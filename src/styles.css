@@ -1,0 +1,18 @@
+@import 'tailwindcss';
+
+/* The overlay window is transparent; only the panel paints. */
+html,
+body,
+#root {
+  margin: 0;
+  height: 100%;
+  background: transparent;
+  overflow: hidden;
+}
+
+body {
+  font-family: ui-sans-serif, system-ui, -apple-system, 'Segoe UI', sans-serif;
+  /* Default to click-through visuals; interactive elements opt back in. */
+  cursor: default;
+  user-select: none;
+}

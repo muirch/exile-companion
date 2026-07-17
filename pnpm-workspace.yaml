@@ -1,0 +1,5 @@
+# Allow the native postinstall build scripts these packages need
+# (pnpm 11 blocks dependency build scripts by default).
+allowBuilds:
+  esbuild: true
+  '@tailwindcss/oxide': true
