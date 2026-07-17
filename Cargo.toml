@@ -1,7 +1,9 @@
 [workspace]
 resolver = "2"
-members = ["crates/poebo-core", "crates/poebo-data"]
-# `src-tauri` is added to the workspace when the Tauri shell lands (build-order step 6).
+members = ["crates/poebo-core", "crates/poebo-data", "src-tauri"]
+# Note: `poebo-app` (src-tauri) links webkit2gtk/gtk on Linux, so a bare `cargo build` at the
+# workspace root needs those system libs (see README / CI). Pure-core work uses `-p poebo-core`,
+# which builds with no GUI system dependencies.
 
 [workspace.package]
 edition = "2021"
