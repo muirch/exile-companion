@@ -77,10 +77,15 @@ You will need Rust (stable), Node 22+, and [pnpm](https://pnpm.io/).
 # run the headless core test suite (no GUI dependencies, runs anywhere)
 cargo test -p poebo-core
 
+# watch the engine follow a sample campaign log, no GUI needed
+cargo run -p poebo-core --example replay_log
+
 # build the overlay UI
 pnpm install
 pnpm build
 ```
+
+There is a sample log at [examples/sample-client.txt](examples/sample-client.txt) you can also load in the app's replay mode.
 
 ### Running the overlay
 

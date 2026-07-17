@@ -1,0 +1,39 @@
+2024/06/01 20:00:00 ***** LOG FILE OPENING *****
+2024/06/01 20:00:04 1004215 e8 [INFO Client 1234] Connecting to instance server at 8.8.8.8:6112
+2024/06/01 20:00:06 1006233 9c8 [INFO Client 1234] Generating level 1 area "1_1_1" with seed 305419896
+2024/06/01 20:00:07 1007188 9c8 [INFO Client 1234] : You have entered The Twilight Strand.
+2024/06/01 20:00:52 1052401 9c8 [INFO Client 1234] : Xophina (Witch) is now level 2
+2024/06/01 20:03:15 1195662 9c8 [INFO Client 1234] : You have entered Lioneye's Watch.
+2024/06/01 20:03:20 1200884 a11 [INFO Client 1234] Tarkleigh: Another Karui washed ashore. Let's see what you're made of.
+2024/06/01 20:03:48 1228015 9c8 [INFO Client 1234] : You have entered The Coast.
+2024/06/01 20:05:02 1302770 33f [INFO Client 1234] #Global4: WTB Tabula Rasa, pm me
+2024/06/01 20:06:37 1397551 9c8 [INFO Client 1234] : Xophina (Witch) is now level 3
+2024/06/01 20:07:41 1461903 9c8 [INFO Client 1234] : You have entered The Mud Flats.
+2024/06/01 20:10:19 1619444 9c8 [INFO Client 1234] : You have entered The Submerged Passage.
+2024/06/01 20:12:33 1753260 9c8 [INFO Client 1234] : Xophina (Witch) is now level 5
+2024/06/01 20:15:08 1908119 9c8 [INFO Client 1234] : You have entered The Ledge.
+2024/06/01 20:18:22 2102446 3a2 [INFO Client 1234] @From SwiftBuyer: Hi, I would like to buy your Wanderlust listed for 1 alch in Standard
+2024/06/01 20:18:55 2135870 9c8 [INFO Client 1234] : You have entered The Climb.
+2024/06/01 20:21:40 2300551 9c8 [INFO Client 1234] : Xophina (Witch) is now level 7
+2024/06/01 20:23:12 2392765 9c8 [INFO Client 1234] : You have entered The Lower Prison.
+2024/06/01 20:25:47 2547009 9c8 [INFO Client 1234] : Xophina has been slain.
+2024/06/01 20:26:30 2590233 9c8 [INFO Client 1234] : You have entered Prisoner's Gate.
+2024/06/01 20:29:55 2795118 33f [INFO Client 1234] $TradeChat9: selling 6-link chest 120c
+2024/06/01 20:30:26 2826470 9c8 [INFO Client 1234] : You have entered The Ship Graveyard.
+2024/06/01 20:33:44 3024889 9c8 [INFO Client 1234] : Xophina (Witch) is now level 9
+2024/06/01 20:36:05 3165003 9c8 [INFO Client 1234] Generating level 10 area "1_1_11_1" with seed 2049423767
+2024/06/01 20:36:07 3167260 9c8 [INFO Client 1234] : You have entered The Cavern of Wrath.
+2024/06/01 20:38:39 3319774 9c8 [INFO Client 1234] : You have entered The Cavern of Anger.
+2024/06/01 20:41:12 3472100 9c8 [INFO Client 1234] : Xophina (Witch) is now level 11
+2024/06/01 20:41:45 3505663 9c8 [INFO Client 1234] : You have entered Lioneye's Watch.
+2024/06/01 20:42:03 3523998 a11 [INFO Client 1234] Nessa: The Brine King's grip on these waters is broken. Well done.
+2024/06/01 20:45:20 ***** LOG FILE OPENING *****
+2024/06/01 20:45:24 3724551 e8 [INFO Client 1234] Connecting to instance server at 8.8.8.8:6112
+2024/06/01 20:45:27 3727180 9c8 [INFO Client 1234] : You have entered Lioneye's Watch.
+2024/06/01 20:46:52 3812446 9c8 [INFO Client 1234] : You have entered The Southern Forest.
+2024/06/01 20:47:38 3858009 9c8 [INFO Client 1234] : Xophina (Witch) is now level 12
+2024/06/01 20:49:20 3960774 9c8 [INFO Client 1234] : You have entered The Forest Encampment.
+2024/06/01 20:51:40 4100118 9c8 [INFO Client 1234] : You have entered The Old Fields.
+2024/06/01 20:54:05 4245663 9c8 [INFO Client 1234] : Xophina (Witch) is now level 13
+2024/06/01 20:56:30 4390774 9c8 [INFO Client 1234] : You have entered The Crossroads.
+2024/06/01 20:59:00 4540118 9c8 [INFO Client 1234] : Xophina (Witch) is now level 14
