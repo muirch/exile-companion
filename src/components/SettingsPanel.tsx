@@ -47,7 +47,7 @@ export function SettingsPanel(): React.JSX.Element {
           className="rounded bg-indigo-700 px-2 py-0.5 hover:bg-indigo-600"
           onClick={replayLog}
         >
-          Replay log…
+          Replay log...
         </button>
         {mode !== 'idle' && (
           <button className="rounded bg-slate-700 px-2 py-0.5 hover:bg-slate-600" onClick={stopSource}>

@@ -65,7 +65,7 @@ pub fn stop_current(app: &AppHandle) {
     run.log_path = None;
 }
 
-/// Spawn the parse → state pipeline, emitting updates to the frontend.
+/// Spawn the parse -> state pipeline, emitting updates to the frontend.
 fn spawn_pipeline(app: AppHandle, stream: LineStream, machine: CampaignMachine) -> JoinHandle<()> {
     tauri::async_runtime::spawn(async move {
         let tx = app.state::<AppState>().state_tx.clone();

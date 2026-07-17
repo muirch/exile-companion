@@ -319,7 +319,7 @@ mod tests {
         assert_eq!(m.snapshot().act, Some(1), "act preserved on unknown zone");
         assert_eq!(m.snapshot().location_kind, LocationKind::Hideout);
         assert!(d.zone_changed && !d.act_changed);
-        // An unknown non-hideout zone → Unknown location, act still preserved.
+        // An unknown non-hideout zone -> Unknown location, act still preserved.
         enter(&mut m, "Some Side Area");
         assert_eq!(m.snapshot().act, Some(1));
         assert_eq!(m.snapshot().location_kind, LocationKind::Unknown);
@@ -336,7 +336,7 @@ mod tests {
     #[test]
     fn name_collision_resolves_by_progression() {
         let mut m = machine();
-        // Early game: entering "Riverside" with no/low act → Act 1 copy.
+        // Early game: entering "Riverside" with no/low act -> Act 1 copy.
         enter(&mut m, "Lioneye's Watch"); // act 1
         enter(&mut m, "Riverside");
         assert_eq!(m.snapshot().act, Some(1));
@@ -345,7 +345,7 @@ mod tests {
             Some("1_1_2")
         );
 
-        // Progress to Act 5, then re-enter "Riverside" → the Act 6 copy (closest forward act).
+        // Progress to Act 5, then re-enter "Riverside" -> the Act 6 copy (closest forward act).
         enter(&mut m, "Overseer's Tower"); // act 5
         enter(&mut m, "Riverside");
         assert_eq!(m.snapshot().act, Some(6));
@@ -413,7 +413,7 @@ mod tests {
             },
             None,
         );
-        // Party member levels up — must not touch our level.
+        // Party member levels up - must not touch our level.
         let d = m.apply(
             LogEvent::LevelUp {
                 character: "SomeFriend".into(),
@@ -424,7 +424,7 @@ mod tests {
         );
         assert!(!d.is_meaningful());
         assert_eq!(m.snapshot().level, 20);
-        // Party member dies — not our death.
+        // Party member dies - not our death.
         let d = m.apply(
             LogEvent::Death {
                 name: "SomeFriend".into(),

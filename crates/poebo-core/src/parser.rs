@@ -1,14 +1,14 @@
 //! Turns raw `Client.txt` lines into typed [`LogEvent`]s.
 //!
 //! Two stages:
-//! 1. [`split_line`] — strip the `YYYY/MM/DD HH:MM:SS <uptime> <hex> [INFO Client <id>] ` framing to
+//! 1. [`split_line`] - strip the `YYYY/MM/DD HH:MM:SS <uptime> <hex> [INFO Client <id>] ` framing to
 //!    the message body, parsing the timestamp. Robust rule: parse the fixed 19-char timestamp, then
 //!    take everything after the first `"] "`. The one framing without `"] "` is the session-start
 //!    banner, handled specially.
-//! 2. [`classify`] — map a body to a [`LogEvent`], or `None` for chat/whisper/NPC/unknown noise.
+//! 2. [`classify`] - map a body to a [`LogEvent`], or `None` for chat/whisper/NPC/unknown noise.
 //!    **System events are exactly the bodies with a leading `": "`.** Chat is `Name: msg` or begins
 //!    with a channel symbol (`@ # $ % & <`) and thus never starts with `": "`, so it falls through
-//!    to `None`. Two no-colon system lines (`Connecting…`, `Generating…`) are matched explicitly.
+//!    to `None`. Two no-colon system lines (`Connecting...`, `Generating...`) are matched explicitly.
 //!
 //! Everything returns `Option`; nothing panics on malformed input.
 
@@ -21,7 +21,7 @@ use time::PrimitiveDateTime;
 use crate::events::{DeathCause, LogEvent, RawLine, TimedEvent};
 use crate::locale::LocalePack;
 
-/// `<char> (<class>) is now level <N>` — char names have no spaces; class is a single token.
+/// `<char> (<class>) is now level <N>` - char names have no spaces; class is a single token.
 static LEVEL_UP: LazyLock<Regex> =
     LazyLock::new(|| Regex::new(r"^(\S+) \(([^)]+)\) is now level (\d+)$").expect("valid regex"));
 
@@ -48,7 +48,7 @@ pub fn split_line(line: &str) -> Option<RawLine> {
     let body = if let Some(idx) = line.find("] ") {
         &line[idx + 2..]
     } else if line.contains(SESSION_MARKER) {
-        // Session banner: `<ts> ***** LOG FILE OPENING *****` — no bracketed prefix.
+        // Session banner: `<ts> ***** LOG FILE OPENING *****` - no bracketed prefix.
         line.get(20..).unwrap_or(line)
     } else {
         // Unframed line we don't recognize; hand the post-timestamp remainder to the classifier.
@@ -99,7 +99,7 @@ pub fn classify(body: &str, locale: &LocalePack) -> Option<LogEvent> {
         });
     }
 
-    // Anything else (chat `Name: …`, whispers `@ # $ % &`, `<Guild> Name:`, NPC dialogue) is noise.
+    // Anything else (chat `Name: ...`, whispers `@ # $ % &`, `<Guild> Name:`, NPC dialogue) is noise.
     None
 }
 
@@ -140,7 +140,7 @@ fn classify_system(rest: &str, locale: &LocalePack) -> Option<LogEvent> {
         });
     }
 
-    // Other system lines (`… has joined the area.`, `… has left the area.`) are not tracked.
+    // Other system lines (`... has joined the area.`, `... has left the area.`) are not tracked.
     None
 }
 

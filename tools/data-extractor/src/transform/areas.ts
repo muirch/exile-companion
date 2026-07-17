@@ -29,7 +29,7 @@ export interface ZoneInfo {
   connections: string[];
 }
 
-// Campaign main-zone ids look like `<part>_<act>_<n>` — e.g. `1_1_1`, `1_1_town`, `2_6_1`. This
+// Campaign main-zone ids look like `<part>_<act>_<n>` - e.g. `1_1_1`, `1_1_town`, `2_6_1`. This
 // pattern cleanly excludes the ~280 non-campaign areas that also carry `Act` in 1..10 (Character
 // Select, hideouts, and league mechanics like Betrayal/Abyss/Descent whose ids are non-numeric).
 const CAMPAIGN_ID = /^[12]_\d+_/;

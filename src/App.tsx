@@ -29,7 +29,7 @@ export function App(): React.JSX.Element {
     getState()
       .then(setCampaign)
       .catch(() => {
-        /* backend not ready / no state yet — the push listener will fill it in */
+        /* backend not ready / no state yet - the push listener will fill it in */
       });
 
     return () => {

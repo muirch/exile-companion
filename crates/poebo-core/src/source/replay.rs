@@ -1,7 +1,7 @@
 //! Replay a recorded `Client.txt` through the same pipeline as live tailing.
 //!
 //! [`ReplaySource`] reads a file, then releases its lines paced by the timestamp deltas between
-//! them (divided by the current speed, clamped). [`ReplayControl`] — a shared, thread-safe handle —
+//! them (divided by the current speed, clamped). [`ReplayControl`] - a shared, thread-safe handle -
 //! drives pause/resume/step/speed/stop while the stream runs. Pacing goes through a [`Sleeper`] so
 //! tests collapse it to zero.
 

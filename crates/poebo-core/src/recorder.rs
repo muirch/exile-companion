@@ -1,7 +1,7 @@
 //! Records raw log lines to a session file so a campaign can be replayed later.
 //!
 //! Lines are written **verbatim** (with reconstructed `\r\n`), so a recording is itself a valid
-//! `Client.txt` that replays through the identical parser — the round-trip is tested.
+//! `Client.txt` that replays through the identical parser - the round-trip is tested.
 
 use std::path::{Path, PathBuf};
 

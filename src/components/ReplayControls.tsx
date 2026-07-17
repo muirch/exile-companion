@@ -3,7 +3,7 @@ import type { SpeedMultiplier } from '../ipc/types';
 import { useAppStore } from '../store/useAppStore';
 
 const SPEEDS: readonly SpeedMultiplier[] = ['X1', 'X2', 'X5', 'X20', 'X100'];
-const speedLabel = (s: SpeedMultiplier): string => `${s.slice(1)}×`;
+const speedLabel = (s: SpeedMultiplier): string => `${s.slice(1)}x`;
 
 export function ReplayControls(): React.JSX.Element | null {
   const replay = useAppStore((s) => s.replay);
@@ -20,14 +20,14 @@ export function ReplayControls(): React.JSX.Element | null {
           className="rounded bg-slate-700 px-2 py-0.5 text-xs hover:bg-slate-600"
           onClick={replay.paused ? replayResume : replayPause}
         >
-          {replay.paused ? '▶ Play' : '⏸ Pause'}
+          {replay.paused ? 'Play' : 'Pause'}
         </button>
         <button
           className="rounded bg-slate-700 px-2 py-0.5 text-xs hover:bg-slate-600 disabled:opacity-40"
           onClick={replayStep}
           disabled={!replay.paused}
         >
-          ⏭ Step
+          Step
         </button>
         <div className="ml-auto flex gap-0.5">
           {SPEEDS.map((s) => (

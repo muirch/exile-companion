@@ -24,7 +24,7 @@ pub enum DataError {
     },
 }
 
-/// Errors from a log line source (live tail or replay) — surfaced as stream items.
+/// Errors from a log line source (live tail or replay) - surfaced as stream items.
 #[derive(Debug, thiserror::Error)]
 pub enum SourceError {
     #[error("log source I/O error: {0}")]
@@ -38,7 +38,7 @@ pub enum RecorderError {
     Io(#[from] std::io::Error),
 }
 
-/// Errors from running the parse → state pipeline over a source.
+/// Errors from running the parse -> state pipeline over a source.
 #[derive(Debug, thiserror::Error)]
 pub enum PipelineError {
     #[error(transparent)]

@@ -14,7 +14,7 @@ use time::PrimitiveDateTime;
 #[cfg_attr(feature = "ts", ts(export))]
 #[serde(tag = "kind", rename_all = "snake_case")]
 pub enum LogEvent {
-    /// `***** LOG FILE OPENING *****` — a new client session began.
+    /// `***** LOG FILE OPENING *****` - a new client session began.
     SessionStart,
 
     /// `: You have entered <zone>.`
@@ -33,7 +33,7 @@ pub enum LogEvent {
     /// attributes it to the local character by name.
     Death { name: String, cause: DeathCause },
 
-    /// `Connecting to instance server at <server>` — emitted on every instance load.
+    /// `Connecting to instance server at <server>` - emitted on every instance load.
     InstanceConnect { server: String },
 
     /// `Generating level <level> area "<world_area_id>" with seed <seed>`.
@@ -67,7 +67,7 @@ pub struct RawLine {
     /// datetime); `None` if the line had no parseable timestamp. Replay pacing uses deltas, for
     /// which the missing offset cancels out.
     pub ts: Option<PrimitiveDateTime>,
-    /// The message body — the classifier's input.
+    /// The message body - the classifier's input.
     pub body: String,
     /// The exact original line (without the trailing newline). Recording writes this verbatim.
     pub raw: String,

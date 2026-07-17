@@ -1,4 +1,4 @@
-//! Integration tests for the source → pipeline layer.
+//! Integration tests for the source -> pipeline layer.
 //!
 //! The headline test proves replay is behaviorally identical to folding the parser directly, so the
 //! `EventSource` seam holds. Others exercise pause/step semantics, recorder round-tripping, and the
@@ -45,7 +45,7 @@ fn zones() -> Arc<ZoneTable> {
     Arc::new(ZoneTable::from_json_bytes(PACK.as_bytes(), 1).expect("pack"))
 }
 
-/// Fold the parser directly over the log — the reference the pipeline must reproduce.
+/// Fold the parser directly over the log - the reference the pipeline must reproduce.
 fn reference_state() -> CampaignState {
     let mut m = CampaignMachine::new(zones());
     for line in LOG.lines() {
@@ -115,7 +115,7 @@ async fn pause_and_step_release_exactly_one_line_each() {
         "no line should be released while paused"
     );
 
-    // One step → exactly one line.
+    // One step -> exactly one line.
     ctl.step();
     let first = tokio::time::timeout(Duration::from_millis(500), stream.next())
         .await
@@ -132,7 +132,7 @@ async fn pause_and_step_release_exactly_one_line_each() {
         "only one line per step"
     );
 
-    // Resume → the remainder flows; drain to completion.
+    // Resume -> the remainder flows; drain to completion.
     ctl.resume();
     let mut count = 1;
     while (tokio::time::timeout(Duration::from_millis(500), stream.next()).await)
@@ -165,7 +165,7 @@ async fn stop_terminates_replay_early() {
 
 #[tokio::test]
 async fn recording_round_trips_to_identical_state() {
-    // Record while replaying, then replay the recording — final states must match.
+    // Record while replaying, then replay the recording - final states must match.
     let fixture = write_fixture(LOG).await;
     let rec_dir = tempfile::tempdir().expect("dir");
     let recorder = poebo_core::recorder::Recorder::create(rec_dir.path(), "test")
@@ -218,7 +218,7 @@ async fn recording_round_trips_to_identical_state() {
 async fn live_tail_reads_appended_lines() {
     // Start from an empty file reading from the top (`from_start`): because streams are lazy, EOF is
     // only captured on first poll, so `from_start` + empty file is the deterministic way to assert
-    // the poll → stat → read → split → yield loop picks up appended content.
+    // the poll -> stat -> read -> split -> yield loop picks up appended content.
     let file = tempfile::NamedTempFile::new().expect("temp");
 
     let tail = LiveTail::open(file.path())

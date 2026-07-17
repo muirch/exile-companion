@@ -1,4 +1,4 @@
-//! The single, source-agnostic consumer: parse → fold into campaign state → notify.
+//! The single, source-agnostic consumer: parse -> fold into campaign state -> notify.
 //!
 //! `run_pipeline` drives any [`LineStream`] (live or replay) through the exact same steps, so the
 //! two are behaviorally identical. It optionally tees each raw line to a [`Recorder`], and invokes
@@ -14,7 +14,7 @@ use crate::recorder::Recorder;
 use crate::source::LineStream;
 use crate::state::{CampaignMachine, CampaignState, StateDelta};
 
-/// Run the parse → state pipeline to completion (or until the source ends / errors).
+/// Run the parse -> state pipeline to completion (or until the source ends / errors).
 ///
 /// `on_update(state, delta)` fires on every meaningful change. Recording (if `tee` is set) writes
 /// every raw line, including ones that classify as noise, so recordings are faithful.

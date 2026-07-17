@@ -1,7 +1,7 @@
 //! The source abstraction that unifies live tailing and replay.
 //!
 //! Both [`live::LiveTail`] and [`replay::ReplaySource`] implement [`EventSource`], producing a
-//! [`LineStream`] of decoded [`RawLine`]s. The pipeline consumes either without knowing which — this
+//! [`LineStream`] of decoded [`RawLine`]s. The pipeline consumes either without knowing which - this
 //! is the seam that makes replay behaviorally identical to live and lets Phase 2 inputs drop in as
 //! new producers.
 

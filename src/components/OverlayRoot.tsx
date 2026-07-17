@@ -25,7 +25,7 @@ export function OverlayRoot(): React.JSX.Element {
           data-tauri-drag-region
           className="flex cursor-move items-center justify-between px-3 py-1 text-[10px] uppercase tracking-wider text-cyan-300/70"
         >
-          <span data-tauri-drag-region>poebo — drag</span>
+          <span data-tauri-drag-region>poebo - drag</span>
           <span className="text-slate-400">Ctrl+Alt+Space to release</span>
         </div>
       )}
