@@ -20,8 +20,8 @@ pub mod data;
 pub mod error;
 pub mod events;
 pub mod locale;
+pub mod parser;
 // Added in later build-order steps:
-//   pub mod parser;    // step 3
 //   pub mod state;     // step 4
 //   pub mod clock;     // step 4
 //   pub mod source;    // step 5

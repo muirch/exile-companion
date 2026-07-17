@@ -4,7 +4,7 @@
 //! the body into a [`LogEvent`]. The state machine consumes [`LogEvent`]s; replay pacing uses the
 //! timestamp carried alongside on [`TimedEvent`].
 
-use time::OffsetDateTime;
+use time::PrimitiveDateTime;
 
 /// A structured event decoded from a single `Client.txt` line.
 ///
@@ -59,8 +59,10 @@ pub enum DeathCause {
 /// (everything after `] `), and the original raw line (preserved for recording).
 #[derive(Debug, Clone, PartialEq, Eq)]
 pub struct RawLine {
-    /// Log timestamp in the client's local time; `None` if the line had no parseable timestamp.
-    pub ts: Option<OffsetDateTime>,
+    /// Log timestamp in the client's local time (the log carries no timezone, so this is a naive
+    /// datetime); `None` if the line had no parseable timestamp. Replay pacing uses deltas, for
+    /// which the missing offset cancels out.
+    pub ts: Option<PrimitiveDateTime>,
     /// The message body — the classifier's input.
     pub body: String,
     /// The exact original line (without the trailing newline). Recording writes this verbatim.
@@ -70,6 +72,6 @@ pub struct RawLine {
 /// A classified event paired with the log timestamp that drives replay pacing.
 #[derive(Debug, Clone, PartialEq, Eq)]
 pub struct TimedEvent {
-    pub at: Option<OffsetDateTime>,
+    pub at: Option<PrimitiveDateTime>,
     pub event: LogEvent,
 }

@@ -11,8 +11,9 @@ serde = { workspace = true }
 serde_json = { workspace = true }
 thiserror = { workspace = true }
 time = { workspace = true }
-# tokio / futures / async-stream / regex / notify are added as the parser, watcher,
-# and replay source land (build-order steps 3 and 5).
+regex = "1"
+# tokio / futures / async-stream / notify are added as the watcher and replay source
+# land (build-order step 5).
 
 [dev-dependencies]
 poebo-data = { path = "../poebo-data" }
