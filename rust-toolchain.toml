@@ -1,0 +1,6 @@
+# Local dev pins to the installed stable toolchain (currently 1.92) to avoid a surprise
+# toolchain download. CI additionally runs `rustup target add x86_64-pc-windows-msvc`
+# for the Windows installer job (see .github/workflows).
+[toolchain]
+channel = "stable"
+components = ["rustfmt", "clippy"]

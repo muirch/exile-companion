@@ -1,0 +1,7 @@
+{
+  "schema_version": 1,
+  "patch": "0.0.0-placeholder",
+  "generated_at": "1970-01-01T00:00:00Z",
+  "files": [{ "name": "areas.json", "sha256": null }],
+  "note": "PLACEHOLDER data pack, committed so the workspace compiles and tests run. Regenerate real data with `cd tools/data-extractor && npm ci && npm run regen`."
+}

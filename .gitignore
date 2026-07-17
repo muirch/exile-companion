@@ -1,0 +1,29 @@
+# Rust
+/target
+**/target/
+**/*.rs.bk
+
+# Node / frontend
+node_modules/
+dist/
+.pnpm-store/
+*.tsbuildinfo
+
+# Tauri
+src-tauri/gen/
+
+# Data-extractor toolchain
+tools/data-extractor/node_modules/
+tools/data-extractor/.cache/
+tools/data-extractor/raw/
+
+# Editor / OS
+.DS_Store
+Thumbs.db
+*.swp
+
+# Local secrets
+.env
+.env.*
+*.local.*
+*.local
