@@ -31,7 +31,7 @@ export const useAppStore = create<AppStore>((set) => ({
   campaign: EMPTY_CAMPAIGN,
   source: { mode: 'idle', path: null, error: null },
   replay: { position: 0, total: 0, speed: 'X1', paused: false },
-  ui: { grabbed: false, opacity: 0.85 },
+  ui: { grabbed: true, opacity: 0.85 },
 
   setCampaign: (campaign) => set({ campaign }),
   setSourceStatus: (status) =>

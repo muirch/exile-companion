@@ -24,10 +24,8 @@ pub fn run() {
             let zones = runtime::load_zone_table()?;
             app.manage(AppState::new(zones));
 
-            let handle = app.handle();
-            overlay::set_click_through_default(handle);
-
-            // Ctrl+Alt+Space toggles the overlay between click-through and interactive.
+            // The overlay starts interactive so its controls are reachable without a hotkey.
+            // Ctrl+Alt+Space toggles click-through on X11; on Wayland global shortcuts do not fire.
             let toggle = Shortcut::new(Some(Modifiers::CONTROL | Modifiers::ALT), Code::Space);
             app.global_shortcut()
                 .on_shortcut(toggle, move |app, _shortcut, event| {

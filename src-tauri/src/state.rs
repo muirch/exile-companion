@@ -58,7 +58,9 @@ impl AppState {
             zones,
             run: Mutex::new(RunState::default()),
             state_tx,
-            grabbed: AtomicBool::new(false),
+            // Start interactive so the controls are reachable without a global hotkey
+            // (global shortcuts do not fire on Wayland).
+            grabbed: AtomicBool::new(true),
         }
     }
 
