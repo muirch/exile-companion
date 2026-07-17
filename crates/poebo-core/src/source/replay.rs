@@ -20,6 +20,8 @@ use crate::events::RawLine;
 
 /// Replay speed multipliers.
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Default, serde::Serialize, serde::Deserialize)]
+#[cfg_attr(feature = "ts", derive(ts_rs::TS))]
+#[cfg_attr(feature = "ts", ts(export))]
 pub enum SpeedMultiplier {
     #[default]
     X1,

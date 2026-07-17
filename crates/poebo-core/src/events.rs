@@ -10,6 +10,8 @@ use time::PrimitiveDateTime;
 ///
 /// Serialized with an internal `kind` tag so the frontend can discriminate variants.
 #[derive(Debug, Clone, PartialEq, Eq, serde::Serialize)]
+#[cfg_attr(feature = "ts", derive(ts_rs::TS))]
+#[cfg_attr(feature = "ts", ts(export))]
 #[serde(tag = "kind", rename_all = "snake_case")]
 pub enum LogEvent {
     /// `***** LOG FILE OPENING *****` — a new client session began.
@@ -47,6 +49,8 @@ pub enum LogEvent {
 
 /// How a character died, per the two `Client.txt` death phrasings.
 #[derive(Debug, Clone, Copy, PartialEq, Eq, serde::Serialize)]
+#[cfg_attr(feature = "ts", derive(ts_rs::TS))]
+#[cfg_attr(feature = "ts", ts(export))]
 #[serde(rename_all = "snake_case")]
 pub enum DeathCause {
     /// `has been slain.`

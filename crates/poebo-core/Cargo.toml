@@ -17,6 +17,11 @@ tokio-util = "0.7"
 futures = "0.3"
 async-stream = "0.3"
 async-trait = "0.1"
+ts-rs = { version = "10", optional = true }
+
+[features]
+# Enables ts-rs derives so `cargo test --features ts` regenerates the TypeScript IPC bindings.
+ts = ["dep:ts-rs"]
 
 [dev-dependencies]
 poebo-data = { path = "../poebo-data" }

@@ -16,6 +16,8 @@ use crate::events::{DeathCause, LogEvent};
 
 /// Where the player currently is, coarsely.
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Default, serde::Serialize)]
+#[cfg_attr(feature = "ts", derive(ts_rs::TS))]
+#[cfg_attr(feature = "ts", ts(export))]
 #[serde(rename_all = "snake_case")]
 pub enum LocationKind {
     Town,
@@ -27,6 +29,8 @@ pub enum LocationKind {
 
 /// The resolved current zone. `id`/`act` are `None` when the zone name wasn't found in the pack.
 #[derive(Debug, Clone, PartialEq, Eq, serde::Serialize)]
+#[cfg_attr(feature = "ts", derive(ts_rs::TS))]
+#[cfg_attr(feature = "ts", ts(export))]
 pub struct ZoneRef {
     pub name: String,
     pub id: Option<String>,
@@ -35,6 +39,8 @@ pub struct ZoneRef {
 
 /// The projection of the log the UI renders. Serialized to the frontend as `campaign://state-updated`.
 #[derive(Debug, Clone, Default, serde::Serialize)]
+#[cfg_attr(feature = "ts", derive(ts_rs::TS))]
+#[cfg_attr(feature = "ts", ts(export))]
 pub struct CampaignState {
     pub character: Option<String>,
     pub class: Option<String>,
@@ -46,6 +52,7 @@ pub struct CampaignState {
     pub session_started: bool,
     /// When the current zone was entered. Internal (drives future "time in zone"); not serialized.
     #[serde(skip)]
+    #[cfg_attr(feature = "ts", ts(skip))]
     pub last_zone_change: Option<PrimitiveDateTime>,
 }
 
