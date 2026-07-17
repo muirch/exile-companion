@@ -80,8 +80,11 @@ cargo test -p poebo-core
 # watch the engine follow a sample campaign log, no GUI needed
 cargo run -p poebo-core --example replay_log
 
-# build the overlay UI
+# develop the overlay UI in a browser with mock data (no Tauri or webkit needed)
 pnpm install
+pnpm dev
+
+# or build it for production
 pnpm build
 ```
 

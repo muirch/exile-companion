@@ -1,0 +1,49 @@
+name: Release (manual)
+
+# Triggered manually only, so there is no tag spam during early development. Each run refreshes a
+# single rolling "dev" pre-release with the latest Windows installer, ready to drop into a VM.
+# Run it from the Actions tab: "Release (manual)" -> "Run workflow".
+on:
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+env:
+  CARGO_TERM_COLOR: always
+
+jobs:
+  windows:
+    name: Windows dev build
+    runs-on: windows-latest
+    steps:
+      - uses: actions/checkout@v7.0.0
+
+      - uses: dtolnay/rust-toolchain@stable
+
+      - uses: Swatinem/rust-cache@v2.9.1
+        with:
+          workspaces: '. -> target'
+
+      - uses: pnpm/action-setup@v6.0.9
+      - uses: actions/setup-node@v7.0.0
+        with:
+          node-version: 22
+          cache: pnpm
+
+      - name: Install frontend deps
+        run: pnpm install --frozen-lockfile
+
+      - name: Build installer and refresh the rolling dev pre-release
+        uses: tauri-apps/tauri-action@v0
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        with:
+          # A single reusable tag/release; each run overwrites its installer assets.
+          tagName: dev
+          releaseName: Development build
+          releaseBody: >
+            Automated Windows build of the latest `main`. This is a rolling development
+            pre-release, not a stable version. Grab the `.exe` (or `.msi`) below.
+          releaseDraft: false
+          prerelease: true

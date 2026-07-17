@@ -2,12 +2,14 @@ import { useEffect } from 'react';
 
 import { OverlayRoot } from './components/OverlayRoot';
 import { getState } from './ipc/commands';
+import { isTauri } from './ipc/env';
 import {
   onCampaignState,
   onOverlayGrab,
   onReplayProgress,
   onSourceStatus,
 } from './ipc/events';
+import { startMock, stopMock } from './ipc/mock';
 import { useAppStore } from './store/useAppStore';
 
 export function App(): React.JSX.Element {
@@ -17,6 +19,12 @@ export function App(): React.JSX.Element {
   const setGrabbed = useAppStore((s) => s.setGrabbed);
 
   useEffect(() => {
+    // In a plain browser (pnpm dev) there is no backend: drive the UI from the mock instead.
+    if (!isTauri()) {
+      startMock();
+      return () => stopMock();
+    }
+
     // Register all push listeners once.
     const unlisteners = Promise.all([
       onCampaignState(setCampaign),
