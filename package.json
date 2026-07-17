@@ -4,6 +4,7 @@
   "version": "0.1.0",
   "type": "module",
   "description": "Path of Exile 1 campaign assistant — overlay UI.",
+  "packageManager": "pnpm@11.5.3",
   "scripts": {
     "dev": "vite",
     "build": "tsc --noEmit && vite build",
