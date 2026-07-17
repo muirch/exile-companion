@@ -16,17 +16,16 @@
 
 #![forbid(unsafe_code)]
 
+pub mod clock;
 pub mod data;
 pub mod error;
 pub mod events;
 pub mod locale;
 pub mod parser;
+pub mod pipeline;
+pub mod recorder;
+pub mod source;
 pub mod state;
-// Added in later build-order steps:
-//   pub mod clock;     // step 5
-//   pub mod source;    // step 5
-//   pub mod recorder;  // step 5
-//   pub mod pipeline;  // step 5
 
 /// Crate version, surfaced in diagnostics / the UI "about" panel.
 pub const VERSION: &str = env!("CARGO_PKG_VERSION");

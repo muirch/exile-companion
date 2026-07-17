@@ -12,8 +12,13 @@ serde_json = { workspace = true }
 thiserror = { workspace = true }
 time = { workspace = true }
 regex = "1"
-# tokio / futures / async-stream / notify are added as the watcher and replay source
-# land (build-order step 5).
+tokio = { workspace = true, features = ["fs", "io-util", "sync", "time", "macros"] }
+tokio-util = "0.7"
+futures = "0.3"
+async-stream = "0.3"
+async-trait = "0.1"
 
 [dev-dependencies]
 poebo-data = { path = "../poebo-data" }
+tokio = { workspace = true, features = ["rt-multi-thread", "macros", "time", "test-util"] }
+tempfile = "3"
