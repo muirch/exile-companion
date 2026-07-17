@@ -1,0 +1,20 @@
+{
+  "name": "poebo-data-extractor",
+  "private": true,
+  "version": "0.1.0",
+  "type": "module",
+  "description": "Generates poebo's campaign data pack from Path of Exile game files via pathofexile-dat. Not part of the Rust app build.",
+  "scripts": {
+    "fetch": "pathofexile-dat",
+    "regen": "tsx src/export.ts",
+    "typecheck": "tsc --noEmit"
+  },
+  "dependencies": {
+    "pathofexile-dat": "15.2.0"
+  },
+  "devDependencies": {
+    "@types/node": "^22.0.0",
+    "tsx": "^4.19.0",
+    "typescript": "^5.6.0"
+  }
+}

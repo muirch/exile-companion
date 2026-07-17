@@ -4,6 +4,12 @@
 //! the embedded bytes (`poebo_data::AREAS_JSON`) to [`ZoneTable::from_json_bytes`]; tests use inline
 //! JSON or the committed pack. Designed so [`ZoneTable`] can later become one field of a broader
 //! `DataPack { zones, quests, gems, … }` without changing its own API.
+//!
+//! ## Zone names are not unique across acts
+//!
+//! PoE's Acts 6-10 revisit Acts 1-5 with the **same display names** (e.g. "Lioneye's Watch" is both
+//! `1_1_town` in Act 1 and `2_6_town` in Act 6). So [`ZoneTable::zones_named`] returns *all*
+//! candidates for a name; disambiguation by progression context is the state machine's job.
 
 use std::collections::HashMap;
 
@@ -22,9 +28,9 @@ pub struct AreaTable {
 /// One campaign area. Mirrors the columns extracted from PoE's `WorldAreas` table.
 #[derive(Debug, Clone, PartialEq, Eq, serde::Serialize, serde::Deserialize)]
 pub struct ZoneInfo {
-    /// Internal, language-independent world-area id (e.g. `1_1_town`).
+    /// Internal, language-independent world-area id (e.g. `1_1_town`), unique per area.
     pub id: String,
-    /// English display name (matches the name written to `Client.txt` on area entry).
+    /// English display name (matches the name written to `Client.txt` on area entry). NOT unique.
     pub name: String,
     /// Campaign act, 1..=10.
     pub act: i32,
@@ -34,17 +40,17 @@ pub struct ZoneInfo {
     pub is_hideout: bool,
     pub is_map: bool,
     pub has_waypoint: bool,
-    /// Ids of connected areas.
+    /// Ids of connected campaign areas.
     #[serde(default)]
     pub connections: Vec<String>,
 }
 
-/// Indexed, queryable view over the area table. Keyed by both id and lowercased name so lookups from
-/// a `Client.txt` "You have entered X" line (name) and from `Generating … area "id"` (id) both work.
+/// Indexed, queryable view over the area table. `by_id` is unique; `by_name` maps a (lowercased)
+/// display name to *all* areas sharing it, because names repeat across Acts 1-5 / 6-10.
 #[derive(Debug, Clone)]
 pub struct ZoneTable {
     by_id: HashMap<String, ZoneInfo>,
-    by_name: HashMap<String, ZoneInfo>,
+    by_name: HashMap<String, Vec<ZoneInfo>>,
     patch: String,
     schema_version: u32,
 }
@@ -63,10 +69,13 @@ impl ZoneTable {
             });
         }
         let mut by_id = HashMap::with_capacity(table.areas.len());
-        let mut by_name = HashMap::with_capacity(table.areas.len());
+        let mut by_name: HashMap<String, Vec<ZoneInfo>> = HashMap::new();
         for area in &table.areas {
             by_id.insert(area.id.clone(), area.clone());
-            by_name.insert(area.name.to_lowercase(), area.clone());
+            by_name
+                .entry(area.name.to_lowercase())
+                .or_default()
+                .push(area.clone());
         }
         Ok(ZoneTable {
             by_id,
@@ -76,14 +85,20 @@ impl ZoneTable {
         })
     }
 
-    /// Look up an area by its internal world-area id (e.g. `1_1_town`).
+    /// Look up an area by its unique internal world-area id (e.g. `1_1_town`).
     pub fn by_id(&self, id: &str) -> Option<&ZoneInfo> {
         self.by_id.get(id)
     }
 
-    /// Look up an area by display name, case-insensitively (matches `Client.txt` "You have entered X").
-    pub fn by_name(&self, name: &str) -> Option<&ZoneInfo> {
-        self.by_name.get(&name.to_lowercase())
+    /// All areas with the given display name, case-insensitively. Returns an empty slice if none.
+    ///
+    /// Usually one element, but repeated-name zones (Acts 1-5 vs 6-10) return several — the caller
+    /// disambiguates by progression context (see `state::CampaignMachine`).
+    pub fn zones_named(&self, name: &str) -> &[ZoneInfo] {
+        match self.by_name.get(&name.to_lowercase()) {
+            Some(v) => v.as_slice(),
+            None => &[],
+        }
     }
 
     /// The game patch these facts were extracted from (shown in the UI).
@@ -96,7 +111,7 @@ impl ZoneTable {
         self.schema_version
     }
 
-    /// Number of areas in the table.
+    /// Number of unique areas in the table.
     pub fn len(&self) -> usize {
         self.by_id.len()
     }
@@ -117,21 +132,41 @@ mod tests {
             {"id":"1_1_1","name":"The Twilight Strand","act":1,"area_level":1,
              "is_town":false,"is_hideout":false,"is_map":false,"has_waypoint":false,"connections":["1_1_town"]},
             {"id":"1_1_town","name":"Lioneye's Watch","act":1,"area_level":1,
-             "is_town":true,"is_hideout":false,"is_map":false,"has_waypoint":true,"connections":["1_1_1"]}
+             "is_town":true,"is_hideout":false,"is_map":false,"has_waypoint":true,"connections":["1_1_1"]},
+            {"id":"2_6_town","name":"Lioneye's Watch","act":6,"area_level":45,
+             "is_town":true,"is_hideout":false,"is_map":false,"has_waypoint":true,"connections":[]}
         ]
     }"#;
 
     #[test]
-    fn loads_and_indexes_by_id_and_name() {
+    fn loads_and_indexes_by_id() {
         let t = ZoneTable::from_json_bytes(SAMPLE.as_bytes(), 1).expect("parse");
-        assert_eq!(t.len(), 2);
+        assert_eq!(t.len(), 3);
         assert_eq!(t.patch(), "test");
-        // name lookup is case-insensitive
-        assert_eq!(t.by_name("the twilight strand").unwrap().act, 1);
-        assert_eq!(t.by_name("The Twilight Strand").unwrap().id, "1_1_1");
-        let lw = t.by_id("1_1_town").expect("id lookup");
-        assert!(lw.is_town && lw.has_waypoint);
-        assert_eq!(lw.act, 1);
+        let strand = t.by_id("1_1_1").expect("id lookup");
+        assert_eq!(strand.act, 1);
+        assert_eq!(strand.name, "The Twilight Strand");
+    }
+
+    #[test]
+    fn name_lookup_is_case_insensitive_and_returns_all_candidates() {
+        let t = ZoneTable::from_json_bytes(SAMPLE.as_bytes(), 1).expect("parse");
+        // Unique name → one candidate.
+        let strand = t.zones_named("the twilight strand");
+        assert_eq!(strand.len(), 1);
+        assert_eq!(strand[0].id, "1_1_1");
+        // Repeated name → both the Act 1 and Act 6 areas.
+        let watch = t.zones_named("Lioneye's Watch");
+        assert_eq!(watch.len(), 2);
+        let mut acts: Vec<i32> = watch.iter().map(|z| z.act).collect();
+        acts.sort();
+        assert_eq!(acts, vec![1, 6]);
+    }
+
+    #[test]
+    fn unknown_name_returns_empty_slice() {
+        let t = ZoneTable::from_json_bytes(SAMPLE.as_bytes(), 1).expect("parse");
+        assert!(t.zones_named("Nonexistent Zone").is_empty());
     }
 
     #[test]

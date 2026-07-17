@@ -1,7 +1,12 @@
 {
   "schema_version": 1,
-  "patch": "0.0.0-placeholder",
-  "generated_at": "1970-01-01T00:00:00Z",
-  "files": [{ "name": "areas.json", "sha256": null }],
-  "note": "PLACEHOLDER data pack, committed so the workspace compiles and tests run. Regenerate real data with `cd tools/data-extractor && npm ci && npm run regen`."
+  "patch": "3.28.0.15",
+  "generated_at": "2026-07-17T17:37:54.970Z",
+  "files": [
+    {
+      "name": "areas.json",
+      "sha256": "808bb3afaaaa9a9e9bf07d374adbd4438dde4bbf2ed32e048a889b21c663067b"
+    }
+  ],
+  "note": "Generated from PoE game files via tools/data-extractor (npm run regen)."
 }

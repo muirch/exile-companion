@@ -12,9 +12,10 @@ dist/
 # Tauri
 src-tauri/gen/
 
-# Data-extractor toolchain
+# Data-extractor toolchain (only the generated data-pack/ is committed)
 tools/data-extractor/node_modules/
 tools/data-extractor/.cache/
+tools/data-extractor/tables/
 tools/data-extractor/raw/
 
 # Editor / OS
