@@ -21,9 +21,9 @@ pub mod error;
 pub mod events;
 pub mod locale;
 pub mod parser;
+pub mod state;
 // Added in later build-order steps:
-//   pub mod state;     // step 4
-//   pub mod clock;     // step 4
+//   pub mod clock;     // step 5
 //   pub mod source;    // step 5
 //   pub mod recorder;  // step 5
 //   pub mod pipeline;  // step 5
