@@ -28,3 +28,5 @@ Thumbs.db
 .env.*
 *.local.*
 *.local
+# ts-rs default export dir (canonical bindings live in src/ipc/generated via TS_RS_EXPORT_DIR)
+crates/poebo-core/bindings/
