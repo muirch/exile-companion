@@ -1,6 +1,10 @@
 //! The Tauri command surface. These are thin; the work lives in `runtime`/`settings`/`overlay`.
 //! Errors cross the IPC boundary as `String`; core keeps its typed errors.
 
+use std::path::Path;
+
+use poebo_core::build::BuildSummary;
+use poebo_core::guidance::NextObjective;
 use poebo_core::source::SpeedMultiplier;
 use poebo_core::state::CampaignState;
 use tauri::{AppHandle, State, WebviewWindow};
@@ -65,6 +69,54 @@ pub fn replay_set_speed(app: AppHandle, speed: SpeedMultiplier) {
 #[tauri::command]
 pub fn get_state(state: State<'_, AppState>) -> CampaignState {
     state.current_state()
+}
+
+/// Open a file dialog to pick a Path of Building export (`.xml` or a saved code), import it, and
+/// return its summary. `None` if the dialog was cancelled.
+#[tauri::command]
+pub async fn import_build_file(app: AppHandle) -> Result<Option<BuildSummary>, String> {
+    let (tx, rx) = tokio::sync::oneshot::channel();
+    app.dialog()
+        .file()
+        .add_filter("Path of Building", &["xml", "txt"])
+        .pick_file(move |file| {
+            let _ = tx.send(file);
+        });
+    let Some(picked) = rx.await.map_err(|e| e.to_string())? else {
+        return Ok(None);
+    };
+    let path = picked
+        .into_path()
+        .map_err(|e| e.to_string())?
+        .to_string_lossy()
+        .into_owned();
+    let build = poebo_pob::from_local_file(Path::new(&path)).map_err(|e| e.to_string())?;
+    runtime::import_build(&app, build).map(Some)
+}
+
+/// Import a Path of Building build from pasted text (an import code or raw XML).
+#[tauri::command]
+pub fn import_build_code(app: AppHandle, code: String) -> Result<BuildSummary, String> {
+    let build = poebo_pob::import_text(&code).map_err(|e| e.to_string())?;
+    runtime::import_build(&app, build)
+}
+
+/// Forget the currently-loaded build.
+#[tauri::command]
+pub fn clear_build(app: AppHandle) {
+    runtime::clear_build(&app);
+}
+
+/// The current build summary, or `None` if no build is loaded.
+#[tauri::command]
+pub fn get_build(app: AppHandle) -> Option<BuildSummary> {
+    runtime::current_build_summary(&app)
+}
+
+/// The next objective for the current state + loaded build (on-demand hydration).
+#[tauri::command]
+pub fn get_guidance(app: AppHandle) -> NextObjective {
+    runtime::current_guidance(&app)
 }
 
 #[tauri::command]

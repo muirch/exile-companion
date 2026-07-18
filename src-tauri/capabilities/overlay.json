@@ -16,6 +16,7 @@
     "global-shortcut:allow-is-registered",
     "dialog:allow-open",
     "fs:default",
-    "store:default"
+    "store:default",
+    "clipboard-manager:allow-read-text"
   ]
 }

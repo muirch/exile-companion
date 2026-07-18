@@ -17,12 +17,13 @@ pub fn run() {
     tauri::Builder::default()
         .plugin(tauri_plugin_dialog::init())
         .plugin(tauri_plugin_fs::init())
+        .plugin(tauri_plugin_clipboard_manager::init())
         .plugin(tauri_plugin_store::Builder::default().build())
         .plugin(tauri_plugin_window_state::Builder::default().build())
         .plugin(tauri_plugin_global_shortcut::Builder::new().build())
         .setup(|app| {
-            let zones = runtime::load_zone_table()?;
-            app.manage(AppState::new(zones));
+            let data = runtime::load_data_pack()?;
+            app.manage(AppState::new(data));
 
             // The overlay starts interactive so its controls are reachable without a hotkey.
             // Ctrl+Alt+Space toggles click-through on X11; on Wayland global shortcuts do not fire.
@@ -46,6 +47,11 @@ pub fn run() {
             commands::replay_step,
             commands::replay_set_speed,
             commands::get_state,
+            commands::import_build_file,
+            commands::import_build_code,
+            commands::clear_build,
+            commands::get_build,
+            commands::get_guidance,
             commands::set_click_through,
             commands::get_settings,
             commands::save_settings,

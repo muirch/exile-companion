@@ -3,7 +3,8 @@
 use std::sync::atomic::AtomicBool;
 use std::sync::{Arc, Mutex};
 
-use poebo_core::data::ZoneTable;
+use poebo_core::build::BuildState;
+use poebo_core::data::DataPack;
 use poebo_core::source::ReplayControl;
 use poebo_core::state::CampaignState;
 use tauri::async_runtime::JoinHandle;
@@ -41,23 +42,26 @@ impl Default for RunState {
 
 /// Managed application state.
 pub struct AppState {
-    /// The campaign data pack, shared with every state machine.
-    pub zones: Arc<ZoneTable>,
+    /// The campaign knowledge base (zones, quests, trials), shared read-only.
+    pub data: Arc<DataPack>,
     /// The running source (guarded; commands mutate it).
     pub run: Mutex<RunState>,
     /// Latest campaign snapshot, so `get_state` can hydrate a late-mounting UI synchronously.
     pub state_tx: watch::Sender<CampaignState>,
+    /// The currently-imported Path of Building build (guarded; import commands mutate it).
+    pub build: Mutex<BuildState>,
     /// Whether the overlay is in interactive ("grabbed") mode.
     pub grabbed: AtomicBool,
 }
 
 impl AppState {
-    pub fn new(zones: Arc<ZoneTable>) -> Self {
+    pub fn new(data: Arc<DataPack>) -> Self {
         let (state_tx, _rx) = watch::channel(CampaignState::default());
         Self {
-            zones,
+            data,
             run: Mutex::new(RunState::default()),
             state_tx,
+            build: Mutex::new(BuildState::new()),
             // Start interactive so the controls are reachable without a global hotkey
             // (global shortcuts do not fire on Wayland).
             grabbed: AtomicBool::new(true),
