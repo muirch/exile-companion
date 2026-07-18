@@ -65,7 +65,7 @@ const SCRIPT: readonly MockStep[] = [
   },
   {
     state: state(2, 1, "Lioneye's Watch", '1_1_town', 'town', 0),
-    objective: obj('quest_reward', 'Pick up Raise Zombie', 'Quest reward from Enemy at the Gate (Act 1)'),
+    objective: obj('quest_reward', 'Claim Raise Zombie', 'Quest reward from Enemy at the Gate (Act 1)'),
   },
   {
     state: state(3, 1, 'The Coast', '1_1_2', 'combat', 0),
@@ -93,7 +93,7 @@ const SCRIPT: readonly MockStep[] = [
   },
   {
     state: state(11, 1, "Lioneye's Watch", '1_1_town', 'town', 1),
-    objective: obj('quest_reward', 'Pick up Spell Echo Support', 'Quest reward from The Caged Brute (Act 1)'),
+    objective: obj('quest_reward', 'Claim Spell Echo Support', 'Quest reward from The Caged Brute (Act 1)'),
   },
   {
     state: state(11, 2, 'The Southern Forest', '1_2_1', 'combat', 1),
@@ -101,7 +101,7 @@ const SCRIPT: readonly MockStep[] = [
   },
   {
     state: state(12, 2, 'The Forest Encampment', '1_2_town', 'town', 1),
-    objective: obj('quest_reward', 'Pick up Herald of Ash (+1 more)', 'Quest reward from Intruders in Black (Act 2)'),
+    objective: obj('quest_reward', 'Claim Herald of Ash (+1 more)', 'Quest reward from Intruders in Black (Act 2)'),
   },
   {
     state: state(13, 2, 'The Old Fields', '1_2_2', 'combat', 1),

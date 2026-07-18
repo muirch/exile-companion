@@ -66,10 +66,11 @@ impl GuidanceEngine {
         if let Some(build) = build {
             let picks = GemResolver::available_now(state, data, build);
             if let Some(first) = picks.first() {
+                // Quest gems are claimed from the quest-reward NPC, not looted, so "Claim".
                 let headline = if picks.len() == 1 {
-                    format!("Pick up {}", first.gem_name)
+                    format!("Claim {}", first.gem_name)
                 } else {
-                    format!("Pick up {} (+{} more)", first.gem_name, picks.len() - 1)
+                    format!("Claim {} (+{} more)", first.gem_name, picks.len() - 1)
                 };
                 let detail = Some(format!(
                     "Quest reward from {} (Act {})",
