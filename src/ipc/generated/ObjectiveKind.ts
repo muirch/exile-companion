@@ -3,4 +3,4 @@
 /**
  * The kind of objective, so the UI can style it. Serialized in snake_case.
  */
-export type ObjectiveKind = "quest_reward" | "proceed_to_zone" | "lab_trial" | "build_spec" | "idle";
+export type ObjectiveKind = "quest_reward" | "proceed_to_zone" | "lab_trial" | "passive_points" | "build_spec" | "idle";

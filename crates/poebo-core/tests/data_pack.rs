@@ -63,7 +63,7 @@ fn committed_pack_has_cross_act_name_collisions() {
 fn committed_quests_have_act1_gem_rewards() {
     let pack = committed_pack();
     assert!(!pack.quests.is_empty(), "quests pack is empty");
-    // "Enemy at the Gate" (a1q1) rewards a starter skill gem to the Witch.
+    // "Enemy at the Gate" (a1q1) rewards a starter skill gem to the Witch, claimed from Tarkleigh.
     let a1q1 = pack
         .quests
         .all()
@@ -74,6 +74,33 @@ fn committed_quests_have_act1_gem_rewards() {
         a1q1.gem_rewards.iter().any(|r| r.allows_class("Witch")),
         "a1q1 should reward a Witch-claimable gem"
     );
+    assert_eq!(a1q1.npc.as_deref(), Some("Tarkleigh"), "a1q1 reward NPC");
+    // Exactly 12 standard gem-reward quests (Tencent-only offers must be excluded).
+    let gem_quests = pack
+        .quests
+        .all()
+        .iter()
+        .filter(|q| !q.gem_rewards.is_empty())
+        .count();
+    assert_eq!(gem_quests, 12, "expected 12 standard gem-reward quests");
+}
+
+#[test]
+fn committed_quests_grant_the_expected_passive_points() {
+    let pack = committed_pack();
+    // 22 passive skill points come from "Book of Skill" quest rewards across the campaign.
+    let total: u32 = pack.quests.all().iter().map(|q| q.passive_points).sum();
+    assert_eq!(total, 22, "expected 22 quest passive points");
+    // "The Way Forward" (a1q9) grants a point and no gem.
+    let a1q9 = pack
+        .quests
+        .all()
+        .iter()
+        .find(|q| q.id == "a1q9")
+        .expect("a1q9");
+    assert_eq!(a1q9.passive_points, 1);
+    assert!(a1q9.gem_rewards.is_empty());
+    assert!(pack.quests.passive_point_quests_in_act(1).count() >= 1);
 }
 
 #[test]

@@ -40,6 +40,7 @@ const KIND_ACCENT: Record<ObjectiveKind, string> = {
   quest_reward: 'border-emerald-400/60 bg-emerald-500/10 text-emerald-200',
   proceed_to_zone: 'border-cyan-400/60 bg-cyan-500/10 text-cyan-200',
   lab_trial: 'border-amber-400/60 bg-amber-500/10 text-amber-200',
+  passive_points: 'border-violet-400/60 bg-violet-500/10 text-violet-200',
   build_spec: 'border-indigo-400/60 bg-indigo-500/10 text-indigo-200',
   idle: 'border-slate-600/60 bg-slate-800/40 text-slate-300',
 };

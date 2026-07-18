@@ -5,10 +5,11 @@
 //! which quests are done, so it surfaces what is *relevant* to the current act/zone rather than a
 //! precise checklist):
 //!
-//! 1. Gems from the build to claim in the current act (needs a build).
+//! 1. Gems from the build to claim in the current act, and from which NPC (needs a build).
 //! 2. When out in a zone: the next area to head to (via zone connectivity).
 //! 3. The current act's Trial of Ascendancy.
-//! 4. A fallback build/spec summary, else an idle prompt.
+//! 4. Unclaimed passive skill points from this act's quests.
+//! 5. A fallback build/spec summary, else an idle prompt.
 
 use crate::build::BuildState;
 use crate::data::{DataPack, ZoneInfo};
@@ -27,6 +28,8 @@ pub enum ObjectiveKind {
     ProceedToZone,
     /// A Trial of Ascendancy is in this act.
     LabTrial,
+    /// Unclaimed passive skill points are available from this act's quests.
+    PassivePoints,
     /// General build/spec context (nothing more specific applies).
     BuildSpec,
     /// Nothing to suggest yet.
@@ -66,16 +69,23 @@ impl GuidanceEngine {
         if let Some(build) = build {
             let picks = GemResolver::available_now(state, data, build);
             if let Some(first) = picks.first() {
-                // Quest gems are claimed from the quest-reward NPC, not looted, so "Claim".
+                // Quest gems are claimed from the quest-reward NPC, not looted, so "Claim ... from X".
+                let from = first
+                    .npc
+                    .as_deref()
+                    .map(|n| format!(" from {}", n))
+                    .unwrap_or_default();
                 let headline = if picks.len() == 1 {
-                    format!("Claim {}", first.gem_name)
+                    format!("Claim {}{}", first.gem_name, from)
                 } else {
-                    format!("Claim {} (+{} more)", first.gem_name, picks.len() - 1)
+                    format!(
+                        "Claim {}{} (+{} more)",
+                        first.gem_name,
+                        from,
+                        picks.len() - 1
+                    )
                 };
-                let detail = Some(format!(
-                    "Quest reward from {} (Act {})",
-                    first.quest_name, first.act
-                ));
+                let detail = Some(format!("{} reward (Act {})", first.quest_name, first.act));
                 return NextObjective::new(ObjectiveKind::QuestReward, headline, detail);
             }
         }
@@ -102,7 +112,26 @@ impl GuidanceEngine {
             }
         }
 
-        // 4. Fall back to proceeding (even from town), then a build summary, then idle.
+        // 4. Unclaimed passive skill points from this act's quests.
+        if let Some(act) = state.act {
+            let quests: Vec<&crate::data::QuestInfo> =
+                data.quests.passive_point_quests_in_act(act).collect();
+            let total: u32 = quests.iter().map(|q| q.passive_points).sum();
+            if total > 0 {
+                let names = quests
+                    .iter()
+                    .map(|q| q.name.as_str())
+                    .collect::<Vec<_>>()
+                    .join(", ");
+                return NextObjective::new(
+                    ObjectiveKind::PassivePoints,
+                    format!("{} passive point{} in Act {}", total, plural(total), act),
+                    Some(names),
+                );
+            }
+        }
+
+        // 5. Fall back to proceeding (even from town), then a build summary, then idle.
         if let Some(obj) = proceed_objective(state, data) {
             return obj;
         }
@@ -122,6 +151,14 @@ impl GuidanceEngine {
         }
 
         idle_objective(state, build.is_some())
+    }
+}
+
+fn plural(n: u32) -> &'static str {
+    if n == 1 {
+        ""
+    } else {
+        "s"
     }
 }
 
@@ -184,9 +221,10 @@ mod tests {
     }"#;
     const QUESTS: &str = r#"{
         "schema_version":1,"patch":"t","generated_at":"t","source":"t","quests":[
-            {"id":"a1q1","act":1,"name":"Enemy at the Gate","gem_rewards":[
+            {"id":"a1q1","act":1,"name":"Enemy at the Gate","npc":"Tarkleigh","gem_rewards":[
                 {"gem_id":"g/Freezing","gem_name":"Freezing Pulse","reward_level":1,"classes":["Witch"]}
-            ]}
+            ]},
+            {"id":"a4q6","act":4,"name":"An Indomitable Spirit","npc":"Tasuni","passive_points":1,"gem_rewards":[]}
         ]
     }"#;
     const TRIALS: &str = r#"{
@@ -257,6 +295,29 @@ mod tests {
         );
         assert_eq!(obj.kind, ObjectiveKind::QuestReward);
         assert!(obj.headline.contains("Freezing Pulse"), "{}", obj.headline);
+        assert!(
+            obj.headline.contains("from Tarkleigh"),
+            "names the NPC: {}",
+            obj.headline
+        );
+    }
+
+    #[test]
+    fn surfaces_passive_points_for_the_act() {
+        let bs = BuildState::new(); // no build, no gem picks
+                                    // Act 4 (no trial in the fixture), in town -> the act's passive points surface.
+        let obj = GuidanceEngine::next(
+            &state("unknown", "Highgate", 4, LocationKind::Town, 40),
+            &bs,
+            &pack(),
+        );
+        assert_eq!(obj.kind, ObjectiveKind::PassivePoints);
+        assert!(
+            obj.headline.contains("1 passive point in Act 4"),
+            "{}",
+            obj.headline
+        );
+        assert_eq!(obj.detail.as_deref(), Some("An Indomitable Spirit"));
     }
 
     #[test]
@@ -288,9 +349,9 @@ mod tests {
     #[test]
     fn idle_prompts_to_import_a_build_when_nothing_applies() {
         let bs = BuildState::new();
-        // Unknown zone (no id) in an act with no trial and no build.
+        // Unknown zone (no id) in an act with no trial, no passive-point quest, and no build.
         let mut st = CampaignState {
-            act: Some(4),
+            act: Some(5),
             session_started: true,
             ..CampaignState::default()
         };

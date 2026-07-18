@@ -178,6 +178,8 @@ pub struct GemPick {
     pub gem_id: String,
     pub gem_name: String,
     pub quest_name: String,
+    /// The NPC you claim it from (e.g. "Tarkleigh"); `None` if unknown.
+    pub npc: Option<String>,
     pub act: i32,
     pub reward_level: u32,
 }
@@ -211,6 +213,7 @@ impl GemResolver {
                         gem_id: reward.gem_id.clone(),
                         gem_name: reward.gem_name.clone(),
                         quest_name: quest.name.clone(),
+                        npc: quest.npc.clone(),
                         act: quest.act,
                         reward_level: reward.reward_level,
                     });
@@ -313,7 +316,7 @@ mod tests {
     }"#;
     const QUESTS: &str = r#"{
         "schema_version":1,"patch":"t","generated_at":"t","source":"t","quests":[
-            {"id":"a1q1","act":1,"name":"Enemy at the Gate","gem_rewards":[
+            {"id":"a1q1","act":1,"name":"Enemy at the Gate","npc":"Tarkleigh","gem_rewards":[
                 {"gem_id":"g/Freezing","gem_name":"Freezing Pulse","reward_level":1,"classes":["Witch"]},
                 {"gem_id":"g/Cleave","gem_name":"Cleave","reward_level":1,"classes":["Duelist"]}
             ]},
@@ -370,6 +373,7 @@ mod tests {
         assert_eq!(picks.len(), 1);
         assert_eq!(picks[0].gem_name, "Freezing Pulse");
         assert_eq!(picks[0].quest_name, "Enemy at the Gate");
+        assert_eq!(picks[0].npc.as_deref(), Some("Tarkleigh"));
     }
 
     #[test]

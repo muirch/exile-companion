@@ -152,13 +152,19 @@ impl GemReward {
     }
 }
 
-/// One campaign quest and the gems it rewards.
+/// One campaign quest and its standard rewards (gems and/or passive skill points).
 #[derive(Debug, Clone, PartialEq, Eq, serde::Serialize, serde::Deserialize)]
 pub struct QuestInfo {
     /// Quest id, e.g. `a1q1`.
     pub id: String,
     pub act: i32,
     pub name: String,
+    /// The NPC you claim this quest's reward from (e.g. "Tarkleigh"); `None` if unresolved.
+    #[serde(default)]
+    pub npc: Option<String>,
+    /// Passive skill points this quest grants (usually 0 or 1).
+    #[serde(default)]
+    pub passive_points: u32,
     #[serde(default)]
     pub gem_rewards: Vec<GemReward>,
 }
@@ -215,6 +221,14 @@ impl QuestTable {
                 .find(|r| r.gem_id == owned)
                 .map(|r| (quest, r))
         })
+    }
+
+    /// Quests in the given act that grant at least one passive skill point.
+    pub fn passive_point_quests_in_act(&self, act: u8) -> impl Iterator<Item = &QuestInfo> {
+        let act = i32::from(act);
+        self.quests
+            .iter()
+            .filter(move |q| q.act == act && q.passive_points > 0)
     }
 
     pub fn schema_version(&self) -> u32 {
@@ -401,14 +415,15 @@ mod tests {
             ]},
             {"id":"a1q3","act":1,"name":"The Siren's Cadence","gem_rewards":[
                 {"gem_id":"Metadata/Items/Gems/SkillGemArc","gem_name":"Arc","reward_level":1,"classes":[]}
-            ]}
+            ]},
+            {"id":"a1q9","act":1,"name":"The Way Forward","npc":"Bestel","passive_points":1,"gem_rewards":[]}
         ]
     }"#;
 
     #[test]
     fn quest_table_indexes_by_gem_and_filters_by_class() {
         let q = QuestTable::from_json_bytes(QUESTS.as_bytes(), 1).expect("parse");
-        assert_eq!(q.len(), 2);
+        assert_eq!(q.len(), 3);
         let hits: Vec<_> = q
             .rewarding_gem("Metadata/Items/Gems/SkillGemFreezingPulse")
             .collect();
@@ -439,6 +454,17 @@ mod tests {
             {"area_id":"1_2_6_2","area_name":"The Chamber of Sins Level 2","act":2}
         ]
     }"#;
+
+    #[test]
+    fn quest_table_queries_passive_points() {
+        let q = QuestTable::from_json_bytes(QUESTS.as_bytes(), 1).expect("parse");
+        let act1: Vec<_> = q.passive_point_quests_in_act(1).collect();
+        assert_eq!(act1.len(), 1);
+        assert_eq!(act1[0].id, "a1q9");
+        assert_eq!(act1[0].passive_points, 1);
+        assert_eq!(act1[0].npc.as_deref(), Some("Bestel"));
+        assert_eq!(q.passive_point_quests_in_act(2).count(), 0);
+    }
 
     #[test]
     fn trial_table_queries_by_act() {
@@ -480,7 +506,7 @@ mod tests {
         )
         .expect("pack");
         assert_eq!(pack.zones.len(), 3);
-        assert_eq!(pack.quests.len(), 2);
+        assert_eq!(pack.quests.len(), 3);
         assert_eq!(pack.trials.len(), 3);
     }
 }
