@@ -10,6 +10,9 @@ export type { LocationKind } from './generated/LocationKind';
 export type { LogEvent } from './generated/LogEvent';
 export type { DeathCause } from './generated/DeathCause';
 export type { SpeedMultiplier } from './generated/SpeedMultiplier';
+export type { BuildSummary } from './generated/BuildSummary';
+export type { NextObjective } from './generated/NextObjective';
+export type { ObjectiveKind } from './generated/ObjectiveKind';
 
 export type SourceMode = 'idle' | 'live' | 'replay';
 

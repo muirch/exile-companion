@@ -4,10 +4,17 @@
 // fully explorable without a backend.
 
 import { invoke } from '@tauri-apps/api/core';
+import { readText } from '@tauri-apps/plugin-clipboard-manager';
 
 import { isTauri } from './env';
 import * as mock from './mock';
-import type { CampaignState, Settings, SpeedMultiplier } from './types';
+import type {
+  BuildSummary,
+  CampaignState,
+  NextObjective,
+  Settings,
+  SpeedMultiplier,
+} from './types';
 
 const EMPTY_STATE: CampaignState = {
   character: null,
@@ -68,6 +75,33 @@ export const replaySetSpeed = (speed: SpeedMultiplier): Promise<void> => {
 
 export const getState = (): Promise<CampaignState> =>
   isTauri() ? invoke('get_state') : Promise.resolve(EMPTY_STATE);
+
+/** Import a build from a local PoB file via a native picker. Resolves null if cancelled. */
+export const importBuildFile = (): Promise<BuildSummary | null> =>
+  isTauri() ? invoke('import_build_file') : Promise.resolve(mock.importBuildMock());
+
+/** Import a build from a pasted PoB code or raw XML. */
+export const importBuildCode = (code: string): Promise<BuildSummary> =>
+  isTauri() ? invoke('import_build_code', { code }) : Promise.resolve(mock.importBuildMock());
+
+/** Read the OS clipboard and import whatever PoB code/XML it holds. */
+export const pasteBuild = async (): Promise<BuildSummary> => {
+  if (!isTauri()) return mock.importBuildMock();
+  const code = await readText();
+  return invoke('import_build_code', { code });
+};
+
+export const clearBuild = (): Promise<void> => {
+  if (isTauri()) return invoke('clear_build');
+  mock.clearBuildMock();
+  return Promise.resolve();
+};
+
+export const getBuild = (): Promise<BuildSummary | null> =>
+  isTauri() ? invoke('get_build') : Promise.resolve(mock.getBuildMock());
+
+export const getGuidance = (): Promise<NextObjective> =>
+  isTauri() ? invoke('get_guidance') : Promise.resolve(mock.getGuidanceMock());
 
 export const setClickThrough = (ignore: boolean): Promise<void> =>
   isTauri() ? invoke('set_click_through', { ignore }) : Promise.resolve();

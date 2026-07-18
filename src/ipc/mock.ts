@@ -3,13 +3,37 @@
  *
  * It plays a scripted run that mirrors examples/sample-client.txt into the store on a timer, so the
  * overlay animates through a realistic-looking campaign and can be styled without Windows or a VM.
- * The replay controls (pause / resume / step / speed) drive this simulator too.
+ * It also drives a fake imported build and a per-step "next objective" (the real ones come from the
+ * Rust GuidanceEngine under Tauri). The replay controls (pause / resume / step / speed) drive this
+ * simulator too.
  */
 
-import type { CampaignState, LocationKind, SpeedMultiplier } from './types';
+import type {
+  BuildSummary,
+  CampaignState,
+  LocationKind,
+  NextObjective,
+  SpeedMultiplier,
+} from './types';
 import { useAppStore } from '../store/useAppStore';
 
-function s(
+/** A fake imported build, shown once "imported" in dev mode. */
+const MOCK_BUILD: BuildSummary = {
+  class_name: 'Witch',
+  ascend_class_name: 'Necromancer',
+  level: 90,
+  active_spec_title: 'Leveling (Act 1)',
+  main_skill: 'Raise Zombie',
+  spec_count: 3,
+  gem_count: 24,
+};
+
+interface MockStep {
+  state: CampaignState;
+  objective: NextObjective;
+}
+
+function state(
   level: number,
   act: number,
   zoneName: string,
@@ -29,21 +53,64 @@ function s(
   };
 }
 
-// An Act 1 run into Act 2: level 1 -> 14, a death, town/combat, an act transition.
-const SCRIPT: readonly CampaignState[] = [
-  s(2, 1, 'The Twilight Strand', '1_1_1', 'combat', 0),
-  s(2, 1, "Lioneye's Watch", '1_1_town', 'town', 0),
-  s(3, 1, 'The Coast', '1_1_2', 'combat', 0),
-  s(5, 1, 'The Submerged Passage', '1_1_4_1', 'combat', 0),
-  s(7, 1, 'The Lower Prison', '1_1_7_1', 'combat', 0),
-  s(7, 1, 'The Lower Prison', '1_1_7_1', 'combat', 1),
-  s(9, 1, 'The Ship Graveyard', '1_1_9', 'combat', 1),
-  s(11, 1, 'The Cavern of Anger', '1_1_11_2', 'combat', 1),
-  s(11, 1, "Lioneye's Watch", '1_1_town', 'town', 1),
-  s(11, 2, 'The Southern Forest', '1_2_1', 'combat', 1),
-  s(12, 2, 'The Forest Encampment', '1_2_town', 'town', 1),
-  s(13, 2, 'The Old Fields', '1_2_2', 'combat', 1),
-  s(14, 2, 'The Crossroads', '1_2_5', 'combat', 1),
+function obj(kind: NextObjective['kind'], headline: string, detail: string | null): NextObjective {
+  return { kind, headline, detail };
+}
+
+// An Act 1 run into Act 2 with a varied set of objectives, one per step, exercising every kind.
+const SCRIPT: readonly MockStep[] = [
+  {
+    state: state(2, 1, 'The Twilight Strand', '1_1_1', 'combat', 0),
+    objective: obj('proceed_to_zone', 'Head to The Coast', 'Act 1'),
+  },
+  {
+    state: state(2, 1, "Lioneye's Watch", '1_1_town', 'town', 0),
+    objective: obj('quest_reward', 'Pick up Raise Zombie', 'Quest reward from Enemy at the Gate (Act 1)'),
+  },
+  {
+    state: state(3, 1, 'The Coast', '1_1_2', 'combat', 0),
+    objective: obj('proceed_to_zone', 'Head to The Tidal Island', 'Act 1'),
+  },
+  {
+    state: state(5, 1, 'The Submerged Passage', '1_1_4_1', 'combat', 0),
+    objective: obj('proceed_to_zone', 'Head to The Ledge', 'Act 1'),
+  },
+  {
+    state: state(7, 1, 'The Lower Prison', '1_1_7_1', 'combat', 0),
+    objective: obj('lab_trial', 'Trial of Ascendancy: The Lower Prison', 'Act 1 lab trial'),
+  },
+  {
+    state: state(7, 1, 'The Lower Prison', '1_1_7_1', 'combat', 1),
+    objective: obj('lab_trial', 'Trial of Ascendancy: The Lower Prison', 'Act 1 lab trial'),
+  },
+  {
+    state: state(9, 1, 'The Ship Graveyard', '1_1_9', 'combat', 1),
+    objective: obj('proceed_to_zone', 'Head to The Cavern of Wrath', 'Act 1'),
+  },
+  {
+    state: state(11, 1, 'The Cavern of Anger', '1_1_11_2', 'combat', 1),
+    objective: obj('build_spec', 'Build tree: Leveling (Act 1)', 'Main skill: Raise Zombie'),
+  },
+  {
+    state: state(11, 1, "Lioneye's Watch", '1_1_town', 'town', 1),
+    objective: obj('quest_reward', 'Pick up Spell Echo Support', 'Quest reward from The Caged Brute (Act 1)'),
+  },
+  {
+    state: state(11, 2, 'The Southern Forest', '1_2_1', 'combat', 1),
+    objective: obj('proceed_to_zone', 'Head to The Old Fields', 'Act 2'),
+  },
+  {
+    state: state(12, 2, 'The Forest Encampment', '1_2_town', 'town', 1),
+    objective: obj('quest_reward', 'Pick up Herald of Ash (+1 more)', 'Quest reward from Intruders in Black (Act 2)'),
+  },
+  {
+    state: state(13, 2, 'The Old Fields', '1_2_2', 'combat', 1),
+    objective: obj('proceed_to_zone', 'Head to The Crossroads', 'Act 2'),
+  },
+  {
+    state: state(14, 2, 'The Crossroads', '1_2_5', 'combat', 1),
+    objective: obj('proceed_to_zone', 'Head to The Broken Bridge', 'Act 2'),
+  },
 ];
 
 const SPEEDS: readonly SpeedMultiplier[] = ['X1', 'X2', 'X5', 'X20', 'X100'];
@@ -70,6 +137,11 @@ function pushProgress(): void {
   });
 }
 
+function applyStep(step: MockStep): void {
+  useAppStore.getState().setCampaign(step.state);
+  useAppStore.getState().setGuidance(step.objective);
+}
+
 function clearTimer(): void {
   if (timer !== undefined) {
     clearTimeout(timer);
@@ -83,7 +155,7 @@ function releaseNext(): void {
     pushProgress();
     return;
   }
-  useAppStore.getState().setCampaign(SCRIPT[index]);
+  applyStep(SCRIPT[index]);
   index += 1;
   pushProgress();
   if (!paused && index < SCRIPT.length) {
@@ -96,6 +168,8 @@ export function startMock(): void {
     mode: 'replay',
     path: 'examples/sample-client.txt (mock)',
   });
+  // Pretend a build is already imported so the build + guidance panels are populated in dev.
+  useAppStore.getState().setBuild(MOCK_BUILD);
   restartMock();
 }
 
@@ -124,7 +198,7 @@ export function resumeMock(): void {
 
 export function stepMock(): void {
   if (!paused || index >= SCRIPT.length) return;
-  useAppStore.getState().setCampaign(SCRIPT[index]);
+  applyStep(SCRIPT[index]);
   index += 1;
   pushProgress();
 }
@@ -132,4 +206,26 @@ export function stepMock(): void {
 export function setMockSpeed(speed: SpeedMultiplier): void {
   factor = Number(speed.slice(1));
   pushProgress();
+}
+
+// --- Build import (dev-mode stand-ins for the Rust import commands) ---
+
+export function importBuildMock(): BuildSummary {
+  useAppStore.getState().setBuild(MOCK_BUILD);
+  return MOCK_BUILD;
+}
+
+export function clearBuildMock(): void {
+  useAppStore.getState().setBuild(null);
+}
+
+export function getBuildMock(): BuildSummary | null {
+  return useAppStore.getState().build;
+}
+
+export function getGuidanceMock(): NextObjective {
+  return (
+    useAppStore.getState().guidance ??
+    obj('idle', 'Import a Path of Building build', 'Load a build for gem and tree guidance')
+  );
 }
