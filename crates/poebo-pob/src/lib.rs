@@ -28,6 +28,16 @@ pub fn import_code(code: &str) -> Result<PobBuild, PobError> {
     parse_xml(&xml)
 }
 
+/// Import a build from arbitrary pasted text: raw PoB XML (starts with `<`) is parsed directly,
+/// anything else is treated as an import code. Use this for clipboard/paste input.
+pub fn import_text(text: &str) -> Result<PobBuild, PobError> {
+    if text.trim_start().starts_with('<') {
+        parse_xml(text.as_bytes())
+    } else {
+        import_code(text)
+    }
+}
+
 /// Import a build from a local file. A file that starts with `<` is treated as raw PoB XML;
 /// otherwise its contents are treated as an import code.
 pub fn from_local_file(path: &Path) -> Result<PobBuild, PobError> {
@@ -35,13 +45,7 @@ pub fn from_local_file(path: &Path) -> Result<PobBuild, PobError> {
         path: path.to_path_buf(),
         source,
     })?;
-
-    let looks_like_xml = bytes.iter().find(|b| !b.is_ascii_whitespace()) == Some(&b'<');
-    if looks_like_xml {
-        parse_xml(&bytes)
-    } else {
-        import_code(&String::from_utf8_lossy(&bytes))
-    }
+    import_text(&String::from_utf8_lossy(&bytes))
 }
 
 #[cfg(test)]
@@ -67,6 +71,16 @@ mod tests {
         let build = import_code(&encode(XML)).expect("import");
         assert_eq!(build.level, Some(42));
         assert_eq!(build.class_name.as_deref(), Some("Ranger"));
+    }
+
+    #[test]
+    fn import_text_accepts_both_raw_xml_and_a_code() {
+        // Leading whitespace + raw XML -> parsed directly.
+        let from_xml = import_text(&format!("  \n{XML}")).expect("xml");
+        assert_eq!(from_xml.level, Some(42));
+        // A base64 code -> decoded then parsed.
+        let from_code = import_text(&encode(XML)).expect("code");
+        assert_eq!(from_code.class_name.as_deref(), Some("Ranger"));
     }
 
     #[test]
