@@ -1,0 +1,3669 @@
+{
+  "schema_version": 1,
+  "patch": "3.28.0.15",
+  "generated_at": "2026-07-18T11:11:44.264Z",
+  "source": "PoE game files (GGG patch CDN) via pathofexile-dat",
+  "quests": [
+    {
+      "id": "a1q1",
+      "act": 1,
+      "name": "Enemy at the Gate",
+      "gem_rewards": [
+        {
+          "gem_id": "Metadata/Items/Gems/SkillGemBlight",
+          "gem_name": "Blight",
+          "reward_level": 1,
+          "classes": [
+            "Shadow",
+            "Witch"
+          ]
+        },
+        {
+          "gem_id": "Metadata/Items/Gems/SkillGemPoisonArrow",
+          "gem_name": "Caustic Arrow",
+          "reward_level": 1,
+          "classes": [
+            "Ranger"
+          ]
+        },
+        {
+          "gem_id": "Metadata/Items/Gems/SkillGemCleave",
+          "gem_name": "Cleave",
+          "reward_level": 1,
+          "classes": [
+            "Duelist"
+          ]
+        },
+        {
+          "gem_id": "Metadata/Items/Gems/SkillGemCobraLash",
+          "gem_name": "Cobra Lash",
+          "reward_level": 1,
+          "classes": [
+            "Shadow"
+          ]
+        },
+        {
+          "gem_id": "Metadata/Items/Gems/SkillGemEtherealKnives",
+          "gem_name": "Ethereal Knives",
+          "reward_level": 1,
+          "classes": [
+            "Shadow"
+          ]
+        },
+        {
+          "gem_id": "Metadata/Items/Gems/SkillGemShrapnelTrap",
+          "gem_name": "Explosive Trap",
+          "reward_level": 1,
+          "classes": [
+            "Shadow"
+          ]
+        },
+        {
+          "gem_id": "Metadata/Items/Gems/SkillGemFreezingPulse",
+          "gem_name": "Freezing Pulse",
+          "reward_level": 1,
+          "classes": [
+            "Shadow",
+            "Witch"
+          ]
+        },
+        {
+          "gem_id": "Metadata/Items/Gems/SkillGemFrostBlades",
+          "gem_name": "Frost Blades",
+          "reward_level": 1,
+          "classes": [
+            "Ranger"
+          ]
+        },
+        {
+          "gem_id": "Metadata/Items/Gems/SkillGemFrostBolt",
+          "gem_name": "Frostbolt",
+          "reward_level": 1,
+          "classes": [
+            "Templar"
+          ]
+        },
+        {
+          "gem_id": "Metadata/Items/Gems/SkillGemShrapnelShot",
+          "gem_name": "Galvanic Arrow",
+          "reward_level": 1,
+          "classes": [
+            "Duelist",
+            "Ranger"
+          ]
+        },
+        {
+          "gem_id": "Metadata/Items/Gems/SkillGemGlacialHammer",
+          "gem_name": "Glacial Hammer",
+          "reward_level": 1,
+          "classes": [
+            "Templar"
+          ]
+        },
+        {
+          "gem_id": "Metadata/Items/Gems/SkillGemGroundSlam",
+          "gem_name": "Ground Slam",
+          "reward_level": 1,
+          "classes": [
+            "Marauder"
+          ]
+        },
+        {
+          "gem_id": "Metadata/Items/Gems/SkillGemIceShot",
+          "gem_name": "Ice Shot",
+          "reward_level": 1,
+          "classes": [
+            "Ranger"
+          ]
+        },
+        {
+          "gem_id": "Metadata/Items/Gems/SkillGemKineticBolt",
+          "gem_name": "Kinetic Bolt",
+          "reward_level": 1,
+          "classes": [
+            "Witch"
+          ]
+        },
+        {
+          "gem_id": "Metadata/Items/Gems/SkillGemLightningTendrils",
+          "gem_name": "Lightning Tendrils",
+          "reward_level": 1,
+          "classes": [
+            "Scion",
+            "Templar",
+            "Witch"
+          ]
+        },
+        {
+          "gem_id": "Metadata/Items/Gems/SkillGemMoltenStrike",
+          "gem_name": "Molten Strike",
+          "reward_level": 1,
+          "classes": [
+            "Duelist",
+            "Marauder",
+            "Scion",
+            "Templar"
+          ]
+        },
+        {
+          "gem_id": "Metadata/Items/Gems/SkillGemPerforate",
+          "gem_name": "Perforate",
+          "reward_level": 1,
+          "classes": [
+            "Duelist"
+          ]
+        },
+        {
+          "gem_id": "Metadata/Items/Gems/SkillGemSanctify",
+          "gem_name": "Purifying Flame",
+          "reward_level": 1,
+          "classes": [
+            "Templar"
+          ]
+        },
+        {
+          "gem_id": "Metadata/Items/Gems/SkillGemRaiseZombie",
+          "gem_name": "Raise Zombie",
+          "reward_level": 1,
+          "classes": [
+            "Witch"
+          ]
+        },
+        {
+          "gem_id": "Metadata/Items/Gems/SkillGemMagmaOrb",
+          "gem_name": "Rolling Magma",
+          "reward_level": 1,
+          "classes": [
+            "Templar",
+            "Witch"
+          ]
+        },
+        {
+          "gem_id": "Metadata/Items/Gems/SkillGemShieldCrush",
+          "gem_name": "Shield Crush",
+          "reward_level": 1,
+          "classes": [
+            "Marauder"
+          ]
+        },
+        {
+          "gem_id": "Metadata/Items/Gems/SkillGemSmite",
+          "gem_name": "Smite",
+          "reward_level": 1,
+          "classes": [
+            "Templar"
+          ]
+        },
+        {
+          "gem_id": "Metadata/Items/Gems/SkillGemSplitArrow",
+          "gem_name": "Split Arrow",
+          "reward_level": 1,
+          "classes": [
+            "Ranger",
+            "Scion"
+          ]
+        },
+        {
+          "gem_id": "Metadata/Items/Gems/SkillGemSplittingSteel",
+          "gem_name": "Splitting Steel",
+          "reward_level": 1,
+          "classes": [
+            "Duelist",
+            "Scion"
+          ]
+        },
+        {
+          "gem_id": "Metadata/Items/Gems/SkillGemStormblastMine",
+          "gem_name": "Stormblast Mine",
+          "reward_level": 1,
+          "classes": [
+            "Shadow"
+          ]
+        }
+      ]
+    },
+    {
+      "id": "a1q2",
+      "act": 1,
+      "name": "The Caged Brute",
+      "gem_rewards": [
+        {
+          "gem_id": "Metadata/Items/Gems/SupportGemAddedColdDamage",
+          "gem_name": "Added Cold Damage Support",
+          "reward_level": 1,
+          "classes": [
+            "Ranger",
+            "Scion",
+            "Shadow"
+          ]
+        },
+        {
+          "gem_id": "Metadata/Items/Gems/SupportGemAddedFireDamage",
+          "gem_name": "Added Fire Damage Support",
+          "reward_level": 1,
+          "classes": [
+            "Duelist",
+            "Marauder",
+            "Scion",
+            "Templar"
+          ]
+        },
+        {
+          "gem_id": "Metadata/Items/Gems/SupportGemAddedLightningDamage",
+          "gem_name": "Added Lightning Damage Support",
+          "reward_level": 1,
+          "classes": [
+            "Scion",
+            "Shadow",
+            "Templar",
+            "Witch"
+          ]
+        },
+        {
+          "gem_id": "Metadata/Items/Gems/SupportGemArrowNova",
+          "gem_name": "Arrow Nova Support",
+          "reward_level": 1,
+          "classes": [
+            "Ranger"
+          ]
+        },
+        {
+          "gem_id": "Metadata/Items/Gems/SkillGemBlinkArrow",
+          "gem_name": "Blink Arrow",
+          "reward_level": 1,
+          "classes": [
+            "Duelist",
+            "Ranger",
+            "Scion"
+          ]
+        },
+        {
+          "gem_id": "Metadata/Items/Gems/SkillGemCorpseWarp",
+          "gem_name": "Bodyswap",
+          "reward_level": 1,
+          "classes": [
+            "Witch"
+          ]
+        },
+        {
+          "gem_id": "Metadata/Items/Gems/SkillGemClarity",
+          "gem_name": "Clarity",
+          "reward_level": 1,
+          "classes": [
+            "Scion",
+            "Shadow",
+            "Templar",
+            "Witch"
+          ]
+        },
+        {
+          "gem_id": "Metadata/Items/Gems/SupportGemChanceToIgnite",
+          "gem_name": "Combustion Support",
+          "reward_level": 1,
+          "classes": [
+            "Templar",
+            "Witch"
+          ]
+        },
+        {
+          "gem_id": "Metadata/Items/Gems/SupportGemDevour",
+          "gem_name": "Devour Support",
+          "reward_level": 1,
+          "classes": [
+            "Witch"
+          ]
+        },
+        {
+          "gem_id": "Metadata/Items/Gems/SupportGemEfficacy",
+          "gem_name": "Efficacy Support",
+          "reward_level": 1,
+          "classes": [
+            "Witch"
+          ]
+        },
+        {
+          "gem_id": "Metadata/Items/Gems/SkillGemEnduringCry",
+          "gem_name": "Enduring Cry",
+          "reward_level": 1,
+          "classes": [
+            "Duelist",
+            "Marauder"
+          ]
+        },
+        {
+          "gem_id": "Metadata/Items/Gems/SupportGemFasterAttack",
+          "gem_name": "Faster Attacks Support",
+          "reward_level": 1,
+          "classes": [
+            "Duelist",
+            "Marauder",
+            "Ranger",
+            "Scion",
+            "Shadow"
+          ]
+        },
+        {
+          "gem_id": "Metadata/Items/Gems/SkillGemFlameDash",
+          "gem_name": "Flame Dash",
+          "reward_level": 1,
+          "classes": [
+            "Scion",
+            "Shadow",
+            "Templar",
+            "Witch"
+          ]
+        },
+        {
+          "gem_id": "Metadata/Items/Gems/SupportGemFlamewood",
+          "gem_name": "Flamewood Support",
+          "reward_level": 1,
+          "classes": [
+            "Marauder"
+          ]
+        },
+        {
+          "gem_id": "Metadata/Items/Gems/SupportGemInfernalLegion",
+          "gem_name": "Infernal Legion Support",
+          "reward_level": 1,
+          "classes": [
+            "Witch"
+          ]
+        },
+        {
+          "gem_id": "Metadata/Items/Gems/SkillGemIntimidatingCry",
+          "gem_name": "Intimidating Cry",
+          "reward_level": 1,
+          "classes": [
+            "Duelist",
+            "Marauder"
+          ]
+        },
+        {
+          "gem_id": "Metadata/Items/Gems/SkillGemLeapSlam",
+          "gem_name": "Leap Slam",
+          "reward_level": 1,
+          "classes": [
+            "Duelist",
+            "Marauder",
+            "Scion",
+            "Templar"
+          ]
+        },
+        {
+          "gem_id": "Metadata/Items/Gems/SupportGemLifetap",
+          "gem_name": "Lifetap Support",
+          "reward_level": 1,
+          "classes": [
+            "Duelist",
+            "Marauder",
+            "Scion",
+            "Templar"
+          ]
+        },
+        {
+          "gem_id": "Metadata/Items/Gems/SkillGemLightningWarp",
+          "gem_name": "Lightning Warp",
+          "reward_level": 1,
+          "classes": [
+            "Witch"
+          ]
+        },
+        {
+          "gem_id": "Metadata/Items/Gems/SupportGemMaim",
+          "gem_name": "Maim Support",
+          "reward_level": 1,
+          "classes": [
+            "Duelist"
+          ]
+        },
+        {
+          "gem_id": "Metadata/Items/Gems/SupportGemManaforgedArrows",
+          "gem_name": "Manaforged Arrows Support",
+          "reward_level": 1,
+          "classes": [
+            "Ranger"
+          ]
+        },
+        {
+          "gem_id": "Metadata/Items/Gems/SupportGemMeleeSplash",
+          "gem_name": "Melee Splash Support",
+          "reward_level": 1,
+          "classes": [
+            "Duelist",
+            "Marauder",
+            "Ranger",
+            "Scion",
+            "Templar"
+          ]
+        },
+        {
+          "gem_id": "Metadata/Items/Gems/SupportGemMinionDamage",
+          "gem_name": "Minion Damage Support",
+          "reward_level": 1,
+          "classes": [
+            "Witch"
+          ]
+        },
+        {
+          "gem_id": "Metadata/Items/Gems/SkillGemMirrorArrow",
+          "gem_name": "Mirror Arrow",
+          "reward_level": 1,
+          "classes": [
+            "Ranger"
+          ]
+        },
+        {
+          "gem_id": "Metadata/Items/Gems/SupportGemLesserMultipleProjectiles",
+          "gem_name": "Multiple Projectiles Support",
+          "reward_level": 1,
+          "classes": [
+            "Duelist",
+            "Ranger",
+            "Scion",
+            "Shadow"
+          ]
+        },
+        {
+          "gem_id": "Metadata/Items/Gems/SupportGemMultiTrap",
+          "gem_name": "Multiple Traps Support",
+          "reward_level": 1,
+          "classes": [
+            "Shadow"
+          ]
+        },
+        {
+          "gem_id": "Metadata/Items/Gems/SkillGemPrecision",
+          "gem_name": "Precision",
+          "reward_level": 1,
+          "classes": [
+            "Duelist",
+            "Ranger",
+            "Scion",
+            "Shadow"
+          ]
+        },
+        {
+          "gem_id": "Metadata/Items/Gems/SkillGemIceSiphonTrap",
+          "gem_name": "Siphoning Trap",
+          "reward_level": 1,
+          "classes": [
+            "Shadow"
+          ]
+        },
+        {
+          "gem_id": "Metadata/Items/Gems/SkillGemSmokeMine",
+          "gem_name": "Smoke Mine",
+          "reward_level": 1,
+          "classes": [
+            "Ranger",
+            "Shadow"
+          ]
+        },
+        {
+          "gem_id": "Metadata/Items/Gems/SkillGemSummonSkeletons",
+          "gem_name": "Summon Skeletons",
+          "reward_level": 1,
+          "classes": [
+            "Witch"
+          ]
+        },
+        {
+          "gem_id": "Metadata/Items/Gems/SupportGemUnboundAilments",
+          "gem_name": "Unbound Ailments Support",
+          "reward_level": 1,
+          "classes": [
+            "Scion",
+            "Witch"
+          ]
+        },
+        {
+          "gem_id": "Metadata/Items/Gems/SkillGemBoneLance",
+          "gem_name": "Unearth",
+          "reward_level": 1,
+          "classes": [
+            "Shadow"
+          ]
+        },
+        {
+          "gem_id": "Metadata/Items/Gems/SkillGemVitality",
+          "gem_name": "Vitality",
+          "reward_level": 1,
+          "classes": [
+            "Duelist",
+            "Marauder",
+            "Scion",
+            "Templar"
+          ]
+        },
+        {
+          "gem_id": "Metadata/Items/Gems/SupportGemVoidManipulation",
+          "gem_name": "Void Manipulation Support",
+          "reward_level": 1,
+          "classes": [
+            "Ranger",
+            "Shadow",
+            "Witch"
+          ]
+        },
+        {
+          "gem_id": "Metadata/Items/Gems/SkillGemWhirlingBlades",
+          "gem_name": "Whirling Blades",
+          "reward_level": 1,
+          "classes": [
+            "Duelist",
+            "Ranger",
+            "Shadow"
+          ]
+        },
+        {
+          "gem_id": "Metadata/Items/Gems/SkillGemWither",
+          "gem_name": "Wither",
+          "reward_level": 1,
+          "classes": [
+            "Witch"
+          ]
+        },
+        {
+          "gem_id": "Metadata/Items/Gems/SkillGemWitheringStep",
+          "gem_name": "Withering Step",
+          "reward_level": 1,
+          "classes": [
+            "Scion",
+            "Shadow"
+          ]
+        }
+      ]
+    },
+    {
+      "id": "a1q3",
+      "act": 1,
+      "name": "The Siren's Cadence",
+      "gem_rewards": [
+        {
+          "gem_id": "Metadata/Items/Gems/SkillGemAbsolution",
+          "gem_name": "Absolution",
+          "reward_level": 1,
+          "classes": [
+            "Templar"
+          ]
+        },
+        {
+          "gem_id": "Metadata/Items/Gems/SkillGemArc",
+          "gem_name": "Arc",
+          "reward_level": 1,
+          "classes": [
+            "Witch"
+          ]
+        },
+        {
+          "gem_id": "Metadata/Items/Gems/SkillGemBladeVortex",
+          "gem_name": "Blade Vortex",
+          "reward_level": 1,
+          "classes": [
+            "Scion",
+            "Shadow"
+          ]
+        },
+        {
+          "gem_id": "Metadata/Items/Gems/SkillGemBlazingSalvo",
+          "gem_name": "Blazing Salvo",
+          "reward_level": 1,
+          "classes": [
+            "Templar",
+            "Witch"
+          ]
+        },
+        {
+          "gem_id": "Metadata/Items/Gems/SkillGemChainHook",
+          "gem_name": "Chain Hook",
+          "reward_level": 1,
+          "classes": [
+            "Marauder"
+          ]
+        },
+        {
+          "gem_id": "Metadata/Items/Gems/SkillGemArcticBreath",
+          "gem_name": "Creeping Frost",
+          "reward_level": 1,
+          "classes": [
+            "Witch"
+          ]
+        },
+        {
+          "gem_id": "Metadata/Items/Gems/SkillGemEarthshatter",
+          "gem_name": "Earthshatter",
+          "reward_level": 1,
+          "classes": [
+            "Duelist",
+            "Marauder"
+          ]
+        },
+        {
+          "gem_id": "Metadata/Items/Gems/SkillGemElementalHit",
+          "gem_name": "Elemental Hit",
+          "reward_level": 1,
+          "classes": [
+            "Ranger"
+          ]
+        },
+        {
+          "gem_id": "Metadata/Items/Gems/SkillGemEssenceDrain",
+          "gem_name": "Essence Drain",
+          "reward_level": 1,
+          "classes": [
+            "Shadow",
+            "Witch"
+          ]
+        },
+        {
+          "gem_id": "Metadata/Items/Gems/SkillGemExsanguinate",
+          "gem_name": "Exsanguinate",
+          "reward_level": 1,
+          "classes": [
+            "Scion"
+          ]
+        },
+        {
+          "gem_id": "Metadata/Items/Gems/SkillGemFireTrap",
+          "gem_name": "Fire Trap",
+          "reward_level": 1,
+          "classes": [
+            "Shadow"
+          ]
+        },
+        {
+          "gem_id": "Metadata/Items/Gems/SkillGemFleshOffering",
+          "gem_name": "Flesh Offering",
+          "reward_level": 1,
+          "classes": [
+            "Witch"
+          ]
+        },
+        {
+          "gem_id": "Metadata/Items/Gems/SkillGemSweep",
+          "gem_name": "Holy Sweep",
+          "reward_level": 1,
+          "classes": [
+            "Duelist",
+            "Marauder"
+          ]
+        },
+        {
+          "gem_id": "Metadata/Items/Gems/SkillGemIceNova",
+          "gem_name": "Ice Nova",
+          "reward_level": 1,
+          "classes": [
+            "Scion",
+            "Templar",
+            "Witch"
+          ]
+        },
+        {
+          "gem_id": "Metadata/Items/Gems/SkillGemFreezeMine",
+          "gem_name": "Icicle Mine",
+          "reward_level": 1,
+          "classes": [
+            "Shadow"
+          ]
+        },
+        {
+          "gem_id": "Metadata/Items/Gems/SkillGemInfernalBlow",
+          "gem_name": "Infernal Blow",
+          "reward_level": 1,
+          "classes": [
+            "Marauder"
+          ]
+        },
+        {
+          "gem_id": "Metadata/Items/Gems/SkillGemLacerate",
+          "gem_name": "Lacerate",
+          "reward_level": 1,
+          "classes": [
+            "Duelist"
+          ]
+        },
+        {
+          "gem_id": "Metadata/Items/Gems/SkillGemLightningArrow",
+          "gem_name": "Lightning Arrow",
+          "reward_level": 1,
+          "classes": [
+            "Ranger"
+          ]
+        },
+        {
+          "gem_id": "Metadata/Items/Gems/SkillGemLightningStrike",
+          "gem_name": "Lightning Strike",
+          "reward_level": 1,
+          "classes": [
+            "Ranger"
+          ]
+        },
+        {
+          "gem_id": "Metadata/Items/Gems/SkillGemLightningTrap",
+          "gem_name": "Lightning Trap",
+          "reward_level": 1,
+          "classes": [
+            "Shadow"
+          ]
+        },
+        {
+          "gem_id": "Metadata/Items/Gems/SkillGemManabond",
+          "gem_name": "Manabond",
+          "reward_level": 1,
+          "classes": [
+            "Templar",
+            "Witch"
+          ]
+        },
+        {
+          "gem_id": "Metadata/Items/Gems/SkillGemPoisonousConcoction",
+          "gem_name": "Poisonous Concoction",
+          "reward_level": 1,
+          "classes": [
+            "Ranger"
+          ]
+        },
+        {
+          "gem_id": "Metadata/Items/Gems/SkillGemRainOfArrows",
+          "gem_name": "Rain of Arrows",
+          "reward_level": 1,
+          "classes": [
+            "Duelist",
+            "Ranger",
+            "Scion"
+          ]
+        },
+        {
+          "gem_id": "Metadata/Items/Gems/SkillGemReave",
+          "gem_name": "Reave",
+          "reward_level": 1,
+          "classes": [
+            "Ranger",
+            "Shadow"
+          ]
+        },
+        {
+          "gem_id": "Metadata/Items/Gems/SkillGemFireBeam",
+          "gem_name": "Scorching Ray",
+          "reward_level": 1,
+          "classes": [
+            "Scion",
+            "Templar",
+            "Witch"
+          ]
+        },
+        {
+          "gem_id": "Metadata/Items/Gems/SkillGemSearingBond",
+          "gem_name": "Searing Bond",
+          "reward_level": 1,
+          "classes": [
+            "Templar"
+          ]
+        },
+        {
+          "gem_id": "Metadata/Items/Gems/SkillGemShatteringSteel",
+          "gem_name": "Shattering Steel",
+          "reward_level": 1,
+          "classes": [
+            "Duelist"
+          ]
+        },
+        {
+          "gem_id": "Metadata/Items/Gems/SkillGemSiegeBallista",
+          "gem_name": "Siege Ballista",
+          "reward_level": 1,
+          "classes": [
+            "Ranger"
+          ]
+        },
+        {
+          "gem_id": "Metadata/Items/Gems/SkillGemSpectralHelix",
+          "gem_name": "Spectral Helix",
+          "reward_level": 1,
+          "classes": [
+            "Scion"
+          ]
+        },
+        {
+          "gem_id": "Metadata/Items/Gems/SkillGemStaticStrike",
+          "gem_name": "Static Strike",
+          "reward_level": 1,
+          "classes": [
+            "Marauder",
+            "Scion",
+            "Templar"
+          ]
+        },
+        {
+          "gem_id": "Metadata/Items/Gems/SkillGemStormBrand",
+          "gem_name": "Storm Brand",
+          "reward_level": 1,
+          "classes": [
+            "Templar"
+          ]
+        },
+        {
+          "gem_id": "Metadata/Items/Gems/SkillGemStormBurst",
+          "gem_name": "Storm Burst",
+          "reward_level": 1,
+          "classes": [
+            "Scion",
+            "Templar"
+          ]
+        },
+        {
+          "gem_id": "Metadata/Items/Gems/SkillGemStormCall",
+          "gem_name": "Storm Call",
+          "reward_level": 1,
+          "classes": [
+            "Templar"
+          ]
+        },
+        {
+          "gem_id": "Metadata/Items/Gems/SkillGemSunder",
+          "gem_name": "Sunder",
+          "reward_level": 1,
+          "classes": [
+            "Marauder"
+          ]
+        },
+        {
+          "gem_id": "Metadata/Items/Gems/SkillGemToxicRain",
+          "gem_name": "Toxic Rain",
+          "reward_level": 1,
+          "classes": [
+            "Ranger"
+          ]
+        },
+        {
+          "gem_id": "Metadata/Items/Gems/SkillGemVenomGyre",
+          "gem_name": "Venom Gyre",
+          "reward_level": 1,
+          "classes": [
+            "Shadow"
+          ]
+        },
+        {
+          "gem_id": "Metadata/Items/Gems/SkillGemVolatileDead",
+          "gem_name": "Volatile Dead",
+          "reward_level": 1,
+          "classes": [
+            "Shadow",
+            "Witch"
+          ]
+        },
+        {
+          "gem_id": "Metadata/Items/Gems/SkillGemVolcanicFissure",
+          "gem_name": "Volcanic Fissure",
+          "reward_level": 1,
+          "classes": [
+            "Marauder"
+          ]
+        },
+        {
+          "gem_id": "Metadata/Items/Gems/SkillGemVoltaxicBurst",
+          "gem_name": "Voltaxic Burst",
+          "reward_level": 1,
+          "classes": [
+            "Shadow"
+          ]
+        },
+        {
+          "gem_id": "Metadata/Items/Gems/SkillGemWintertideBrand",
+          "gem_name": "Wintertide Brand",
+          "reward_level": 1,
+          "classes": [
+            "Templar"
+          ]
+        }
+      ]
+    },
+    {
+      "id": "a1q4",
+      "act": 1,
+      "name": "Breaking Some Eggs",
+      "gem_rewards": [
+        {
+          "gem_id": "Metadata/Items/Gems/SkillGemBearTrap",
+          "gem_name": "Bear Trap",
+          "reward_level": 1,
+          "classes": [
+            "Ranger",
+            "Scion",
+            "Shadow"
+          ]
+        },
+        {
+          "gem_id": "Metadata/Items/Gems/SkillGemBloodAndSand",
+          "gem_name": "Blood and Sand",
+          "reward_level": 1,
+          "classes": [
+            "Duelist"
+          ]
+        },
+        {
+          "gem_id": "Metadata/Items/Gems/SkillGemContagion",
+          "gem_name": "Contagion",
+          "reward_level": 1,
+          "classes": [
+            "Shadow",
+            "Witch"
+          ]
+        },
+        {
+          "gem_id": "Metadata/Items/Gems/SkillGemVengeance",
+          "gem_name": "Crushing Fist",
+          "reward_level": 1,
+          "classes": [
+            "Duelist",
+            "Marauder"
+          ]
+        },
+        {
+          "gem_id": "Metadata/Items/Gems/SkillGemDash",
+          "gem_name": "Dash",
+          "reward_level": 1,
+          "classes": [
+            "Duelist",
+            "Ranger",
+            "Scion",
+            "Shadow"
+          ]
+        },
+        {
+          "gem_id": "Metadata/Items/Gems/SkillGemDecoyTotem",
+          "gem_name": "Decoy Totem",
+          "reward_level": 1,
+          "classes": [
+            "Duelist",
+            "Marauder",
+            "Scion"
+          ]
+        },
+        {
+          "gem_id": "Metadata/Items/Gems/SkillGemDetonateDead",
+          "gem_name": "Detonate Dead",
+          "reward_level": 1,
+          "classes": [
+            "Shadow",
+            "Witch"
+          ]
+        },
+        {
+          "gem_id": "Metadata/Items/Gems/SkillGemFlameWall",
+          "gem_name": "Flame Wall",
+          "reward_level": 1,
+          "classes": [
+            "Templar",
+            "Witch"
+          ]
+        },
+        {
+          "gem_id": "Metadata/Items/Gems/SkillGemFrostBomb",
+          "gem_name": "Frost Bomb",
+          "reward_level": 1,
+          "classes": [
+            "Scion",
+            "Templar",
+            "Witch"
+          ]
+        },
+        {
+          "gem_id": "Metadata/Items/Gems/SkillGemFrostblink",
+          "gem_name": "Frostblink",
+          "reward_level": 1,
+          "classes": [
+            "Scion",
+            "Shadow",
+            "Templar",
+            "Witch"
+          ]
+        },
+        {
+          "gem_id": "Metadata/Items/Gems/SkillGemFlameTotem",
+          "gem_name": "Holy Flame Totem",
+          "reward_level": 1,
+          "classes": [
+            "Templar"
+          ]
+        },
+        {
+          "gem_id": "Metadata/Items/Gems/SkillGemOrbOfStorms",
+          "gem_name": "Orb of Storms",
+          "reward_level": 1,
+          "classes": [
+            "Shadow",
+            "Witch"
+          ]
+        },
+        {
+          "gem_id": "Metadata/Items/Gems/SkillGemPuncture",
+          "gem_name": "Puncture",
+          "reward_level": 1,
+          "classes": [
+            "Duelist",
+            "Ranger"
+          ]
+        },
+        {
+          "gem_id": "Metadata/Items/Gems/SkillGemShieldCharge",
+          "gem_name": "Shield Charge",
+          "reward_level": 1,
+          "classes": [
+            "Duelist",
+            "Marauder",
+            "Scion",
+            "Templar"
+          ]
+        },
+        {
+          "gem_id": "Metadata/Items/Gems/SkillGemShrapnelBallista",
+          "gem_name": "Shrapnel Ballista",
+          "reward_level": 1,
+          "classes": [
+            "Ranger"
+          ]
+        },
+        {
+          "gem_id": "Metadata/Items/Gems/SkillGemProjectileWeakness",
+          "gem_name": "Sniper's Mark",
+          "reward_level": 1,
+          "classes": [
+            "Duelist",
+            "Ranger"
+          ]
+        },
+        {
+          "gem_id": "Metadata/Items/Gems/SkillGemSteelskin",
+          "gem_name": "Steelskin",
+          "reward_level": 1,
+          "classes": [
+            "Marauder"
+          ]
+        },
+        {
+          "gem_id": "Metadata/Items/Gems/SkillGemSummonRelic",
+          "gem_name": "Summon Holy Relic",
+          "reward_level": 1,
+          "classes": [
+            "Templar"
+          ]
+        },
+        {
+          "gem_id": "Metadata/Items/Gems/SkillGemSummonRagingSpirit",
+          "gem_name": "Summon Raging Spirit",
+          "reward_level": 1,
+          "classes": [
+            "Witch"
+          ]
+        },
+        {
+          "gem_id": "Metadata/Items/Gems/SkillGemVigilantStrike",
+          "gem_name": "Vigilant Strike",
+          "reward_level": 1,
+          "classes": [
+            "Duelist",
+            "Marauder",
+            "Scion",
+            "Templar"
+          ]
+        },
+        {
+          "gem_id": "Metadata/Items/Gems/SkillGemWarBanner",
+          "gem_name": "War Banner",
+          "reward_level": 1,
+          "classes": [
+            "Duelist"
+          ]
+        }
+      ]
+    },
+    {
+      "id": "a1q5",
+      "act": 1,
+      "name": "Mercy Mission",
+      "gem_rewards": [
+        {
+          "gem_id": "Metadata/Items/Gems/SupportGemSpiritStrike",
+          "gem_name": "Ancestral Call Support",
+          "reward_level": 1,
+          "classes": [
+            "Duelist",
+            "Marauder",
+            "Scion",
+            "Templar"
+          ]
+        },
+        {
+          "gem_id": "Metadata/Items/Gems/SupportGemArcaneSurge",
+          "gem_name": "Arcane Surge Support",
+          "reward_level": 1,
+          "classes": [
+            "Scion",
+            "Templar"
+          ]
+        },
+        {
+          "gem_id": "Metadata/Items/Gems/SupportGemChanceToBleed",
+          "gem_name": "Chance to Bleed Support",
+          "reward_level": 1,
+          "classes": [
+            "Marauder",
+            "Scion",
+            "Templar"
+          ]
+        },
+        {
+          "gem_id": "Metadata/Items/Gems/SupportGemLesserPoison",
+          "gem_name": "Chance to Poison Support",
+          "reward_level": 1,
+          "classes": [
+            "Duelist",
+            "Ranger",
+            "Scion",
+            "Witch"
+          ]
+        },
+        {
+          "gem_id": "Metadata/Items/Gems/SupportGemElementalProliferation",
+          "gem_name": "Elemental Proliferation Support",
+          "reward_level": 1,
+          "classes": [
+            "Scion",
+            "Shadow",
+            "Templar",
+            "Witch"
+          ]
+        },
+        {
+          "gem_id": "Metadata/Items/Gems/SupportGemStormBarrier",
+          "gem_name": "Infused Channelling Support",
+          "reward_level": 1,
+          "classes": [
+            "Shadow",
+            "Templar",
+            "Witch"
+          ]
+        },
+        {
+          "gem_id": "Metadata/Items/Gems/SupportGemMirageArcher",
+          "gem_name": "Mirage Archer Support",
+          "reward_level": 1,
+          "classes": [
+            "Duelist",
+            "Ranger"
+          ]
+        },
+        {
+          "gem_id": "Metadata/Items/Gems/SupportGemOnslaught",
+          "gem_name": "Momentum Support",
+          "reward_level": 1,
+          "classes": [
+            "Duelist",
+            "Marauder",
+            "Scion",
+            "Shadow"
+          ]
+        },
+        {
+          "gem_id": "Metadata/Items/Gems/SupportGemPierce",
+          "gem_name": "Pierce Support",
+          "reward_level": 1,
+          "classes": [
+            "Duelist",
+            "Ranger",
+            "Scion",
+            "Shadow"
+          ]
+        },
+        {
+          "gem_id": "Metadata/Items/Gems/SupportGemRuthless",
+          "gem_name": "Ruthless Support",
+          "reward_level": 1,
+          "classes": [
+            "Duelist",
+            "Scion",
+            "Templar"
+          ]
+        },
+        {
+          "gem_id": "Metadata/Items/Gems/SupportGemSpellCascade",
+          "gem_name": "Spell Cascade Support",
+          "reward_level": 1,
+          "classes": [
+            "Scion",
+            "Shadow",
+            "Templar",
+            "Witch"
+          ]
+        },
+        {
+          "gem_id": "Metadata/Items/Gems/SupportGemSummonGhostOnKill",
+          "gem_name": "Summon Phantasm Support",
+          "reward_level": 1,
+          "classes": [
+            "Scion",
+            "Witch"
+          ]
+        },
+        {
+          "gem_id": "Metadata/Items/Gems/SupportGemSwiftAssembly",
+          "gem_name": "Swift Assembly Support",
+          "reward_level": 1,
+          "classes": [
+            "Shadow"
+          ]
+        },
+        {
+          "gem_id": "Metadata/Items/Gems/SupportGemParallelProjectiles",
+          "gem_name": "Volley Support",
+          "reward_level": 1,
+          "classes": [
+            "Duelist",
+            "Ranger",
+            "Scion",
+            "Shadow"
+          ]
+        }
+      ]
+    },
+    {
+      "id": "a2q4",
+      "act": 2,
+      "name": "Sharp and Cruel",
+      "gem_rewards": [
+        {
+          "gem_id": "Metadata/Items/Gems/SupportGemCloseCombat",
+          "gem_name": "Close Combat Support",
+          "reward_level": 1,
+          "classes": [
+            "Duelist",
+            "Marauder",
+            "Ranger"
+          ]
+        },
+        {
+          "gem_id": "Metadata/Items/Gems/SupportGemConcentratedEffect",
+          "gem_name": "Concentrated Effect Support",
+          "reward_level": 1,
+          "classes": [
+            "Scion",
+            "Templar",
+            "Witch"
+          ]
+        },
+        {
+          "gem_id": "Metadata/Items/Gems/SupportGemControlledDestruction",
+          "gem_name": "Controlled Destruction Support",
+          "reward_level": 1,
+          "classes": [
+            "Templar",
+            "Witch"
+          ]
+        },
+        {
+          "gem_id": "Metadata/Items/Gems/SupportGemCruelty",
+          "gem_name": "Cruelty Support",
+          "reward_level": 1,
+          "classes": [
+            "Duelist",
+            "Marauder",
+            "Scion",
+            "Templar",
+            "Witch"
+          ]
+        },
+        {
+          "gem_id": "Metadata/Items/Gems/SupportGemDeadlyAilments",
+          "gem_name": "Deadly Ailments Support",
+          "reward_level": 1,
+          "classes": [
+            "Scion",
+            "Shadow"
+          ]
+        },
+        {
+          "gem_id": "Metadata/Items/Gems/SupportGemWeaponElementalDamage",
+          "gem_name": "Elemental Damage with Attacks Support",
+          "reward_level": 1,
+          "classes": [
+            "Duelist",
+            "Marauder",
+            "Ranger",
+            "Scion",
+            "Templar"
+          ]
+        },
+        {
+          "gem_id": "Metadata/Items/Gems/SupportGemElementalFocus",
+          "gem_name": "Elemental Focus Support",
+          "reward_level": 1,
+          "classes": [
+            "Shadow",
+            "Templar",
+            "Witch"
+          ]
+        },
+        {
+          "gem_id": "Metadata/Items/Gems/SupportGemExemplar",
+          "gem_name": "Exemplar Support",
+          "reward_level": 1,
+          "classes": [
+            "Templar"
+          ]
+        },
+        {
+          "gem_id": "Metadata/Items/Gems/SupportGemFasterCast",
+          "gem_name": "Faster Casting Support",
+          "reward_level": 1,
+          "classes": [
+            "Scion",
+            "Shadow",
+            "Templar",
+            "Witch"
+          ]
+        },
+        {
+          "gem_id": "Metadata/Items/Gems/SupportGemFreshMeat",
+          "gem_name": "Fresh Meat Support",
+          "reward_level": 1,
+          "classes": [
+            "Witch"
+          ]
+        },
+        {
+          "gem_id": "Metadata/Items/Gems/SupportGemKineticInstability",
+          "gem_name": "Kinetic Instability Support",
+          "reward_level": 1,
+          "classes": [
+            "Witch"
+          ]
+        },
+        {
+          "gem_id": "Metadata/Items/Gems/SupportGemLivingLightning",
+          "gem_name": "Living Lightning Support",
+          "reward_level": 1,
+          "classes": [
+            "Witch"
+          ]
+        },
+        {
+          "gem_id": "Metadata/Items/Gems/SupportGemMeleePhysicalDamage",
+          "gem_name": "Melee Physical Damage Support",
+          "reward_level": 1,
+          "classes": [
+            "Duelist",
+            "Marauder",
+            "Scion",
+            "Shadow",
+            "Templar"
+          ]
+        },
+        {
+          "gem_id": "Metadata/Items/Gems/SupportGemMinionSpeed",
+          "gem_name": "Minion Speed Support",
+          "reward_level": 1,
+          "classes": [
+            "Witch"
+          ]
+        },
+        {
+          "gem_id": "Metadata/Items/Gems/SupportGemNightblade",
+          "gem_name": "Nightblade Support",
+          "reward_level": 1,
+          "classes": [
+            "Shadow"
+          ]
+        },
+        {
+          "gem_id": "Metadata/Items/Gems/SupportGemOvercharge",
+          "gem_name": "Overcharge Support",
+          "reward_level": 1,
+          "classes": [
+            "Witch"
+          ]
+        },
+        {
+          "gem_id": "Metadata/Items/Gems/SupportGemDeathmark",
+          "gem_name": "Predator Support",
+          "reward_level": 1,
+          "classes": [
+            "Witch"
+          ]
+        },
+        {
+          "gem_id": "Metadata/Items/Gems/SupportGemRage",
+          "gem_name": "Rage Support",
+          "reward_level": 1,
+          "classes": [
+            "Duelist",
+            "Marauder"
+          ]
+        },
+        {
+          "gem_id": "Metadata/Items/Gems/SupportGemSacredWisps",
+          "gem_name": "Sacred Wisps Support",
+          "reward_level": 1,
+          "classes": [
+            "Witch"
+          ]
+        },
+        {
+          "gem_id": "Metadata/Items/Gems/SupportGemSadism",
+          "gem_name": "Sadism Support",
+          "reward_level": 1,
+          "classes": [
+            "Duelist",
+            "Scion"
+          ]
+        },
+        {
+          "gem_id": "Metadata/Items/Gems/SupportGemShockwave",
+          "gem_name": "Shockwave Support",
+          "reward_level": 1,
+          "classes": [
+            "Marauder",
+            "Templar"
+          ]
+        },
+        {
+          "gem_id": "Metadata/Items/Gems/SupportGemTrapAndMineDamage",
+          "gem_name": "Trap and Mine Damage Support",
+          "reward_level": 1,
+          "classes": [
+            "Shadow"
+          ]
+        },
+        {
+          "gem_id": "Metadata/Items/Gems/SupportGemTrinity",
+          "gem_name": "Trinity Support",
+          "reward_level": 1,
+          "classes": [
+            "Ranger",
+            "Shadow",
+            "Witch"
+          ]
+        },
+        {
+          "gem_id": "Metadata/Items/Gems/SupportGemPhysicalProjectileAttackDamage",
+          "gem_name": "Vicious Projectiles Support",
+          "reward_level": 1,
+          "classes": [
+            "Duelist",
+            "Ranger",
+            "Scion"
+          ]
+        },
+        {
+          "gem_id": "Metadata/Items/Gems/SupportGemVolatility",
+          "gem_name": "Volatility Support",
+          "reward_level": 1,
+          "classes": [
+            "Marauder"
+          ]
+        }
+      ]
+    },
+    {
+      "id": "a2q6",
+      "act": 2,
+      "name": "Intruders in Black",
+      "gem_rewards": [
+        {
+          "gem_id": "Metadata/Items/Gems/SkillGemAncestralCry",
+          "gem_name": "Ancestral Cry",
+          "reward_level": 1,
+          "classes": [
+            "Duelist",
+            "Marauder"
+          ]
+        },
+        {
+          "gem_id": "Metadata/Items/Gems/SkillGemArcaneCloak",
+          "gem_name": "Arcane Cloak",
+          "reward_level": 1,
+          "classes": [
+            "Shadow",
+            "Templar",
+            "Witch"
+          ]
+        },
+        {
+          "gem_id": "Metadata/Items/Gems/SkillGemArcticArmour",
+          "gem_name": "Arctic Armour",
+          "reward_level": 1,
+          "classes": [
+            "Ranger",
+            "Scion",
+            "Shadow",
+            "Witch"
+          ]
+        },
+        {
+          "gem_id": "Metadata/Items/Gems/SkillGemCriticalWeakness",
+          "gem_name": "Assassin's Mark",
+          "reward_level": 1,
+          "classes": [
+            "Shadow"
+          ]
+        },
+        {
+          "gem_id": "Metadata/Items/Gems/SkillGemBladeBlast",
+          "gem_name": "Blade Blast",
+          "reward_level": 1,
+          "classes": [
+            "Shadow"
+          ]
+        },
+        {
+          "gem_id": "Metadata/Items/Gems/SkillGemBloodRage",
+          "gem_name": "Blood Rage",
+          "reward_level": 1,
+          "classes": [
+            "Duelist",
+            "Ranger",
+            "Shadow"
+          ]
+        },
+        {
+          "gem_id": "Metadata/Items/Gems/SkillGemRecallBrands",
+          "gem_name": "Brand Recall",
+          "reward_level": 1,
+          "classes": [
+            "Templar"
+          ]
+        },
+        {
+          "gem_id": "Metadata/Items/Gems/SkillGemColdSnap",
+          "gem_name": "Cold Snap",
+          "reward_level": 1,
+          "classes": [
+            "Shadow",
+            "Witch"
+          ]
+        },
+        {
+          "gem_id": "Metadata/Items/Gems/SkillGemCorruptingFever",
+          "gem_name": "Corrupting Fever",
+          "reward_level": 1,
+          "classes": [
+            "Duelist",
+            "Marauder",
+            "Scion"
+          ]
+        },
+        {
+          "gem_id": "Metadata/Items/Gems/SkillGemDefianceBanner",
+          "gem_name": "Defiance Banner",
+          "reward_level": 1,
+          "classes": [
+            "Duelist"
+          ]
+        },
+        {
+          "gem_id": "Metadata/Items/Gems/SkillGemDesecrate",
+          "gem_name": "Desecrate",
+          "reward_level": 1,
+          "classes": [
+            "Witch"
+          ]
+        },
+        {
+          "gem_id": "Metadata/Items/Gems/SkillGemDivineRetribution",
+          "gem_name": "Divine Retribution",
+          "reward_level": 1,
+          "classes": [
+            "Templar"
+          ]
+        },
+        {
+          "gem_id": "Metadata/Items/Gems/SkillGemEnsnaringArrow",
+          "gem_name": "Ensnaring Arrow",
+          "reward_level": 1,
+          "classes": [
+            "Ranger"
+          ]
+        },
+        {
+          "gem_id": "Metadata/Items/Gems/SkillGemEviscerate",
+          "gem_name": "Eviscerate",
+          "reward_level": 1,
+          "classes": [
+            "Duelist",
+            "Marauder"
+          ]
+        },
+        {
+          "gem_id": "Metadata/Items/Gems/SkillGemFleshAndStone",
+          "gem_name": "Flesh and Stone",
+          "reward_level": 1,
+          "classes": [
+            "Duelist"
+          ]
+        },
+        {
+          "gem_id": "Metadata/Items/Gems/SkillGemFrenzy",
+          "gem_name": "Frenzy",
+          "reward_level": 1,
+          "classes": [
+            "Duelist",
+            "Ranger",
+            "Scion"
+          ]
+        },
+        {
+          "gem_id": "Metadata/Items/Gems/SkillGemGalvanicField",
+          "gem_name": "Galvanic Field",
+          "reward_level": 1,
+          "classes": [
+            "Witch"
+          ]
+        },
+        {
+          "gem_id": "Metadata/Items/Gems/SkillGemRiposte",
+          "gem_name": "Glacial Shield Swipe",
+          "reward_level": 1,
+          "classes": [
+            "Duelist"
+          ]
+        },
+        {
+          "gem_id": "Metadata/Items/Gems/SkillGemHeraldOfAgony",
+          "gem_name": "Herald of Agony",
+          "reward_level": 1,
+          "classes": [
+            "Ranger",
+            "Shadow"
+          ]
+        },
+        {
+          "gem_id": "Metadata/Items/Gems/SkillGemHeraldOfAsh",
+          "gem_name": "Herald of Ash",
+          "reward_level": 1,
+          "classes": [
+            "Duelist",
+            "Marauder",
+            "Ranger",
+            "Scion",
+            "Shadow",
+            "Templar",
+            "Witch"
+          ]
+        },
+        {
+          "gem_id": "Metadata/Items/Gems/SkillGemHeraldOfIce",
+          "gem_name": "Herald of Ice",
+          "reward_level": 1,
+          "classes": [
+            "Duelist",
+            "Marauder",
+            "Ranger",
+            "Scion",
+            "Shadow",
+            "Templar",
+            "Witch"
+          ]
+        },
+        {
+          "gem_id": "Metadata/Items/Gems/SkillGemHeraldOfPurity",
+          "gem_name": "Herald of Purity",
+          "reward_level": 1,
+          "classes": [
+            "Templar"
+          ]
+        },
+        {
+          "gem_id": "Metadata/Items/Gems/SkillGemHeraldOfThunder",
+          "gem_name": "Herald of Thunder",
+          "reward_level": 1,
+          "classes": [
+            "Duelist",
+            "Marauder",
+            "Ranger",
+            "Scion",
+            "Shadow",
+            "Templar",
+            "Witch"
+          ]
+        },
+        {
+          "gem_id": "Metadata/Items/Gems/SkillGemMoltenShell",
+          "gem_name": "Molten Shell",
+          "reward_level": 1,
+          "classes": [
+            "Marauder"
+          ]
+        },
+        {
+          "gem_id": "Metadata/Items/Gems/SkillGemPoachersMark",
+          "gem_name": "Poacher's Mark",
+          "reward_level": 1,
+          "classes": [
+            "Duelist",
+            "Ranger"
+          ]
+        },
+        {
+          "gem_id": "Metadata/Items/Gems/SkillGemSeismicCry",
+          "gem_name": "Seismic Cry",
+          "reward_level": 1,
+          "classes": [
+            "Duelist",
+            "Marauder"
+          ]
+        },
+        {
+          "gem_id": "Metadata/Items/Gems/SkillGemShieldOfLight",
+          "gem_name": "Shield of Light",
+          "reward_level": 1,
+          "classes": [
+            "Templar"
+          ]
+        },
+        {
+          "gem_id": "Metadata/Items/Gems/SkillGemSummonSkitterbots",
+          "gem_name": "Summon Skitterbots",
+          "reward_level": 1,
+          "classes": [
+            "Shadow"
+          ]
+        },
+        {
+          "gem_id": "Metadata/Items/Gems/SkillGemReckoning",
+          "gem_name": "Swordstorm",
+          "reward_level": 1,
+          "classes": [
+            "Duelist"
+          ]
+        },
+        {
+          "gem_id": "Metadata/Items/Gems/SkillGemWallOfForce",
+          "gem_name": "Wall of Force",
+          "reward_level": 1,
+          "classes": [
+            "Witch"
+          ]
+        },
+        {
+          "gem_id": "Metadata/Items/Gems/SkillGemWarlordsMark",
+          "gem_name": "Warlord's Mark",
+          "reward_level": 1,
+          "classes": [
+            "Duelist",
+            "Marauder"
+          ]
+        },
+        {
+          "gem_id": "Metadata/Items/Gems/SkillGemPurge",
+          "gem_name": "Wave of Conviction",
+          "reward_level": 1,
+          "classes": [
+            "Templar"
+          ]
+        }
+      ]
+    },
+    {
+      "id": "a2q9",
+      "act": 2,
+      "name": "The Root of the Problem",
+      "gem_rewards": [
+        {
+          "gem_id": "Metadata/Items/Gems/SkillGemAbsolution",
+          "gem_name": "Absolution",
+          "reward_level": 15,
+          "classes": [
+            "Templar"
+          ]
+        },
+        {
+          "gem_id": "Metadata/Items/Gems/SupportGemAddedLightningDamage",
+          "gem_name": "Added Lightning Damage Support",
+          "reward_level": 15,
+          "classes": [
+            "Templar"
+          ]
+        },
+        {
+          "gem_id": "Metadata/Items/Gems/SupportGemArcaneSurge",
+          "gem_name": "Arcane Surge Support",
+          "reward_level": 15,
+          "classes": [
+            "Templar",
+            "Witch"
+          ]
+        },
+        {
+          "gem_id": "Metadata/Items/Gems/SupportGemControlledDestruction",
+          "gem_name": "Controlled Destruction Support",
+          "reward_level": 15,
+          "classes": [
+            "Witch"
+          ]
+        },
+        {
+          "gem_id": "Metadata/Items/Gems/SupportGemEfficacy",
+          "gem_name": "Efficacy Support",
+          "reward_level": 15,
+          "classes": [
+            "Witch"
+          ]
+        },
+        {
+          "gem_id": "Metadata/Items/Gems/SupportGemWeaponElementalDamage",
+          "gem_name": "Elemental Damage with Attacks Support",
+          "reward_level": 15,
+          "classes": [
+            "Marauder",
+            "Templar"
+          ]
+        },
+        {
+          "gem_id": "Metadata/Items/Gems/SupportGemLifetap",
+          "gem_name": "Lifetap Support",
+          "reward_level": 15,
+          "classes": [
+            "Marauder",
+            "Templar"
+          ]
+        },
+        {
+          "gem_id": "Metadata/Items/Gems/SupportGemMeleePhysicalDamage",
+          "gem_name": "Melee Physical Damage Support",
+          "reward_level": 15,
+          "classes": [
+            "Templar"
+          ]
+        },
+        {
+          "gem_id": "Metadata/Items/Gems/SupportGemMinionDamage",
+          "gem_name": "Minion Damage Support",
+          "reward_level": 15,
+          "classes": [
+            "Templar"
+          ]
+        },
+        {
+          "gem_id": "Metadata/Items/Gems/SkillGemStaticStrike",
+          "gem_name": "Static Strike",
+          "reward_level": 15,
+          "classes": [
+            "Templar"
+          ]
+        },
+        {
+          "gem_id": "Metadata/Items/Gems/SupportGemPhysicalProjectileAttackDamage",
+          "gem_name": "Vicious Projectiles Support",
+          "reward_level": 15,
+          "classes": [
+            "Marauder"
+          ]
+        },
+        {
+          "gem_id": "Metadata/Items/Gems/SkillGemVolcanicFissure",
+          "gem_name": "Volcanic Fissure",
+          "reward_level": 15,
+          "classes": [
+            "Marauder"
+          ]
+        },
+        {
+          "gem_id": "Metadata/Items/Gems/SkillGemWintertideBrand",
+          "gem_name": "Wintertide Brand",
+          "reward_level": 15,
+          "classes": [
+            "Witch"
+          ]
+        }
+      ]
+    },
+    {
+      "id": "a3q1",
+      "act": 3,
+      "name": "Lost in Love",
+      "gem_rewards": [
+        {
+          "gem_id": "Metadata/Items/Gems/SkillGemAlchemistsMark",
+          "gem_name": "Alchemist's Mark",
+          "reward_level": 1,
+          "classes": [
+            "Ranger"
+          ]
+        },
+        {
+          "gem_id": "Metadata/Items/Gems/SkillGemAnger",
+          "gem_name": "Anger",
+          "reward_level": 1,
+          "classes": [
+            "Marauder",
+            "Scion"
+          ]
+        },
+        {
+          "gem_id": "Metadata/Items/Gems/SkillGemDarkRitual",
+          "gem_name": "Bane",
+          "reward_level": 1,
+          "classes": [
+            "Scion",
+            "Shadow",
+            "Witch"
+          ]
+        },
+        {
+          "gem_id": "Metadata/Items/Gems/SkillGemBattlemagesCry",
+          "gem_name": "Battlemage's Cry",
+          "reward_level": 1,
+          "classes": [
+            "Templar"
+          ]
+        },
+        {
+          "gem_id": "Metadata/Items/Gems/SkillGemConductivity",
+          "gem_name": "Conductivity",
+          "reward_level": 1,
+          "classes": [
+            "Scion",
+            "Shadow",
+            "Templar",
+            "Witch"
+          ]
+        },
+        {
+          "gem_id": "Metadata/Items/Gems/SkillGemVulnerability",
+          "gem_name": "Despair",
+          "reward_level": 1,
+          "classes": [
+            "Ranger",
+            "Shadow",
+            "Witch"
+          ]
+        },
+        {
+          "gem_id": "Metadata/Items/Gems/SkillGemDetermination",
+          "gem_name": "Determination",
+          "reward_level": 1,
+          "classes": [
+            "Marauder"
+          ]
+        },
+        {
+          "gem_id": "Metadata/Items/Gems/SkillGemDiscipline",
+          "gem_name": "Discipline",
+          "reward_level": 1,
+          "classes": [
+            "Witch"
+          ]
+        },
+        {
+          "gem_id": "Metadata/Items/Gems/SkillGemDreadBanner",
+          "gem_name": "Dread Banner",
+          "reward_level": 1,
+          "classes": [
+            "Duelist"
+          ]
+        },
+        {
+          "gem_id": "Metadata/Items/Gems/SkillGemElementalWeakness",
+          "gem_name": "Elemental Weakness",
+          "reward_level": 1,
+          "classes": [
+            "Scion",
+            "Shadow",
+            "Templar",
+            "Witch"
+          ]
+        },
+        {
+          "gem_id": "Metadata/Items/Gems/SkillGemEnfeeble",
+          "gem_name": "Enfeeble",
+          "reward_level": 1,
+          "classes": [
+            "Shadow",
+            "Templar",
+            "Witch"
+          ]
+        },
+        {
+          "gem_id": "Metadata/Items/Gems/SkillGemFlammability",
+          "gem_name": "Flammability",
+          "reward_level": 1,
+          "classes": [
+            "Scion",
+            "Shadow",
+            "Templar",
+            "Witch"
+          ]
+        },
+        {
+          "gem_id": "Metadata/Items/Gems/SkillGemFrostbite",
+          "gem_name": "Frostbite",
+          "reward_level": 1,
+          "classes": [
+            "Scion",
+            "Shadow",
+            "Templar",
+            "Witch"
+          ]
+        },
+        {
+          "gem_id": "Metadata/Items/Gems/SkillGemGeneralsCry",
+          "gem_name": "General's Cry",
+          "reward_level": 1,
+          "classes": [
+            "Marauder"
+          ]
+        },
+        {
+          "gem_id": "Metadata/Items/Gems/SkillGemGrace",
+          "gem_name": "Grace",
+          "reward_level": 1,
+          "classes": [
+            "Duelist",
+            "Ranger"
+          ]
+        },
+        {
+          "gem_id": "Metadata/Items/Gems/SkillGemHatred",
+          "gem_name": "Hatred",
+          "reward_level": 1,
+          "classes": [
+            "Duelist",
+            "Ranger",
+            "Scion",
+            "Shadow"
+          ]
+        },
+        {
+          "gem_id": "Metadata/Items/Gems/SkillGemAbyssalCry",
+          "gem_name": "Infernal Cry",
+          "reward_level": 1,
+          "classes": [
+            "Marauder"
+          ]
+        },
+        {
+          "gem_id": "Metadata/Items/Gems/SkillGemDamageOverTimeAura",
+          "gem_name": "Malevolence",
+          "reward_level": 1,
+          "classes": [
+            "Scion",
+            "Shadow",
+            "Witch"
+          ]
+        },
+        {
+          "gem_id": "Metadata/Items/Gems/SkillGemPetrifiedBlood",
+          "gem_name": "Petrified Blood",
+          "reward_level": 1,
+          "classes": [
+            "Duelist",
+            "Marauder",
+            "Scion"
+          ]
+        },
+        {
+          "gem_id": "Metadata/Items/Gems/SkillGemPlagueBearer",
+          "gem_name": "Plague Bearer",
+          "reward_level": 1,
+          "classes": [
+            "Shadow"
+          ]
+        },
+        {
+          "gem_id": "Metadata/Items/Gems/SkillGemPride",
+          "gem_name": "Pride",
+          "reward_level": 1,
+          "classes": [
+            "Duelist",
+            "Marauder"
+          ]
+        },
+        {
+          "gem_id": "Metadata/Items/Gems/SkillGemPunishment",
+          "gem_name": "Punishment",
+          "reward_level": 1,
+          "classes": [
+            "Marauder",
+            "Scion",
+            "Templar"
+          ]
+        },
+        {
+          "gem_id": "Metadata/Items/Gems/SkillGemPurity",
+          "gem_name": "Purity of Elements",
+          "reward_level": 1,
+          "classes": [
+            "Witch"
+          ]
+        },
+        {
+          "gem_id": "Metadata/Items/Gems/SkillGemRallyingCry",
+          "gem_name": "Rallying Cry",
+          "reward_level": 1,
+          "classes": [
+            "Duelist"
+          ]
+        },
+        {
+          "gem_id": "Metadata/Items/Gems/SkillGemSpellslinger",
+          "gem_name": "Spellslinger",
+          "reward_level": 1,
+          "classes": [
+            "Witch"
+          ]
+        },
+        {
+          "gem_id": "Metadata/Items/Gems/SkillGemTemporalChains",
+          "gem_name": "Temporal Chains",
+          "reward_level": 1,
+          "classes": [
+            "Scion",
+            "Shadow",
+            "Witch"
+          ]
+        },
+        {
+          "gem_id": "Metadata/Items/Gems/SkillGemVengefulCry",
+          "gem_name": "Vengeful Cry",
+          "reward_level": 1,
+          "classes": [
+            "Marauder"
+          ]
+        },
+        {
+          "gem_id": "Metadata/Items/Gems/SkillGemNewVulnerability",
+          "gem_name": "Vulnerability",
+          "reward_level": 1,
+          "classes": [
+            "Marauder",
+            "Scion",
+            "Templar"
+          ]
+        },
+        {
+          "gem_id": "Metadata/Items/Gems/SkillGemWrath",
+          "gem_name": "Wrath",
+          "reward_level": 1,
+          "classes": [
+            "Scion",
+            "Shadow"
+          ]
+        },
+        {
+          "gem_id": "Metadata/Items/Gems/SkillGemSpellDamageAura",
+          "gem_name": "Zealotry",
+          "reward_level": 1,
+          "classes": [
+            "Scion",
+            "Templar",
+            "Witch"
+          ]
+        }
+      ]
+    },
+    {
+      "id": "a3q12",
+      "act": 3,
+      "name": "A Fixture of Fate",
+      "gem_rewards": [
+        {
+          "gem_id": "Metadata/Items/Gems/SupportGemArchmage",
+          "gem_name": "Archmage Support",
+          "reward_level": 1,
+          "classes": [
+            "Shadow",
+            "Templar",
+            "Witch"
+          ]
+        },
+        {
+          "gem_id": "Metadata/Items/Gems/SupportGemBloodMagic",
+          "gem_name": "Arrogance Support",
+          "reward_level": 1,
+          "classes": [
+            "Duelist",
+            "Marauder",
+            "Scion",
+            "Templar"
+          ]
+        },
+        {
+          "gem_id": "Metadata/Items/Gems/SupportGemBlasphemy",
+          "gem_name": "Blasphemy Support",
+          "reward_level": 1,
+          "classes": [
+            "Templar",
+            "Witch"
+          ]
+        },
+        {
+          "gem_id": "Metadata/Items/Gems/SupportGemBlessedCall",
+          "gem_name": "Blessed Call Support",
+          "reward_level": 1,
+          "classes": [
+            "Templar"
+          ]
+        },
+        {
+          "gem_id": "Metadata/Items/Gems/SupportGemBloodthirst",
+          "gem_name": "Bloodthirst Support",
+          "reward_level": 1,
+          "classes": [
+            "Duelist",
+            "Marauder",
+            "Scion"
+          ]
+        },
+        {
+          "gem_id": "Metadata/Items/Gems/SupportGemIncreasedBurningDamage",
+          "gem_name": "Burning Damage Support",
+          "reward_level": 1,
+          "classes": [
+            "Templar",
+            "Witch"
+          ]
+        },
+        {
+          "gem_id": "Metadata/Items/Gems/SupportGemChargedMines",
+          "gem_name": "Charged Mines Support",
+          "reward_level": 1,
+          "classes": [
+            "Shadow"
+          ]
+        },
+        {
+          "gem_id": "Metadata/Items/Gems/SupportGemFrenzyPowerOnTrapTrigger",
+          "gem_name": "Charged Traps Support",
+          "reward_level": 1,
+          "classes": [
+            "Shadow"
+          ]
+        },
+        {
+          "gem_id": "Metadata/Items/Gems/SupportGemColdPenetration",
+          "gem_name": "Cold Penetration Support",
+          "reward_level": 1,
+          "classes": [
+            "Scion",
+            "Shadow",
+            "Templar",
+            "Witch"
+          ]
+        },
+        {
+          "gem_id": "Metadata/Items/Gems/SupportGemControlledBlaze",
+          "gem_name": "Controlled Blaze Support",
+          "reward_level": 1,
+          "classes": [
+            "Marauder"
+          ]
+        },
+        {
+          "gem_id": "Metadata/Items/Gems/SupportGemCorruptingCry",
+          "gem_name": "Corrupting Cry Support",
+          "reward_level": 1,
+          "classes": [
+            "Duelist",
+            "Marauder"
+          ]
+        },
+        {
+          "gem_id": "Metadata/Items/Gems/SupportGemPoison",
+          "gem_name": "Critical Strike Affliction Support",
+          "reward_level": 1,
+          "classes": [
+            "Ranger",
+            "Shadow"
+          ]
+        },
+        {
+          "gem_id": "Metadata/Items/Gems/SupportGemEnergyShieldLeech",
+          "gem_name": "Energy Leech Support",
+          "reward_level": 1,
+          "classes": [
+            "Scion",
+            "Shadow",
+            "Templar",
+            "Witch"
+          ]
+        },
+        {
+          "gem_id": "Metadata/Items/Gems/SupportGemExcommunicate",
+          "gem_name": "Excommunicate Support",
+          "reward_level": 1,
+          "classes": [
+            "Templar"
+          ]
+        },
+        {
+          "gem_id": "Metadata/Items/Gems/SupportGemExpertRetaliation",
+          "gem_name": "Expert Retaliation Support",
+          "reward_level": 1,
+          "classes": [
+            "Duelist"
+          ]
+        },
+        {
+          "gem_id": "Metadata/Items/Gems/SupportGemFasterProjectiles",
+          "gem_name": "Faster Projectiles Support",
+          "reward_level": 1,
+          "classes": [
+            "Shadow"
+          ]
+        },
+        {
+          "gem_id": "Metadata/Items/Gems/SupportGemFeedingFrenzy",
+          "gem_name": "Feeding Frenzy Support",
+          "reward_level": 1,
+          "classes": [
+            "Witch"
+          ]
+        },
+        {
+          "gem_id": "Metadata/Items/Gems/SupportGemFirePenetration",
+          "gem_name": "Fire Penetration Support",
+          "reward_level": 1,
+          "classes": [
+            "Scion",
+            "Templar",
+            "Witch"
+          ]
+        },
+        {
+          "gem_id": "Metadata/Items/Gems/SupportGemFocusedBallista",
+          "gem_name": "Focused Ballista Support",
+          "reward_level": 1,
+          "classes": [
+            "Ranger"
+          ]
+        },
+        {
+          "gem_id": "Metadata/Items/Gems/SupportGemFocusedChannelling",
+          "gem_name": "Focused Channelling Support",
+          "reward_level": 1,
+          "classes": [
+            "Shadow",
+            "Witch"
+          ]
+        },
+        {
+          "gem_id": "Metadata/Items/Gems/SupportGemFork",
+          "gem_name": "Fork Support",
+          "reward_level": 1,
+          "classes": [
+            "Ranger"
+          ]
+        },
+        {
+          "gem_id": "Metadata/Items/Gems/SupportGemFortify",
+          "gem_name": "Fortify Support",
+          "reward_level": 1,
+          "classes": [
+            "Duelist",
+            "Marauder",
+            "Ranger",
+            "Scion",
+            "Templar"
+          ]
+        },
+        {
+          "gem_id": "Metadata/Items/Gems/SupportGemGuardiansBlessing",
+          "gem_name": "Guardian's Blessing Support",
+          "reward_level": 1,
+          "classes": [
+            "Templar"
+          ]
+        },
+        {
+          "gem_id": "Metadata/Items/Gems/SupportGemHighImpactMineSupport",
+          "gem_name": "High-Impact Mine Support",
+          "reward_level": 1,
+          "classes": [
+            "Shadow"
+          ]
+        },
+        {
+          "gem_id": "Metadata/Items/Gems/SupportGemDamageAgainstChilled",
+          "gem_name": "Hypothermia Support",
+          "reward_level": 1,
+          "classes": [
+            "Duelist",
+            "Ranger"
+          ]
+        },
+        {
+          "gem_id": "Metadata/Items/Gems/SupportGemFrenzyChargeOnSlayingFrozenEnemy",
+          "gem_name": "Ice Bite Support",
+          "reward_level": 1,
+          "classes": [
+            "Ranger",
+            "Scion",
+            "Shadow"
+          ]
+        },
+        {
+          "gem_id": "Metadata/Items/Gems/SupportGemImpale",
+          "gem_name": "Impale Support",
+          "reward_level": 1,
+          "classes": [
+            "Duelist",
+            "Marauder",
+            "Ranger"
+          ]
+        },
+        {
+          "gem_id": "Metadata/Items/Gems/SupportGemImpendingDoom",
+          "gem_name": "Impending Doom Support",
+          "reward_level": 1,
+          "classes": [
+            "Scion",
+            "Shadow",
+            "Witch"
+          ]
+        },
+        {
+          "gem_id": "Metadata/Items/Gems/SupportGemOnslaughtOnSlayingShockedEnemy",
+          "gem_name": "Innervate Support",
+          "reward_level": 1,
+          "classes": [
+            "Scion",
+            "Shadow"
+          ]
+        },
+        {
+          "gem_id": "Metadata/Items/Gems/SupportGemHandcastSpellBoost",
+          "gem_name": "Intensify Support",
+          "reward_level": 1,
+          "classes": [
+            "Scion",
+            "Templar",
+            "Witch"
+          ]
+        },
+        {
+          "gem_id": "Metadata/Items/Gems/SupportGemLifeLeech",
+          "gem_name": "Life Leech Support",
+          "reward_level": 1,
+          "classes": [
+            "Duelist",
+            "Marauder",
+            "Ranger",
+            "Scion"
+          ]
+        },
+        {
+          "gem_id": "Metadata/Items/Gems/SupportGemLightningPenetration",
+          "gem_name": "Lightning Penetration Support",
+          "reward_level": 1,
+          "classes": [
+            "Scion",
+            "Shadow",
+            "Templar",
+            "Witch"
+          ]
+        },
+        {
+          "gem_id": "Metadata/Items/Gems/SupportGemMeatShield",
+          "gem_name": "Meat Shield Support",
+          "reward_level": 1,
+          "classes": [
+            "Witch"
+          ]
+        },
+        {
+          "gem_id": "Metadata/Items/Gems/SupportGemIncreasedDuration",
+          "gem_name": "More Duration Support",
+          "reward_level": 1,
+          "classes": [
+            "Marauder"
+          ]
+        },
+        {
+          "gem_id": "Metadata/Items/Gems/SupportGemPinpoint",
+          "gem_name": "Pinpoint Support",
+          "reward_level": 1,
+          "classes": [
+            "Shadow",
+            "Witch"
+          ]
+        },
+        {
+          "gem_id": "Metadata/Items/Gems/SupportGemPulverise",
+          "gem_name": "Pulverise Support",
+          "reward_level": 1,
+          "classes": [
+            "Duelist",
+            "Marauder",
+            "Templar"
+          ]
+        },
+        {
+          "gem_id": "Metadata/Items/Gems/SupportGemSacrifice",
+          "gem_name": "Sacrifice Support",
+          "reward_level": 1,
+          "classes": [
+            "Witch"
+          ]
+        },
+        {
+          "gem_id": "Metadata/Items/Gems/SupportGemSecondWind",
+          "gem_name": "Second Wind Support",
+          "reward_level": 1,
+          "classes": [
+            "Ranger",
+            "Shadow"
+          ]
+        },
+        {
+          "gem_id": "Metadata/Items/Gems/SupportGemRapidDecay",
+          "gem_name": "Swift Affliction Support",
+          "reward_level": 1,
+          "classes": [
+            "Shadow",
+            "Witch"
+          ]
+        },
+        {
+          "gem_id": "Metadata/Items/Gems/SupportGemSwiftbrand",
+          "gem_name": "Swiftbrand Support",
+          "reward_level": 1,
+          "classes": [
+            "Templar"
+          ]
+        },
+        {
+          "gem_id": "Metadata/Items/Gems/SupportGemUrgentOrders",
+          "gem_name": "Urgent Orders Support",
+          "reward_level": 1,
+          "classes": [
+            "Duelist",
+            "Marauder"
+          ]
+        },
+        {
+          "gem_id": "Metadata/Items/Gems/SupportGemWindburst",
+          "gem_name": "Windburst Support",
+          "reward_level": 1,
+          "classes": [
+            "Duelist",
+            "Ranger"
+          ]
+        }
+      ]
+    },
+    {
+      "id": "a3q8",
+      "act": 3,
+      "name": "Sever the Right Hand",
+      "gem_rewards": [
+        {
+          "gem_id": "Metadata/Items/Gems/SkillGemArmageddonBrand",
+          "gem_name": "Armageddon Brand",
+          "reward_level": 1,
+          "classes": [
+            "Templar"
+          ]
+        },
+        {
+          "gem_id": "Metadata/Items/Gems/SkillGemArtilleryBallista",
+          "gem_name": "Artillery Ballista",
+          "reward_level": 1,
+          "classes": [
+            "Ranger"
+          ]
+        },
+        {
+          "gem_id": "Metadata/Items/Gems/SkillGemBallLightning",
+          "gem_name": "Ball Lightning",
+          "reward_level": 1,
+          "classes": [
+            "Shadow",
+            "Witch"
+          ]
+        },
+        {
+          "gem_id": "Metadata/Items/Gems/SkillGemChargedAttack",
+          "gem_name": "Blade Flurry",
+          "reward_level": 1,
+          "classes": [
+            "Ranger",
+            "Scion",
+            "Shadow"
+          ]
+        },
+        {
+          "gem_id": "Metadata/Items/Gems/SkillGemBladefall",
+          "gem_name": "Bladefall",
+          "reward_level": 1,
+          "classes": [
+            "Scion",
+            "Shadow"
+          ]
+        },
+        {
+          "gem_id": "Metadata/Items/Gems/SkillGemBladestorm",
+          "gem_name": "Bladestorm",
+          "reward_level": 1,
+          "classes": [
+            "Duelist"
+          ]
+        },
+        {
+          "gem_id": "Metadata/Items/Gems/SkillGemBlastRain",
+          "gem_name": "Blast Rain",
+          "reward_level": 1,
+          "classes": [
+            "Duelist",
+            "Ranger"
+          ]
+        },
+        {
+          "gem_id": "Metadata/Items/Gems/SkillGemChargedDash",
+          "gem_name": "Charged Dash",
+          "reward_level": 1,
+          "classes": [
+            "Duelist",
+            "Ranger",
+            "Scion",
+            "Shadow"
+          ]
+        },
+        {
+          "gem_id": "Metadata/Items/Gems/SkillGemConflagration",
+          "gem_name": "Conflagration",
+          "reward_level": 1,
+          "classes": [
+            "Ranger"
+          ]
+        },
+        {
+          "gem_id": "Metadata/Items/Gems/SkillGemConsecratedPath",
+          "gem_name": "Consecrated Path",
+          "reward_level": 1,
+          "classes": [
+            "Templar"
+          ]
+        },
+        {
+          "gem_id": "Metadata/Items/Gems/SkillGemCracklingLance",
+          "gem_name": "Crackling Lance",
+          "reward_level": 1,
+          "classes": [
+            "Witch"
+          ]
+        },
+        {
+          "gem_id": "Metadata/Items/Gems/SkillGemCorpseEruption",
+          "gem_name": "Cremation",
+          "reward_level": 1,
+          "classes": [
+            "Shadow",
+            "Witch"
+          ]
+        },
+        {
+          "gem_id": "Metadata/Items/Gems/SkillGemCyclone",
+          "gem_name": "Cyclone",
+          "reward_level": 1,
+          "classes": [
+            "Duelist",
+            "Marauder",
+            "Scion"
+          ]
+        },
+        {
+          "gem_id": "Metadata/Items/Gems/SkillGemDivineBlast",
+          "gem_name": "Divine Blast",
+          "reward_level": 1,
+          "classes": [
+            "Templar"
+          ]
+        },
+        {
+          "gem_id": "Metadata/Items/Gems/SkillGemDivineTempest",
+          "gem_name": "Divine Ire",
+          "reward_level": 1,
+          "classes": [
+            "Scion",
+            "Templar"
+          ]
+        },
+        {
+          "gem_id": "Metadata/Items/Gems/SkillGemDominatingBlow",
+          "gem_name": "Dominating Blow",
+          "reward_level": 1,
+          "classes": [
+            "Templar"
+          ]
+        },
+        {
+          "gem_id": "Metadata/Items/Gems/SkillGemEarthquake",
+          "gem_name": "Earthquake",
+          "reward_level": 1,
+          "classes": [
+            "Marauder"
+          ]
+        },
+        {
+          "gem_id": "Metadata/Items/Gems/SkillGemExplosiveConcoction",
+          "gem_name": "Explosive Concoction",
+          "reward_level": 1,
+          "classes": [
+            "Ranger"
+          ]
+        },
+        {
+          "gem_id": "Metadata/Items/Gems/SkillGemEyeOfWinter",
+          "gem_name": "Eye of Winter",
+          "reward_level": 1,
+          "classes": [
+            "Witch"
+          ]
+        },
+        {
+          "gem_id": "Metadata/Items/Gems/SkillGemFirestorm",
+          "gem_name": "Firestorm",
+          "reward_level": 1,
+          "classes": [
+            "Templar",
+            "Witch"
+          ]
+        },
+        {
+          "gem_id": "Metadata/Items/Gems/SkillGemFlameblast",
+          "gem_name": "Flameblast",
+          "reward_level": 1,
+          "classes": [
+            "Scion",
+            "Templar",
+            "Witch"
+          ]
+        },
+        {
+          "gem_id": "Metadata/Items/Gems/SkillGemFlamethrowerTrap",
+          "gem_name": "Flamethrower Trap",
+          "reward_level": 1,
+          "classes": [
+            "Shadow"
+          ]
+        },
+        {
+          "gem_id": "Metadata/Items/Gems/SkillGemGlacialCascade",
+          "gem_name": "Glacial Cascade",
+          "reward_level": 1,
+          "classes": [
+            "Witch"
+          ]
+        },
+        {
+          "gem_id": "Metadata/Items/Gems/SkillGemHexblast",
+          "gem_name": "Hexblast",
+          "reward_level": 1,
+          "classes": [
+            "Scion",
+            "Shadow",
+            "Witch"
+          ]
+        },
+        {
+          "gem_id": "Metadata/Items/Gems/SkillGemHolyHammers",
+          "gem_name": "Holy Hammers",
+          "reward_level": 1,
+          "classes": [
+            "Templar"
+          ]
+        },
+        {
+          "gem_id": "Metadata/Items/Gems/SkillGemIceCrash",
+          "gem_name": "Ice Crash",
+          "reward_level": 1,
+          "classes": [
+            "Duelist",
+            "Marauder",
+            "Templar"
+          ]
+        },
+        {
+          "gem_id": "Metadata/Items/Gems/SkillGemKineticBlast",
+          "gem_name": "Kinetic Blast",
+          "reward_level": 1,
+          "classes": [
+            "Witch"
+          ]
+        },
+        {
+          "gem_id": "Metadata/Items/Gems/SkillGemKineticRain",
+          "gem_name": "Kinetic Rain",
+          "reward_level": 1,
+          "classes": [
+            "Witch"
+          ]
+        },
+        {
+          "gem_id": "Metadata/Items/Gems/SkillGemLancingSteel",
+          "gem_name": "Lancing Steel",
+          "reward_level": 1,
+          "classes": [
+            "Duelist"
+          ]
+        },
+        {
+          "gem_id": "Metadata/Items/Gems/SkillGemLightningConduit",
+          "gem_name": "Lightning Conduit",
+          "reward_level": 1,
+          "classes": [
+            "Witch"
+          ]
+        },
+        {
+          "gem_id": "Metadata/Items/Gems/SkillGemLightningTowerTrap",
+          "gem_name": "Lightning Spire Trap",
+          "reward_level": 1,
+          "classes": [
+            "Shadow"
+          ]
+        },
+        {
+          "gem_id": "Metadata/Items/Gems/SkillGemPenanceBrand",
+          "gem_name": "Penance Brand",
+          "reward_level": 1,
+          "classes": [
+            "Templar"
+          ]
+        },
+        {
+          "gem_id": "Metadata/Items/Gems/SkillGemPestilentStrike",
+          "gem_name": "Pestilent Strike",
+          "reward_level": 1,
+          "classes": [
+            "Shadow"
+          ]
+        },
+        {
+          "gem_id": "Metadata/Items/Gems/SkillGemFireNovaMine",
+          "gem_name": "Pyroclast Mine",
+          "reward_level": 1,
+          "classes": [
+            "Shadow"
+          ]
+        },
+        {
+          "gem_id": "Metadata/Items/Gems/SkillGemRageVortex",
+          "gem_name": "Rage Vortex",
+          "reward_level": 1,
+          "classes": [
+            "Marauder"
+          ]
+        },
+        {
+          "gem_id": "Metadata/Items/Gems/SkillGemRaiseSpectre",
+          "gem_name": "Raise Spectre",
+          "reward_level": 1,
+          "classes": [
+            "Witch"
+          ]
+        },
+        {
+          "gem_id": "Metadata/Items/Gems/SkillGemBloodreap",
+          "gem_name": "Reap",
+          "reward_level": 1,
+          "classes": [
+            "Scion"
+          ]
+        },
+        {
+          "gem_id": "Metadata/Items/Gems/SkillGemScourgeArrow",
+          "gem_name": "Scourge Arrow",
+          "reward_level": 1,
+          "classes": [
+            "Ranger"
+          ]
+        },
+        {
+          "gem_id": "Metadata/Items/Gems/SkillGemPhysCascadeTrap",
+          "gem_name": "Seismic Trap",
+          "reward_level": 1,
+          "classes": [
+            "Shadow"
+          ]
+        },
+        {
+          "gem_id": "Metadata/Items/Gems/SkillGemShockNova",
+          "gem_name": "Shock Nova",
+          "reward_level": 1,
+          "classes": [
+            "Templar"
+          ]
+        },
+        {
+          "gem_id": "Metadata/Items/Gems/SkillGemShockwaveTotem",
+          "gem_name": "Shockwave Totem",
+          "reward_level": 1,
+          "classes": [
+            "Templar"
+          ]
+        },
+        {
+          "gem_id": "Metadata/Items/Gems/SkillGemSomaticShell",
+          "gem_name": "Somatic Shell",
+          "reward_level": 1,
+          "classes": [
+            "Witch"
+          ]
+        },
+        {
+          "gem_id": "Metadata/Items/Gems/SkillGemSoulrend",
+          "gem_name": "Soulrend",
+          "reward_level": 1,
+          "classes": [
+            "Scion",
+            "Shadow",
+            "Witch"
+          ]
+        },
+        {
+          "gem_id": "Metadata/Items/Gems/SkillGemThrownShieldProjectile",
+          "gem_name": "Spectral Shield Throw",
+          "reward_level": 1,
+          "classes": [
+            "Duelist"
+          ]
+        },
+        {
+          "gem_id": "Metadata/Items/Gems/SkillGemStormRain",
+          "gem_name": "Storm Rain",
+          "reward_level": 1,
+          "classes": [
+            "Ranger"
+          ]
+        },
+        {
+          "gem_id": "Metadata/Items/Gems/SkillGemStormBind",
+          "gem_name": "Stormbind",
+          "reward_level": 1,
+          "classes": [
+            "Templar",
+            "Witch"
+          ]
+        },
+        {
+          "gem_id": "Metadata/Items/Gems/SkillGemSummonReaper",
+          "gem_name": "Summon Reaper",
+          "reward_level": 1,
+          "classes": [
+            "Witch"
+          ]
+        },
+        {
+          "gem_id": "Metadata/Items/Gems/SkillGemTectonicSlam",
+          "gem_name": "Tectonic Slam",
+          "reward_level": 1,
+          "classes": [
+            "Marauder",
+            "Scion"
+          ]
+        },
+        {
+          "gem_id": "Metadata/Items/Gems/SkillGemThunderstorm",
+          "gem_name": "Thunderstorm",
+          "reward_level": 1,
+          "classes": [
+            "Duelist",
+            "Ranger"
+          ]
+        },
+        {
+          "gem_id": "Metadata/Items/Gems/SkillGemTornadoShot",
+          "gem_name": "Tornado Shot",
+          "reward_level": 1,
+          "classes": [
+            "Ranger",
+            "Scion"
+          ]
+        },
+        {
+          "gem_id": "Metadata/Items/Gems/SkillGemWildStrike",
+          "gem_name": "Wild Strike",
+          "reward_level": 1,
+          "classes": [
+            "Ranger"
+          ]
+        }
+      ]
+    },
+    {
+      "id": "a4q1",
+      "act": 4,
+      "name": "The Eternal Nightmare",
+      "gem_rewards": [
+        {
+          "gem_id": "Metadata/Items/Gems/SkillGemArcanistBrand",
+          "gem_name": "Arcanist Brand",
+          "reward_level": 1,
+          "classes": [
+            "Templar"
+          ]
+        },
+        {
+          "gem_id": "Metadata/Items/Gems/SupportGemBarrage",
+          "gem_name": "Barrage Support",
+          "reward_level": 1,
+          "classes": [
+            "Duelist",
+            "Ranger",
+            "Scion",
+            "Shadow"
+          ]
+        },
+        {
+          "gem_id": "Metadata/Items/Gems/SupportGemBehead",
+          "gem_name": "Behead Support",
+          "reward_level": 1,
+          "classes": [
+            "Duelist",
+            "Marauder"
+          ]
+        },
+        {
+          "gem_id": "Metadata/Items/Gems/SupportGemBonechill",
+          "gem_name": "Bonechill Support",
+          "reward_level": 1,
+          "classes": [
+            "Shadow",
+            "Witch"
+          ]
+        },
+        {
+          "gem_id": "Metadata/Items/Gems/SupportGemBrutality",
+          "gem_name": "Brutality Support",
+          "reward_level": 1,
+          "classes": [
+            "Marauder"
+          ]
+        },
+        {
+          "gem_id": "Metadata/Items/Gems/SupportGemChain",
+          "gem_name": "Chain Support",
+          "reward_level": 1,
+          "classes": [
+            "Duelist",
+            "Marauder",
+            "Ranger",
+            "Scion",
+            "Shadow",
+            "Templar",
+            "Witch"
+          ]
+        },
+        {
+          "gem_id": "Metadata/Items/Gems/SupportGemClusterTrap",
+          "gem_name": "Cluster Traps Support",
+          "reward_level": 1,
+          "classes": [
+            "Shadow"
+          ]
+        },
+        {
+          "gem_id": "Metadata/Items/Gems/SupportGemDecay",
+          "gem_name": "Decay Support",
+          "reward_level": 1,
+          "classes": [
+            "Scion",
+            "Witch"
+          ]
+        },
+        {
+          "gem_id": "Metadata/Items/Gems/SupportGemEternalBlessing",
+          "gem_name": "Eternal Blessing Support",
+          "reward_level": 1,
+          "classes": [
+            "Marauder"
+          ]
+        },
+        {
+          "gem_id": "Metadata/Items/Gems/SupportGemFistOfWar",
+          "gem_name": "Fist of War Support",
+          "reward_level": 1,
+          "classes": [
+            "Duelist",
+            "Marauder",
+            "Templar"
+          ]
+        },
+        {
+          "gem_id": "Metadata/Items/Gems/SupportGemFrigidBond",
+          "gem_name": "Frigid Bond Support",
+          "reward_level": 1,
+          "classes": [
+            "Scion",
+            "Templar"
+          ]
+        },
+        {
+          "gem_id": "Metadata/Items/Gems/SupportGemGreaterMultipleProjectiles",
+          "gem_name": "Greater Multiple Projectiles Support",
+          "reward_level": 1,
+          "classes": [
+            "Duelist",
+            "Marauder",
+            "Ranger",
+            "Scion",
+            "Shadow",
+            "Templar",
+            "Witch"
+          ]
+        },
+        {
+          "gem_id": "Metadata/Items/Gems/SupportGemGreaterVolley",
+          "gem_name": "Greater Volley Support",
+          "reward_level": 1,
+          "classes": [
+            "Duelist",
+            "Ranger",
+            "Scion",
+            "Shadow"
+          ]
+        },
+        {
+          "gem_id": "Metadata/Items/Gems/SupportGemHexBloom",
+          "gem_name": "Hex Bloom Support",
+          "reward_level": 1,
+          "classes": [
+            "Witch"
+          ]
+        },
+        {
+          "gem_id": "Metadata/Items/Gems/SupportGemIgniteProliferation",
+          "gem_name": "Ignite Proliferation Support",
+          "reward_level": 1,
+          "classes": [
+            "Templar"
+          ]
+        },
+        {
+          "gem_id": "Metadata/Items/Gems/SupportGemImmolate",
+          "gem_name": "Immolate Support",
+          "reward_level": 1,
+          "classes": [
+            "Scion",
+            "Witch"
+          ]
+        },
+        {
+          "gem_id": "Metadata/Items/Gems/SupportGemIncreasedAreaOfEffect",
+          "gem_name": "Increased Area of Effect Support",
+          "reward_level": 1,
+          "classes": [
+            "Duelist",
+            "Marauder",
+            "Ranger",
+            "Scion",
+            "Shadow",
+            "Templar",
+            "Witch"
+          ]
+        },
+        {
+          "gem_id": "Metadata/Items/Gems/SupportGemMinefield",
+          "gem_name": "Minefield Support",
+          "reward_level": 1,
+          "classes": [
+            "Shadow"
+          ]
+        },
+        {
+          "gem_id": "Metadata/Items/Gems/SupportGemMultiTotem",
+          "gem_name": "Multiple Totems Support",
+          "reward_level": 1,
+          "classes": [
+            "Marauder",
+            "Templar"
+          ]
+        },
+        {
+          "gem_id": "Metadata/Items/Gems/SupportGemMultistrike",
+          "gem_name": "Multistrike Support",
+          "reward_level": 1,
+          "classes": [
+            "Duelist",
+            "Marauder",
+            "Ranger",
+            "Scion",
+            "Shadow",
+            "Templar",
+            "Witch"
+          ]
+        },
+        {
+          "gem_id": "Metadata/Items/Gems/SupportGemOverexertion",
+          "gem_name": "Overexertion Support",
+          "reward_level": 1,
+          "classes": [
+            "Marauder"
+          ]
+        },
+        {
+          "gem_id": "Metadata/Items/Gems/SupportGemReturningProjectiles",
+          "gem_name": "Returning Projectiles Support",
+          "reward_level": 1,
+          "classes": [
+            "Ranger",
+            "Scion",
+            "Shadow"
+          ]
+        },
+        {
+          "gem_id": "Metadata/Items/Gems/SupportGemRupture",
+          "gem_name": "Rupture Support",
+          "reward_level": 1,
+          "classes": [
+            "Ranger"
+          ]
+        },
+        {
+          "gem_id": "Metadata/Items/Gems/SupportGemMulticast",
+          "gem_name": "Spell Echo Support",
+          "reward_level": 1,
+          "classes": [
+            "Duelist",
+            "Marauder",
+            "Ranger",
+            "Scion",
+            "Shadow",
+            "Templar",
+            "Witch"
+          ]
+        },
+        {
+          "gem_id": "Metadata/Items/Gems/SupportGemSpellblade",
+          "gem_name": "Spellblade Support",
+          "reward_level": 1,
+          "classes": [
+            "Templar"
+          ]
+        },
+        {
+          "gem_id": "Metadata/Items/Gems/SupportGemTrauma",
+          "gem_name": "Trauma Support",
+          "reward_level": 1,
+          "classes": [
+            "Duelist",
+            "Marauder"
+          ]
+        },
+        {
+          "gem_id": "Metadata/Items/Gems/SupportGemHandcastAnticipation",
+          "gem_name": "Unleash Support",
+          "reward_level": 1,
+          "classes": [
+            "Scion",
+            "Shadow",
+            "Templar",
+            "Witch"
+          ]
+        },
+        {
+          "gem_id": "Metadata/Items/Gems/SupportGemVileToxins",
+          "gem_name": "Vile Toxins Support",
+          "reward_level": 1,
+          "classes": [
+            "Shadow"
+          ]
+        },
+        {
+          "gem_id": "Metadata/Items/Gems/SupportGemChaosAttacks",
+          "gem_name": "Withering Touch Support",
+          "reward_level": 1,
+          "classes": [
+            "Ranger",
+            "Shadow"
+          ]
+        }
+      ]
+    },
+    {
+      "id": "a4q2",
+      "act": 4,
+      "name": "Breaking the Seal",
+      "gem_rewards": [
+        {
+          "gem_id": "Metadata/Items/Gems/SkillGemAmbush",
+          "gem_name": "Ambush",
+          "reward_level": 1,
+          "classes": [
+            "Shadow"
+          ]
+        },
+        {
+          "gem_id": "Metadata/Items/Gems/SkillGemBerserk",
+          "gem_name": "Berserk",
+          "reward_level": 1,
+          "classes": [
+            "Marauder"
+          ]
+        },
+        {
+          "gem_id": "Metadata/Items/Gems/SkillGemFlameLink",
+          "gem_name": "Flame Link",
+          "reward_level": 1,
+          "classes": [
+            "Scion"
+          ]
+        },
+        {
+          "gem_id": "Metadata/Items/Gems/SkillGemFrostShield",
+          "gem_name": "Frost Shield",
+          "reward_level": 1,
+          "classes": [
+            "Scion",
+            "Shadow",
+            "Templar",
+            "Witch"
+          ]
+        },
+        {
+          "gem_id": "Metadata/Items/Gems/SkillGemFrozenLegion",
+          "gem_name": "Frozen Legion",
+          "reward_level": 1,
+          "classes": [
+            "Templar"
+          ]
+        },
+        {
+          "gem_id": "Metadata/Items/Gems/SkillGemHydrosphere",
+          "gem_name": "Hydrosphere",
+          "reward_level": 1,
+          "classes": [
+            "Templar",
+            "Witch"
+          ]
+        },
+        {
+          "gem_id": "Metadata/Items/Gems/SkillGemIntuitiveLink",
+          "gem_name": "Intuitive Link",
+          "reward_level": 1,
+          "classes": [
+            "Scion"
+          ]
+        },
+        {
+          "gem_id": "Metadata/Items/Gems/SkillGemSigilOfPower",
+          "gem_name": "Sigil of Power",
+          "reward_level": 1,
+          "classes": [
+            "Templar",
+            "Witch"
+          ]
+        },
+        {
+          "gem_id": "Metadata/Items/Gems/SkillGemChannelledSnipe",
+          "gem_name": "Snipe",
+          "reward_level": 1,
+          "classes": [
+            "Ranger"
+          ]
+        },
+        {
+          "gem_id": "Metadata/Items/Gems/SkillGemSoulLink",
+          "gem_name": "Soul Link",
+          "reward_level": 1,
+          "classes": [
+            "Scion"
+          ]
+        },
+        {
+          "gem_id": "Metadata/Items/Gems/SkillGemSummonCarrionGolem",
+          "gem_name": "Summon Carrion Golem",
+          "reward_level": 1,
+          "classes": [
+            "Templar",
+            "Witch"
+          ]
+        },
+        {
+          "gem_id": "Metadata/Items/Gems/SkillGemSummonChaosGolem",
+          "gem_name": "Summon Chaos Golem",
+          "reward_level": 1,
+          "classes": [
+            "Duelist",
+            "Marauder",
+            "Ranger",
+            "Scion",
+            "Shadow",
+            "Templar",
+            "Witch"
+          ]
+        },
+        {
+          "gem_id": "Metadata/Items/Gems/SkillGemSummonFlameGolem",
+          "gem_name": "Summon Flame Golem",
+          "reward_level": 1,
+          "classes": [
+            "Duelist",
+            "Marauder",
+            "Ranger",
+            "Scion",
+            "Shadow",
+            "Templar",
+            "Witch"
+          ]
+        },
+        {
+          "gem_id": "Metadata/Items/Gems/SkillGemSummonIceGolem",
+          "gem_name": "Summon Ice Golem",
+          "reward_level": 1,
+          "classes": [
+            "Duelist",
+            "Marauder",
+            "Ranger",
+            "Scion",
+            "Shadow",
+            "Templar",
+            "Witch"
+          ]
+        },
+        {
+          "gem_id": "Metadata/Items/Gems/SkillGemSummonLightningGolem",
+          "gem_name": "Summon Lightning Golem",
+          "reward_level": 1,
+          "classes": [
+            "Duelist",
+            "Marauder",
+            "Ranger",
+            "Scion",
+            "Shadow",
+            "Templar",
+            "Witch"
+          ]
+        },
+        {
+          "gem_id": "Metadata/Items/Gems/SkillGemSummonRockGolem",
+          "gem_name": "Summon Stone Golem",
+          "reward_level": 1,
+          "classes": [
+            "Duelist",
+            "Marauder",
+            "Ranger",
+            "Scion",
+            "Shadow",
+            "Templar",
+            "Witch"
+          ]
+        },
+        {
+          "gem_id": "Metadata/Items/Gems/SkillGemTemporalRift",
+          "gem_name": "Temporal Rift",
+          "reward_level": 1,
+          "classes": [
+            "Shadow"
+          ]
+        },
+        {
+          "gem_id": "Metadata/Items/Gems/SkillGemTornado",
+          "gem_name": "Tornado",
+          "reward_level": 1,
+          "classes": [
+            "Ranger",
+            "Shadow"
+          ]
+        },
+        {
+          "gem_id": "Metadata/Items/Gems/SkillGemVoidSphere",
+          "gem_name": "Void Sphere",
+          "reward_level": 1,
+          "classes": [
+            "Scion",
+            "Shadow",
+            "Templar",
+            "Witch"
+          ]
+        }
+      ]
+    },
+    {
+      "id": "a4q6",
+      "act": 4,
+      "name": "An Indomitable Spirit",
+      "gem_rewards": [
+        {
+          "gem_id": "Metadata/Items/Gems/SupportGemBonechill",
+          "gem_name": "Bonechill Support",
+          "reward_level": 35,
+          "classes": [
+            "Witch"
+          ]
+        },
+        {
+          "gem_id": "Metadata/Items/Gems/SupportGemControlledDestruction",
+          "gem_name": "Controlled Destruction Support",
+          "reward_level": 35,
+          "classes": [
+            "Witch"
+          ]
+        },
+        {
+          "gem_id": "Metadata/Items/Gems/SkillGemDominatingBlow",
+          "gem_name": "Dominating Blow",
+          "reward_level": 35,
+          "classes": [
+            "Templar"
+          ]
+        },
+        {
+          "gem_id": "Metadata/Items/Gems/SupportGemEfficacy",
+          "gem_name": "Efficacy Support",
+          "reward_level": 35,
+          "classes": [
+            "Witch"
+          ]
+        },
+        {
+          "gem_id": "Metadata/Items/Gems/SupportGemWeaponElementalDamage",
+          "gem_name": "Elemental Damage with Attacks Support",
+          "reward_level": 35,
+          "classes": [
+            "Marauder",
+            "Templar"
+          ]
+        },
+        {
+          "gem_id": "Metadata/Items/Gems/SupportGemFirePenetration",
+          "gem_name": "Fire Penetration Support",
+          "reward_level": 35,
+          "classes": [
+            "Marauder"
+          ]
+        },
+        {
+          "gem_id": "Metadata/Items/Gems/SupportGemFortify",
+          "gem_name": "Fortify Support",
+          "reward_level": 35,
+          "classes": [
+            "Templar"
+          ]
+        },
+        {
+          "gem_id": "Metadata/Items/Gems/SupportGemDamageAgainstChilled",
+          "gem_name": "Hypothermia Support",
+          "reward_level": 35,
+          "classes": [
+            "Witch"
+          ]
+        },
+        {
+          "gem_id": "Metadata/Items/Gems/SkillGemIceCrash",
+          "gem_name": "Ice Crash",
+          "reward_level": 35,
+          "classes": [
+            "Templar"
+          ]
+        },
+        {
+          "gem_id": "Metadata/Items/Gems/SupportGemLifetap",
+          "gem_name": "Lifetap Support",
+          "reward_level": 35,
+          "classes": [
+            "Marauder",
+            "Templar"
+          ]
+        },
+        {
+          "gem_id": "Metadata/Items/Gems/SupportGemMeleePhysicalDamage",
+          "gem_name": "Melee Physical Damage Support",
+          "reward_level": 35,
+          "classes": [
+            "Templar"
+          ]
+        },
+        {
+          "gem_id": "Metadata/Items/Gems/SupportGemMeleeSplash",
+          "gem_name": "Melee Splash Support",
+          "reward_level": 35,
+          "classes": [
+            "Templar"
+          ]
+        },
+        {
+          "gem_id": "Metadata/Items/Gems/SupportGemMinionDamage",
+          "gem_name": "Minion Damage Support",
+          "reward_level": 35,
+          "classes": [
+            "Templar"
+          ]
+        },
+        {
+          "gem_id": "Metadata/Items/Gems/SupportGemMultistrike",
+          "gem_name": "Multistrike Support",
+          "reward_level": 35,
+          "classes": [
+            "Templar"
+          ]
+        },
+        {
+          "gem_id": "Metadata/Items/Gems/SupportGemPhysicalProjectileAttackDamage",
+          "gem_name": "Vicious Projectiles Support",
+          "reward_level": 35,
+          "classes": [
+            "Marauder"
+          ]
+        },
+        {
+          "gem_id": "Metadata/Items/Gems/SkillGemVolcanicFissure",
+          "gem_name": "Volcanic Fissure",
+          "reward_level": 35,
+          "classes": [
+            "Marauder"
+          ]
+        },
+        {
+          "gem_id": "Metadata/Items/Gems/SkillGemWintertideBrand",
+          "gem_name": "Wintertide Brand",
+          "reward_level": 35,
+          "classes": [
+            "Witch"
+          ]
+        }
+      ]
+    }
+  ]
+}

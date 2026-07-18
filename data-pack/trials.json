@@ -1,0 +1,68 @@
+{
+  "schema_version": 1,
+  "patch": "3.28.0.15",
+  "generated_at": "2026-07-18T11:11:44.264Z",
+  "source": "PoE game files (GGG patch CDN) via pathofexile-dat",
+  "trials": [
+    {
+      "area_id": "1_1_7_1",
+      "area_name": "The Lower Prison",
+      "act": 1
+    },
+    {
+      "area_id": "1_2_5_1",
+      "area_name": "The Crypt Level 1",
+      "act": 2
+    },
+    {
+      "area_id": "1_2_6_2",
+      "area_name": "The Chamber of Sins Level 2",
+      "act": 2
+    },
+    {
+      "area_id": "1_3_15",
+      "area_name": "The Imperial Gardens",
+      "act": 3
+    },
+    {
+      "area_id": "1_3_3_1",
+      "area_name": "The Crematorium",
+      "act": 3
+    },
+    {
+      "area_id": "1_3_6",
+      "area_name": "The Catacombs",
+      "act": 3
+    },
+    {
+      "area_id": "2_6_7_1",
+      "area_name": "The Lower Prison",
+      "act": 6
+    },
+    {
+      "area_id": "2_7_4",
+      "area_name": "The Crypt",
+      "act": 7
+    },
+    {
+      "area_id": "2_7_5_2",
+      "area_name": "The Chamber of Sins Level 2",
+      "act": 7
+    },
+    {
+      "area_id": "2_8_5",
+      "area_name": "The Bath House",
+      "act": 8
+    },
+    {
+      "area_id": "2_9_7",
+      "area_name": "The Tunnel",
+      "act": 9
+    },
+    {
+      "area_id": "2_10_9",
+      "area_name": "The Ossuary",
+      "act": 10
+    }
+  ]
+}

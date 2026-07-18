@@ -1,11 +1,18 @@
 {
-  "schema_version": 1,
   "patch": "3.28.0.15",
-  "generated_at": "2026-07-17T17:37:54.970Z",
+  "generated_at": "2026-07-18T11:11:44.264Z",
   "files": [
     {
       "name": "areas.json",
-      "sha256": "808bb3afaaaa9a9e9bf07d374adbd4438dde4bbf2ed32e048a889b21c663067b"
+      "sha256": "4d939ed5616b5a03a90fc9d679b3ec6950bd96d82882c867ecd2243b2d75b3f2"
+    },
+    {
+      "name": "quests.json",
+      "sha256": "7267ba30bede507b3789fe789ef7ea4cc90c86bd1739ac548cb1d4a2bc2589a1"
+    },
+    {
+      "name": "trials.json",
+      "sha256": "d8b9555937aa98c612942306b605ecda0c0117b3b12561b67a06328685c86683"
     }
   ],
   "note": "Generated from PoE game files via tools/data-extractor (npm run regen)."
