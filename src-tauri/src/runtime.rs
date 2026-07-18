@@ -26,7 +26,7 @@ use crate::state::{AppState, SourceMode};
 /// Load and index the embedded campaign data pack.
 pub fn load_zone_table() -> Result<Arc<ZoneTable>, DataError> {
     let table =
-        ZoneTable::from_json_bytes(poebo_data::AREAS_JSON, poebo_data::PACK_SCHEMA_VERSION)?;
+        ZoneTable::from_json_bytes(poebo_data::AREAS_JSON, poebo_data::AREAS_SCHEMA_VERSION)?;
     Ok(Arc::new(table))
 }
 

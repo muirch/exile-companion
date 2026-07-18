@@ -58,7 +58,7 @@ pub struct ZoneTable {
 impl ZoneTable {
     /// Parse and index a data pack from raw JSON bytes, rejecting an unexpected schema version.
     ///
-    /// `expected_schema` is normally `poebo_data::PACK_SCHEMA_VERSION`, passed in by the caller so
+    /// `expected_schema` is normally `poebo_data::AREAS_SCHEMA_VERSION`, passed in by the caller so
     /// this pure crate need not depend on the data crate.
     pub fn from_json_bytes(bytes: &[u8], expected_schema: u32) -> Result<Self, DataError> {
         let table: AreaTable = serde_json::from_slice(bytes)?;
@@ -119,6 +119,208 @@ impl ZoneTable {
     /// Whether the table has no areas.
     pub fn is_empty(&self) -> bool {
         self.by_id.is_empty()
+    }
+}
+
+// --- Quests + gem rewards (data-pack/quests.json) ---------------------------------------------
+
+/// Top-level shape of `data-pack/quests.json`.
+#[derive(Debug, Clone, serde::Deserialize)]
+struct QuestFile {
+    schema_version: u32,
+    quests: Vec<QuestInfo>,
+}
+
+/// One gem a quest can reward, and the classes eligible to claim it.
+#[derive(Debug, Clone, PartialEq, Eq, serde::Serialize, serde::Deserialize)]
+pub struct GemReward {
+    /// Metadata path (matches a Path of Building gem's `gemId`), the join key to a build's gems.
+    pub gem_id: String,
+    /// Display name, e.g. "Fireball".
+    pub gem_name: String,
+    /// The gem level the reward grants.
+    pub reward_level: u32,
+    /// Class names that can claim this reward. Empty means "all classes".
+    #[serde(default)]
+    pub classes: Vec<String>,
+}
+
+impl GemReward {
+    /// Whether a class (by display name, case-insensitively) can claim this reward.
+    pub fn allows_class(&self, class: &str) -> bool {
+        self.classes.is_empty() || self.classes.iter().any(|c| c.eq_ignore_ascii_case(class))
+    }
+}
+
+/// One campaign quest and the gems it rewards.
+#[derive(Debug, Clone, PartialEq, Eq, serde::Serialize, serde::Deserialize)]
+pub struct QuestInfo {
+    /// Quest id, e.g. `a1q1`.
+    pub id: String,
+    pub act: i32,
+    pub name: String,
+    #[serde(default)]
+    pub gem_rewards: Vec<GemReward>,
+}
+
+/// Indexed view over the quest table. `by_gem` maps a gem's metadata id to every quest that rewards
+/// it, so the gem resolver can answer "which quest gives this build's gem" without a full scan.
+#[derive(Debug, Clone)]
+pub struct QuestTable {
+    quests: Vec<QuestInfo>,
+    by_gem: HashMap<String, Vec<usize>>,
+    schema_version: u32,
+}
+
+impl QuestTable {
+    /// Parse and index the quest pack, rejecting an unexpected schema version.
+    pub fn from_json_bytes(bytes: &[u8], expected_schema: u32) -> Result<Self, DataError> {
+        let file: QuestFile = serde_json::from_slice(bytes)?;
+        if file.schema_version != expected_schema {
+            return Err(DataError::SchemaMismatch {
+                found: file.schema_version,
+                expected: expected_schema,
+            });
+        }
+        let mut by_gem: HashMap<String, Vec<usize>> = HashMap::new();
+        for (i, quest) in file.quests.iter().enumerate() {
+            for reward in &quest.gem_rewards {
+                by_gem.entry(reward.gem_id.clone()).or_default().push(i);
+            }
+        }
+        Ok(QuestTable {
+            quests: file.quests,
+            by_gem,
+            schema_version: expected_schema,
+        })
+    }
+
+    /// All campaign quests, ordered by act.
+    pub fn all(&self) -> &[QuestInfo] {
+        &self.quests
+    }
+
+    /// Every (quest, reward) pair that grants the gem with the given metadata id.
+    pub fn rewarding_gem<'a>(
+        &'a self,
+        gem_id: &str,
+    ) -> impl Iterator<Item = (&'a QuestInfo, &'a GemReward)> + 'a {
+        let owned = gem_id.to_string();
+        let indices = self.by_gem.get(gem_id).map(Vec::as_slice).unwrap_or(&[]);
+        indices.iter().filter_map(move |&i| {
+            let quest = &self.quests[i];
+            quest
+                .gem_rewards
+                .iter()
+                .find(|r| r.gem_id == owned)
+                .map(|r| (quest, r))
+        })
+    }
+
+    pub fn schema_version(&self) -> u32 {
+        self.schema_version
+    }
+
+    pub fn len(&self) -> usize {
+        self.quests.len()
+    }
+
+    pub fn is_empty(&self) -> bool {
+        self.quests.is_empty()
+    }
+}
+
+// --- Lab trials (data-pack/trials.json) -------------------------------------------------------
+
+/// Top-level shape of `data-pack/trials.json`.
+#[derive(Debug, Clone, serde::Deserialize)]
+struct TrialFile {
+    schema_version: u32,
+    trials: Vec<TrialInfo>,
+}
+
+/// One campaign Trial of Ascendancy location.
+#[derive(Debug, Clone, PartialEq, Eq, serde::Serialize, serde::Deserialize)]
+pub struct TrialInfo {
+    /// The world-area id the trial is in, e.g. `1_1_7_1` (The Lower Prison).
+    pub area_id: String,
+    pub area_name: String,
+    pub act: i32,
+}
+
+/// The campaign lab trials, queryable by act.
+#[derive(Debug, Clone)]
+pub struct TrialTable {
+    trials: Vec<TrialInfo>,
+    schema_version: u32,
+}
+
+impl TrialTable {
+    /// Parse the trial pack, rejecting an unexpected schema version.
+    pub fn from_json_bytes(bytes: &[u8], expected_schema: u32) -> Result<Self, DataError> {
+        let file: TrialFile = serde_json::from_slice(bytes)?;
+        if file.schema_version != expected_schema {
+            return Err(DataError::SchemaMismatch {
+                found: file.schema_version,
+                expected: expected_schema,
+            });
+        }
+        Ok(TrialTable {
+            trials: file.trials,
+            schema_version: expected_schema,
+        })
+    }
+
+    /// All campaign trials, ordered by act.
+    pub fn all(&self) -> &[TrialInfo] {
+        &self.trials
+    }
+
+    /// The trials located in a given act.
+    pub fn in_act(&self, act: u8) -> impl Iterator<Item = &TrialInfo> {
+        let act = i32::from(act);
+        self.trials.iter().filter(move |t| t.act == act)
+    }
+
+    pub fn schema_version(&self) -> u32 {
+        self.schema_version
+    }
+
+    pub fn len(&self) -> usize {
+        self.trials.len()
+    }
+
+    pub fn is_empty(&self) -> bool {
+        self.trials.is_empty()
+    }
+}
+
+// --- The aggregate pack -----------------------------------------------------------------------
+
+/// The whole campaign knowledge base: zones (act inference), quests (gem rewards), and lab trials.
+/// The guidance engine reads it read-only; the Tauri shell builds it once from the embedded bytes.
+#[derive(Debug, Clone)]
+pub struct DataPack {
+    pub zones: ZoneTable,
+    pub quests: QuestTable,
+    pub trials: TrialTable,
+}
+
+impl DataPack {
+    /// Build the pack from the three committed JSON files, each validated against its schema version.
+    pub fn from_bytes(
+        areas: &[u8],
+        areas_schema: u32,
+        quests: &[u8],
+        quests_schema: u32,
+        trials: &[u8],
+        trials_schema: u32,
+    ) -> Result<Self, DataError> {
+        Ok(DataPack {
+            zones: ZoneTable::from_json_bytes(areas, areas_schema)?,
+            quests: QuestTable::from_json_bytes(quests, quests_schema)?,
+            trials: TrialTable::from_json_bytes(trials, trials_schema)?,
+        })
     }
 }
 
@@ -188,5 +390,97 @@ mod tests {
             "is_town":false,"is_hideout":false,"is_map":false,"has_waypoint":false}]}"#;
         let t = ZoneTable::from_json_bytes(json.as_bytes(), 1).expect("parse");
         assert!(t.by_id("x").unwrap().connections.is_empty());
+    }
+
+    const QUESTS: &str = r#"{
+        "schema_version": 1, "patch": "t", "generated_at": "t", "source": "t",
+        "quests": [
+            {"id":"a1q1","act":1,"name":"Enemy at the Gate","gem_rewards":[
+                {"gem_id":"Metadata/Items/Gems/SkillGemFreezingPulse","gem_name":"Freezing Pulse","reward_level":1,"classes":["Witch","Shadow"]},
+                {"gem_id":"Metadata/Items/Gems/SkillGemCleave","gem_name":"Cleave","reward_level":1,"classes":["Duelist"]}
+            ]},
+            {"id":"a1q3","act":1,"name":"The Siren's Cadence","gem_rewards":[
+                {"gem_id":"Metadata/Items/Gems/SkillGemArc","gem_name":"Arc","reward_level":1,"classes":[]}
+            ]}
+        ]
+    }"#;
+
+    #[test]
+    fn quest_table_indexes_by_gem_and_filters_by_class() {
+        let q = QuestTable::from_json_bytes(QUESTS.as_bytes(), 1).expect("parse");
+        assert_eq!(q.len(), 2);
+        let hits: Vec<_> = q
+            .rewarding_gem("Metadata/Items/Gems/SkillGemFreezingPulse")
+            .collect();
+        assert_eq!(hits.len(), 1);
+        let (quest, reward) = hits[0];
+        assert_eq!(quest.id, "a1q1");
+        assert!(reward.allows_class("witch"), "case-insensitive class match");
+        assert!(!reward.allows_class("Marauder"));
+        // Empty classes means every class can claim it.
+        let arc = q
+            .rewarding_gem("Metadata/Items/Gems/SkillGemArc")
+            .next()
+            .unwrap()
+            .1;
+        assert!(arc.allows_class("Marauder"));
+        // A gem no quest rewards yields nothing.
+        assert_eq!(
+            q.rewarding_gem("Metadata/Items/Gems/SkillGemNope").count(),
+            0
+        );
+    }
+
+    const TRIALS: &str = r#"{
+        "schema_version": 1, "patch": "t", "generated_at": "t", "source": "t",
+        "trials": [
+            {"area_id":"1_1_7_1","area_name":"The Lower Prison","act":1},
+            {"area_id":"1_2_5_1","area_name":"The Crypt Level 1","act":2},
+            {"area_id":"1_2_6_2","area_name":"The Chamber of Sins Level 2","act":2}
+        ]
+    }"#;
+
+    #[test]
+    fn trial_table_queries_by_act() {
+        let t = TrialTable::from_json_bytes(TRIALS.as_bytes(), 1).expect("parse");
+        assert_eq!(t.len(), 3);
+        assert_eq!(t.in_act(1).count(), 1);
+        assert_eq!(t.in_act(2).count(), 2);
+        assert_eq!(t.in_act(3).count(), 0);
+        assert_eq!(t.in_act(1).next().unwrap().area_name, "The Lower Prison");
+    }
+
+    #[test]
+    fn quest_and_trial_tables_reject_schema_mismatch() {
+        assert!(matches!(
+            QuestTable::from_json_bytes(QUESTS.as_bytes(), 2),
+            Err(DataError::SchemaMismatch {
+                found: 1,
+                expected: 2
+            })
+        ));
+        assert!(matches!(
+            TrialTable::from_json_bytes(TRIALS.as_bytes(), 9),
+            Err(DataError::SchemaMismatch {
+                found: 1,
+                expected: 9
+            })
+        ));
+    }
+
+    #[test]
+    fn datapack_assembles_all_three() {
+        let pack = DataPack::from_bytes(
+            SAMPLE.as_bytes(),
+            1,
+            QUESTS.as_bytes(),
+            1,
+            TRIALS.as_bytes(),
+            1,
+        )
+        .expect("pack");
+        assert_eq!(pack.zones.len(), 3);
+        assert_eq!(pack.quests.len(), 2);
+        assert_eq!(pack.trials.len(), 3);
     }
 }
