@@ -15,6 +15,30 @@
         "HasWaypoint",
         "Connections_WorldAreasKeys"
       ]
+    },
+    {
+      "name": "Quest",
+      "columns": ["Id", "Act", "Name"]
+    },
+    {
+      "name": "QuestRewards",
+      "columns": ["RewardOffer", "Characters", "Reward", "RewardLevel"]
+    },
+    {
+      "name": "QuestRewardOffers",
+      "columns": ["Id", "QuestKey"]
+    },
+    {
+      "name": "Characters",
+      "columns": ["Id", "Name"]
+    },
+    {
+      "name": "BaseItemTypes",
+      "columns": ["Id", "Name"]
+    },
+    {
+      "name": "LabyrinthTrials",
+      "columns": ["WorldAreas"]
     }
   ]
 }
