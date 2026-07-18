@@ -2295,6 +2295,7 @@ dependencies = [
  "async-trait",
  "futures",
  "poebo-data",
+ "poebo-pob",
  "regex",
  "serde",
  "serde_json",

@@ -16,14 +16,17 @@
 
 #![forbid(unsafe_code)]
 
+pub mod build;
 pub mod clock;
 pub mod data;
 pub mod error;
 pub mod events;
+pub mod guidance;
 pub mod locale;
 pub mod parser;
 pub mod pipeline;
 pub mod recorder;
+pub mod resolve;
 pub mod source;
 pub mod state;
 

@@ -7,6 +7,7 @@ rust-version.workspace = true
 description = "Pure, Tauri-free campaign logic for the poebo PoE1 leveling assistant."
 
 [dependencies]
+poebo-pob = { path = "../poebo-pob" }
 serde = { workspace = true }
 serde_json = { workspace = true }
 thiserror = { workspace = true }
