@@ -1,12 +1,19 @@
 // Reshapes the quest / quest-reward tables (as exported by pathofexile-dat) into poebo's flat
 // `QuestInfo` schema: one entry per campaign quest, carrying the gem rewards it grants keyed by the
-// classes that can claim them.
+// classes that can claim them, plus the NPC you claim them from.
 //
 // The join is: QuestRewards.RewardOffer -> QuestRewardOffers.QuestKey -> Quest (id/act/name), plus
 // QuestRewards.Reward -> BaseItemTypes (gem id/name) and QuestRewards.Characters -> Characters
-// (class names). Foreign keys export as row *indices* into the referenced table, same as the
-// WorldAreas connections; we resolve them here. Only gem rewards are kept (Reward whose BaseItemType
-// id is under `Metadata/Items/Gems/`); other reward items (flasks, currency) are dropped.
+// (class names). The reward NPC comes from NPCTalk.QuestRewardOffersKey -> the same offer, resolving
+// NPCTalk.NPCKey -> NPCs.Name. Foreign keys export as row *indices* into the referenced table, same
+// as the WorldAreas connections; we resolve them here.
+//
+// Two standard rewards are kept per quest: gem rewards (Reward whose BaseItemType id is under
+// `Metadata/Items/Gems/`) and passive skill points (a "Book of Skill" quest item = +1 point). Other
+// reward items (keys, flasks, "Book of Regrets" respec) are dropped. Reward offers whose id carries a
+// `_tencent` suffix are region-specific (the Chinese/Tencent client) and are excluded - so a quest
+// that only "gives a gem" through a Tencent offer correctly shows no gem on the standard client
+// (e.g. An Indomitable Spirit gives a Book of Skill, not a gem).
 
 /** A `Quest` row (only the columns we request). */
 export interface RawQuest {
@@ -46,6 +53,33 @@ export interface RawBaseItemType {
   Name: string;
 }
 
+/** An `NPCTalk` row: a dialogue that may present a reward offer, spoken by an NPC. */
+export interface RawNPCTalk {
+  _index: number;
+  NPCKey: number | null;
+  QuestRewardOffersKey: number | null;
+}
+
+/** An `NPCs` row. `Name` is the NPC's display name (e.g. "Tarkleigh", "Nessa"). */
+export interface RawNPC {
+  _index: number;
+  Id: string;
+  Name: string;
+}
+
+// Service/placeholder NPC names that show up in reward dialogue but aren't the quest giver.
+const NON_NPC_NAMES = new Set(['', 'Tutorial NPC']);
+
+// A few reward offers are presented via a tutorial/service dialogue, so the NPCTalk join yields no
+// real NPC. Hand-filled from the game (verified by quest name), applied only as a fallback.
+const NPC_OVERRIDES: Record<string, string> = {
+  a4q6: 'Tasuni', // An Indomitable Spirit (Book of Skill)
+};
+
+// The Book-of-Skill quest item grants one passive skill point; "Book of Regrets" is a respec, not a
+// point, so it is excluded.
+const PASSIVE_POINT_ITEM = 'Book of Skill';
+
 /** One gem a quest can reward, and the classes eligible to claim it. */
 export interface GemReward {
   /** Metadata path, e.g. `Metadata/Items/Gems/SkillGemFireball` - the join key to a PoB gem. */
@@ -58,12 +92,16 @@ export interface GemReward {
   classes: string[];
 }
 
-/** One campaign quest and its gem rewards (mirrors `poebo_core::data::QuestInfo`). */
+/** One campaign quest with its standard rewards (mirrors `poebo_core::data::QuestInfo`). */
 export interface QuestInfo {
   /** Quest id, e.g. `a1q1`. */
   id: string;
   act: number;
   name: string;
+  /** The NPC you claim this quest's reward from (e.g. "Tarkleigh"); null if unresolved. */
+  npc: string | null;
+  /** Passive skill points this quest grants (Book of Skill count); usually 0 or 1. */
+  passive_points: number;
   gem_rewards: GemReward[];
 }
 
@@ -78,53 +116,97 @@ export function transformQuests(
   offers: RawQuestRewardOffer[],
   characters: RawCharacter[],
   baseItems: RawBaseItemType[],
+  npcTalk: RawNPCTalk[],
+  npcs: RawNPC[],
 ): QuestInfo[] {
   const questByIndex = new Map(quests.map((q) => [q._index, q]));
   const offerToQuest = new Map(offers.map((o) => [o._index, o.QuestKey]));
   const className = new Map(characters.map((c) => [c._index, c.Name]));
   const itemByIndex = new Map(baseItems.map((b) => [b._index, b]));
+  const npcName = new Map(npcs.map((n) => [n._index, n.Name]));
+  // Region-specific (Tencent/Chinese client) reward offers - excluded from the standard pack.
+  const tencentOffers = new Set(
+    offers.filter((o) => o.Id.toLowerCase().includes('tencent')).map((o) => o._index),
+  );
 
-  // Accumulate per quest, de-duplicating a gem across class-specific reward rows (the same gem is
-  // often listed once per class), unioning the eligible classes.
+  // Reward offer -> the NPC most often quoted presenting it (skipping placeholder/tutorial names).
+  const offerNpcNames = new Map<number, string[]>();
+  for (const t of npcTalk) {
+    if (t.QuestRewardOffersKey == null) continue;
+    const name = t.NPCKey == null ? undefined : npcName.get(t.NPCKey);
+    if (!name || NON_NPC_NAMES.has(name)) continue;
+    const list = offerNpcNames.get(t.QuestRewardOffersKey) ?? [];
+    list.push(name);
+    offerNpcNames.set(t.QuestRewardOffersKey, list);
+  }
+  const offerNpc = (offerIndex: number): string | null => {
+    const names = offerNpcNames.get(offerIndex);
+    if (!names || names.length === 0) return null;
+    const counts = new Map<string, number>();
+    for (const n of names) counts.set(n, (counts.get(n) ?? 0) + 1);
+    return [...counts.entries()].sort((a, b) => b[1] - a[1])[0][0];
+  };
+
+  // Accumulate per quest: gems (de-duplicated across class-specific rows, unioning eligible classes)
+  // and a passive-point count. A quest is emitted if it grants a gem or at least one passive point.
   const acc = new Map<string, { info: QuestInfo; gems: Map<string, GemReward> }>();
+
+  const ensure = (quest: RawQuest, offerIndex: number) => {
+    let entry = acc.get(quest.Id);
+    if (!entry) {
+      entry = {
+        info: {
+          id: quest.Id,
+          act: quest.Act,
+          name: quest.Name,
+          npc: offerNpc(offerIndex) ?? NPC_OVERRIDES[quest.Id] ?? null,
+          passive_points: 0,
+          gem_rewards: [],
+        },
+        gems: new Map(),
+      };
+      acc.set(quest.Id, entry);
+    } else if (entry.info.npc == null) {
+      // Fill the NPC from a later offer if the first one had none.
+      entry.info.npc = offerNpc(offerIndex) ?? NPC_OVERRIDES[quest.Id] ?? null;
+    }
+    return entry;
+  };
 
   for (const r of rewards) {
     if (r.RewardOffer == null || r.Reward == null) continue;
+    if (tencentOffers.has(r.RewardOffer)) continue;
     const questIndex = offerToQuest.get(r.RewardOffer);
     if (questIndex == null) continue;
     const quest = questByIndex.get(questIndex);
     if (!quest || !CAMPAIGN_QUEST.test(quest.Id)) continue;
     const item = itemByIndex.get(r.Reward);
-    if (!item || !item.Id || !GEM_ID.test(item.Id)) continue;
+    if (!item || !item.Id) continue;
 
-    let entry = acc.get(quest.Id);
-    if (!entry) {
-      entry = {
-        info: { id: quest.Id, act: quest.Act, name: quest.Name, gem_rewards: [] },
-        gems: new Map(),
-      };
-      acc.set(quest.Id, entry);
-    }
-
-    const classes = (r.Characters ?? [])
-      .map((ci) => className.get(ci))
-      .filter((n): n is string => Boolean(n));
-
-    const existing = entry.gems.get(item.Id);
-    if (existing) {
-      for (const c of classes) if (!existing.classes.includes(c)) existing.classes.push(c);
-    } else {
-      entry.gems.set(item.Id, {
-        gem_id: item.Id,
-        gem_name: item.Name,
-        reward_level: r.RewardLevel,
-        classes: [...classes],
-      });
+    if (GEM_ID.test(item.Id)) {
+      const entry = ensure(quest, r.RewardOffer);
+      const classes = (r.Characters ?? [])
+        .map((ci) => className.get(ci))
+        .filter((n): n is string => Boolean(n));
+      const existing = entry.gems.get(item.Id);
+      if (existing) {
+        for (const c of classes) if (!existing.classes.includes(c)) existing.classes.push(c);
+      } else {
+        entry.gems.set(item.Id, {
+          gem_id: item.Id,
+          gem_name: item.Name,
+          reward_level: r.RewardLevel,
+          classes: [...classes],
+        });
+      }
+    } else if (item.Name === PASSIVE_POINT_ITEM) {
+      ensure(quest, r.RewardOffer).info.passive_points += 1;
     }
   }
 
   const out: QuestInfo[] = [];
   for (const { info, gems } of acc.values()) {
+    if (gems.size === 0 && info.passive_points === 0) continue;
     info.gem_rewards = [...gems.values()].sort((a, b) => a.gem_name.localeCompare(b.gem_name));
     for (const g of info.gem_rewards) g.classes.sort();
     out.push(info);

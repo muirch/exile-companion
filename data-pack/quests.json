@@ -1,13 +1,15 @@
 {
   "schema_version": 1,
   "patch": "3.28.0.15",
-  "generated_at": "2026-07-18T11:11:44.264Z",
+  "generated_at": "2026-07-18T12:17:16.524Z",
   "source": "PoE game files (GGG patch CDN) via pathofexile-dat",
   "quests": [
     {
       "id": "a1q1",
       "act": 1,
       "name": "Enemy at the Gate",
+      "npc": "Tarkleigh",
+      "passive_points": 0,
       "gem_rewards": [
         {
           "gem_id": "Metadata/Items/Gems/SkillGemBlight",
@@ -226,6 +228,8 @@
       "id": "a1q2",
       "act": 1,
       "name": "The Caged Brute",
+      "npc": "Nessa",
+      "passive_points": 0,
       "gem_rewards": [
         {
           "gem_id": "Metadata/Items/Gems/SupportGemAddedColdDamage",
@@ -578,6 +582,8 @@
       "id": "a1q3",
       "act": 1,
       "name": "The Siren's Cadence",
+      "npc": "Nessa",
+      "passive_points": 0,
       "gem_rewards": [
         {
           "gem_id": "Metadata/Items/Gems/SkillGemAbsolution",
@@ -922,6 +928,8 @@
       "id": "a1q4",
       "act": 1,
       "name": "Breaking Some Eggs",
+      "npc": "Tarkleigh",
+      "passive_points": 0,
       "gem_rewards": [
         {
           "gem_id": "Metadata/Items/Gems/SkillGemBearTrap",
@@ -1122,6 +1130,8 @@
       "id": "a1q5",
       "act": 1,
       "name": "Mercy Mission",
+      "npc": "Nessa",
+      "passive_points": 0,
       "gem_rewards": [
         {
           "gem_id": "Metadata/Items/Gems/SupportGemSpiritStrike",
@@ -1268,9 +1278,35 @@
       ]
     },
     {
+      "id": "a1q6",
+      "act": 1,
+      "name": "The Marooned Mariner",
+      "npc": "Bestel",
+      "passive_points": 1,
+      "gem_rewards": []
+    },
+    {
+      "id": "a1q7",
+      "act": 1,
+      "name": "The Dweller of the Deep",
+      "npc": "Tarkleigh",
+      "passive_points": 1,
+      "gem_rewards": []
+    },
+    {
+      "id": "a1q9",
+      "act": 1,
+      "name": "The Way Forward",
+      "npc": "Bestel",
+      "passive_points": 1,
+      "gem_rewards": []
+    },
+    {
       "id": "a2q4",
       "act": 2,
       "name": "Sharp and Cruel",
+      "npc": "Silk",
+      "passive_points": 0,
       "gem_rewards": [
         {
           "gem_id": "Metadata/Items/Gems/SupportGemCloseCombat",
@@ -1505,9 +1541,19 @@
       ]
     },
     {
+      "id": "a2q5",
+      "act": 2,
+      "name": "Through Sacred Ground",
+      "npc": "Yeena",
+      "passive_points": 1,
+      "gem_rewards": []
+    },
+    {
       "id": "a2q6",
       "act": 2,
       "name": "Intruders in Black",
+      "npc": "Greust",
+      "passive_points": 0,
       "gem_rewards": [
         {
           "gem_id": "Metadata/Items/Gems/SkillGemAncestralCry",
@@ -1804,123 +1850,11 @@
       ]
     },
     {
-      "id": "a2q9",
-      "act": 2,
-      "name": "The Root of the Problem",
-      "gem_rewards": [
-        {
-          "gem_id": "Metadata/Items/Gems/SkillGemAbsolution",
-          "gem_name": "Absolution",
-          "reward_level": 15,
-          "classes": [
-            "Templar"
-          ]
-        },
-        {
-          "gem_id": "Metadata/Items/Gems/SupportGemAddedLightningDamage",
-          "gem_name": "Added Lightning Damage Support",
-          "reward_level": 15,
-          "classes": [
-            "Templar"
-          ]
-        },
-        {
-          "gem_id": "Metadata/Items/Gems/SupportGemArcaneSurge",
-          "gem_name": "Arcane Surge Support",
-          "reward_level": 15,
-          "classes": [
-            "Templar",
-            "Witch"
-          ]
-        },
-        {
-          "gem_id": "Metadata/Items/Gems/SupportGemControlledDestruction",
-          "gem_name": "Controlled Destruction Support",
-          "reward_level": 15,
-          "classes": [
-            "Witch"
-          ]
-        },
-        {
-          "gem_id": "Metadata/Items/Gems/SupportGemEfficacy",
-          "gem_name": "Efficacy Support",
-          "reward_level": 15,
-          "classes": [
-            "Witch"
-          ]
-        },
-        {
-          "gem_id": "Metadata/Items/Gems/SupportGemWeaponElementalDamage",
-          "gem_name": "Elemental Damage with Attacks Support",
-          "reward_level": 15,
-          "classes": [
-            "Marauder",
-            "Templar"
-          ]
-        },
-        {
-          "gem_id": "Metadata/Items/Gems/SupportGemLifetap",
-          "gem_name": "Lifetap Support",
-          "reward_level": 15,
-          "classes": [
-            "Marauder",
-            "Templar"
-          ]
-        },
-        {
-          "gem_id": "Metadata/Items/Gems/SupportGemMeleePhysicalDamage",
-          "gem_name": "Melee Physical Damage Support",
-          "reward_level": 15,
-          "classes": [
-            "Templar"
-          ]
-        },
-        {
-          "gem_id": "Metadata/Items/Gems/SupportGemMinionDamage",
-          "gem_name": "Minion Damage Support",
-          "reward_level": 15,
-          "classes": [
-            "Templar"
-          ]
-        },
-        {
-          "gem_id": "Metadata/Items/Gems/SkillGemStaticStrike",
-          "gem_name": "Static Strike",
-          "reward_level": 15,
-          "classes": [
-            "Templar"
-          ]
-        },
-        {
-          "gem_id": "Metadata/Items/Gems/SupportGemPhysicalProjectileAttackDamage",
-          "gem_name": "Vicious Projectiles Support",
-          "reward_level": 15,
-          "classes": [
-            "Marauder"
-          ]
-        },
-        {
-          "gem_id": "Metadata/Items/Gems/SkillGemVolcanicFissure",
-          "gem_name": "Volcanic Fissure",
-          "reward_level": 15,
-          "classes": [
-            "Marauder"
-          ]
-        },
-        {
-          "gem_id": "Metadata/Items/Gems/SkillGemWintertideBrand",
-          "gem_name": "Wintertide Brand",
-          "reward_level": 15,
-          "classes": [
-            "Witch"
-          ]
-        }
-      ]
-    },
-    {
       "id": "a3q1",
       "act": 3,
       "name": "Lost in Love",
+      "npc": "Maramoa",
+      "passive_points": 0,
       "gem_rewards": [
         {
           "gem_id": "Metadata/Items/Gems/SkillGemAlchemistsMark",
@@ -2202,9 +2136,19 @@
       ]
     },
     {
+      "id": "a3q11",
+      "act": 3,
+      "name": "Victario's Secrets",
+      "npc": "Hargan",
+      "passive_points": 1,
+      "gem_rewards": []
+    },
+    {
       "id": "a3q12",
       "act": 3,
       "name": "A Fixture of Fate",
+      "npc": "Siosa",
+      "passive_points": 0,
       "gem_rewards": [
         {
           "gem_id": "Metadata/Items/Gems/SupportGemArchmage",
@@ -2595,6 +2539,8 @@
       "id": "a3q8",
       "act": 3,
       "name": "Sever the Right Hand",
+      "npc": "Maramoa",
+      "passive_points": 0,
       "gem_rewards": [
         {
           "gem_id": "Metadata/Items/Gems/SkillGemArmageddonBrand",
@@ -3032,9 +2978,19 @@
       ]
     },
     {
+      "id": "a3q9",
+      "act": 3,
+      "name": "Piety's Pets",
+      "npc": "Grigor",
+      "passive_points": 1,
+      "gem_rewards": []
+    },
+    {
       "id": "a4q1",
       "act": 4,
       "name": "The Eternal Nightmare",
+      "npc": "Dialla",
+      "passive_points": 0,
       "gem_rewards": [
         {
           "gem_id": "Metadata/Items/Gems/SkillGemArcanistBrand",
@@ -3325,6 +3281,8 @@
       "id": "a4q2",
       "act": 4,
       "name": "Breaking the Seal",
+      "npc": "Oyun",
+      "passive_points": 0,
       "gem_rewards": [
         {
           "gem_id": "Metadata/Items/Gems/SkillGemAmbush",
@@ -3524,146 +3482,129 @@
       "id": "a4q6",
       "act": 4,
       "name": "An Indomitable Spirit",
-      "gem_rewards": [
-        {
-          "gem_id": "Metadata/Items/Gems/SupportGemBonechill",
-          "gem_name": "Bonechill Support",
-          "reward_level": 35,
-          "classes": [
-            "Witch"
-          ]
-        },
-        {
-          "gem_id": "Metadata/Items/Gems/SupportGemControlledDestruction",
-          "gem_name": "Controlled Destruction Support",
-          "reward_level": 35,
-          "classes": [
-            "Witch"
-          ]
-        },
-        {
-          "gem_id": "Metadata/Items/Gems/SkillGemDominatingBlow",
-          "gem_name": "Dominating Blow",
-          "reward_level": 35,
-          "classes": [
-            "Templar"
-          ]
-        },
-        {
-          "gem_id": "Metadata/Items/Gems/SupportGemEfficacy",
-          "gem_name": "Efficacy Support",
-          "reward_level": 35,
-          "classes": [
-            "Witch"
-          ]
-        },
-        {
-          "gem_id": "Metadata/Items/Gems/SupportGemWeaponElementalDamage",
-          "gem_name": "Elemental Damage with Attacks Support",
-          "reward_level": 35,
-          "classes": [
-            "Marauder",
-            "Templar"
-          ]
-        },
-        {
-          "gem_id": "Metadata/Items/Gems/SupportGemFirePenetration",
-          "gem_name": "Fire Penetration Support",
-          "reward_level": 35,
-          "classes": [
-            "Marauder"
-          ]
-        },
-        {
-          "gem_id": "Metadata/Items/Gems/SupportGemFortify",
-          "gem_name": "Fortify Support",
-          "reward_level": 35,
-          "classes": [
-            "Templar"
-          ]
-        },
-        {
-          "gem_id": "Metadata/Items/Gems/SupportGemDamageAgainstChilled",
-          "gem_name": "Hypothermia Support",
-          "reward_level": 35,
-          "classes": [
-            "Witch"
-          ]
-        },
-        {
-          "gem_id": "Metadata/Items/Gems/SkillGemIceCrash",
-          "gem_name": "Ice Crash",
-          "reward_level": 35,
-          "classes": [
-            "Templar"
-          ]
-        },
-        {
-          "gem_id": "Metadata/Items/Gems/SupportGemLifetap",
-          "gem_name": "Lifetap Support",
-          "reward_level": 35,
-          "classes": [
-            "Marauder",
-            "Templar"
-          ]
-        },
-        {
-          "gem_id": "Metadata/Items/Gems/SupportGemMeleePhysicalDamage",
-          "gem_name": "Melee Physical Damage Support",
-          "reward_level": 35,
-          "classes": [
-            "Templar"
-          ]
-        },
-        {
-          "gem_id": "Metadata/Items/Gems/SupportGemMeleeSplash",
-          "gem_name": "Melee Splash Support",
-          "reward_level": 35,
-          "classes": [
-            "Templar"
-          ]
-        },
-        {
-          "gem_id": "Metadata/Items/Gems/SupportGemMinionDamage",
-          "gem_name": "Minion Damage Support",
-          "reward_level": 35,
-          "classes": [
-            "Templar"
-          ]
-        },
-        {
-          "gem_id": "Metadata/Items/Gems/SupportGemMultistrike",
-          "gem_name": "Multistrike Support",
-          "reward_level": 35,
-          "classes": [
-            "Templar"
-          ]
-        },
-        {
-          "gem_id": "Metadata/Items/Gems/SupportGemPhysicalProjectileAttackDamage",
-          "gem_name": "Vicious Projectiles Support",
-          "reward_level": 35,
-          "classes": [
-            "Marauder"
-          ]
-        },
-        {
-          "gem_id": "Metadata/Items/Gems/SkillGemVolcanicFissure",
-          "gem_name": "Volcanic Fissure",
-          "reward_level": 35,
-          "classes": [
-            "Marauder"
-          ]
-        },
-        {
-          "gem_id": "Metadata/Items/Gems/SkillGemWintertideBrand",
-          "gem_name": "Wintertide Brand",
-          "reward_level": 35,
-          "classes": [
-            "Witch"
-          ]
-        }
-      ]
+      "npc": "Tasuni",
+      "passive_points": 1,
+      "gem_rewards": []
+    },
+    {
+      "id": "a5q3",
+      "act": 5,
+      "name": "In Service to Science",
+      "npc": "Vilenta",
+      "passive_points": 1,
+      "gem_rewards": []
+    },
+    {
+      "id": "a5q7",
+      "act": 5,
+      "name": "Kitava's Torments",
+      "npc": "Lani",
+      "passive_points": 1,
+      "gem_rewards": []
+    },
+    {
+      "id": "a6q3",
+      "act": 6,
+      "name": "The Father of War",
+      "npc": "Tarkleigh",
+      "passive_points": 1,
+      "gem_rewards": []
+    },
+    {
+      "id": "a6q6",
+      "act": 6,
+      "name": "The Puppet Mistress",
+      "npc": "Tarkleigh",
+      "passive_points": 1,
+      "gem_rewards": []
+    },
+    {
+      "id": "a6q7",
+      "act": 6,
+      "name": "The Cloven One",
+      "npc": "Bestel",
+      "passive_points": 1,
+      "gem_rewards": []
+    },
+    {
+      "id": "a7q1",
+      "act": 7,
+      "name": "The Master of a Million Faces",
+      "npc": "Eramir",
+      "passive_points": 1,
+      "gem_rewards": []
+    },
+    {
+      "id": "a7q6",
+      "act": 7,
+      "name": "Kishara's Star",
+      "npc": "Weylam Roth",
+      "passive_points": 1,
+      "gem_rewards": []
+    },
+    {
+      "id": "a7q9",
+      "act": 7,
+      "name": "Queen of Despair",
+      "npc": "Eramir",
+      "passive_points": 1,
+      "gem_rewards": []
+    },
+    {
+      "id": "a8q4",
+      "act": 8,
+      "name": "Reflection of Terror",
+      "npc": "Hargan",
+      "passive_points": 1,
+      "gem_rewards": []
+    },
+    {
+      "id": "a8q6",
+      "act": 8,
+      "name": "Love is Dead",
+      "npc": "Clarissa",
+      "passive_points": 1,
+      "gem_rewards": []
+    },
+    {
+      "id": "a8q7",
+      "act": 8,
+      "name": "The Gemling Legion",
+      "npc": "Maramoa",
+      "passive_points": 1,
+      "gem_rewards": []
+    },
+    {
+      "id": "a9q2",
+      "act": 9,
+      "name": "The Ruler of Highgate",
+      "npc": "Tasuni",
+      "passive_points": 1,
+      "gem_rewards": []
+    },
+    {
+      "id": "a9q5",
+      "act": 9,
+      "name": "Queen of the Sands",
+      "npc": "Irasha",
+      "passive_points": 1,
+      "gem_rewards": []
+    },
+    {
+      "id": "a10q3",
+      "act": 10,
+      "name": "An End to Hunger",
+      "npc": "Lani",
+      "passive_points": 1,
+      "gem_rewards": []
+    },
+    {
+      "id": "a10q6",
+      "act": 10,
+      "name": "Vilenta's Vengeance",
+      "npc": "Lani",
+      "passive_points": 1,
+      "gem_rewards": []
     }
   ]
 }

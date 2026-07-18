@@ -19,6 +19,8 @@ import {
   type QuestInfo,
   type RawBaseItemType,
   type RawCharacter,
+  type RawNPC,
+  type RawNPCTalk,
   type RawQuest,
   type RawQuestReward,
   type RawQuestRewardOffer,
@@ -99,11 +101,24 @@ function validateQuestAnchors(quests: QuestInfo[]): void {
   if (!witchStarter) {
     throw new Error('Anchor failed: a1q1 has no Witch-class starter gem - class join looks wrong; not writing.');
   }
-  const withGems = quests.filter((q) => q.gem_rewards.length > 0).length;
-  if (withGems < 12) {
-    throw new Error(`Anchor failed: only ${withGems} campaign quests carry gem rewards (expected >= 12) - not writing.`);
+  if (first.npc !== 'Tarkleigh') {
+    throw new Error(`Anchor failed: a1q1 reward NPC is "${first.npc}" (expected Tarkleigh) - NPC join looks wrong; not writing.`);
   }
-  console.log(`[regen] ${quests.length} campaign quests, ${withGems} with gem rewards.`);
+  const withGems = quests.filter((q) => q.gem_rewards.length > 0).length;
+  if (withGems !== 12) {
+    throw new Error(`Anchor failed: ${withGems} campaign gem-reward quests (expected exactly 12; Tencent-only offers must be excluded) - not writing.`);
+  }
+  // "The Way Forward" (a1q9) grants a Book of Skill (a passive point) and no gem.
+  const a1q9 = quests.find((q) => q.id === 'a1q9');
+  if (!a1q9 || a1q9.passive_points !== 1 || a1q9.gem_rewards.length !== 0) {
+    throw new Error('Anchor failed: a1q9 "The Way Forward" should grant 1 passive point and no gem - not writing.');
+  }
+  const totalPoints = quests.reduce((sum, q) => sum + q.passive_points, 0);
+  if (totalPoints !== 22) {
+    throw new Error(`Anchor failed: ${totalPoints} passive points from quests (expected 22 Book-of-Skill grants) - not writing.`);
+  }
+  const withNpc = quests.filter((q) => q.npc).length;
+  console.log(`[regen] ${quests.length} campaign quests: ${withGems} with gems, ${totalPoints} passive points (${withNpc}/${quests.length} with a reward NPC).`);
 }
 
 function validateTrialAnchors(trials: TrialInfo[]): void {
@@ -132,6 +147,8 @@ function main(): void {
     loadTable<RawQuestRewardOffer>('QuestRewardOffers'),
     loadTable<RawCharacter>('Characters'),
     loadTable<RawBaseItemType>('BaseItemTypes'),
+    loadTable<RawNPCTalk>('NPCTalk'),
+    loadTable<RawNPC>('NPCs'),
   );
   const trials = transformTrials(
     loadTable<RawLabyrinthTrial>('LabyrinthTrials'),

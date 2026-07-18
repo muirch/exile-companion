@@ -29,6 +29,14 @@
       "columns": ["Id", "QuestKey"]
     },
     {
+      "name": "NPCTalk",
+      "columns": ["NPCKey", "QuestRewardOffersKey"]
+    },
+    {
+      "name": "NPCs",
+      "columns": ["Id", "Name"]
+    },
+    {
       "name": "Characters",
       "columns": ["Id", "Name"]
     },
