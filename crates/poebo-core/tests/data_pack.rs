@@ -80,11 +80,20 @@ fn committed_quests_have_act1_gem_rewards() {
 fn committed_trials_cover_the_normal_lab() {
     let pack = committed_pack();
     // 6 Normal Labyrinth trials live in acts 1-3; 12 campaign trials in total.
-    assert_eq!(pack.trials.all().len(), 12, "expected 12 campaign lab trials");
+    assert_eq!(
+        pack.trials.all().len(),
+        12,
+        "expected 12 campaign lab trials"
+    );
     let acts_1_3 = pack.trials.all().iter().filter(|t| t.act <= 3).count();
-    assert_eq!(acts_1_3, 6, "expected 6 Normal Labyrinth trials in acts 1-3");
+    assert_eq!(
+        acts_1_3, 6,
+        "expected 6 Normal Labyrinth trials in acts 1-3"
+    );
     assert!(
-        pack.trials.in_act(1).any(|t| t.area_name == "The Lower Prison"),
+        pack.trials
+            .in_act(1)
+            .any(|t| t.area_name == "The Lower Prison"),
         "The Lower Prison is the Act 1 trial"
     );
 }

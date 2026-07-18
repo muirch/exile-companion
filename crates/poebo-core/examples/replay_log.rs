@@ -63,7 +63,10 @@ fn main() {
         );
     }
     println!();
-    println!("{:>3} | {:>3} | {:<8} | {:<26} | next objective", "act", "lvl", "where", "zone");
+    println!(
+        "{:>3} | {:>3} | {:<8} | {:<26} | next objective",
+        "act", "lvl", "where", "zone"
+    );
     println!("{}", "-".repeat(96));
 
     for line in text.lines() {
@@ -93,5 +96,9 @@ fn main() {
     println!("  act       : {:?}", s.act);
     println!("  zone      : {:?}", s.zone.as_ref().map(|z| &z.name));
     println!("  deaths    : {}", s.deaths);
-    println!("  objective : {} - {}", objective.headline, objective.detail.as_deref().unwrap_or(""));
+    println!(
+        "  objective : {} - {}",
+        objective.headline,
+        objective.detail.as_deref().unwrap_or("")
+    );
 }
