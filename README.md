@@ -100,7 +100,7 @@ sudo apt install libwebkit2gtk-4.1-dev libgtk-3-dev libsoup-3.0-dev \
 pnpm tauri dev
 ```
 
-The Windows installer is built by CI (see `.github/workflows/ci.yml`); you can also build it on Windows with `pnpm tauri build`.
+The overlay is a Windows target: the desktop app is only built on Windows (via the manual "Release" workflow, or `pnpm tauri build` on Windows). On Linux, develop the UI in the browser with `pnpm dev` and the logic with `cargo test` / the `replay_log` example.
 
 ### Regenerating the campaign data
 
