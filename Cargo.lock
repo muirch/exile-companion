@@ -2311,6 +2311,17 @@ name = "poebo-data"
 version = "0.1.0"
 
 [[package]]
+name = "poebo-pob"
+version = "0.1.0"
+dependencies = [
+ "base64 0.22.1",
+ "flate2",
+ "quick-xml",
+ "tempfile",
+ "thiserror 2.0.18",
+]
+
+[[package]]
 name = "potential_utf"
 version = "0.1.5"
 source = "registry+https://github.com/rust-lang/crates.io-index"

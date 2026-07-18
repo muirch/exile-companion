@@ -1,0 +1,16 @@
+[package]
+name = "poebo-pob"
+version = "0.1.0"
+edition.workspace = true
+license.workspace = true
+rust-version.workspace = true
+description = "Path of Building build import (decode + parse) for the poebo PoE1 leveling assistant."
+
+[dependencies]
+thiserror = { workspace = true }
+base64 = "=0.22.1"
+flate2 = "=1.1.9"
+quick-xml = "=0.41.0"
+
+[dev-dependencies]
+tempfile = "=3.27.0"
