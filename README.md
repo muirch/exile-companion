@@ -40,7 +40,7 @@ This project is not affiliated with or endorsed by Grinding Gear Games. Path of 
 - **Recording.** A recording is just another `Client.txt`, so it plays back exactly.
 - **Leveling route.** The overlay shows what to do in the current area and what comes next, using the route from [exile-leveling](https://github.com/HeartofPhos/exile-leveling) (MIT). It follows the area the game loads, and your level tells repeat town visits apart; Alt+Right and Alt+Left step it by hand (all hotkeys can be changed in settings). The position is saved between sessions.
 - **Quick menu and settings.** Hold Esc in the game for a menu under the cursor: turn features on or off, open the settings window, move the overlay, quit. poebo only watches the key; the game still gets it.
-- **The overlay.** A borderless, transparent, always-on-top window that is click-through by default, so the game keeps the mouse. Press Ctrl+Alt+Space to grab it when you want to move it or change a setting, and again to let go.
+- **The overlay.** A borderless, transparent, always-on-top window that is click-through by default, so the game keeps the mouse. Press Alt+M to unlock it and drag it, and again to lock it.
 - **Data straight from the game.** The 155-area campaign map is generated from Path of Exile's own game files for the current patch, so it does not depend on someone else's dataset staying current.
 
 ## Roadmap
