@@ -101,6 +101,10 @@ impl ZoneTable {
         }
     }
 
+    pub fn town_of_act(&self, act: i32) -> Option<&ZoneInfo> {
+        self.by_id.values().find(|z| z.is_town && z.act == act)
+    }
+
     /// The game patch these facts were extracted from (shown in the UI).
     pub fn patch(&self) -> &str {
         &self.patch
@@ -204,6 +208,10 @@ impl QuestTable {
     /// All campaign quests, ordered by act.
     pub fn all(&self) -> &[QuestInfo] {
         &self.quests
+    }
+
+    pub fn by_id(&self, id: &str) -> Option<&QuestInfo> {
+        self.quests.iter().find(|q| q.id == id)
     }
 
     /// Every (quest, reward) pair that grants the gem with the given metadata id.

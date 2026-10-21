@@ -22,6 +22,20 @@ pub const QUESTS_JSON: &[u8] = include_bytes!("../../../data-pack/quests.json");
 /// Raw bytes of the committed lab-trials pack (`data-pack/trials.json`).
 pub const TRIALS_JSON: &[u8] = include_bytes!("../../../data-pack/trials.json");
 
+/// exile-leveling's route, one file per act in order (MIT, see `data-pack/routes/exile-leveling`).
+pub const ROUTE_ACTS: [&str; 10] = [
+    include_str!("../../../data-pack/routes/exile-leveling/act-1.txt"),
+    include_str!("../../../data-pack/routes/exile-leveling/act-2.txt"),
+    include_str!("../../../data-pack/routes/exile-leveling/act-3.txt"),
+    include_str!("../../../data-pack/routes/exile-leveling/act-4.txt"),
+    include_str!("../../../data-pack/routes/exile-leveling/act-5.txt"),
+    include_str!("../../../data-pack/routes/exile-leveling/act-6.txt"),
+    include_str!("../../../data-pack/routes/exile-leveling/act-7.txt"),
+    include_str!("../../../data-pack/routes/exile-leveling/act-8.txt"),
+    include_str!("../../../data-pack/routes/exile-leveling/act-9.txt"),
+    include_str!("../../../data-pack/routes/exile-leveling/act-10.txt"),
+];
+
 #[cfg(test)]
 mod tests {
     use super::*;

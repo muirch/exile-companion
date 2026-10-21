@@ -27,6 +27,7 @@ pub mod parser;
 pub mod pipeline;
 pub mod recorder;
 pub mod resolve;
+pub mod route;
 pub mod source;
 pub mod state;
 

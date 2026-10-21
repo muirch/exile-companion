@@ -124,3 +124,41 @@ fn committed_trials_cover_the_normal_lab() {
         "The Lower Prison is the Act 1 trial"
     );
 }
+
+#[test]
+fn bundled_route_parses_cleanly() {
+    use poebo_core::route::parse_route;
+    use std::collections::HashSet;
+
+    let pack = committed_pack();
+    let source = poebo_data::ROUTE_ACTS.join("\n");
+    for defines in [HashSet::new(), HashSet::from(["LEAGUE_START".to_string()])] {
+        let (route, warnings) = parse_route(&source, &pack.zones, &pack.quests, &defines);
+        assert!(warnings.is_empty(), "{warnings:#?}");
+        assert_eq!(route.sections.len(), 10);
+        assert_eq!(route.edges.first().map(String::as_str), Some("1_1_1"));
+        assert!(route.edges.len() > 100, "only {} edges", route.edges.len());
+    }
+}
+
+#[test]
+fn tracker_walks_the_bundled_route_end_to_end() {
+    use poebo_core::route::{parse_route, RouteTracker};
+    use std::collections::HashSet;
+
+    let pack = committed_pack();
+    let source = poebo_data::ROUTE_ACTS.join("\n");
+    let (route, _) = parse_route(&source, &pack.zones, &pack.quests, &HashSet::new());
+    let mut tracker = RouteTracker::default();
+    for (i, area) in route.edges.iter().enumerate().skip(1) {
+        assert!(
+            route.view(tracker.active()).is_some(),
+            "no view for edge {i}"
+        );
+        assert!(
+            tracker.on_area_generated(&route, area),
+            "stuck before edge {i} ({area})"
+        );
+    }
+    assert_eq!(tracker.active(), route.edges.len() - 1);
+}

@@ -7,6 +7,7 @@
   "scripts": {
     "fetch": "pathofexile-dat",
     "regen": "tsx src/export.ts",
+    "routes": "tsx src/routes.ts",
     "typecheck": "tsc --noEmit"
   },
   "dependencies": {
