@@ -15,13 +15,21 @@ pub use state::AppState;
 
 /// Build and run the application.
 pub fn run() {
+    log_panics();
     tauri::Builder::default()
+        .plugin(
+            tauri_plugin_log::Builder::new()
+                .level(log::LevelFilter::Info)
+                .max_file_size(1_000_000)
+                .build(),
+        )
         .plugin(tauri_plugin_dialog::init())
         .plugin(tauri_plugin_fs::init())
         .plugin(tauri_plugin_clipboard_manager::init())
         .plugin(tauri_plugin_store::Builder::default().build())
         .plugin(tauri_plugin_global_shortcut::Builder::new().build())
         .setup(|app| {
+            log::info!("poebo {} starting", env!("CARGO_PKG_VERSION"));
             let data = runtime::load_data_pack()?;
             let saved = settings::load(app.handle()).unwrap_or_default();
             let route = runtime::load_route(&data, saved.league_start);
@@ -36,9 +44,12 @@ pub fn run() {
             if let Some(log) = poebo_core::logfile::find_client_log(saved.last_log_path.as_deref())
             {
                 let path = log.to_string_lossy().into_owned();
+                log::info!("watching {path}");
                 if let Err(e) = runtime::start_live(app.handle().clone(), path) {
-                    eprintln!("could not watch {}: {e}", log.display());
+                    log::error!("could not watch {}: {e}", log.display());
                 }
+            } else {
+                log::info!("no Client.txt found");
             }
 
             overlay::create_tray(app.handle())?;
@@ -48,9 +59,10 @@ pub fn run() {
             menu::watch_esc_hold(app.handle().clone());
 
             for e in hotkeys::register_all(app.handle()) {
-                eprintln!("hotkey {} ({}): {}", e.action, e.shortcut, e.error);
+                log::warn!("hotkey {} ({}): {}", e.action, e.shortcut, e.error);
             }
 
+            log::info!("started");
             Ok(())
         })
         .on_window_event(|window, event| match event {
@@ -106,4 +118,14 @@ pub fn run() {
         ])
         .run(tauri::generate_context!())
         .expect("error while running poebo");
+}
+
+// The release build has no console, so a panic would vanish without this.
+fn log_panics() {
+    let default = std::panic::take_hook();
+    std::panic::set_hook(Box::new(move |info| {
+        log::error!("panic: {info}");
+        log::logger().flush();
+        default(info);
+    }));
 }

@@ -54,7 +54,7 @@ pub fn load_route(data: &DataPack, league_start: bool) -> Arc<Route> {
     let source = poebo_data::ROUTE_ACTS.join("\n");
     let (route, warnings) = parse_route(&source, &data.zones, &data.quests, &defines);
     for w in warnings {
-        eprintln!("route line {}: {}", w.line, w.message);
+        log::warn!("route line {}: {}", w.line, w.message);
     }
     Arc::new(route)
 }
