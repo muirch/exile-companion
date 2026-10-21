@@ -30,3 +30,20 @@ Thumbs.db
 *.local
 # ts-rs default export dir (canonical bindings live in src/ipc/generated via TS_RS_EXPORT_DIR)
 crates/poebo-core/bindings/
+
+# Personal agent settings and the skill's downloaded binary
+.claude/settings.local.json
+.claude/worktrees/
+.claude/skills/impeccable/scripts/bin/
+
+# impeccable working files; design.json and surfaces/ are shared
+.impeccable/config.local.json
+.impeccable/hook.*.json
+.impeccable/review/
+.impeccable/questions/
+.impeccable/mocks/
+.impeccable/build/
+
+# Personal Claude Code notes and UI screenshots
+CLAUDE.local.md
+.ui-shots/

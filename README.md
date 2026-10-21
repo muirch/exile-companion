@@ -124,8 +124,22 @@ The overlay uses Alegreya Sans and Alegreya Sans SC by Huerta Tipográfica, bund
 
 The leveling route in `data-pack/routes/exile-leveling` is written by the exile-leveling authors and kept under its MIT license (see the `LICENSE` file there). `npm run routes` in `tools/data-extractor` refreshes it from a pinned commit.
 
+The design skill in `.claude/skills/impeccable` is [impeccable](https://github.com/pbakaus/impeccable) by Paul Bakaus, under the Apache License 2.0 (`LICENSE` there).
 
 The application code is MIT; see [LICENSE](LICENSE). The campaign data pack is derived from Path of Exile's game files and is still (c) Grinding Gear Games, redistributed under their fan content policy, so it is not covered by the code license.
+
+## How it's built
+
+This is a side project, and I build it with an AI coding agent (Claude Code) on purpose. I set the architecture and the constraints, review every change, and test it in the game; the agent does most of the typing. It's a faster way to get a hobby tool done, and an experiment in how far that workflow goes when you keep it on a short leash.
+
+The leash is in the repo:
+
+- [AGENTS.md](AGENTS.md) has the project rules: what poebo may and may not do to the game, what to run before committing, how to write comments and commit messages. `CLAUDE.md` only points Claude Code at it.
+- [PRODUCT.md](PRODUCT.md) says who the tool is for and what it must never do.
+- [DESIGN.md](DESIGN.md) and `.impeccable/` hold the design system. UI work goes through the impeccable skill and gets an independent review before it ships.
+- `.claude/settings.json` has the hooks and the permission rules every session shares.
+
+Every change goes through a pull request, CI and my review before it lands on `main`.
 
 ## Contributing
 

@@ -1,0 +1,457 @@
+{
+  "schemaVersion": 2,
+  "generatedAt": "2026-10-21T13:21:25+00:00",
+  "title": "Design System: poebo",
+  "extensions": {
+    "colorMeta": {
+      "void": {
+        "role": "neutral",
+        "displayName": "Void",
+        "canonical": "#000000",
+        "tonalRamp": [
+          "oklch(15% 0.000 0.0)",
+          "oklch(26% 0.000 0.0)",
+          "oklch(37% 0.000 0.0)",
+          "oklch(48% 0.000 0.0)",
+          "oklch(60% 0.000 0.0)",
+          "oklch(71% 0.000 0.0)",
+          "oklch(83% 0.000 0.0)",
+          "oklch(95% 0.000 0.0)"
+        ]
+      },
+      "char": {
+        "role": "neutral",
+        "displayName": "Char",
+        "canonical": "#0a0a0a",
+        "tonalRamp": [
+          "oklch(15% 0.000 0.0)",
+          "oklch(26% 0.000 0.0)",
+          "oklch(37% 0.000 0.0)",
+          "oklch(48% 0.000 0.0)",
+          "oklch(60% 0.000 0.0)",
+          "oklch(71% 0.000 0.0)",
+          "oklch(83% 0.000 0.0)",
+          "oklch(95% 0.000 0.0)"
+        ]
+      },
+      "soot": {
+        "role": "neutral",
+        "displayName": "Soot",
+        "canonical": "#1b1b1b",
+        "tonalRamp": [
+          "oklch(15% 0.000 0.0)",
+          "oklch(26% 0.000 0.0)",
+          "oklch(37% 0.000 0.0)",
+          "oklch(48% 0.000 0.0)",
+          "oklch(60% 0.000 0.0)",
+          "oklch(71% 0.000 0.0)",
+          "oklch(83% 0.000 0.0)",
+          "oklch(95% 0.000 0.0)"
+        ]
+      },
+      "edge": {
+        "role": "neutral",
+        "displayName": "Edge",
+        "canonical": "#3a3a3a",
+        "tonalRamp": [
+          "oklch(15% 0.000 0.0)",
+          "oklch(26% 0.000 0.0)",
+          "oklch(37% 0.000 0.0)",
+          "oklch(48% 0.000 0.0)",
+          "oklch(60% 0.000 0.0)",
+          "oklch(71% 0.000 0.0)",
+          "oklch(83% 0.000 0.0)",
+          "oklch(95% 0.000 0.0)"
+        ]
+      },
+      "edge-bright": {
+        "role": "neutral",
+        "displayName": "Edge Bright",
+        "canonical": "#6b6b6b",
+        "tonalRamp": [
+          "oklch(15% 0.000 0.0)",
+          "oklch(26% 0.000 0.0)",
+          "oklch(37% 0.000 0.0)",
+          "oklch(48% 0.000 0.0)",
+          "oklch(60% 0.000 0.0)",
+          "oklch(71% 0.000 0.0)",
+          "oklch(83% 0.000 0.0)",
+          "oklch(95% 0.000 0.0)"
+        ]
+      },
+      "label": {
+        "role": "neutral",
+        "displayName": "Label Grey",
+        "canonical": "#8a8a8a",
+        "tonalRamp": [
+          "oklch(15% 0.000 0.0)",
+          "oklch(26% 0.000 0.0)",
+          "oklch(37% 0.000 0.0)",
+          "oklch(48% 0.000 0.0)",
+          "oklch(60% 0.000 0.0)",
+          "oklch(71% 0.000 0.0)",
+          "oklch(83% 0.000 0.0)",
+          "oklch(95% 0.000 0.0)"
+        ]
+      },
+      "plain": {
+        "role": "neutral",
+        "displayName": "Plain Grey",
+        "canonical": "#a8a8a8",
+        "tonalRamp": [
+          "oklch(15% 0.000 0.0)",
+          "oklch(26% 0.000 0.0)",
+          "oklch(37% 0.000 0.0)",
+          "oklch(48% 0.000 0.0)",
+          "oklch(60% 0.000 0.0)",
+          "oklch(71% 0.000 0.0)",
+          "oklch(83% 0.000 0.0)",
+          "oklch(95% 0.000 0.0)"
+        ]
+      },
+      "normal": {
+        "role": "primary",
+        "displayName": "Normal Item White",
+        "canonical": "#c8c8c8",
+        "tonalRamp": [
+          "oklch(15% 0.000 0.0)",
+          "oklch(26% 0.000 0.0)",
+          "oklch(37% 0.000 0.0)",
+          "oklch(48% 0.000 0.0)",
+          "oklch(60% 0.000 0.0)",
+          "oklch(71% 0.000 0.0)",
+          "oklch(83% 0.000 0.0)",
+          "oklch(95% 0.000 0.0)"
+        ]
+      },
+      "value": {
+        "role": "neutral",
+        "displayName": "Value White",
+        "canonical": "#ececec",
+        "tonalRamp": [
+          "oklch(15% 0.000 0.0)",
+          "oklch(26% 0.000 0.0)",
+          "oklch(37% 0.000 0.0)",
+          "oklch(48% 0.000 0.0)",
+          "oklch(60% 0.000 0.0)",
+          "oklch(71% 0.000 0.0)",
+          "oklch(83% 0.000 0.0)",
+          "oklch(95% 0.000 0.0)"
+        ]
+      },
+      "currency": {
+        "role": "secondary",
+        "displayName": "Currency Sand",
+        "canonical": "#aa9e82",
+        "tonalRamp": [
+          "oklch(15% 0.042 87.6)",
+          "oklch(26% 0.042 87.6)",
+          "oklch(37% 0.042 87.6)",
+          "oklch(48% 0.042 87.6)",
+          "oklch(60% 0.042 87.6)",
+          "oklch(71% 0.042 87.6)",
+          "oklch(83% 0.042 87.6)",
+          "oklch(95% 0.042 87.6)"
+        ]
+      },
+      "magic": {
+        "role": "tertiary",
+        "displayName": "Magic Blue",
+        "canonical": "#8888ff",
+        "tonalRamp": [
+          "oklch(15% 0.172 280.8)",
+          "oklch(26% 0.172 280.8)",
+          "oklch(37% 0.172 280.8)",
+          "oklch(48% 0.172 280.8)",
+          "oklch(60% 0.172 280.8)",
+          "oklch(71% 0.172 280.8)",
+          "oklch(83% 0.172 280.8)",
+          "oklch(95% 0.172 280.8)"
+        ]
+      },
+      "quest": {
+        "role": "tertiary",
+        "displayName": "Quest Green",
+        "canonical": "#4ae63a",
+        "tonalRamp": [
+          "oklch(15% 0.244 141.8)",
+          "oklch(26% 0.244 141.8)",
+          "oklch(37% 0.244 141.8)",
+          "oklch(48% 0.244 141.8)",
+          "oklch(60% 0.244 141.8)",
+          "oklch(71% 0.244 141.8)",
+          "oklch(83% 0.244 141.8)",
+          "oklch(95% 0.244 141.8)"
+        ]
+      },
+      "corrupted": {
+        "role": "tertiary",
+        "displayName": "Corrupted Red",
+        "canonical": "#e0443a",
+        "tonalRamp": [
+          "oklch(15% 0.194 28.0)",
+          "oklch(26% 0.194 28.0)",
+          "oklch(37% 0.194 28.0)",
+          "oklch(48% 0.194 28.0)",
+          "oklch(60% 0.194 28.0)",
+          "oklch(71% 0.194 28.0)",
+          "oklch(83% 0.194 28.0)",
+          "oklch(95% 0.194 28.0)"
+        ]
+      },
+      "unique": {
+        "role": "tertiary",
+        "displayName": "Unique Brown",
+        "canonical": "#c2703a",
+        "tonalRamp": [
+          "oklch(15% 0.124 51.8)",
+          "oklch(26% 0.124 51.8)",
+          "oklch(37% 0.124 51.8)",
+          "oklch(48% 0.124 51.8)",
+          "oklch(60% 0.124 51.8)",
+          "oklch(71% 0.124 51.8)",
+          "oklch(83% 0.124 51.8)",
+          "oklch(95% 0.124 51.8)"
+        ]
+      },
+      "gem": {
+        "role": "tertiary",
+        "displayName": "Gem Teal",
+        "canonical": "#1ba29b",
+        "tonalRamp": [
+          "oklch(15% 0.107 189.2)",
+          "oklch(26% 0.107 189.2)",
+          "oklch(37% 0.107 189.2)",
+          "oklch(48% 0.107 189.2)",
+          "oklch(60% 0.107 189.2)",
+          "oklch(71% 0.107 189.2)",
+          "oklch(83% 0.107 189.2)",
+          "oklch(95% 0.107 189.2)"
+        ]
+      },
+      "crafted": {
+        "role": "tertiary",
+        "displayName": "Crafted Lavender",
+        "canonical": "#b4b4ff",
+        "tonalRamp": [
+          "oklch(15% 0.106 283.7)",
+          "oklch(26% 0.106 283.7)",
+          "oklch(37% 0.106 283.7)",
+          "oklch(48% 0.106 283.7)",
+          "oklch(60% 0.106 283.7)",
+          "oklch(71% 0.106 283.7)",
+          "oklch(83% 0.106 283.7)",
+          "oklch(95% 0.106 283.7)"
+        ]
+      }
+    },
+    "typographyMeta": {
+      "display": {
+        "displayName": "Display",
+        "purpose": "Tooltip title in the header band: zone name, poebo, settings group name."
+      },
+      "subtitle": {
+        "displayName": "Subtitle",
+        "purpose": "Act line under the title, at 85 percent opacity."
+      },
+      "body": {
+        "displayName": "Body",
+        "purpose": "This area's actions and the Then line."
+      },
+      "body-sm": {
+        "displayName": "Body small",
+        "purpose": "Quick menu rows, gem claims."
+      },
+      "label": {
+        "displayName": "Label",
+        "purpose": "Properties line, settings row labels and values."
+      },
+      "button": {
+        "displayName": "Button",
+        "purpose": "Every button and the hold-key select."
+      },
+      "flavour": {
+        "displayName": "Flavour",
+        "purpose": "Route hints and the startup notice, italic, in Label Grey."
+      },
+      "caption": {
+        "displayName": "Caption",
+        "purpose": "Settings explanations (italic) and bind errors."
+      },
+      "key-hint": {
+        "displayName": "Key hint",
+        "purpose": "Shortcut names, move bar hint, replay line count."
+      }
+    },
+    "shadows": [
+      {
+        "name": "button-sheen",
+        "value": "inset 0 0 0 1px rgb(255 255 255 / 0.04)",
+        "purpose": "Inner sheen on every button, inside the border."
+      },
+      {
+        "name": "track-keyline",
+        "value": "0 0 0 1px #000",
+        "purpose": "Black keyline around the slider track and replay progress bar."
+      },
+      {
+        "name": "header-sheen",
+        "value": "linear-gradient(180deg, rgb(255 255 255 / 0.07), transparent 40%, rgb(0 0 0 / 0.4))",
+        "purpose": "The header band's only lift, over the tint mixed 30 percent into #050505."
+      }
+    ],
+    "motion": [
+      {
+        "name": "button-state",
+        "value": "150ms ease-out",
+        "purpose": "Border and text colour on button hover."
+      },
+      {
+        "name": "overlay-show",
+        "value": "opacity 150ms",
+        "purpose": "Overlay fades in when the game gains focus; hiding is instant to match the game window."
+      },
+      {
+        "name": "notice-fade",
+        "value": "opacity 700ms after 5000ms",
+        "purpose": "Startup notice fades out."
+      },
+      {
+        "name": "reduced-motion",
+        "value": "transition-duration: 0ms",
+        "purpose": "All transitions off under prefers-reduced-motion."
+      }
+    ],
+    "breakpoints": []
+  },
+  "components": [
+    {
+      "name": "Button",
+      "kind": "button",
+      "refersTo": "button",
+      "description": "The only button: neutral dark face, 1px edge, square. Used for route steps, settings actions and toggles.",
+      "html": "<button class=\"ds-btn\">Next</button>",
+      "css": ".ds-btn { font-family: var(--font-caps, 'Alegreya Sans SC', 'Alegreya Sans', ui-sans-serif, sans-serif); font-weight: 500; font-size: 12px; line-height: 1; padding: 5px 9px 6px; color: var(--color-normal, #c8c8c8); background: linear-gradient(180deg, #1b1b1b, #0a0a0a); border: 1px solid var(--color-edge, #3a3a3a); border-radius: 0; box-shadow: inset 0 0 0 1px rgb(255 255 255 / 0.04); transition: border-color 150ms ease-out, color 150ms ease-out; cursor: default; } .ds-btn:hover { border-color: var(--color-edge-bright, #6b6b6b); color: var(--color-value, #ececec); } .ds-btn:active { background: #070606; } .ds-btn:focus-visible { outline: 1px solid var(--color-normal, #c8c8c8); outline-offset: 2px; } .ds-btn:disabled { opacity: 0.4; pointer-events: none; } .ds-btn[aria-pressed='true'] { border-color: var(--color-normal, #c8c8c8); color: var(--color-value, #ececec); }"
+    },
+    {
+      "name": "Pressed button",
+      "kind": "button",
+      "refersTo": "button-pressed",
+      "description": "Selected speed, recording hotkey, or a switch that is on.",
+      "html": "<button class=\"ds-btn\" aria-pressed=\"true\">On</button>",
+      "css": ".ds-btn { font-family: var(--font-caps, 'Alegreya Sans SC', 'Alegreya Sans', ui-sans-serif, sans-serif); font-weight: 500; font-size: 12px; line-height: 1; padding: 5px 9px 6px; color: var(--color-normal, #c8c8c8); background: linear-gradient(180deg, #1b1b1b, #0a0a0a); border: 1px solid var(--color-edge, #3a3a3a); border-radius: 0; box-shadow: inset 0 0 0 1px rgb(255 255 255 / 0.04); transition: border-color 150ms ease-out, color 150ms ease-out; cursor: default; } .ds-btn:hover { border-color: var(--color-edge-bright, #6b6b6b); color: var(--color-value, #ececec); } .ds-btn:active { background: #070606; } .ds-btn:focus-visible { outline: 1px solid var(--color-normal, #c8c8c8); outline-offset: 2px; } .ds-btn:disabled { opacity: 0.4; pointer-events: none; } .ds-btn[aria-pressed='true'] { border-color: var(--color-normal, #c8c8c8); color: var(--color-value, #ececec); }"
+    },
+    {
+      "name": "Key binding button",
+      "kind": "button",
+      "refersTo": "button",
+      "description": "Button carrying a literal key string, set in Alegreya Sans with a 112px minimum width.",
+      "html": "<button class=\"ds-btn ds-btn-key\">Alt+M</button>",
+      "css": ".ds-btn { font-family: var(--font-caps, 'Alegreya Sans SC', 'Alegreya Sans', ui-sans-serif, sans-serif); font-weight: 500; font-size: 12px; line-height: 1; padding: 5px 9px 6px; color: var(--color-normal, #c8c8c8); background: linear-gradient(180deg, #1b1b1b, #0a0a0a); border: 1px solid var(--color-edge, #3a3a3a); border-radius: 0; box-shadow: inset 0 0 0 1px rgb(255 255 255 / 0.04); transition: border-color 150ms ease-out, color 150ms ease-out; cursor: default; } .ds-btn:hover { border-color: var(--color-edge-bright, #6b6b6b); color: var(--color-value, #ececec); } .ds-btn:active { background: #070606; } .ds-btn:focus-visible { outline: 1px solid var(--color-normal, #c8c8c8); outline-offset: 2px; } .ds-btn:disabled { opacity: 0.4; pointer-events: none; } .ds-btn[aria-pressed='true'] { border-color: var(--color-normal, #c8c8c8); color: var(--color-value, #ececec); } .ds-btn-key { font-family: var(--font-body, 'Alegreya Sans', ui-sans-serif, sans-serif); font-weight: 400; min-width: 112px; }"
+    },
+    {
+      "name": "Tooltip header band (area)",
+      "kind": "custom",
+      "refersTo": "tooltip-header-area",
+      "description": "Signature band: tint mixed into near-black, edge rules and wedge ends meeting in a diamond, in the tint. White tint for areas and app chrome.",
+      "html": "<div class=\"ds-wrap\" style=\"--tint: #c8c8c8\"><header class=\"ds-band\"><svg class=\"ds-corner\" viewBox=\"0 0 40 34\" preserveAspectRatio=\"xMinYMid meet\" aria-hidden=\"true\"><g fill=\"none\" stroke=\"currentColor\" stroke-width=\"1.5\" stroke-linecap=\"round\"><path d=\"M4 3C11 7 14 11 14 17C14 23 11 27 4 31\"/><path d=\"M14 17C14 11 19 8 24 9.5C28 10.8 28.5 15 25.5 16C23.5 16.6 22 15.3 22.6 13.8\"/><path d=\"M14 17C14 23 19 26 24 24.5C28 23.2 28.5 19 25.5 18C23.5 17.4 22 18.7 22.6 20.2\"/><path d=\"M26 17H38\" opacity=\"0.7\"/></g><circle cx=\"22.6\" cy=\"13.8\" r=\"1.4\" fill=\"currentColor\"/><circle cx=\"22.6\" cy=\"20.2\" r=\"1.4\" fill=\"currentColor\"/><path d=\"M6 17l2.5-2.5L11 17l-2.5 2.5Z\" fill=\"currentColor\"/></svg><h1 class=\"ds-title\">The Twilight Strand</h1><p class=\"ds-sub\">Act 1</p><svg class=\"ds-corner ds-corner-end\" viewBox=\"0 0 40 34\" preserveAspectRatio=\"xMinYMid meet\" aria-hidden=\"true\"><g fill=\"none\" stroke=\"currentColor\" stroke-width=\"1.5\" stroke-linecap=\"round\"><path d=\"M4 3C11 7 14 11 14 17C14 23 11 27 4 31\"/><path d=\"M14 17C14 11 19 8 24 9.5C28 10.8 28.5 15 25.5 16C23.5 16.6 22 15.3 22.6 13.8\"/><path d=\"M14 17C14 23 19 26 24 24.5C28 23.2 28.5 19 25.5 18C23.5 17.4 22 18.7 22.6 20.2\"/><path d=\"M26 17H38\" opacity=\"0.7\"/></g><circle cx=\"22.6\" cy=\"13.8\" r=\"1.4\" fill=\"currentColor\"/><circle cx=\"22.6\" cy=\"20.2\" r=\"1.4\" fill=\"currentColor\"/><path d=\"M6 17l2.5-2.5L11 17l-2.5 2.5Z\" fill=\"currentColor\"/></svg></header></div>",
+      "css": ".ds-wrap { width: 404px; background: rgb(0 0 0 / 0.85); } .ds-band { position: relative; padding: 6px 46px 7px; text-align: center; font-family: var(--font-caps, 'Alegreya Sans SC', 'Alegreya Sans', ui-sans-serif, sans-serif); font-weight: 500; background: linear-gradient(180deg, rgb(255 255 255 / 0.07), transparent 40%, rgb(0 0 0 / 0.4)), color-mix(in srgb, var(--tint) 30%, #050505); color: var(--tint); } .ds-band::before, .ds-band::after { content: ''; position: absolute; left: 40px; right: 40px; height: 1px; background: color-mix(in srgb, var(--tint) 75%, transparent); } .ds-band::before { top: 2px; } .ds-band::after { bottom: 2px; } .ds-corner { position: absolute; top: 0; left: 0; width: 40px; height: 100%; color: var(--tint); } .ds-corner-end { left: auto; right: 0; transform: scaleX(-1); } .ds-title { margin: 0; font-size: 19px; line-height: 1.25; font-weight: 500; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; } .ds-sub { margin: 0; font-size: 14px; line-height: 1.25; opacity: 0.85; }"
+    },
+    {
+      "name": "Tooltip header band (town)",
+      "kind": "custom",
+      "refersTo": "tooltip-header-town",
+      "description": "Same band in Currency Sand for towns.",
+      "html": "<div class=\"ds-wrap\" style=\"--tint: #aa9e82\"><header class=\"ds-band\"><svg class=\"ds-corner\" viewBox=\"0 0 40 34\" preserveAspectRatio=\"xMinYMid meet\" aria-hidden=\"true\"><g fill=\"none\" stroke=\"currentColor\" stroke-width=\"1.5\" stroke-linecap=\"round\"><path d=\"M4 3C11 7 14 11 14 17C14 23 11 27 4 31\"/><path d=\"M14 17C14 11 19 8 24 9.5C28 10.8 28.5 15 25.5 16C23.5 16.6 22 15.3 22.6 13.8\"/><path d=\"M14 17C14 23 19 26 24 24.5C28 23.2 28.5 19 25.5 18C23.5 17.4 22 18.7 22.6 20.2\"/><path d=\"M26 17H38\" opacity=\"0.7\"/></g><circle cx=\"22.6\" cy=\"13.8\" r=\"1.4\" fill=\"currentColor\"/><circle cx=\"22.6\" cy=\"20.2\" r=\"1.4\" fill=\"currentColor\"/><path d=\"M6 17l2.5-2.5L11 17l-2.5 2.5Z\" fill=\"currentColor\"/></svg><h1 class=\"ds-title\">Lioneye's Watch</h1><p class=\"ds-sub\">Act 1 town</p><svg class=\"ds-corner ds-corner-end\" viewBox=\"0 0 40 34\" preserveAspectRatio=\"xMinYMid meet\" aria-hidden=\"true\"><g fill=\"none\" stroke=\"currentColor\" stroke-width=\"1.5\" stroke-linecap=\"round\"><path d=\"M4 3C11 7 14 11 14 17C14 23 11 27 4 31\"/><path d=\"M14 17C14 11 19 8 24 9.5C28 10.8 28.5 15 25.5 16C23.5 16.6 22 15.3 22.6 13.8\"/><path d=\"M14 17C14 23 19 26 24 24.5C28 23.2 28.5 19 25.5 18C23.5 17.4 22 18.7 22.6 20.2\"/><path d=\"M26 17H38\" opacity=\"0.7\"/></g><circle cx=\"22.6\" cy=\"13.8\" r=\"1.4\" fill=\"currentColor\"/><circle cx=\"22.6\" cy=\"20.2\" r=\"1.4\" fill=\"currentColor\"/><path d=\"M6 17l2.5-2.5L11 17l-2.5 2.5Z\" fill=\"currentColor\"/></svg></header></div>",
+      "css": ".ds-wrap { width: 404px; background: rgb(0 0 0 / 0.85); } .ds-band { position: relative; padding: 6px 46px 7px; text-align: center; font-family: var(--font-caps, 'Alegreya Sans SC', 'Alegreya Sans', ui-sans-serif, sans-serif); font-weight: 500; background: linear-gradient(180deg, rgb(255 255 255 / 0.07), transparent 40%, rgb(0 0 0 / 0.4)), color-mix(in srgb, var(--tint) 30%, #050505); color: var(--tint); } .ds-band::before, .ds-band::after { content: ''; position: absolute; left: 40px; right: 40px; height: 1px; background: color-mix(in srgb, var(--tint) 75%, transparent); } .ds-band::before { top: 2px; } .ds-band::after { bottom: 2px; } .ds-corner { position: absolute; top: 0; left: 0; width: 40px; height: 100%; color: var(--tint); } .ds-corner-end { left: auto; right: 0; transform: scaleX(-1); } .ds-title { margin: 0; font-size: 19px; line-height: 1.25; font-weight: 500; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; } .ds-sub { margin: 0; font-size: 14px; line-height: 1.25; opacity: 0.85; }"
+    },
+    {
+      "name": "Route tooltip",
+      "kind": "card",
+      "refersTo": "tooltip-body",
+      "description": "The locked overlay: band, properties line, separator, actions, separator, Then line. See-through black, no frame.",
+      "html": "<div class=\"ds-tip\" style=\"--tint: #c8c8c8\"><header class=\"ds-band\"><svg class=\"ds-corner\" viewBox=\"0 0 40 34\" preserveAspectRatio=\"xMinYMid meet\" aria-hidden=\"true\"><g fill=\"none\" stroke=\"currentColor\" stroke-width=\"1.5\" stroke-linecap=\"round\"><path d=\"M4 3C11 7 14 11 14 17C14 23 11 27 4 31\"/><path d=\"M14 17C14 11 19 8 24 9.5C28 10.8 28.5 15 25.5 16C23.5 16.6 22 15.3 22.6 13.8\"/><path d=\"M14 17C14 23 19 26 24 24.5C28 23.2 28.5 19 25.5 18C23.5 17.4 22 18.7 22.6 20.2\"/><path d=\"M26 17H38\" opacity=\"0.7\"/></g><circle cx=\"22.6\" cy=\"13.8\" r=\"1.4\" fill=\"currentColor\"/><circle cx=\"22.6\" cy=\"20.2\" r=\"1.4\" fill=\"currentColor\"/><path d=\"M6 17l2.5-2.5L11 17l-2.5 2.5Z\" fill=\"currentColor\"/></svg><h1 class=\"ds-title\">The Twilight Strand</h1><p class=\"ds-sub\">Act 1</p><svg class=\"ds-corner ds-corner-end\" viewBox=\"0 0 40 34\" preserveAspectRatio=\"xMinYMid meet\" aria-hidden=\"true\"><g fill=\"none\" stroke=\"currentColor\" stroke-width=\"1.5\" stroke-linecap=\"round\"><path d=\"M4 3C11 7 14 11 14 17C14 23 11 27 4 31\"/><path d=\"M14 17C14 11 19 8 24 9.5C28 10.8 28.5 15 25.5 16C23.5 16.6 22 15.3 22.6 13.8\"/><path d=\"M14 17C14 23 19 26 24 24.5C28 23.2 28.5 19 25.5 18C23.5 17.4 22 18.7 22.6 20.2\"/><path d=\"M26 17H38\" opacity=\"0.7\"/></g><circle cx=\"22.6\" cy=\"13.8\" r=\"1.4\" fill=\"currentColor\"/><circle cx=\"22.6\" cy=\"20.2\" r=\"1.4\" fill=\"currentColor\"/><path d=\"M6 17l2.5-2.5L11 17l-2.5 2.5Z\" fill=\"currentColor\"/></svg></header><div class=\"ds-body\"><p class=\"ds-props\"><span><span class=\"ds-l\">Witch level </span><span class=\"ds-v\">2</span></span><span><span class=\"ds-l\">Step </span><span class=\"ds-v\">1 / 233</span></span></p><div class=\"ds-sep\"></div><ul class=\"ds-steps\"><li>Find and kill <span class=\"ds-kill\">Hillock</span><ul class=\"ds-hint\"><li>Beach, north of the shipwreck</li></ul></li><li><span class=\"ds-magic\">Waypoint</span></li></ul><div class=\"ds-sep\"></div><p class=\"ds-then\"><span class=\"ds-l\">Then: </span><span class=\"ds-v\">Lioneye's Watch</span></p></div></div>",
+      "css": ".ds-tip { width: 404px; background: rgb(0 0 0 / 0.85); text-align: center; font-family: var(--font-caps, 'Alegreya Sans SC', 'Alegreya Sans', ui-sans-serif, sans-serif); font-weight: 500; } .ds-band { position: relative; padding: 6px 46px 7px; text-align: center; font-family: var(--font-caps, 'Alegreya Sans SC', 'Alegreya Sans', ui-sans-serif, sans-serif); font-weight: 500; background: linear-gradient(180deg, rgb(255 255 255 / 0.07), transparent 40%, rgb(0 0 0 / 0.4)), color-mix(in srgb, var(--tint) 30%, #050505); color: var(--tint); } .ds-band::before, .ds-band::after { content: ''; position: absolute; left: 40px; right: 40px; height: 1px; background: color-mix(in srgb, var(--tint) 75%, transparent); } .ds-band::before { top: 2px; } .ds-band::after { bottom: 2px; } .ds-corner { position: absolute; top: 0; left: 0; width: 40px; height: 100%; color: var(--tint); } .ds-corner-end { left: auto; right: 0; transform: scaleX(-1); } .ds-title { margin: 0; font-size: 19px; line-height: 1.25; font-weight: 500; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; } .ds-sub { margin: 0; font-size: 14px; line-height: 1.25; opacity: 0.85; } .ds-sep { height: 1px; width: 30%; margin: 7px auto; background: radial-gradient(ellipse at center, var(--tint) 0%, transparent 70%); } .ds-body { padding: 6px 16px 12px; font-variant-numeric: tabular-nums; } .ds-props { margin: 0; display: flex; justify-content: center; gap: 16px; font-size: 13px; } .ds-l { color: var(--color-label, #8a8a8a); } .ds-v { color: var(--color-value, #ececec); } .ds-steps { list-style: none; margin: 0; padding: 0; display: flex; flex-direction: column; gap: 4px; font-size: 15px; line-height: 1.375; color: var(--color-value, #ececec); } .ds-kill { color: var(--color-corrupted, #e0443a); } .ds-magic { color: var(--color-magic, #8888ff); } .ds-hint { list-style: none; margin: 2px 0 0; padding: 0; font-family: var(--font-body, 'Alegreya Sans', ui-sans-serif, sans-serif); font-weight: 400; font-style: italic; font-size: 13px; color: var(--color-label, #8a8a8a); } .ds-then { margin: 0; font-size: 15px; line-height: 1.375; }"
+    },
+    {
+      "name": "Quick menu",
+      "kind": "nav",
+      "refersTo": "menu",
+      "description": "Hold-Esc menu: a 228px tooltip of full-width rows; hover and focus fill the row with white at 6 percent.",
+      "html": "<div class=\"ds-menu\" role=\"menu\" style=\"--tint: #c8c8c8\"><header class=\"ds-band\"><svg class=\"ds-corner\" viewBox=\"0 0 40 34\" preserveAspectRatio=\"xMinYMid meet\" aria-hidden=\"true\"><g fill=\"none\" stroke=\"currentColor\" stroke-width=\"1.5\" stroke-linecap=\"round\"><path d=\"M4 3C11 7 14 11 14 17C14 23 11 27 4 31\"/><path d=\"M14 17C14 11 19 8 24 9.5C28 10.8 28.5 15 25.5 16C23.5 16.6 22 15.3 22.6 13.8\"/><path d=\"M14 17C14 23 19 26 24 24.5C28 23.2 28.5 19 25.5 18C23.5 17.4 22 18.7 22.6 20.2\"/><path d=\"M26 17H38\" opacity=\"0.7\"/></g><circle cx=\"22.6\" cy=\"13.8\" r=\"1.4\" fill=\"currentColor\"/><circle cx=\"22.6\" cy=\"20.2\" r=\"1.4\" fill=\"currentColor\"/><path d=\"M6 17l2.5-2.5L11 17l-2.5 2.5Z\" fill=\"currentColor\"/></svg><h1 class=\"ds-title\">poebo</h1><svg class=\"ds-corner ds-corner-end\" viewBox=\"0 0 40 34\" preserveAspectRatio=\"xMinYMid meet\" aria-hidden=\"true\"><g fill=\"none\" stroke=\"currentColor\" stroke-width=\"1.5\" stroke-linecap=\"round\"><path d=\"M4 3C11 7 14 11 14 17C14 23 11 27 4 31\"/><path d=\"M14 17C14 11 19 8 24 9.5C28 10.8 28.5 15 25.5 16C23.5 16.6 22 15.3 22.6 13.8\"/><path d=\"M14 17C14 23 19 26 24 24.5C28 23.2 28.5 19 25.5 18C23.5 17.4 22 18.7 22.6 20.2\"/><path d=\"M26 17H38\" opacity=\"0.7\"/></g><circle cx=\"22.6\" cy=\"13.8\" r=\"1.4\" fill=\"currentColor\"/><circle cx=\"22.6\" cy=\"20.2\" r=\"1.4\" fill=\"currentColor\"/><path d=\"M6 17l2.5-2.5L11 17l-2.5 2.5Z\" fill=\"currentColor\"/></svg></header><div style=\"height:6px\"></div><button class=\"ds-row\" role=\"menuitemcheckbox\" aria-checked=\"true\"><span>Leveling route</span><span class=\"ds-on\">On</span></button><div class=\"ds-sep\"></div><button class=\"ds-row\"><span>Settings</span></button><button class=\"ds-row\"><span>Move overlay</span><span class=\"ds-key\">Alt+M</span></button><div class=\"ds-sep\"></div><button class=\"ds-row\"><span>Quit poebo</span></button></div>",
+      "css": ".ds-menu { width: 228px; padding-bottom: 6px; background: rgb(0 0 0 / 0.9); text-align: center; font-family: var(--font-caps, 'Alegreya Sans SC', 'Alegreya Sans', ui-sans-serif, sans-serif); font-weight: 500; } .ds-band { position: relative; padding: 6px 46px 7px; text-align: center; font-family: var(--font-caps, 'Alegreya Sans SC', 'Alegreya Sans', ui-sans-serif, sans-serif); font-weight: 500; background: linear-gradient(180deg, rgb(255 255 255 / 0.07), transparent 40%, rgb(0 0 0 / 0.4)), color-mix(in srgb, var(--tint) 30%, #050505); color: var(--tint); } .ds-band::before, .ds-band::after { content: ''; position: absolute; left: 40px; right: 40px; height: 1px; background: color-mix(in srgb, var(--tint) 75%, transparent); } .ds-band::before { top: 2px; } .ds-band::after { bottom: 2px; } .ds-corner { position: absolute; top: 0; left: 0; width: 40px; height: 100%; color: var(--tint); } .ds-corner-end { left: auto; right: 0; transform: scaleX(-1); } .ds-title { margin: 0; font-size: 19px; line-height: 1.25; font-weight: 500; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; } .ds-sub { margin: 0; font-size: 14px; line-height: 1.25; opacity: 0.85; } .ds-sep { height: 1px; width: 30%; margin: 7px auto; background: radial-gradient(ellipse at center, var(--tint) 0%, transparent 70%); } .ds-row { display: flex; width: 100%; align-items: baseline; justify-content: space-between; gap: 12px; padding: 6px 12px; border: 0; background: none; text-align: left; font: inherit; font-size: 14px; color: var(--color-value, #ececec); } .ds-row:hover, .ds-row:focus-visible { background: rgb(255 255 255 / 0.06); outline: none; } .ds-on { color: var(--color-quest, #4ae63a); } .ds-key { font-family: var(--font-body, 'Alegreya Sans', ui-sans-serif, sans-serif); font-weight: 400; font-size: 11px; color: var(--color-label, #8a8a8a); }"
+    },
+    {
+      "name": "Settings group with slider",
+      "kind": "input",
+      "refersTo": "settings-section",
+      "description": "A settings group is a tooltip at 80 percent black; rows pair a 128px grey small-caps label with controls. The slider is a 3px track with a diamond thumb.",
+      "html": "<section class=\"ds-set\" style=\"--tint: #c8c8c8\"><header class=\"ds-band\"><svg class=\"ds-corner\" viewBox=\"0 0 40 34\" preserveAspectRatio=\"xMinYMid meet\" aria-hidden=\"true\"><g fill=\"none\" stroke=\"currentColor\" stroke-width=\"1.5\" stroke-linecap=\"round\"><path d=\"M4 3C11 7 14 11 14 17C14 23 11 27 4 31\"/><path d=\"M14 17C14 11 19 8 24 9.5C28 10.8 28.5 15 25.5 16C23.5 16.6 22 15.3 22.6 13.8\"/><path d=\"M14 17C14 23 19 26 24 24.5C28 23.2 28.5 19 25.5 18C23.5 17.4 22 18.7 22.6 20.2\"/><path d=\"M26 17H38\" opacity=\"0.7\"/></g><circle cx=\"22.6\" cy=\"13.8\" r=\"1.4\" fill=\"currentColor\"/><circle cx=\"22.6\" cy=\"20.2\" r=\"1.4\" fill=\"currentColor\"/><path d=\"M6 17l2.5-2.5L11 17l-2.5 2.5Z\" fill=\"currentColor\"/></svg><h1 class=\"ds-title\">Overlay</h1><svg class=\"ds-corner ds-corner-end\" viewBox=\"0 0 40 34\" preserveAspectRatio=\"xMinYMid meet\" aria-hidden=\"true\"><g fill=\"none\" stroke=\"currentColor\" stroke-width=\"1.5\" stroke-linecap=\"round\"><path d=\"M4 3C11 7 14 11 14 17C14 23 11 27 4 31\"/><path d=\"M14 17C14 11 19 8 24 9.5C28 10.8 28.5 15 25.5 16C23.5 16.6 22 15.3 22.6 13.8\"/><path d=\"M14 17C14 23 19 26 24 24.5C28 23.2 28.5 19 25.5 18C23.5 17.4 22 18.7 22.6 20.2\"/><path d=\"M26 17H38\" opacity=\"0.7\"/></g><circle cx=\"22.6\" cy=\"13.8\" r=\"1.4\" fill=\"currentColor\"/><circle cx=\"22.6\" cy=\"20.2\" r=\"1.4\" fill=\"currentColor\"/><path d=\"M6 17l2.5-2.5L11 17l-2.5 2.5Z\" fill=\"currentColor\"/></svg></header><div class=\"ds-setbody\"><div class=\"ds-srow\"><span class=\"ds-slabel\">Text size</span><input class=\"ds-range\" type=\"range\" min=\"0.8\" max=\"1.5\" step=\"0.05\" value=\"1\" aria-label=\"Text size\"><span class=\"ds-pct\">100%</span></div><div class=\"ds-srow\"><span class=\"ds-slabel\">Position</span><button class=\"ds-btn\">Bottom center</button><button class=\"ds-btn\">Move by hand</button></div></div></section>",
+      "css": ".ds-set { width: 480px; background: rgb(0 0 0 / 0.8); font-family: var(--font-caps, 'Alegreya Sans SC', 'Alegreya Sans', ui-sans-serif, sans-serif); font-weight: 500; } .ds-band { position: relative; padding: 6px 46px 7px; text-align: center; font-family: var(--font-caps, 'Alegreya Sans SC', 'Alegreya Sans', ui-sans-serif, sans-serif); font-weight: 500; background: linear-gradient(180deg, rgb(255 255 255 / 0.07), transparent 40%, rgb(0 0 0 / 0.4)), color-mix(in srgb, var(--tint) 30%, #050505); color: var(--tint); } .ds-band::before, .ds-band::after { content: ''; position: absolute; left: 40px; right: 40px; height: 1px; background: color-mix(in srgb, var(--tint) 75%, transparent); } .ds-band::before { top: 2px; } .ds-band::after { bottom: 2px; } .ds-corner { position: absolute; top: 0; left: 0; width: 40px; height: 100%; color: var(--tint); } .ds-corner-end { left: auto; right: 0; transform: scaleX(-1); } .ds-title { margin: 0; font-size: 19px; line-height: 1.25; font-weight: 500; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; } .ds-sub { margin: 0; font-size: 14px; line-height: 1.25; opacity: 0.85; } .ds-btn { font-family: var(--font-caps, 'Alegreya Sans SC', 'Alegreya Sans', ui-sans-serif, sans-serif); font-weight: 500; font-size: 12px; line-height: 1; padding: 5px 9px 6px; color: var(--color-normal, #c8c8c8); background: linear-gradient(180deg, #1b1b1b, #0a0a0a); border: 1px solid var(--color-edge, #3a3a3a); border-radius: 0; box-shadow: inset 0 0 0 1px rgb(255 255 255 / 0.04); transition: border-color 150ms ease-out, color 150ms ease-out; cursor: default; } .ds-btn:hover { border-color: var(--color-edge-bright, #6b6b6b); color: var(--color-value, #ececec); } .ds-btn:active { background: #070606; } .ds-btn:focus-visible { outline: 1px solid var(--color-normal, #c8c8c8); outline-offset: 2px; } .ds-btn:disabled { opacity: 0.4; pointer-events: none; } .ds-btn[aria-pressed='true'] { border-color: var(--color-normal, #c8c8c8); color: var(--color-value, #ececec); } .ds-setbody { display: flex; flex-direction: column; gap: 8px; padding: 12px 20px 16px; text-align: left; } .ds-srow { display: flex; min-height: 28px; align-items: center; gap: 6px; } .ds-slabel { width: 128px; margin-right: 6px; flex-shrink: 0; font-size: 13px; color: var(--color-label, #8a8a8a); } .ds-pct { width: 44px; text-align: right; font-size: 13px; color: var(--color-value, #ececec); } .ds-range { flex: 1; appearance: none; height: 14px; background: transparent; } .ds-range::-webkit-slider-runnable-track { height: 3px; background: #1b1b1b; box-shadow: 0 0 0 1px #000; } .ds-range::-webkit-slider-thumb { appearance: none; width: 9px; height: 9px; margin-top: -3px; background: var(--color-normal, #c8c8c8); border: 1px solid #000; transform: rotate(45deg); } .ds-range:hover::-webkit-slider-thumb { background: var(--color-value, #ececec); } .ds-range:focus-visible { outline: 1px solid var(--color-normal, #c8c8c8); outline-offset: 2px; }"
+    }
+  ],
+  "narrative": {
+    "northStar": "The Item Tooltip of Where You Stand",
+    "overview": "Every surface poebo draws is a Path of Exile item tooltip. The zone is the item name in a tinted header band, the things to do there are its properties, and the way out is the last line, \"Then:\". The overlay, the quick menu and each settings group use the same parts: a see-through black body with no frame, a header band with rules along both edges and wedge ends that meet in a diamond, short glowing separators, centered small caps, and text colours that mean what they mean in the game.\n\nThe system is dense and quiet. It is read in glances over a busy, dark game scene, so it has no fills, gradients or accents beyond what the game's own tooltips carry, and colour is spent only on meaning: a boss name is red because the game's corrupted red is the danger colour, a waypoint is blue because it is magic. The overlay window is transparent and fitted to its content; only the plate paints. The settings window is an ordinary window, but its groups are still tooltips standing on a dark ground.\n\nIt rejects the web-app card (rounded corners, drop shadows, coloured buttons) and the generic brown-and-gold fantasy panel. The chrome is neutral grey and black; the only warm hue in the frame is the sand tint for towns.",
+    "keyCharacteristics": [
+      "See-through black bodies, opacity set by the player (50 to 100 percent on the overlay).",
+      "A header band per tooltip, tinted by kind, with 1px rules along its top and bottom edges and, at each end, a wedge drawn from both corners to a 7px diamond on the middle.",
+      "Alegreya Sans SC at medium weight for all tooltip text; Alegreya Sans italic for flavour.",
+      "Square corners everywhere.",
+      "Tabular numerals throughout."
+    ],
+    "rules": [
+      {
+        "name": "The Game's Meaning Rule",
+        "body": "A hue appears only where the game uses it for the same meaning. New content picks the matching item text colour; if the game has none for that meaning, it stays grey or white.",
+        "section": "colors"
+      },
+      {
+        "name": "The Grey Ladder Rule",
+        "body": "Brightness is rank: Label Grey for what something is, Plain Grey for running text, Normal Item White for chrome, Value White for what the player acts on.",
+        "section": "colors"
+      },
+      {
+        "name": "The Tint by Kind Rule",
+        "body": "One tint per tooltip drives its band, rules, corners and separators together. Areas and app chrome use Normal Item White, towns use Currency Sand.",
+        "section": "colors"
+      },
+      {
+        "name": "The Small Caps Voice Rule",
+        "body": "Everything in a tooltip is Alegreya Sans SC at 500. Switch to Alegreya Sans for flavour (italic) and for literal strings: key names, file paths, speed multipliers.",
+        "section": "typography"
+      },
+      {
+        "name": "The Size as Rank Rule",
+        "body": "The current actions are the largest body text (15px) and the brightest; the properties line and labels drop to 13px grey; key hints sit at 11px. Do not add a size between these steps.",
+        "section": "typography"
+      },
+      {
+        "name": "The No Frame Rule",
+        "body": "A tooltip body has no border and no shadow. The only frame is the pair of 1px tint rules inside the header band, 2px from its top and bottom and stopping 40px short of each end. The one exception is state: an unlocked overlay gets a 1px white outline at 35 percent, 2px out, while it can be dragged.",
+        "section": "elevation"
+      },
+      {
+        "name": "The Square Corner Rule",
+        "body": "Nothing is rounded. Ornament lives only in the header corners.",
+        "section": "shapes"
+      }
+    ],
+    "dos": [
+      "Do build every new panel as a tooltip: a header band tinted by kind over a see-through black body with no frame.",
+      "Do colour route content only with the game's item text colours, by meaning (Magic Blue for waypoints and portals, Corrupted Red for bosses, Quest Green for quests, Unique Brown for trials and arenas, Gem Teal for gems).",
+      "Do keep the overlay's bottom center fixed and let new content grow upward.",
+      "Do set tooltip text in Alegreya Sans SC 500 and switch to Alegreya Sans for flavour, key names and paths.",
+      "Do draw small marks as inline SVG in currentColor.",
+      "Do show state on buttons with the pressed treatment (Normal Item White border, Value White text), not with a fill colour."
+    ],
+    "donts": [
+      "Don't round corners or add drop shadows; the system is square and flat.",
+      "Don't put a border around a tooltip body; the frame belongs to the header band.",
+      "Don't bring back the brown-and-gold fantasy chrome; the frame is neutral grey and black.",
+      "Don't use a route colour for decoration or for chrome.",
+      "Don't add a type size between the existing steps (11, 12, 13, 14, 15, 19px).",
+      "Don't use the game's header art or GGG logos; the header frame and diamonds are poebo's own."
+    ]
+  }
+}
