@@ -2,8 +2,6 @@ import { useEffect, useLayoutEffect, useRef, useState } from 'react';
 
 import { fitOverlay } from '../ipc/commands';
 import { useAppStore } from '../store/useAppStore';
-import { ReplayControls } from './ReplayControls';
-import { SettingsPanel } from './SettingsPanel';
 import { StatusPanel } from './StatusPanel';
 import { TooltipHeader } from './Tooltip';
 
@@ -27,7 +25,7 @@ function StartupNotice(): React.JSX.Element {
     >
       <TooltipHeader tint="var(--color-currency)" title="poebo" subtitle="Running in the background" />
       <p className="px-4 pt-2 pb-3 font-body text-[13px] leading-snug text-label italic">
-        It appears over Path of Exile while the game is focused. Ctrl+Alt+Space unlocks it.
+        It appears over Path of Exile while the game is focused. Hold Esc in the game for the menu.
       </p>
     </div>
   );
@@ -38,7 +36,8 @@ export function OverlayRoot(): React.JSX.Element {
   const opacity = useAppStore((s) => s.ui.opacity);
   const textScale = useAppStore((s) => s.ui.textScale);
   const gameFocused = useAppStore((s) => s.ui.gameFocused);
-  const visible = gameFocused || grabbed;
+  const routeEnabled = useAppStore((s) => s.routeEnabled);
+  const visible = (gameFocused && routeEnabled) || grabbed;
   const [shownOnce, setShownOnce] = useState(false);
   if (visible && !shownOnce) setShownOnce(true);
 
@@ -80,16 +79,12 @@ export function OverlayRoot(): React.JSX.Element {
                 poebo
               </span>
               <span data-tauri-drag-region className="text-[11px] text-label">
-                Drag to move. Ctrl+Alt+Space locks it.
+                Drag to move, Ctrl+Alt+Space to lock. Hold Esc for the menu.
               </span>
-            </div>
-            <div className="border-b border-frame-dark px-3 py-2.5">
-              <SettingsPanel />
-              <ReplayControls />
             </div>
           </>
         )}
-        <StatusPanel />
+        {routeEnabled && <StatusPanel />}
       </div>
     </div>
   );

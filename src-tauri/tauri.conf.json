@@ -17,7 +17,7 @@
         "title": "poebo",
         "url": "index.html",
         "width": 420,
-        "height": 560,
+        "height": 240,
         "resizable": false,
         "maximizable": false,
         "minimizable": false,
@@ -28,6 +28,34 @@
         "skipTaskbar": true,
         "shadow": false,
         "visible": true
+      },
+      {
+        "label": "menu",
+        "title": "poebo menu",
+        "url": "index.html",
+        "width": 236,
+        "height": 220,
+        "resizable": false,
+        "maximizable": false,
+        "minimizable": false,
+        "decorations": false,
+        "transparent": true,
+        "alwaysOnTop": true,
+        "skipTaskbar": true,
+        "shadow": false,
+        "visible": false
+      },
+      {
+        "label": "settings",
+        "title": "poebo settings",
+        "url": "index.html",
+        "width": 520,
+        "height": 640,
+        "minWidth": 440,
+        "minHeight": 420,
+        "resizable": true,
+        "visible": false,
+        "center": true
       }
     ],
     "security": {

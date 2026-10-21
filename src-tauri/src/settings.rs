@@ -15,6 +15,7 @@ pub struct Settings {
     pub text_scale: f64,
     /// Overlay position as fractions of its monitor: horizontal center and bottom edge.
     pub anchor: Option<(f64, f64)>,
+    pub route_enabled: bool,
     /// Read once at startup: the edges differ between the two route variants.
     pub league_start: bool,
 }
@@ -27,6 +28,7 @@ impl Default for Settings {
             route_edge: 0,
             text_scale: 1.0,
             anchor: None,
+            route_enabled: true,
             league_start: true,
         }
     }

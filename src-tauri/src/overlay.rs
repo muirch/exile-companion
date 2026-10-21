@@ -134,12 +134,13 @@ pub fn create_tray(app: &AppHandle) -> tauri::Result<()> {
     let grab = MenuItem::with_id(
         app,
         "grab",
-        "Move / settings (Ctrl+Alt+Space)",
+        "Move overlay (Ctrl+Alt+Space)",
         true,
         None::<&str>,
     )?;
+    let settings = MenuItem::with_id(app, "settings", "Settings", true, None::<&str>)?;
     let quit = MenuItem::with_id(app, "quit", "Quit poebo", true, None::<&str>)?;
-    let menu = Menu::with_items(app, &[&grab, &quit])?;
+    let menu = Menu::with_items(app, &[&settings, &grab, &quit])?;
     let mut tray = TrayIconBuilder::new()
         .tooltip("poebo")
         .menu(&menu)
@@ -151,6 +152,7 @@ pub fn create_tray(app: &AppHandle) -> tauri::Result<()> {
                     let _ = w.set_focus();
                 }
             }
+            "settings" => crate::menu::open_settings(app),
             "quit" => app.exit(0),
             _ => {}
         });
@@ -195,8 +197,6 @@ mod win {
         DispatchMessageW, GetClassNameW, GetForegroundWindow, GetMessageW, GetWindowTextW,
         TranslateMessage, EVENT_SYSTEM_FOREGROUND, MSG, WINEVENT_OUTOFCONTEXT,
     };
-
-    use super::OVERLAY_LABEL;
 
     // PoE 1 and PoE 2 both use this window class; the title check covers anything else.
     const GAME_CLASS: &str = "POEWindowClass";
@@ -245,11 +245,13 @@ mod win {
         let Some(app) = APP.get() else {
             return;
         };
-        let own = app
-            .get_webview_window(OVERLAY_LABEL)
-            .and_then(|w| w.hwnd().ok())
-            .map(|h| h.0);
-        let is_own = !hwnd.is_null() && own == Some(hwnd);
+        // Menu and settings count as ours too, so the overlay doesn't vanish while they're open.
+        let is_own = !hwnd.is_null()
+            && app
+                .webview_windows()
+                .values()
+                .filter_map(|w| w.hwnd().ok())
+                .any(|h| h.0 == hwnd);
         super::on_foreground_changed(app, !is_own && is_game(hwnd), is_own);
     }
 

@@ -27,6 +27,7 @@ interface AppStore {
   build: BuildSummary | null;
   guidance: NextObjective | null;
   route: RouteView | null;
+  routeEnabled: boolean;
   source: { mode: SourceMode; path: string | null; error: string | null };
   replay: ReplayProgress;
   ui: { grabbed: boolean; opacity: number; gameFocused: boolean; textScale: number };
@@ -35,6 +36,7 @@ interface AppStore {
   setBuild: (build: BuildSummary | null) => void;
   setGuidance: (guidance: NextObjective | null) => void;
   setRoute: (route: RouteView | null) => void;
+  setRouteEnabled: (routeEnabled: boolean) => void;
   setSourceStatus: (status: SourceStatus) => void;
   setReplayProgress: (progress: ReplayProgress) => void;
   setGrabbed: (grabbed: boolean) => void;
@@ -49,6 +51,7 @@ export const useAppStore = create<AppStore>((set) => ({
   build: null,
   guidance: null,
   route: null,
+  routeEnabled: true,
   source: { mode: 'idle', path: null, error: null },
   replay: { position: 0, total: 0, speed: 'X1', paused: false },
   // Hidden and locked until the backend (or the browser mock) says otherwise, so the first frame
@@ -59,6 +62,7 @@ export const useAppStore = create<AppStore>((set) => ({
   setBuild: (build) => set({ build }),
   setGuidance: (guidance) => set({ guidance }),
   setRoute: (route) => set({ route }),
+  setRouteEnabled: (routeEnabled) => set({ routeEnabled }),
   setSourceStatus: (status) =>
     set({ source: { mode: status.mode, path: status.path ?? null, error: status.error ?? null } }),
   setReplayProgress: (replay) => set({ replay }),

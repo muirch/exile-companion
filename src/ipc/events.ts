@@ -8,6 +8,7 @@ import type {
   NextObjective,
   ReplayProgress,
   RouteView,
+  Settings,
   SourceStatus,
 } from './types';
 
@@ -43,3 +44,12 @@ export const onRouteView = (cb: (view: RouteView | null) => void): Promise<Unlis
 
 export const onGameFocus = (cb: (focused: boolean) => void): Promise<UnlistenFn> =>
   listen<boolean>(GAME_FOCUS, (e) => cb(e.payload));
+
+export const onSettingsChanged = (cb: (settings: Settings) => void): Promise<UnlistenFn> =>
+  listen<Settings>('settings://changed', (e) => cb(e.payload));
+
+export const onRouteEnabled = (cb: (enabled: boolean) => void): Promise<UnlistenFn> =>
+  listen<boolean>('features://route', (e) => cb(e.payload));
+
+export const onMenuOpened = (cb: () => void): Promise<UnlistenFn> =>
+  listen('menu://opened', () => cb());

@@ -8,7 +8,7 @@ use poebo_core::guidance::NextObjective;
 use poebo_core::route::RouteView;
 use poebo_core::source::SpeedMultiplier;
 use poebo_core::state::CampaignState;
-use tauri::{AppHandle, State, WebviewWindow};
+use tauri::{AppHandle, Emitter, State, WebviewWindow};
 use tauri_plugin_dialog::DialogExt;
 
 use crate::runtime::{self, RouteMove};
@@ -136,6 +136,36 @@ pub fn get_overlay_state(app: AppHandle, state: State<'_, AppState>) -> OverlayS
 }
 
 #[tauri::command]
+pub fn open_settings(app: AppHandle) {
+    crate::menu::open_settings(&app);
+}
+
+#[tauri::command]
+pub fn start_move(app: AppHandle) {
+    crate::menu::start_move(&app);
+}
+
+#[tauri::command]
+pub fn close_menu(app: AppHandle) {
+    crate::menu::close(&app);
+}
+
+#[tauri::command]
+pub fn quit_app(app: AppHandle) {
+    app.exit(0);
+}
+
+#[tauri::command]
+pub fn get_route_enabled(app: AppHandle) -> bool {
+    crate::menu::route_enabled(&app)
+}
+
+#[tauri::command]
+pub fn set_route_enabled(app: AppHandle, enabled: bool) {
+    crate::menu::set_route_enabled(&app, enabled);
+}
+
+#[tauri::command]
 pub fn fit_overlay(app: AppHandle, width: f64, height: f64) -> Result<(), String> {
     crate::overlay::fit(&app, width, height).map_err(|e| e.to_string())
 }
@@ -184,5 +214,8 @@ pub fn get_settings(app: AppHandle) -> Result<Settings, String> {
 
 #[tauri::command]
 pub fn save_settings(app: AppHandle, settings: Settings) -> Result<(), String> {
-    settings::save(&app, &settings)
+    settings::save(&app, &settings)?;
+    // The overlay and settings windows each hold their own copy of the display settings.
+    let _ = app.emit("settings://changed", &settings);
+    Ok(())
 }

@@ -57,10 +57,16 @@ pub struct AppState {
     pub route: Arc<Route>,
     pub anchor: Mutex<(f64, f64)>,
     pub tracker: Mutex<RouteTracker>,
+    pub route_enabled: AtomicBool,
 }
 
 impl AppState {
-    pub fn new(data: Arc<DataPack>, route: Arc<Route>, route_edge: usize) -> Self {
+    pub fn new(
+        data: Arc<DataPack>,
+        route: Arc<Route>,
+        route_edge: usize,
+        route_enabled: bool,
+    ) -> Self {
         let (state_tx, _rx) = watch::channel(CampaignState::default());
         Self {
             data,
@@ -73,6 +79,7 @@ impl AppState {
             route,
             anchor: Mutex::new(crate::overlay::DEFAULT_ANCHOR),
             tracker: Mutex::new(RouteTracker::at(route_edge)),
+            route_enabled: AtomicBool::new(route_enabled),
         }
     }
 

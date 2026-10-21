@@ -65,6 +65,21 @@ body,
   overflow: hidden;
 }
 
+/* The settings window is an ordinary window with its own ground and scrolling. */
+html[data-window='settings'],
+html[data-window='settings'] body {
+  background: #0b0a09;
+  overflow: auto;
+}
+html[data-window='settings'] #root {
+  display: block;
+  height: auto;
+}
+html[data-window='menu'] #root {
+  align-items: flex-start;
+  justify-content: flex-start;
+}
+
 /* In Tauri the window is fitted to the content; in the browser mock this keeps it bottom center. */
 #root {
   display: flex;
@@ -86,9 +101,11 @@ body {
   color: var(--color-value);
 }
 
-:focus-visible {
-  outline: 1px solid var(--color-currency);
-  outline-offset: 2px;
+@layer base {
+  :focus-visible {
+    outline: 1px solid var(--color-currency);
+    outline-offset: 2px;
+  }
 }
 
 @layer components {

@@ -8,6 +8,7 @@ import { readText } from '@tauri-apps/plugin-clipboard-manager';
 
 import { isTauri } from './env';
 import * as mock from './mock';
+import { useAppStore } from '../store/useAppStore';
 import type {
   BuildSummary,
   CampaignState,
@@ -151,3 +152,22 @@ export const snapOverlayBottomCenter = (): Promise<void> =>
 
 export const fitOverlay = (width: number, height: number): Promise<void> =>
   isTauri() ? invoke('fit_overlay', { width, height }) : Promise.resolve();
+
+export const openSettings = (): Promise<void> =>
+  isTauri() ? invoke('open_settings') : Promise.resolve();
+
+export const startMove = (): Promise<void> =>
+  isTauri() ? invoke('start_move') : Promise.resolve();
+
+export const closeMenu = (): Promise<void> =>
+  isTauri() ? invoke('close_menu') : Promise.resolve();
+
+export const quitApp = (): Promise<void> => (isTauri() ? invoke('quit_app') : Promise.resolve());
+
+export const getRouteEnabled = (): Promise<boolean> =>
+  isTauri() ? invoke('get_route_enabled') : Promise.resolve(true);
+
+export const setRouteEnabled = (enabled: boolean): Promise<void> =>
+  isTauri()
+    ? invoke('set_route_enabled', { enabled })
+    : Promise.resolve(useAppStore.getState().setRouteEnabled(enabled));

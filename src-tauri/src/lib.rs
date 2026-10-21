@@ -3,6 +3,7 @@
 
 mod commands;
 mod logfile;
+mod menu;
 mod overlay;
 mod runtime;
 mod settings;
@@ -26,7 +27,12 @@ pub fn run() {
             let data = runtime::load_data_pack()?;
             let saved = settings::load(app.handle()).unwrap_or_default();
             let route = runtime::load_route(&data, saved.league_start);
-            app.manage(AppState::new(data, route, saved.route_edge));
+            app.manage(AppState::new(
+                data,
+                route,
+                saved.route_edge,
+                saved.route_enabled,
+            ));
             overlay::restore_anchor(app.handle(), &saved);
 
             if let Some(log) = logfile::find_client_log(saved.last_log_path.as_deref()) {
@@ -50,6 +56,7 @@ pub fn run() {
             let grabbed = !cfg!(windows);
             overlay::set_grab(app.handle(), grabbed);
             overlay::watch_game_focus(app.handle().clone());
+            menu::watch_esc_hold(app.handle().clone());
 
             for (code, mv) in [(Code::PageDown, 0), (Code::PageUp, 1)] {
                 let shortcut = Shortcut::new(Some(Modifiers::CONTROL | Modifiers::ALT), code);
@@ -68,10 +75,19 @@ pub fn run() {
 
             Ok(())
         })
-        .on_window_event(|window, event| {
-            if let tauri::WindowEvent::Moved(_) = event {
-                overlay::on_moved(window);
+        .on_window_event(|window, event| match event {
+            tauri::WindowEvent::Moved(_) => overlay::on_moved(window),
+            tauri::WindowEvent::Focused(false) if window.label() == menu::MENU_LABEL => {
+                let _ = window.hide();
             }
+            // Settings is created once at startup; closing it only hides it.
+            tauri::WindowEvent::CloseRequested { api, .. }
+                if window.label() == menu::SETTINGS_LABEL =>
+            {
+                api.prevent_close();
+                let _ = window.hide();
+            }
+            _ => {}
         })
         .invoke_handler(tauri::generate_handler![
             commands::pick_log_file,
@@ -93,6 +109,12 @@ pub fn run() {
             commands::get_overlay_state,
             commands::snap_overlay_bottom_center,
             commands::fit_overlay,
+            commands::open_settings,
+            commands::start_move,
+            commands::close_menu,
+            commands::quit_app,
+            commands::get_route_enabled,
+            commands::set_route_enabled,
             commands::route_next,
             commands::route_prev,
             commands::route_reset,
