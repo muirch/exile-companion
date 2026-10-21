@@ -37,11 +37,11 @@ jobs:
       - name: rustfmt
         run: cargo fmt --all --check
 
-      - name: clippy (core + data)
-        run: cargo clippy -p poebo-core -p poebo-data --all-targets -- -D warnings
+      - name: clippy (core + data + pob)
+        run: cargo clippy -p poebo-core -p poebo-data -p poebo-pob --all-targets -- -D warnings
 
-      - name: Test core + data
-        run: cargo test -p poebo-core -p poebo-data
+      - name: Test core + data + pob
+        run: cargo test -p poebo-core -p poebo-data -p poebo-pob
 
       - name: ts-rs bindings are up to date
         run: |
