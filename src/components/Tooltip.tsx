@@ -4,16 +4,20 @@ import type { CSSProperties, ReactNode } from 'react';
 function Corner({ end }: { end?: boolean }): React.JSX.Element {
   return (
     <svg
-      viewBox="0 0 24 30"
+      viewBox="0 0 40 34"
+      preserveAspectRatio="xMinYMid meet"
       className={`corner ${end ? 'corner-end' : 'corner-start'}`}
       aria-hidden="true"
     >
-      <g fill="none" stroke="currentColor" strokeWidth="1.1" strokeLinecap="round">
-        <path d="M3 3C9 6 11 10 11 15C11 20 9 24 3 27" />
-        <path d="M11 15C11 10 15 8 18 10C20 11.5 19.5 14 17.5 14C16 14 15.5 12.8 16.3 12" />
-        <path d="M11 15C11 20 15 22 18 20C20 18.5 19.5 16 17.5 16C16 16 15.5 17.2 16.3 18" />
+      <g fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round">
+        <path d="M4 3C11 7 14 11 14 17C14 23 11 27 4 31" />
+        <path d="M14 17C14 11 19 8 24 9.5C28 10.8 28.5 15 25.5 16C23.5 16.6 22 15.3 22.6 13.8" />
+        <path d="M14 17C14 23 19 26 24 24.5C28 23.2 28.5 19 25.5 18C23.5 17.4 22 18.7 22.6 20.2" />
+        <path d="M26 17H38" opacity="0.7" />
       </g>
-      <path d="M4 15l2-2 2 2-2 2Z" fill="currentColor" />
+      <circle cx="22.6" cy="13.8" r="1.4" fill="currentColor" />
+      <circle cx="22.6" cy="20.2" r="1.4" fill="currentColor" />
+      <path d="M6 17l2.5-2.5L11 17l-2.5 2.5Z" fill="currentColor" />
     </svg>
   );
 }

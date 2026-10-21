@@ -20,6 +20,7 @@ import {
 import type { Settings } from '../ipc/types';
 import { useAppStore } from '../store/useAppStore';
 import { ReplayControls } from './ReplayControls';
+import { TooltipHeader } from './Tooltip';
 
 // Read-modify-write: the backend saves the route position and anchor into the same file.
 async function save(patch: Partial<Settings>): Promise<void> {
@@ -27,11 +28,12 @@ async function save(patch: Partial<Settings>): Promise<void> {
   await saveSettings({ ...current, ...patch });
 }
 
+// Each group is its own item tooltip: a header band over a see-through black body.
 function Section({ title, children }: { title: string; children: ReactNode }): React.JSX.Element {
   return (
-    <section className="flex flex-col gap-2.5">
-      <h2 className="border-b border-frame-dark pb-1 font-caps text-[16px] text-currency">{title}</h2>
-      {children}
+    <section className="tooltip bg-black/80">
+      <TooltipHeader tint="var(--color-normal)" title={title} />
+      <div className="flex flex-col gap-2 px-5 pt-3 pb-4 text-left">{children}</div>
     </section>
   );
 }
@@ -80,7 +82,7 @@ function DisplaySection(): React.JSX.Element {
       <Row label="Background">
         <input
           type="range"
-          min={0.2}
+          min={0.5}
           max={1}
           step={0.05}
           value={opacity}
@@ -114,7 +116,7 @@ function RouteSection(): React.JSX.Element {
       <Row label="Show route">
         <Toggle on={enabled} onChange={(v) => void setRouteEnabled(v)} />
       </Row>
-      <Row label="Position">
+      <Row label="Progress">
         <span className="text-[13px] text-value">
           {route ? `Step ${route.edge + 1} of ${route.edge_count}, ${route.section}` : 'No route'}
         </span>
@@ -169,7 +171,13 @@ function LogSection(): React.JSX.Element {
           </button>
         )}
       </Row>
-      <ReplayControls />
+      {mode === 'replay' && (
+        <Row label="Replay">
+          <div className="flex-1">
+            <ReplayControls />
+          </div>
+        </Row>
+      )}
     </Section>
   );
 }
@@ -247,7 +255,7 @@ function HotkeySection(): React.JSX.Element {
 
 export function SettingsApp(): React.JSX.Element {
   return (
-    <main className="tooltip mx-auto flex max-w-[34rem] flex-col gap-6 px-6 py-5 text-left">
+    <main className="mx-auto flex max-w-[34rem] flex-col gap-4 px-5 py-5">
       <DisplaySection />
       <RouteSection />
       <LogSection />

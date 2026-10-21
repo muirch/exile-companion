@@ -1,11 +1,11 @@
 import { routeNext, routePrev } from '../ipc/commands';
 import { useAppStore } from '../store/useAppStore';
-import { HereSteps, ThenStep } from './RoutePanel';
+import { HereSteps, PassThrough, ThenStep, hasActions } from './RoutePanel';
 import { TooltipHeader, TooltipSep } from './Tooltip';
 
 // Towns take the currency item's sand tint, everything else the normal item's white.
 const TINT_TOWN = 'var(--color-currency)';
-const TINT_AREA = '#c8c8c8';
+const TINT_AREA = 'var(--color-normal)';
 
 function Prop({ label, value }: { label: string; value: string | number }): React.JSX.Element {
   return (
@@ -67,6 +67,8 @@ export function StatusPanel(): React.JSX.Element {
   const act = useAppStore((s) => s.campaign.act);
   const location = useAppStore((s) => s.campaign.location_kind);
   const grabbed = useAppStore((s) => s.ui.grabbed);
+  const route = useAppStore((s) => s.route);
+  const actions = hasActions(route);
 
   const tint = location === 'town' ? TINT_TOWN : TINT_AREA;
   const subtitle = act != null ? `Act ${act}${location === 'town' ? ' town' : ''}` : undefined;
@@ -78,10 +80,14 @@ export function StatusPanel(): React.JSX.Element {
         <Properties />
         <TooltipSep tint={tint} />
         <NoLogHint />
-        <HereSteps />
+        {route && !actions ? <PassThrough /> : <HereSteps />}
         <GemClaim />
-        <TooltipSep tint={tint} />
-        <ThenStep />
+        {actions && (
+          <>
+            <TooltipSep tint={tint} />
+            <ThenStep />
+          </>
+        )}
         {grabbed && <RouteNav />}
       </div>
     </div>

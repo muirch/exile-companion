@@ -23,7 +23,7 @@ function StartupNotice(): React.JSX.Element {
         shown ? 'opacity-100' : 'opacity-0',
       ].join(' ')}
     >
-      <TooltipHeader tint="var(--color-currency)" title="poebo" subtitle="Running in the background" />
+      <TooltipHeader tint="var(--color-normal)" title="poebo" subtitle="Running in the background" />
       <p className="px-4 pt-2 pb-3 font-body text-[13px] leading-snug text-label italic">
         It appears over Path of Exile while the game is focused. Hold Esc in the game for the menu.
       </p>
@@ -64,7 +64,7 @@ export function OverlayRoot(): React.JSX.Element {
       <div
         hidden={!shownOnce}
         className={[
-          grabbed ? 'pointer-events-auto outline outline-1 outline-offset-2 outline-currency/60' : 'pointer-events-none',
+          grabbed ? 'pointer-events-auto outline outline-1 outline-offset-2 outline-white/35' : 'pointer-events-none',
           visible ? 'opacity-100 transition-opacity duration-150' : 'opacity-0',
         ].join(' ')}
         style={{ backgroundColor: `rgb(0 0 0 / ${opacity})`, zoom: textScale, width: 404 }}
@@ -73,9 +73,9 @@ export function OverlayRoot(): React.JSX.Element {
           <>
             <div
               data-tauri-drag-region
-              className="flex cursor-move items-baseline justify-between border-b border-frame-dark px-3 pt-1.5 pb-1"
+              className="flex cursor-move items-baseline justify-between border-b border-edge px-3 pt-1.5 pb-1"
             >
-              <span data-tauri-drag-region className="font-caps text-[13px] text-currency">
+              <span data-tauri-drag-region className="font-caps text-[13px] text-normal">
                 poebo
               </span>
               <span data-tauri-drag-region className="text-[11px] text-label">

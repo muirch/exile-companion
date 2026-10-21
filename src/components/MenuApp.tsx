@@ -6,7 +6,7 @@ import { onMenuOpened } from '../ipc/events';
 import { useAppStore } from '../store/useAppStore';
 import { TooltipHeader, TooltipSep } from './Tooltip';
 
-const TINT = 'var(--color-currency)';
+const TINT = 'var(--color-normal)';
 
 function Row({
   label,
@@ -62,7 +62,7 @@ export function MenuApp(): React.JSX.Element {
   return (
     <div ref={panel} role="menu" className="tooltip m-1 w-[228px] bg-black/90 pb-1.5">
       <TooltipHeader tint={TINT} title="poebo" />
-      <p className="mt-1.5 px-3 text-left text-[12px] text-label">Features</p>
+      <div className="h-1.5" />
       <Row
         first
         label="Leveling route"
@@ -72,6 +72,7 @@ export function MenuApp(): React.JSX.Element {
       <TooltipSep tint={TINT} />
       <Row label="Settings" onClick={() => void openSettings()} />
       <Row label="Move overlay" hint="Ctrl+Alt+Space" onClick={() => void startMove()} />
+      <TooltipSep tint={TINT} />
       <Row label="Quit poebo" onClick={() => void quitApp()} />
     </div>
   );

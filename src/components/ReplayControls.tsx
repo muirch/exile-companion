@@ -14,7 +14,7 @@ export function ReplayControls(): React.JSX.Element | null {
   const pct = replay.total > 0 ? Math.round((replay.position / replay.total) * 100) : 0;
 
   return (
-    <div className="mt-2.5 flex flex-col gap-1.5">
+    <div className="flex flex-col gap-1.5">
       <div className="flex items-center gap-1.5">
         <button className="btn" onClick={replay.paused ? replayResume : replayPause}>
           {replay.paused ? 'Play' : 'Pause'}
@@ -36,8 +36,8 @@ export function ReplayControls(): React.JSX.Element | null {
         </div>
       </div>
       <div className="flex items-center gap-2">
-        <div className="h-[3px] flex-1 bg-frame-dark shadow-[0_0_0_1px_#000]">
-          <div className="h-full bg-currency" style={{ width: `${pct}%` }} />
+        <div className="h-[3px] flex-1 bg-edge shadow-[0_0_0_1px_#000]">
+          <div className="h-full bg-normal" style={{ width: `${pct}%` }} />
         </div>
         <span className="text-[11px] text-label">
           {replay.position}/{replay.total} lines

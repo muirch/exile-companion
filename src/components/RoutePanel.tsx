@@ -139,17 +139,19 @@ export function HereSteps(): React.JSX.Element {
   if (!route) {
     return <p className="text-[14px] text-label">The leveling route didn't load.</p>;
   }
-  const actionable = route.here.filter((s) => s.parts.length > 0);
   return (
     <>
-      {actionable.length === 0 && <p className="text-[14px] text-label">Nothing to do here</p>}
-      <ul className="flex flex-col gap-1 text-[15px] leading-snug">
+      <ul className="flex flex-col gap-1 text-[15px] leading-snug text-value">
         {route.here.map((step, i) => (
           <StepView key={i} step={step} />
         ))}
       </ul>
     </>
   );
+}
+
+export function hasActions(route: { here: Step[] } | null): boolean {
+  return !!route && route.here.some((s) => s.parts.length > 0);
 }
 
 export function ThenStep(): React.JSX.Element | null {
@@ -160,5 +162,20 @@ export function ThenStep(): React.JSX.Element | null {
       <span className="text-label">Then: </span>
       <Parts parts={then.parts} />
     </div>
+  );
+}
+
+// When the area is only a passage, the way out is the instruction.
+export function PassThrough(): React.JSX.Element | null {
+  const then = useAppStore((s) => s.route?.then);
+  return (
+    <>
+      <p className="text-[13px] text-label">Nothing to do here</p>
+      {then && (
+        <p className="text-[15px] leading-snug text-value">
+          <Parts parts={then.parts} />
+        </p>
+      )}
+    </>
   );
 }

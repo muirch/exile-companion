@@ -51,8 +51,9 @@
   --color-quest: #4ae63a;
   --color-corrupted: #e0443a;
   --color-crafted: #b4b4ff;
-  --color-frame: #6e6556;
-  --color-frame-dark: #2a2620;
+  --color-normal: #c8c8c8;
+  --color-edge: #3a3a3a;
+  --color-edge-bright: #6b6b6b;
 }
 
 /* The overlay window is transparent; only the plate paints. */
@@ -68,7 +69,10 @@ body,
 /* The settings window is an ordinary window with its own ground and scrolling. */
 html[data-window='settings'],
 html[data-window='settings'] body {
-  background: #0b0a09;
+  background:
+    radial-gradient(ellipse at 30% 20%, #23251c 0%, transparent 55%),
+    radial-gradient(ellipse at 80% 90%, #251d16 0%, transparent 50%),
+    #0a0a0a;
   overflow: auto;
 }
 html[data-window='settings'] #root {
@@ -97,13 +101,13 @@ body {
 }
 
 ::selection {
-  background: #4a4436;
+  background: #45454f;
   color: var(--color-value);
 }
 
 @layer base {
   :focus-visible {
-    outline: 1px solid var(--color-currency);
+    outline: 1px solid var(--color-normal);
     outline-offset: 2px;
   }
 }
@@ -116,39 +120,51 @@ body {
     font-weight: 500;
   }
 
+  /* The band is filled with the tint; its two rules sit inside it, short of the corners. */
   .tooltip-header {
     position: relative;
-    padding: 5px 34px 6px;
-    border-top: 1px solid var(--tint);
-    border-bottom: 1px solid var(--tint);
+    padding: 6px 46px 7px;
     background:
-      linear-gradient(180deg, rgb(255 255 255 / 0.05), transparent 45%, rgb(0 0 0 / 0.35)),
-      color-mix(in srgb, var(--tint) 18%, #080706);
+      linear-gradient(180deg, rgb(255 255 255 / 0.07), transparent 40%, rgb(0 0 0 / 0.4)),
+      color-mix(in srgb, var(--tint) 30%, #050505);
     color: var(--tint);
+  }
+  .tooltip-header::before,
+  .tooltip-header::after {
+    content: '';
+    position: absolute;
+    left: 40px;
+    right: 40px;
+    height: 1px;
+    background: color-mix(in srgb, var(--tint) 75%, transparent);
+  }
+  .tooltip-header::before {
+    top: 2px;
+  }
+  .tooltip-header::after {
+    bottom: 2px;
   }
   .tooltip-header > .corner {
     position: absolute;
-    top: 50%;
-    width: 24px;
-    height: 30px;
-    transform: translateY(-50%);
+    top: 0;
+    width: 40px;
+    height: 100%;
     color: var(--tint);
   }
   .tooltip-header > .corner-start {
-    left: 4px;
+    left: 0;
   }
   .tooltip-header > .corner-end {
-    right: 4px;
-    transform: translateY(-50%) scaleX(-1);
+    right: 0;
+    transform: scaleX(-1);
   }
 
-  /* Short separator in the header's tint, fading out both ways. */
+  /* Short separator, brightest in the middle like the game's. */
   .tooltip-sep {
     height: 1px;
-    width: 68%;
-    margin: 6px auto;
-    background: linear-gradient(90deg, transparent, var(--tint), transparent);
-    opacity: 0.8;
+    width: 30%;
+    margin: 7px auto;
+    background: radial-gradient(ellipse at center, var(--tint) 0%, transparent 70%);
   }
 
   .btn {
@@ -157,16 +173,16 @@ body {
     font-size: 12px;
     line-height: 1;
     padding: 5px 9px 6px;
-    color: var(--color-currency);
-    background: linear-gradient(180deg, #1c1a17, #0b0a09);
-    border: 1px solid var(--color-frame-dark);
+    color: var(--color-normal);
+    background: linear-gradient(180deg, #1b1b1b, #0a0a0a);
+    border: 1px solid var(--color-edge);
     box-shadow: inset 0 0 0 1px rgb(255 255 255 / 0.04);
     transition:
       border-color 150ms ease-out,
       color 150ms ease-out;
   }
   .btn:hover {
-    border-color: var(--color-frame);
+    border-color: var(--color-edge-bright);
     color: var(--color-value);
   }
   .btn:active {
@@ -177,7 +193,7 @@ body {
     pointer-events: none;
   }
   .btn[aria-pressed='true'] {
-    border-color: var(--color-currency);
+    border-color: var(--color-normal);
     color: var(--color-value);
   }
 }
@@ -189,7 +205,7 @@ input[type='range'] {
 }
 input[type='range']::-webkit-slider-runnable-track {
   height: 3px;
-  background: #1c1a17;
+  background: #1b1b1b;
   box-shadow: 0 0 0 1px #000;
 }
 input[type='range']::-webkit-slider-thumb {
@@ -197,7 +213,7 @@ input[type='range']::-webkit-slider-thumb {
   width: 9px;
   height: 9px;
   margin-top: -3px;
-  background: var(--color-currency);
+  background: var(--color-normal);
   border: 1px solid #000;
   transform: rotate(45deg);
 }
