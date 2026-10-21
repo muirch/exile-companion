@@ -162,3 +162,24 @@ fn tracker_walks_the_bundled_route_end_to_end() {
     }
     assert_eq!(tracker.active(), route.edges.len() - 1);
 }
+
+#[test]
+fn high_level_character_in_act1_town_gets_the_last_act1_visit() {
+    use poebo_core::route::{parse_route, RouteTracker};
+    use std::collections::HashSet;
+
+    let pack = committed_pack();
+    let source = poebo_data::ROUTE_ACTS.join("\n");
+    let (route, _) = parse_route(&source, &pack.zones, &pack.quests, &HashSet::new());
+    let town_visits: Vec<usize> = (0..route.edges.len())
+        .filter(|&i| route.edges[i] == "1_1_town")
+        .collect();
+
+    let mut fresh = RouteTracker::default();
+    fresh.on_area(&route, "1_1_town", Some(2));
+    assert_eq!(fresh.active(), town_visits[0]);
+
+    let mut done = RouteTracker::default();
+    done.on_area(&route, "1_1_town", Some(90));
+    assert_eq!(Some(&done.active()), town_visits.last());
+}

@@ -100,6 +100,9 @@ pub struct Route {
     pub sections: Vec<Section>,
     /// Area id per edge. `edges[0]` is where the character spawns.
     pub edges: Vec<String>,
+    /// Monster level the player is heading into at each edge: the area's own level, or for towns
+    /// the next combat area's. Tells the many visits to one town apart.
+    pub edge_levels: Vec<Option<u32>>,
 }
 
 #[derive(Debug, Clone, PartialEq, Eq)]
@@ -142,6 +145,7 @@ pub fn parse_route(
     let mut route = Route {
         sections: Vec::new(),
         edges: vec![START_AREA.to_string()],
+        edge_levels: Vec::new(),
     };
     let mut conditions: Vec<bool> = Vec::new();
     let mut prev_area: Option<String> = None;
@@ -221,6 +225,7 @@ pub fn parse_route(
     if !conditions.is_empty() {
         p.warn("missing #endif");
     }
+    route.edge_levels = edge_levels(&route.edges, zones);
     (route, p.warnings)
 }
 
@@ -447,6 +452,27 @@ impl Parser<'_> {
     }
 }
 
+fn edge_levels(edges: &[String], zones: &ZoneTable) -> Vec<Option<u32>> {
+    let own: Vec<Option<u32>> = edges
+        .iter()
+        .map(|id| {
+            zones
+                .by_id(id)
+                .filter(|z| !z.is_town)
+                .map(|z| z.area_level.max(0) as u32)
+        })
+        .collect();
+    let mut out = vec![None; edges.len()];
+    let mut ahead = None;
+    for i in (0..edges.len()).rev() {
+        if own[i].is_some() {
+            ahead = own[i];
+        }
+        out[i] = own[i].or(ahead);
+    }
+    out
+}
+
 fn split_comment(line: &str) -> (&str, Option<&str>) {
     let mut depth = 0u32;
     for (i, c) in line.char_indices() {
@@ -515,6 +541,9 @@ impl Route {
     }
 }
 
+// Players run a few levels over the zone; past this the nearest visit is probably the wrong one.
+const LEVEL_SLACK: u32 = 5;
+
 #[derive(Debug, Clone, Default)]
 pub struct RouteTracker {
     active: usize,
@@ -534,30 +563,51 @@ impl RouteTracker {
     /// is further along (or went back to town) lands on the right steps. Areas off the route
     /// (hideouts, maps) leave the position alone.
     pub fn on_area_generated(&mut self, route: &Route, area_id: &str) -> bool {
-        if route
-            .edges
-            .get(self.active + 1)
-            .is_some_and(|e| e == area_id)
-        {
+        self.on_area(route, area_id, None)
+    }
+
+    /// Like [`Self::on_area_generated`], but when the nearest match is far from the character's
+    /// level it picks the visit whose level fits instead. A level 90 character standing in
+    /// Lioneye's Watch belongs at the last act 1 town visit, not the first.
+    pub fn on_area(&mut self, route: &Route, area_id: &str, char_level: Option<u32>) -> bool {
+        let level_gap = |i: usize| match (route.edge_levels.get(i).copied().flatten(), char_level) {
+            (Some(edge), Some(ch)) => edge.abs_diff(ch),
+            _ => 0,
+        };
+        let fits = |i: usize| {
+            route.edges.get(i).is_some_and(|e| e == area_id) && level_gap(i) <= LEVEL_SLACK
+        };
+        if fits(self.active + 1) {
             self.active += 1;
             return true;
         }
-        if route.edges.get(self.active).is_some_and(|e| e == area_id) {
+        if fits(self.active) {
             return false;
         }
-        let nearest = route
+        let candidates: Vec<usize> = route
             .edges
             .iter()
             .enumerate()
             .filter(|(_, e)| *e == area_id)
-            .min_by_key(|(i, _)| (i.abs_diff(self.active), *i < self.active))
-            .map(|(i, _)| i);
-        match nearest {
-            Some(i) => {
+            .map(|(i, _)| i)
+            .collect();
+        let nearest = candidates
+            .iter()
+            .copied()
+            .min_by_key(|&i| (i.abs_diff(self.active), i < self.active));
+        let pick = match nearest {
+            Some(i) if level_gap(i) > LEVEL_SLACK => candidates
+                .iter()
+                .copied()
+                .min_by_key(|&c| (level_gap(c), c.abs_diff(self.active))),
+            other => other,
+        };
+        match pick {
+            Some(i) if i != self.active => {
                 self.active = i;
                 true
             }
-            None => false,
+            _ => false,
         }
     }
 
@@ -684,6 +734,21 @@ Take {portal|use}
         assert_eq!(t.active(), 3);
         assert!(!t.on_area_generated(&route, "HideoutFelled"));
         assert_eq!(t.active(), 3);
+    }
+
+    #[test]
+    fn character_level_picks_between_town_visits() {
+        let (route, _) = parse(ROUTE, &[]);
+        assert_eq!(
+            route.edge_levels,
+            [Some(1), Some(2), Some(2), Some(3), None]
+        );
+        let mut t = RouteTracker::default();
+        assert!(t.on_area(&route, "1_1_town", Some(2)));
+        assert_eq!(t.active(), 1);
+        let mut t = RouteTracker::at(0);
+        assert!(t.on_area(&route, "1_1_town", Some(40)));
+        assert_eq!(t.active(), 4);
     }
 
     #[test]
