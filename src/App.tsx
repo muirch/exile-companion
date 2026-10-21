@@ -1,7 +1,7 @@
 import { useEffect } from 'react';
 
 import { OverlayRoot } from './components/OverlayRoot';
-import { getBuild, getGuidance, getState } from './ipc/commands';
+import { getBuild, getGuidance, getRoute, getState } from './ipc/commands';
 import { isTauri } from './ipc/env';
 import {
   onBuildUpdated,
@@ -9,6 +9,7 @@ import {
   onGuidance,
   onOverlayGrab,
   onReplayProgress,
+  onRouteView,
   onSourceStatus,
 } from './ipc/events';
 import { startMock, stopMock } from './ipc/mock';
@@ -18,6 +19,7 @@ export function App(): React.JSX.Element {
   const setCampaign = useAppStore((s) => s.setCampaign);
   const setBuild = useAppStore((s) => s.setBuild);
   const setGuidance = useAppStore((s) => s.setGuidance);
+  const setRoute = useAppStore((s) => s.setRoute);
   const setSourceStatus = useAppStore((s) => s.setSourceStatus);
   const setReplayProgress = useAppStore((s) => s.setReplayProgress);
   const setGrabbed = useAppStore((s) => s.setGrabbed);
@@ -34,6 +36,7 @@ export function App(): React.JSX.Element {
       onCampaignState(setCampaign),
       onBuildUpdated(setBuild),
       onGuidance(setGuidance),
+      onRouteView(setRoute),
       onSourceStatus(setSourceStatus),
       onReplayProgress(setReplayProgress),
       onOverlayGrab(setGrabbed),
@@ -43,11 +46,12 @@ export function App(): React.JSX.Element {
     getState().then(setCampaign).catch(noop);
     getBuild().then(setBuild).catch(noop);
     getGuidance().then(setGuidance).catch(noop);
+    getRoute().then(setRoute).catch(noop);
 
     return () => {
       void unlisteners.then((list) => list.forEach((unlisten) => unlisten()));
     };
-  }, [setCampaign, setBuild, setGuidance, setSourceStatus, setReplayProgress, setGrabbed]);
+  }, [setCampaign, setBuild, setGuidance, setRoute, setSourceStatus, setReplayProgress, setGrabbed]);
 
   return <OverlayRoot />;
 }

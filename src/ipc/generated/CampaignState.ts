@@ -5,4 +5,9 @@ import type { ZoneRef } from "./ZoneRef";
 /**
  * The projection of the log the UI renders. Serialized to the frontend as `campaign://state-updated`.
  */
-export type CampaignState = { character: string | null, class: string | null, level: number, act: number | null, zone: ZoneRef | null, location_kind: LocationKind, deaths: number, session_started: boolean, };
+export type CampaignState = { character: string | null, class: string | null, level: number, act: number | null, zone: ZoneRef | null, location_kind: LocationKind, deaths: number, session_started: boolean, 
+/**
+ * Raw id from the `Generating level` line, kept even for areas the pack doesn't know (the
+ * labyrinth). The route tracker keys off this.
+ */
+area_id: string | null, };

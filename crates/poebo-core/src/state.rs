@@ -50,6 +50,9 @@ pub struct CampaignState {
     pub location_kind: LocationKind,
     pub deaths: u32,
     pub session_started: bool,
+    /// Raw id from the `Generating level` line, kept even for areas the pack doesn't know (the
+    /// labyrinth). The route tracker keys off this.
+    pub area_id: Option<String>,
     /// When the current zone was entered. Internal (drives future "time in zone"); not serialized.
     #[serde(skip)]
     #[cfg_attr(feature = "ts", ts(skip))]
@@ -141,7 +144,8 @@ impl CampaignMachine {
     fn apply_zone_entered(&mut self, zone_name: &str, at: Option<PrimitiveDateTime>) -> StateDelta {
         let resolved: Option<ZoneInfo> = self.resolve_zone(zone_name).cloned();
         // The AreaGenerated hint is consumed by exactly one zone change.
-        self.last_generated_id = None;
+        let generated_id = self.last_generated_id.take();
+        let old_area_id = self.state.area_id.clone();
 
         let old_key = self
             .state
@@ -191,7 +195,8 @@ impl CampaignMachine {
         };
 
         let new_key = Some((zref.id.clone(), zref.name.clone()));
-        let zone_changed = old_key != new_key;
+        self.state.area_id = generated_id;
+        let zone_changed = old_key != new_key || old_area_id != self.state.area_id;
         if zone_changed {
             self.state.last_zone_change = at;
         }

@@ -12,6 +12,7 @@ import type {
   BuildSummary,
   CampaignState,
   NextObjective,
+  RouteView,
   Settings,
   SpeedMultiplier,
 } from './types';
@@ -25,6 +26,7 @@ const EMPTY_STATE: CampaignState = {
   location_kind: 'unknown',
   deaths: 0,
   session_started: false,
+  area_id: null,
 };
 
 export const pickLogFile = (): Promise<string | null> =>
@@ -107,7 +109,21 @@ export const setClickThrough = (ignore: boolean): Promise<void> =>
   isTauri() ? invoke('set_click_through', { ignore }) : Promise.resolve();
 
 export const getSettings = (): Promise<Settings> =>
-  isTauri() ? invoke('get_settings') : Promise.resolve({ opacity: 0.85, lastLogPath: null });
+  isTauri()
+    ? invoke('get_settings')
+    : Promise.resolve({ opacity: 0.85, lastLogPath: null, routeEdge: 0, leagueStart: true });
 
 export const saveSettings = (settings: Settings): Promise<void> =>
   isTauri() ? invoke('save_settings', { settings }) : Promise.resolve();
+
+export const getRoute = (): Promise<RouteView | null> =>
+  isTauri() ? invoke('get_route') : Promise.resolve(mock.routeMock());
+
+export const routeNext = (): Promise<RouteView | null> =>
+  isTauri() ? invoke('route_next') : Promise.resolve(mock.moveRouteMock(1));
+
+export const routePrev = (): Promise<RouteView | null> =>
+  isTauri() ? invoke('route_prev') : Promise.resolve(mock.moveRouteMock(-1));
+
+export const routeReset = (): Promise<RouteView | null> =>
+  isTauri() ? invoke('route_reset') : Promise.resolve(mock.moveRouteMock(-Infinity));

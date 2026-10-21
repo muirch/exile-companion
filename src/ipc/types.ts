@@ -13,6 +13,9 @@ export type { SpeedMultiplier } from './generated/SpeedMultiplier';
 export type { BuildSummary } from './generated/BuildSummary';
 export type { NextObjective } from './generated/NextObjective';
 export type { ObjectiveKind } from './generated/ObjectiveKind';
+export type { Part } from './generated/Part';
+export type { Step } from './generated/Step';
+export type { RouteView } from './generated/RouteView';
 
 export type SourceMode = 'idle' | 'live' | 'replay';
 
@@ -20,6 +23,8 @@ export type SourceMode = 'idle' | 'live' | 'replay';
 export interface Settings {
   opacity: number;
   lastLogPath: string | null;
+  routeEdge: number;
+  leagueStart: boolean;
 }
 
 /** Payload of `source://status`. */

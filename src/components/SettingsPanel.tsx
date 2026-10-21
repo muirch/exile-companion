@@ -1,5 +1,6 @@
 import {
   clearBuild,
+  getSettings,
   importBuildFile,
   pasteBuild,
   pickLogFile,
@@ -18,9 +19,11 @@ export function SettingsPanel(): React.JSX.Element {
   const mode = useAppStore((s) => s.source.mode);
   const path = useAppStore((s) => s.source.path);
 
-  const onOpacityChange = (value: number): void => {
+  // Read-modify-write: the backend saves the route position into the same file.
+  const onOpacityChange = async (value: number): Promise<void> => {
     setOpacity(value);
-    void saveSettings({ opacity: value, lastLogPath: path });
+    const current = await getSettings();
+    await saveSettings({ ...current, opacity: value, lastLogPath: path });
   };
 
   const watchLive = async (): Promise<void> => {
@@ -57,7 +60,7 @@ export function SettingsPanel(): React.JSX.Element {
           max={1}
           step={0.05}
           value={opacity}
-          onChange={(e) => onOpacityChange(Number(e.target.value))}
+          onChange={(e) => void onOpacityChange(Number(e.target.value))}
           className="flex-1"
         />
       </label>

@@ -1,0 +1,855 @@
+[
+  {
+    "section": "Act 1",
+    "edge": 0,
+    "edge_count": 233,
+    "steps": [
+      {
+        "parts": [
+          {
+            "kind": "text",
+            "text": "Find and kill "
+          },
+          {
+            "kind": "kill",
+            "name": "Hillock"
+          }
+        ],
+        "sub_steps": []
+      }
+    ],
+    "next_steps": [
+      {
+        "parts": [
+          {
+            "kind": "text",
+            "text": "➞ "
+          },
+          {
+            "kind": "enter",
+            "id": "1_1_town",
+            "name": "Lioneye's Watch"
+          }
+        ],
+        "sub_steps": []
+      },
+      {
+        "parts": [
+          {
+            "kind": "text",
+            "text": "Hand in "
+          },
+          {
+            "kind": "quest",
+            "id": "a1q1",
+            "name": "Enemy at the Gate"
+          }
+        ],
+        "sub_steps": []
+      }
+    ]
+  },
+  {
+    "section": "Act 1",
+    "edge": 1,
+    "edge_count": 233,
+    "steps": [
+      {
+        "parts": [
+          {
+            "kind": "text",
+            "text": "➞ "
+          },
+          {
+            "kind": "enter",
+            "id": "1_1_town",
+            "name": "Lioneye's Watch"
+          }
+        ],
+        "sub_steps": []
+      },
+      {
+        "parts": [
+          {
+            "kind": "text",
+            "text": "Hand in "
+          },
+          {
+            "kind": "quest",
+            "id": "a1q1",
+            "name": "Enemy at the Gate"
+          }
+        ],
+        "sub_steps": []
+      }
+    ],
+    "next_steps": [
+      {
+        "parts": [
+          {
+            "kind": "text",
+            "text": "➞ "
+          },
+          {
+            "kind": "enter",
+            "id": "1_1_2",
+            "name": "The Coast"
+          }
+        ],
+        "sub_steps": []
+      },
+      {
+        "parts": [
+          {
+            "kind": "text",
+            "text": "Get "
+          },
+          {
+            "kind": "waypoint_get"
+          }
+        ],
+        "sub_steps": []
+      }
+    ]
+  },
+  {
+    "section": "Act 1",
+    "edge": 2,
+    "edge_count": 233,
+    "steps": [
+      {
+        "parts": [
+          {
+            "kind": "text",
+            "text": "➞ "
+          },
+          {
+            "kind": "enter",
+            "id": "1_1_2",
+            "name": "The Coast"
+          }
+        ],
+        "sub_steps": []
+      },
+      {
+        "parts": [
+          {
+            "kind": "text",
+            "text": "Get "
+          },
+          {
+            "kind": "waypoint_get"
+          }
+        ],
+        "sub_steps": []
+      }
+    ],
+    "next_steps": [
+      {
+        "parts": [
+          {
+            "kind": "text",
+            "text": "➞ "
+          },
+          {
+            "kind": "enter",
+            "id": "1_1_3",
+            "name": "The Mud Flats"
+          }
+        ],
+        "sub_steps": []
+      },
+      {
+        "parts": [
+          {
+            "kind": "text",
+            "text": "Find 3x"
+          },
+          {
+            "kind": "quest_text",
+            "text": "Glyph"
+          }
+        ],
+        "sub_steps": [
+          [
+            {
+              "kind": "text",
+              "text": "Little streams connect the 3 Rhoa nests"
+            }
+          ],
+          [
+            {
+              "kind": "text",
+              "text": "Usually form a triangle, but will rarely form a line"
+            }
+          ]
+        ]
+      }
+    ]
+  },
+  {
+    "section": "Act 1",
+    "edge": 3,
+    "edge_count": 233,
+    "steps": [
+      {
+        "parts": [
+          {
+            "kind": "text",
+            "text": "➞ "
+          },
+          {
+            "kind": "enter",
+            "id": "1_1_3",
+            "name": "The Mud Flats"
+          }
+        ],
+        "sub_steps": []
+      },
+      {
+        "parts": [
+          {
+            "kind": "text",
+            "text": "Find 3x"
+          },
+          {
+            "kind": "quest_text",
+            "text": "Glyph"
+          }
+        ],
+        "sub_steps": [
+          [
+            {
+              "kind": "text",
+              "text": "Little streams connect the 3 Rhoa nests"
+            }
+          ],
+          [
+            {
+              "kind": "text",
+              "text": "Usually form a triangle, but will rarely form a line"
+            }
+          ]
+        ]
+      }
+    ],
+    "next_steps": [
+      {
+        "parts": [
+          {
+            "kind": "text",
+            "text": "➞ "
+          },
+          {
+            "kind": "enter",
+            "id": "1_1_4_1",
+            "name": "The Submerged Passage"
+          }
+        ],
+        "sub_steps": []
+      }
+    ]
+  },
+  {
+    "section": "Act 1",
+    "edge": 4,
+    "edge_count": 233,
+    "steps": [
+      {
+        "parts": [
+          {
+            "kind": "text",
+            "text": "➞ "
+          },
+          {
+            "kind": "enter",
+            "id": "1_1_4_1",
+            "name": "The Submerged Passage"
+          }
+        ],
+        "sub_steps": []
+      }
+    ],
+    "next_steps": [
+      {
+        "parts": [
+          {
+            "kind": "waypoint_use",
+            "id": "1_1_2",
+            "name": "The Coast"
+          }
+        ],
+        "sub_steps": []
+      }
+    ]
+  },
+  {
+    "section": "Act 1",
+    "edge": 5,
+    "edge_count": 233,
+    "steps": [
+      {
+        "parts": [
+          {
+            "kind": "waypoint_use",
+            "id": "1_1_2",
+            "name": "The Coast"
+          }
+        ],
+        "sub_steps": []
+      }
+    ],
+    "next_steps": [
+      {
+        "parts": [
+          {
+            "kind": "text",
+            "text": "➞ "
+          },
+          {
+            "kind": "enter",
+            "id": "1_1_2a",
+            "name": "The Tidal Island"
+          }
+        ],
+        "sub_steps": []
+      },
+      {
+        "parts": [
+          {
+            "kind": "text",
+            "text": "Find and kill "
+          },
+          {
+            "kind": "kill",
+            "name": "Hailrake"
+          },
+          {
+            "kind": "text",
+            "text": ", take "
+          },
+          {
+            "kind": "quest_text",
+            "text": "Medicine Chest"
+          }
+        ],
+        "sub_steps": [
+          [
+            {
+              "kind": "text",
+              "text": "Go "
+            },
+            {
+              "kind": "dir",
+              "degrees": 270
+            }
+          ],
+          [
+            {
+              "kind": "text",
+              "text": "If you find a ledge, turn around and go "
+            },
+            {
+              "kind": "dir",
+              "degrees": 90
+            }
+          ],
+          [
+            {
+              "kind": "text",
+              "text": "Recommended Level: 4"
+            }
+          ]
+        ]
+      }
+    ]
+  },
+  {
+    "section": "Act 1",
+    "edge": 6,
+    "edge_count": 233,
+    "steps": [
+      {
+        "parts": [
+          {
+            "kind": "text",
+            "text": "➞ "
+          },
+          {
+            "kind": "enter",
+            "id": "1_1_2a",
+            "name": "The Tidal Island"
+          }
+        ],
+        "sub_steps": []
+      },
+      {
+        "parts": [
+          {
+            "kind": "text",
+            "text": "Find and kill "
+          },
+          {
+            "kind": "kill",
+            "name": "Hailrake"
+          },
+          {
+            "kind": "text",
+            "text": ", take "
+          },
+          {
+            "kind": "quest_text",
+            "text": "Medicine Chest"
+          }
+        ],
+        "sub_steps": [
+          [
+            {
+              "kind": "text",
+              "text": "Go "
+            },
+            {
+              "kind": "dir",
+              "degrees": 270
+            }
+          ],
+          [
+            {
+              "kind": "text",
+              "text": "If you find a ledge, turn around and go "
+            },
+            {
+              "kind": "dir",
+              "degrees": 90
+            }
+          ],
+          [
+            {
+              "kind": "text",
+              "text": "Recommended Level: 4"
+            }
+          ]
+        ]
+      }
+    ],
+    "next_steps": [
+      {
+        "parts": [
+          {
+            "kind": "logout",
+            "town": "Lioneye's Watch"
+          }
+        ],
+        "sub_steps": []
+      },
+      {
+        "parts": [
+          {
+            "kind": "text",
+            "text": "Hand in "
+          },
+          {
+            "kind": "quest",
+            "id": "a1q4",
+            "name": "Breaking Some Eggs"
+          }
+        ],
+        "sub_steps": []
+      },
+      {
+        "parts": [
+          {
+            "kind": "text",
+            "text": "Hand in "
+          },
+          {
+            "kind": "quest",
+            "id": "a1q5",
+            "name": "Mercy Mission"
+          }
+        ],
+        "sub_steps": []
+      }
+    ]
+  },
+  {
+    "section": "Act 1",
+    "edge": 7,
+    "edge_count": 233,
+    "steps": [
+      {
+        "parts": [
+          {
+            "kind": "logout",
+            "town": "Lioneye's Watch"
+          }
+        ],
+        "sub_steps": []
+      },
+      {
+        "parts": [
+          {
+            "kind": "text",
+            "text": "Hand in "
+          },
+          {
+            "kind": "quest",
+            "id": "a1q4",
+            "name": "Breaking Some Eggs"
+          }
+        ],
+        "sub_steps": []
+      },
+      {
+        "parts": [
+          {
+            "kind": "text",
+            "text": "Hand in "
+          },
+          {
+            "kind": "quest",
+            "id": "a1q5",
+            "name": "Mercy Mission"
+          }
+        ],
+        "sub_steps": []
+      }
+    ],
+    "next_steps": [
+      {
+        "parts": [
+          {
+            "kind": "waypoint_use",
+            "id": "1_1_4_1",
+            "name": "The Submerged Passage"
+          }
+        ],
+        "sub_steps": []
+      }
+    ]
+  },
+  {
+    "section": "Act 1",
+    "edge": 8,
+    "edge_count": 233,
+    "steps": [
+      {
+        "parts": [
+          {
+            "kind": "waypoint_use",
+            "id": "1_1_4_1",
+            "name": "The Submerged Passage"
+          }
+        ],
+        "sub_steps": []
+      }
+    ],
+    "next_steps": [
+      {
+        "parts": [
+          {
+            "kind": "text",
+            "text": "➞ "
+          },
+          {
+            "kind": "enter",
+            "id": "1_1_4_0",
+            "name": "The Flooded Depths"
+          }
+        ],
+        "sub_steps": [
+          [
+            {
+              "kind": "text",
+              "text": "Go right of the bridge"
+            }
+          ]
+        ]
+      },
+      {
+        "parts": [
+          {
+            "kind": "text",
+            "text": "Find and kill "
+          },
+          {
+            "kind": "kill",
+            "name": "The Dweller of the Deep"
+          }
+        ],
+        "sub_steps": [
+          [
+            {
+              "kind": "text",
+              "text": "Search opposite the entrance"
+            }
+          ],
+          [
+            {
+              "kind": "text",
+              "text": "Look for the large empty room"
+            }
+          ]
+        ]
+      }
+    ]
+  },
+  {
+    "section": "Act 1",
+    "edge": 9,
+    "edge_count": 233,
+    "steps": [
+      {
+        "parts": [
+          {
+            "kind": "text",
+            "text": "➞ "
+          },
+          {
+            "kind": "enter",
+            "id": "1_1_4_0",
+            "name": "The Flooded Depths"
+          }
+        ],
+        "sub_steps": [
+          [
+            {
+              "kind": "text",
+              "text": "Go right of the bridge"
+            }
+          ]
+        ]
+      },
+      {
+        "parts": [
+          {
+            "kind": "text",
+            "text": "Find and kill "
+          },
+          {
+            "kind": "kill",
+            "name": "The Dweller of the Deep"
+          }
+        ],
+        "sub_steps": [
+          [
+            {
+              "kind": "text",
+              "text": "Search opposite the entrance"
+            }
+          ],
+          [
+            {
+              "kind": "text",
+              "text": "Look for the large empty room"
+            }
+          ]
+        ]
+      }
+    ],
+    "next_steps": [
+      {
+        "parts": [
+          {
+            "kind": "text",
+            "text": "Take the "
+          },
+          {
+            "kind": "generic",
+            "text": "Boat"
+          },
+          {
+            "kind": "text",
+            "text": " ➞ "
+          },
+          {
+            "kind": "enter",
+            "id": "1_1_4_1",
+            "name": "The Submerged Passage"
+          }
+        ],
+        "sub_steps": []
+      }
+    ]
+  },
+  {
+    "section": "Act 1",
+    "edge": 10,
+    "edge_count": 233,
+    "steps": [
+      {
+        "parts": [
+          {
+            "kind": "text",
+            "text": "Take the "
+          },
+          {
+            "kind": "generic",
+            "text": "Boat"
+          },
+          {
+            "kind": "text",
+            "text": " ➞ "
+          },
+          {
+            "kind": "enter",
+            "id": "1_1_4_1",
+            "name": "The Submerged Passage"
+          }
+        ],
+        "sub_steps": []
+      }
+    ],
+    "next_steps": [
+      {
+        "parts": [
+          {
+            "kind": "text",
+            "text": "➞ "
+          },
+          {
+            "kind": "enter",
+            "id": "1_1_5",
+            "name": "The Ledge"
+          }
+        ],
+        "sub_steps": []
+      }
+    ]
+  },
+  {
+    "section": "Act 1",
+    "edge": 11,
+    "edge_count": 233,
+    "steps": [
+      {
+        "parts": [
+          {
+            "kind": "text",
+            "text": "➞ "
+          },
+          {
+            "kind": "enter",
+            "id": "1_1_5",
+            "name": "The Ledge"
+          }
+        ],
+        "sub_steps": []
+      }
+    ],
+    "next_steps": [
+      {
+        "parts": [
+          {
+            "kind": "text",
+            "text": "➞ "
+          },
+          {
+            "kind": "enter",
+            "id": "1_1_6",
+            "name": "The Climb"
+          }
+        ],
+        "sub_steps": []
+      }
+    ]
+  },
+  {
+    "section": "Act 1",
+    "edge": 12,
+    "edge_count": 233,
+    "steps": [
+      {
+        "parts": [
+          {
+            "kind": "text",
+            "text": "➞ "
+          },
+          {
+            "kind": "enter",
+            "id": "1_1_6",
+            "name": "The Climb"
+          }
+        ],
+        "sub_steps": []
+      }
+    ],
+    "next_steps": [
+      {
+        "parts": [
+          {
+            "kind": "text",
+            "text": "➞ "
+          },
+          {
+            "kind": "enter",
+            "id": "1_1_7_1",
+            "name": "The Lower Prison"
+          }
+        ],
+        "sub_steps": []
+      }
+    ]
+  },
+  {
+    "section": "Act 1",
+    "edge": 13,
+    "edge_count": 233,
+    "steps": [
+      {
+        "parts": [
+          {
+            "kind": "text",
+            "text": "➞ "
+          },
+          {
+            "kind": "enter",
+            "id": "1_1_7_1",
+            "name": "The Lower Prison"
+          }
+        ],
+        "sub_steps": []
+      }
+    ],
+    "next_steps": [
+      {
+        "parts": [
+          {
+            "kind": "waypoint_use",
+            "id": "1_1_town",
+            "name": "Lioneye's Watch"
+          }
+        ],
+        "sub_steps": []
+      },
+      {
+        "parts": [
+          {
+            "kind": "text",
+            "text": "Hand in "
+          },
+          {
+            "kind": "quest",
+            "id": "a1q7",
+            "name": "The Dweller of the Deep"
+          }
+        ],
+        "sub_steps": []
+      },
+      {
+        "parts": [
+          {
+            "kind": "text",
+            "text": "Hand in "
+          },
+          {
+            "kind": "quest",
+            "id": "a1q2",
+            "name": "The Caged Brute"
+          }
+        ],
+        "sub_steps": []
+      }
+    ]
+  }
+]

@@ -13,9 +13,15 @@ import type {
   CampaignState,
   LocationKind,
   NextObjective,
+  RouteView,
   SpeedMultiplier,
 } from './types';
 import { useAppStore } from '../store/useAppStore';
+// Real views from the bundled route (`cargo run -p poebo-core --example dump_route`).
+import MOCK_ROUTE from './mock-route.json';
+
+const ROUTE = MOCK_ROUTE as RouteView[];
+let routeIndex = 0;
 
 /** A fake imported build, shown once "imported" in dev mode. */
 const MOCK_BUILD: BuildSummary = {
@@ -50,6 +56,7 @@ function state(
     location_kind,
     deaths,
     session_started: true,
+    area_id: zoneId,
   };
 }
 
@@ -144,6 +151,7 @@ function pushProgress(): void {
 function applyStep(step: MockStep): void {
   useAppStore.getState().setCampaign(step.state);
   useAppStore.getState().setGuidance(step.objective);
+  moveRouteMock(1);
 }
 
 function clearTimer(): void {
@@ -184,6 +192,7 @@ export function stopMock(): void {
 export function restartMock(): void {
   clearTimer();
   index = 0;
+  routeIndex = -1;
   paused = false;
   releaseNext();
 }
@@ -232,4 +241,15 @@ export function getGuidanceMock(): NextObjective {
     useAppStore.getState().guidance ??
     obj('idle', 'Import a Path of Building build', 'Load a build for gem and tree guidance')
   );
+}
+
+export function routeMock(): RouteView | null {
+  return ROUTE[routeIndex] ?? null;
+}
+
+export function moveRouteMock(delta: number): RouteView | null {
+  routeIndex = Math.min(ROUTE.length - 1, Math.max(0, routeIndex + delta));
+  const view = routeMock();
+  useAppStore.getState().setRoute(view);
+  return view;
 }

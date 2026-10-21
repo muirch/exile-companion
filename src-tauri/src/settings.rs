@@ -7,10 +7,13 @@ use tauri::{AppHandle, Manager};
 
 /// User settings. Field names are camelCase to match the frontend `Settings` type.
 #[derive(Debug, Clone, Serialize, Deserialize)]
-#[serde(rename_all = "camelCase")]
+#[serde(rename_all = "camelCase", default)]
 pub struct Settings {
     pub opacity: f64,
     pub last_log_path: Option<String>,
+    pub route_edge: usize,
+    /// Read once at startup: the edges differ between the two route variants.
+    pub league_start: bool,
 }
 
 impl Default for Settings {
@@ -18,6 +21,8 @@ impl Default for Settings {
         Self {
             opacity: 0.85,
             last_log_path: None,
+            route_edge: 0,
+            league_start: true,
         }
     }
 }

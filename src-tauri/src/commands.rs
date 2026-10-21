@@ -5,12 +5,13 @@ use std::path::Path;
 
 use poebo_core::build::BuildSummary;
 use poebo_core::guidance::NextObjective;
+use poebo_core::route::RouteView;
 use poebo_core::source::SpeedMultiplier;
 use poebo_core::state::CampaignState;
 use tauri::{AppHandle, State, WebviewWindow};
 use tauri_plugin_dialog::DialogExt;
 
-use crate::runtime;
+use crate::runtime::{self, RouteMove};
 use crate::settings::{self, Settings};
 use crate::state::AppState;
 
@@ -117,6 +118,26 @@ pub fn get_build(app: AppHandle) -> Option<BuildSummary> {
 #[tauri::command]
 pub fn get_guidance(app: AppHandle) -> NextObjective {
     runtime::current_guidance(&app)
+}
+
+#[tauri::command]
+pub fn get_route(app: AppHandle) -> Option<RouteView> {
+    runtime::current_route_view(&app)
+}
+
+#[tauri::command]
+pub fn route_next(app: AppHandle) -> Option<RouteView> {
+    runtime::move_route(&app, RouteMove::Next)
+}
+
+#[tauri::command]
+pub fn route_prev(app: AppHandle) -> Option<RouteView> {
+    runtime::move_route(&app, RouteMove::Prev)
+}
+
+#[tauri::command]
+pub fn route_reset(app: AppHandle) -> Option<RouteView> {
+    runtime::move_route(&app, RouteMove::Reset)
 }
 
 #[tauri::command]

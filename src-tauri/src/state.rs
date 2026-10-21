@@ -5,6 +5,7 @@ use std::sync::{Arc, Mutex};
 
 use poebo_core::build::BuildState;
 use poebo_core::data::DataPack;
+use poebo_core::route::{Route, RouteTracker};
 use poebo_core::source::ReplayControl;
 use poebo_core::state::CampaignState;
 use tauri::async_runtime::JoinHandle;
@@ -52,10 +53,12 @@ pub struct AppState {
     pub build: Mutex<BuildState>,
     /// Whether the overlay is in interactive ("grabbed") mode.
     pub grabbed: AtomicBool,
+    pub route: Arc<Route>,
+    pub tracker: Mutex<RouteTracker>,
 }
 
 impl AppState {
-    pub fn new(data: Arc<DataPack>) -> Self {
+    pub fn new(data: Arc<DataPack>, route: Arc<Route>, route_edge: usize) -> Self {
         let (state_tx, _rx) = watch::channel(CampaignState::default());
         Self {
             data,
@@ -65,6 +68,8 @@ impl AppState {
             // Start interactive so the controls are reachable without a global hotkey
             // (global shortcuts do not fire on Wayland).
             grabbed: AtomicBool::new(true),
+            route,
+            tracker: Mutex::new(RouteTracker::at(route_edge)),
         }
     }
 

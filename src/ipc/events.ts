@@ -7,6 +7,7 @@ import type {
   CampaignState,
   NextObjective,
   ReplayProgress,
+  RouteView,
   SourceStatus,
 } from './types';
 
@@ -16,6 +17,7 @@ export const REPLAY_PROGRESS = 'replay://progress';
 export const OVERLAY_GRAB = 'overlay://grab-changed';
 export const BUILD_UPDATED = 'build://updated';
 export const GUIDANCE_NEXT = 'guidance://next';
+export const ROUTE_VIEW = 'route://view';
 
 export const onCampaignState = (cb: (state: CampaignState) => void): Promise<UnlistenFn> =>
   listen<CampaignState>(CAMPAIGN_STATE, (e) => cb(e.payload));
@@ -34,3 +36,6 @@ export const onBuildUpdated = (cb: (build: BuildSummary | null) => void): Promis
 
 export const onGuidance = (cb: (objective: NextObjective) => void): Promise<UnlistenFn> =>
   listen<NextObjective>(GUIDANCE_NEXT, (e) => cb(e.payload));
+
+export const onRouteView = (cb: (view: RouteView | null) => void): Promise<UnlistenFn> =>
+  listen<RouteView | null>(ROUTE_VIEW, (e) => cb(e.payload));

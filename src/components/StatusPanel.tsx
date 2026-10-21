@@ -1,5 +1,6 @@
 import type { ObjectiveKind } from '../ipc/types';
 import { useAppStore } from '../store/useAppStore';
+import { RoutePanel } from './RoutePanel';
 
 const actLabel = (act: number | null): string => (act == null ? '-' : `Act ${act}`);
 
@@ -45,16 +46,10 @@ const KIND_ACCENT: Record<ObjectiveKind, string> = {
   idle: 'border-slate-600/60 bg-slate-800/40 text-slate-300',
 };
 
-function NextObjective(): React.JSX.Element {
+// The route covers where to go; from the old guidance only the build's gem claims add anything.
+function GemClaim(): React.JSX.Element | null {
   const guidance = useAppStore((s) => s.guidance);
-
-  if (!guidance) {
-    return (
-      <div className="rounded-md border border-slate-700/50 bg-slate-800/40 px-2 py-1 text-xs text-slate-400">
-        Waiting for the campaign to start...
-      </div>
-    );
-  }
+  if (guidance?.kind !== 'quest_reward') return null;
 
   return (
     <div className={`rounded-md border px-2 py-1 ${KIND_ACCENT[guidance.kind]}`}>
@@ -92,7 +87,8 @@ export function StatusPanel(): React.JSX.Element {
         <ActZoneDisplay />
         <LevelBadge />
       </div>
-      <NextObjective />
+      <RoutePanel />
+      <GemClaim />
       <BuildLine />
       {deaths > 0 && <div className="text-xs text-rose-400/80">Deaths: {deaths}</div>}
     </div>
