@@ -2,6 +2,7 @@
 //! campaign logic to `poebo-core`.
 
 mod commands;
+mod logfile;
 mod overlay;
 mod runtime;
 mod settings;
@@ -27,6 +28,13 @@ pub fn run() {
             let saved = settings::load(app.handle()).unwrap_or_default();
             let route = runtime::load_route(&data, saved.league_start);
             app.manage(AppState::new(data, route, saved.route_edge));
+
+            if let Some(log) = logfile::find_client_log(saved.last_log_path.as_deref()) {
+                let path = log.to_string_lossy().into_owned();
+                if let Err(e) = runtime::start_live(app.handle().clone(), path) {
+                    eprintln!("could not watch {}: {e}", log.display());
+                }
+            }
 
             // The overlay starts interactive so its controls are reachable without a hotkey.
             // Ctrl+Alt+Space toggles click-through on X11; on Wayland global shortcuts do not fire.
@@ -71,6 +79,7 @@ pub fn run() {
             commands::get_build,
             commands::get_guidance,
             commands::get_route,
+            commands::get_source,
             commands::route_next,
             commands::route_prev,
             commands::route_reset,

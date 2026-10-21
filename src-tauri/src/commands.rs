@@ -121,6 +121,11 @@ pub fn get_guidance(app: AppHandle) -> NextObjective {
 }
 
 #[tauri::command]
+pub fn get_source(app: AppHandle) -> runtime::SourceStatus {
+    runtime::current_source(&app)
+}
+
+#[tauri::command]
 pub fn get_route(app: AppHandle) -> Option<RouteView> {
     runtime::current_route_view(&app)
 }

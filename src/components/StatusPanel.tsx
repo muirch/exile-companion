@@ -78,6 +78,18 @@ function BuildLine(): React.JSX.Element | null {
   );
 }
 
+function NoLogHint(): React.JSX.Element | null {
+  const mode = useAppStore((s) => s.source.mode);
+  const error = useAppStore((s) => s.source.error);
+  if (mode !== 'idle') return null;
+  return (
+    <div className="rounded-md border border-amber-400/50 bg-amber-500/10 px-2 py-1 text-xs text-amber-200">
+      {error ?? 'Game log not found.'} Press Ctrl+Alt+Space if the controls are hidden, then use
+      Watch Client.txt and pick logs/Client.txt in the game folder.
+    </div>
+  );
+}
+
 export function StatusPanel(): React.JSX.Element {
   const deaths = useAppStore((s) => s.campaign.deaths);
 
@@ -87,6 +99,7 @@ export function StatusPanel(): React.JSX.Element {
         <ActZoneDisplay />
         <LevelBadge />
       </div>
+      <NoLogHint />
       <RoutePanel />
       <GemClaim />
       <BuildLine />

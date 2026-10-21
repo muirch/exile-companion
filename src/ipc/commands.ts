@@ -14,6 +14,7 @@ import type {
   NextObjective,
   RouteView,
   Settings,
+  SourceStatus,
   SpeedMultiplier,
 } from './types';
 
@@ -127,3 +128,6 @@ export const routePrev = (): Promise<RouteView | null> =>
 
 export const routeReset = (): Promise<RouteView | null> =>
   isTauri() ? invoke('route_reset') : Promise.resolve(mock.moveRouteMock(-Infinity));
+
+export const getSource = (): Promise<SourceStatus> =>
+  isTauri() ? invoke('get_source') : Promise.resolve({ mode: 'replay', path: 'mock' });

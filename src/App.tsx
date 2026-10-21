@@ -1,7 +1,7 @@
 import { useEffect } from 'react';
 
 import { OverlayRoot } from './components/OverlayRoot';
-import { getBuild, getGuidance, getRoute, getState } from './ipc/commands';
+import { getBuild, getGuidance, getRoute, getSource, getState } from './ipc/commands';
 import { isTauri } from './ipc/env';
 import {
   onBuildUpdated,
@@ -47,6 +47,7 @@ export function App(): React.JSX.Element {
     getBuild().then(setBuild).catch(noop);
     getGuidance().then(setGuidance).catch(noop);
     getRoute().then(setRoute).catch(noop);
+    getSource().then(setSourceStatus).catch(noop);
 
     return () => {
       void unlisteners.then((list) => list.forEach((unlisten) => unlisten()));

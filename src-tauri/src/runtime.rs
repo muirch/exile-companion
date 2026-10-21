@@ -167,8 +167,18 @@ pub fn current_guidance(app: &AppHandle) -> poebo_core::guidance::NextObjective 
     objective
 }
 
+pub fn current_source(app: &AppHandle) -> SourceStatus {
+    let app_state = app.state::<AppState>();
+    let run = lock(&app_state.run);
+    SourceStatus {
+        mode: run.mode,
+        path: run.log_path.clone(),
+        error: None,
+    }
+}
+
 #[derive(Serialize, Clone)]
-struct SourceStatus {
+pub struct SourceStatus {
     mode: SourceMode,
     path: Option<String>,
     error: Option<String>,
@@ -269,8 +279,10 @@ fn spawn_progress(app: AppHandle, ctl: Arc<ReplayControl>) -> JoinHandle<()> {
 pub fn start_live(app: AppHandle, path: String) -> Result<CampaignState, String> {
     stop_current(&app);
     let state = app.state::<AppState>();
-    let saved_edge = settings::load(&app).map(|s| s.route_edge).unwrap_or(0);
-    *lock(&state.tracker) = RouteTracker::at(saved_edge);
+    let mut saved = settings::load(&app).unwrap_or_default();
+    *lock(&state.tracker) = RouteTracker::at(saved.route_edge);
+    saved.last_log_path = Some(path.clone());
+    let _ = settings::save(&app, &saved);
     emit_route(&app);
     let machine = CampaignMachine::new(Arc::new(state.data.zones.clone()));
     let stream = Box::new(LiveTail::open(&path)).into_stream();
