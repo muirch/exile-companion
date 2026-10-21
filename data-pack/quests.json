@@ -1,7 +1,7 @@
 {
   "schema_version": 1,
-  "patch": "3.28.0.15",
-  "generated_at": "2026-07-18T12:17:16.524Z",
+  "patch": "3.29.3.3",
+  "generated_at": "2026-10-21T10:34:00.341Z",
   "source": "PoE game files (GGG patch CDN) via pathofexile-dat",
   "quests": [
     {
@@ -1294,11 +1294,59 @@
       "gem_rewards": []
     },
     {
+      "id": "a1q8",
+      "act": 1,
+      "name": "A Dirty Job",
+      "npc": null,
+      "passive_points": 0,
+      "gem_rewards": []
+    },
+    {
       "id": "a1q9",
       "act": 1,
       "name": "The Way Forward",
       "npc": "Bestel",
       "passive_points": 1,
+      "gem_rewards": []
+    },
+    {
+      "id": "a2q1",
+      "act": 2,
+      "name": "The Bandit Lord Kraityn",
+      "npc": null,
+      "passive_points": 0,
+      "gem_rewards": []
+    },
+    {
+      "id": "a2q10",
+      "act": 2,
+      "name": "The Great White Beast",
+      "npc": null,
+      "passive_points": 0,
+      "gem_rewards": []
+    },
+    {
+      "id": "a2q11",
+      "act": 2,
+      "name": "The Way Forward",
+      "npc": null,
+      "passive_points": 0,
+      "gem_rewards": []
+    },
+    {
+      "id": "a2q2",
+      "act": 2,
+      "name": "The Bandit Lord Alira",
+      "npc": null,
+      "passive_points": 0,
+      "gem_rewards": []
+    },
+    {
+      "id": "a2q3",
+      "act": 2,
+      "name": "The Bandit Lord Oak",
+      "npc": null,
+      "passive_points": 0,
       "gem_rewards": []
     },
     {
@@ -1773,6 +1821,14 @@
           ]
         },
         {
+          "gem_id": "Metadata/Items/Gems/SkillGemManaInfusedStaff",
+          "gem_name": "Mana-Infused Staff",
+          "reward_level": 1,
+          "classes": [
+            "Templar"
+          ]
+        },
+        {
           "gem_id": "Metadata/Items/Gems/SkillGemMoltenShell",
           "gem_name": "Molten Shell",
           "reward_level": 1,
@@ -1848,6 +1904,30 @@
           ]
         }
       ]
+    },
+    {
+      "id": "a2q7",
+      "act": 2,
+      "name": "Deal with the Bandits",
+      "npc": null,
+      "passive_points": 0,
+      "gem_rewards": []
+    },
+    {
+      "id": "a2q8",
+      "act": 2,
+      "name": "Shadow of the Vaal",
+      "npc": null,
+      "passive_points": 0,
+      "gem_rewards": []
+    },
+    {
+      "id": "a2q9",
+      "act": 2,
+      "name": "The Root of the Problem",
+      "npc": null,
+      "passive_points": 0,
+      "gem_rewards": []
     },
     {
       "id": "a3q1",
@@ -2134,6 +2214,14 @@
           ]
         }
       ]
+    },
+    {
+      "id": "a3q10",
+      "act": 3,
+      "name": "The Sceptre of God",
+      "npc": null,
+      "passive_points": 0,
+      "gem_rewards": []
     },
     {
       "id": "a3q11",
@@ -2534,6 +2622,46 @@
           ]
         }
       ]
+    },
+    {
+      "id": "a3q13",
+      "act": 3,
+      "name": "A Swig of Hope",
+      "npc": null,
+      "passive_points": 0,
+      "gem_rewards": []
+    },
+    {
+      "id": "a3q2",
+      "act": 3,
+      "name": "Lost in Love",
+      "npc": null,
+      "passive_points": 0,
+      "gem_rewards": []
+    },
+    {
+      "id": "a3q3",
+      "act": 3,
+      "name": "The Gemling Queen",
+      "npc": null,
+      "passive_points": 0,
+      "gem_rewards": []
+    },
+    {
+      "id": "a3q4",
+      "act": 3,
+      "name": "The Ribbon Spool",
+      "npc": null,
+      "passive_points": 0,
+      "gem_rewards": []
+    },
+    {
+      "id": "a3q5",
+      "act": 3,
+      "name": "Fiery Dust",
+      "npc": null,
+      "passive_points": 0,
+      "gem_rewards": []
     },
     {
       "id": "a3q8",
@@ -3479,11 +3607,59 @@
       ]
     },
     {
+      "id": "a4q3",
+      "act": 4,
+      "name": "The King of Fury",
+      "npc": null,
+      "passive_points": 0,
+      "gem_rewards": []
+    },
+    {
+      "id": "a4q4",
+      "act": 4,
+      "name": "The King of Desire",
+      "npc": null,
+      "passive_points": 0,
+      "gem_rewards": []
+    },
+    {
+      "id": "a4q5",
+      "act": 4,
+      "name": "Corpus Malachus",
+      "npc": null,
+      "passive_points": 0,
+      "gem_rewards": []
+    },
+    {
       "id": "a4q6",
       "act": 4,
       "name": "An Indomitable Spirit",
       "npc": "Tasuni",
       "passive_points": 1,
+      "gem_rewards": []
+    },
+    {
+      "id": "a5q1a",
+      "act": 4,
+      "name": "Return to Oriath",
+      "npc": null,
+      "passive_points": 0,
+      "gem_rewards": []
+    },
+    {
+      "id": "a5q1b",
+      "act": 5,
+      "name": "Return to Oriath",
+      "npc": null,
+      "passive_points": 0,
+      "gem_rewards": []
+    },
+    {
+      "id": "a5q2",
+      "act": 5,
+      "name": "The Key to Freedom",
+      "npc": null,
+      "passive_points": 0,
       "gem_rewards": []
     },
     {
@@ -3495,6 +3671,30 @@
       "gem_rewards": []
     },
     {
+      "id": "a5q4",
+      "act": 5,
+      "name": "Death to Purity",
+      "npc": null,
+      "passive_points": 0,
+      "gem_rewards": []
+    },
+    {
+      "id": "a5q5",
+      "act": 5,
+      "name": "The King's Feast",
+      "npc": null,
+      "passive_points": 0,
+      "gem_rewards": []
+    },
+    {
+      "id": "a5q6",
+      "act": 5,
+      "name": "The Ravenous God",
+      "npc": null,
+      "passive_points": 0,
+      "gem_rewards": []
+    },
+    {
       "id": "a5q7",
       "act": 5,
       "name": "Kitava's Torments",
@@ -3503,11 +3703,43 @@
       "gem_rewards": []
     },
     {
+      "id": "a6q1",
+      "act": 6,
+      "name": "The Brine King",
+      "npc": null,
+      "passive_points": 0,
+      "gem_rewards": []
+    },
+    {
+      "id": "a6q2",
+      "act": 6,
+      "name": "Essence of Umbra",
+      "npc": null,
+      "passive_points": 0,
+      "gem_rewards": []
+    },
+    {
       "id": "a6q3",
       "act": 6,
       "name": "The Father of War",
       "npc": "Tarkleigh",
       "passive_points": 1,
+      "gem_rewards": []
+    },
+    {
+      "id": "a6q4",
+      "act": 6,
+      "name": "Fallen from Grace",
+      "npc": null,
+      "passive_points": 0,
+      "gem_rewards": []
+    },
+    {
+      "id": "a6q5",
+      "act": 6,
+      "name": "Bestel's Epic",
+      "npc": null,
+      "passive_points": 0,
       "gem_rewards": []
     },
     {
@@ -3535,11 +3767,59 @@
       "gem_rewards": []
     },
     {
+      "id": "a7q2",
+      "act": 7,
+      "name": "Essence of the Artist",
+      "npc": null,
+      "passive_points": 0,
+      "gem_rewards": []
+    },
+    {
+      "id": "a7q3",
+      "act": 7,
+      "name": "Web of Secrets",
+      "npc": null,
+      "passive_points": 0,
+      "gem_rewards": []
+    },
+    {
+      "id": "a7q4",
+      "act": 7,
+      "name": "The Mother of Spiders",
+      "npc": null,
+      "passive_points": 0,
+      "gem_rewards": []
+    },
+    {
+      "id": "a7q5",
+      "act": 7,
+      "name": "The Silver Locket",
+      "npc": null,
+      "passive_points": 0,
+      "gem_rewards": []
+    },
+    {
       "id": "a7q6",
       "act": 7,
       "name": "Kishara's Star",
       "npc": "Weylam Roth",
       "passive_points": 1,
+      "gem_rewards": []
+    },
+    {
+      "id": "a7q7",
+      "act": 7,
+      "name": "Lighting the Way",
+      "npc": null,
+      "passive_points": 0,
+      "gem_rewards": []
+    },
+    {
+      "id": "a7q8",
+      "act": 7,
+      "name": "In Memory of Greust",
+      "npc": null,
+      "passive_points": 0,
       "gem_rewards": []
     },
     {
@@ -3551,11 +3831,43 @@
       "gem_rewards": []
     },
     {
+      "id": "a8q1",
+      "act": 8,
+      "name": "Essence of the Hag",
+      "npc": null,
+      "passive_points": 0,
+      "gem_rewards": []
+    },
+    {
+      "id": "a8q2",
+      "act": 8,
+      "name": "Lunar Eclipse",
+      "npc": null,
+      "passive_points": 0,
+      "gem_rewards": []
+    },
+    {
+      "id": "a8q3",
+      "act": 8,
+      "name": "Solar Eclipse",
+      "npc": null,
+      "passive_points": 0,
+      "gem_rewards": []
+    },
+    {
       "id": "a8q4",
       "act": 8,
       "name": "Reflection of Terror",
       "npc": "Hargan",
       "passive_points": 1,
+      "gem_rewards": []
+    },
+    {
+      "id": "a8q5",
+      "act": 8,
+      "name": "The Wings of Vastiri",
+      "npc": null,
+      "passive_points": 0,
       "gem_rewards": []
     },
     {
@@ -3575,11 +3887,35 @@
       "gem_rewards": []
     },
     {
+      "id": "a9q1",
+      "act": 9,
+      "name": "Recurring Nightmare",
+      "npc": null,
+      "passive_points": 0,
+      "gem_rewards": []
+    },
+    {
       "id": "a9q2",
       "act": 9,
       "name": "The Ruler of Highgate",
       "npc": "Tasuni",
       "passive_points": 1,
+      "gem_rewards": []
+    },
+    {
+      "id": "a9q3",
+      "act": 9,
+      "name": "The Storm Blade",
+      "npc": null,
+      "passive_points": 0,
+      "gem_rewards": []
+    },
+    {
+      "id": "a9q4",
+      "act": 9,
+      "name": "Fastis Fortuna",
+      "npc": null,
+      "passive_points": 0,
       "gem_rewards": []
     },
     {
@@ -3591,11 +3927,43 @@
       "gem_rewards": []
     },
     {
+      "id": "a10q1",
+      "act": 10,
+      "name": "Safe Passage",
+      "npc": null,
+      "passive_points": 0,
+      "gem_rewards": []
+    },
+    {
+      "id": "a10q2",
+      "act": 10,
+      "name": "Death and Rebirth",
+      "npc": null,
+      "passive_points": 0,
+      "gem_rewards": []
+    },
+    {
       "id": "a10q3",
       "act": 10,
       "name": "An End to Hunger",
       "npc": "Lani",
       "passive_points": 1,
+      "gem_rewards": []
+    },
+    {
+      "id": "a10q4",
+      "act": 10,
+      "name": "No Love for Old Ghosts",
+      "npc": null,
+      "passive_points": 0,
+      "gem_rewards": []
+    },
+    {
+      "id": "a10q5",
+      "act": 10,
+      "name": "Map to Tsoatha",
+      "npc": null,
+      "passive_points": 0,
       "gem_rewards": []
     },
     {

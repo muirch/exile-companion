@@ -9,14 +9,14 @@ This is a standalone Node toolchain and is not part of the Rust app build. The a
 1. [`pathofexile-dat`](https://www.npmjs.com/package/pathofexile-dat) downloads the bundle index and the tables listed in `config.json` straight from GGG's patch CDN by version. No PoE install is required (Oodle decompression runs in WASM via `ooz-wasm`). The output lands in `tables/English/*.json`. Foreign keys export as row indices into the referenced table.
 2. `src/transform/*.ts` reshape the raw rows into poebo's flat schemas, resolving the row-index references into ids:
    - `areas.ts` -> `ZoneInfo` (zone -> act table + connectivity).
-   - `quests.ts` -> `QuestInfo` (campaign quests with per-class gem rewards). Join: `QuestRewards.RewardOffer -> QuestRewardOffers.QuestKey -> Quest`, plus `Reward -> BaseItemTypes` (gem id/name) and `Characters -> Characters` (class names). Only gem rewards (metadata id under `Metadata/Items/Gems/`) are kept.
+   - `quests.ts` -> `QuestInfo` (every campaign quest, with per-class gem rewards, passive points and the reward NPC). Join: `QuestRewards.RewardOffer -> QuestRewardOffers.QuestKey -> Quest`, plus `Reward -> BaseItemTypes` (gem id/name, or a Book of Skill for a passive point) and `Characters -> Characters` (class names). Routes reference quests without rewards too, so all of them are kept.
    - `trials.ts` -> `TrialInfo` (campaign Trials of Ascendancy). Join: `LabyrinthTrials.WorldAreas -> WorldAreas`; endgame (Uber Lab, act 11) trials are dropped.
 3. `src/export.ts` writes `../../data-pack/{areas,quests,trials}.json` and `manifest.json` (each file with a sha256), and validates each against known anchors (The Twilight Strand is act 1; a1q1 rewards a Witch starter gem; The Lower Prison is an act 1 trial; 6 trials in acts 1-3, 12 total).
 
 ### Data not extracted here (known gaps)
 
 - **Vendor (purchasable) gems** have no clean `.dat` table (only quest gem rewards do). Deferred; would need the PoE Wiki `vendor_rewards` cargo table or exile-leveling's compilation.
-- **Passive skill points per quest** are not encoded as stat values in `QuestStaticRewards` for this patch (the grant is a client-string message with no count), so they are not extracted. Deferred; would need a hand-authored, anchor-validated table or a `QuestFlags` decode.
+- The bandit choice in act 2 (kill all for +2 passives) is a branch, not a Book of Skill, so it isn't counted.
 
 ## Regenerate
 

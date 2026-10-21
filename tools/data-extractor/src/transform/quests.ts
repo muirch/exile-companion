@@ -105,9 +105,9 @@ export interface QuestInfo {
   gem_rewards: GemReward[];
 }
 
-// Main-campaign quests are ided `a<act>q<n>` (e.g. `a1q1`, `a10q3`). This excludes league/tutorial
+// Main-campaign quests are ided `a<act>q<n>`, sometimes with a letter suffix (`a1q1`, `a10q3`, `a5q1b`). This excludes league/tutorial
 // quests (synthesis, hellscape, MercenariesTutorial, ...) that also carry an Act.
-const CAMPAIGN_QUEST = /^a([1-9]|10)q\d+$/;
+const CAMPAIGN_QUEST = /^a([1-9]|10)q\d+[a-z]?$/;
 const GEM_ID = /^Metadata\/Items\/Gems\//;
 
 export function transformQuests(
@@ -147,8 +147,7 @@ export function transformQuests(
     return [...counts.entries()].sort((a, b) => b[1] - a[1])[0][0];
   };
 
-  // Accumulate per quest: gems (de-duplicated across class-specific rows, unioning eligible classes)
-  // and a passive-point count. A quest is emitted if it grants a gem or at least one passive point.
+  // Every campaign quest is emitted: routes reference quests that give no gem or passive point.
   const acc = new Map<string, { info: QuestInfo; gems: Map<string, GemReward> }>();
 
   const ensure = (quest: RawQuest, offerIndex: number) => {
@@ -172,6 +171,10 @@ export function transformQuests(
     }
     return entry;
   };
+
+  for (const q of quests) {
+    if (CAMPAIGN_QUEST.test(q.Id)) ensure(q, -1);
+  }
 
   for (const r of rewards) {
     if (r.RewardOffer == null || r.Reward == null) continue;
@@ -206,7 +209,6 @@ export function transformQuests(
 
   const out: QuestInfo[] = [];
   for (const { info, gems } of acc.values()) {
-    if (gems.size === 0 && info.passive_points === 0) continue;
     info.gem_rewards = [...gems.values()].sort((a, b) => a.gem_name.localeCompare(b.gem_name));
     for (const g of info.gem_rewards) g.classes.sort();
     out.push(info);
