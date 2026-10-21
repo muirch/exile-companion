@@ -131,3 +131,11 @@ export const routeReset = (): Promise<RouteView | null> =>
 
 export const getSource = (): Promise<SourceStatus> =>
   isTauri() ? invoke('get_source') : Promise.resolve({ mode: 'replay', path: 'mock' });
+
+export interface OverlayState {
+  grabbed: boolean;
+  gameFocused: boolean;
+}
+
+export const getOverlayState = (): Promise<OverlayState> =>
+  isTauri() ? invoke('get_overlay_state') : Promise.resolve({ grabbed: true, gameFocused: true });

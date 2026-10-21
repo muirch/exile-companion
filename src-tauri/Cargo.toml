@@ -13,7 +13,7 @@ crate-type = ["lib", "cdylib", "staticlib"]
 tauri-build = { version = "=2.6.3", features = [] }
 
 [dependencies]
-tauri = { version = "=2.11.5", features = ["macos-private-api"] }
+tauri = { version = "=2.11.5", features = ["macos-private-api", "tray-icon"] }
 tauri-plugin-dialog = "=2.7.1"
 tauri-plugin-fs = "=2.5.1"
 tauri-plugin-clipboard-manager = "=2.3.2"
@@ -26,3 +26,6 @@ tokio = { version = "=1.53.0", features = ["rt-multi-thread", "macros", "sync", 
 poebo-core = { path = "../crates/poebo-core" }
 poebo-data = { path = "../crates/poebo-data" }
 poebo-pob = { path = "../crates/poebo-pob" }
+
+[target.'cfg(windows)'.dependencies]
+windows-sys = { version = "=0.61.2", features = ["Win32_Foundation", "Win32_UI_WindowsAndMessaging"] }

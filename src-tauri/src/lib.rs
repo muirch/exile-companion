@@ -46,6 +46,11 @@ pub fn run() {
                     }
                 })?;
 
+            overlay::create_tray(app.handle())?;
+            let grabbed = !cfg!(windows);
+            overlay::set_grab(app.handle(), grabbed);
+            overlay::watch_game_focus(app.handle().clone());
+
             for (code, mv) in [(Code::PageDown, 0), (Code::PageUp, 1)] {
                 let shortcut = Shortcut::new(Some(Modifiers::CONTROL | Modifiers::ALT), code);
                 app.global_shortcut()
@@ -80,6 +85,7 @@ pub fn run() {
             commands::get_guidance,
             commands::get_route,
             commands::get_source,
+            commands::get_overlay_state,
             commands::route_next,
             commands::route_prev,
             commands::route_reset,

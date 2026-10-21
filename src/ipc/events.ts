@@ -18,6 +18,7 @@ export const OVERLAY_GRAB = 'overlay://grab-changed';
 export const BUILD_UPDATED = 'build://updated';
 export const GUIDANCE_NEXT = 'guidance://next';
 export const ROUTE_VIEW = 'route://view';
+export const GAME_FOCUS = 'overlay://game-focus';
 
 export const onCampaignState = (cb: (state: CampaignState) => void): Promise<UnlistenFn> =>
   listen<CampaignState>(CAMPAIGN_STATE, (e) => cb(e.payload));
@@ -39,3 +40,6 @@ export const onGuidance = (cb: (objective: NextObjective) => void): Promise<Unli
 
 export const onRouteView = (cb: (view: RouteView | null) => void): Promise<UnlistenFn> =>
   listen<RouteView | null>(ROUTE_VIEW, (e) => cb(e.payload));
+
+export const onGameFocus = (cb: (focused: boolean) => void): Promise<UnlistenFn> =>
+  listen<boolean>(GAME_FOCUS, (e) => cb(e.payload));

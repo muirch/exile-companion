@@ -120,6 +120,21 @@ pub fn get_guidance(app: AppHandle) -> NextObjective {
     runtime::current_guidance(&app)
 }
 
+#[derive(serde::Serialize)]
+#[serde(rename_all = "camelCase")]
+pub struct OverlayState {
+    grabbed: bool,
+    game_focused: bool,
+}
+
+#[tauri::command]
+pub fn get_overlay_state(app: AppHandle, state: State<'_, AppState>) -> OverlayState {
+    OverlayState {
+        grabbed: state.grabbed.load(std::sync::atomic::Ordering::SeqCst),
+        game_focused: crate::overlay::game_focused(&app),
+    }
+}
+
 #[tauri::command]
 pub fn get_source(app: AppHandle) -> runtime::SourceStatus {
     runtime::current_source(&app)

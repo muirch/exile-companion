@@ -1,0 +1,9 @@
+#!/bin/sh
+# Lets `cargo check/clippy --target x86_64-pc-windows-msvc -p poebo-app` run on Linux:
+#   RC=tools/fake-llvm-rc cargo clippy -p poebo-app --target x86_64-pc-windows-msvc
+# check never links, so an empty resource file is enough. Not for real builds.
+case "$*" in *"/?"*) echo "OVERVIEW: LLVM Resource Converter /no-preprocess"; exit 0;; esac
+while [ $# -gt 0 ]; do
+  if [ "$1" = "/fo" ]; then shift; : > "$1"; fi
+  shift
+done

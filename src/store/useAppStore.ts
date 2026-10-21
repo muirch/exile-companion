@@ -29,7 +29,7 @@ interface AppStore {
   route: RouteView | null;
   source: { mode: SourceMode; path: string | null; error: string | null };
   replay: ReplayProgress;
-  ui: { grabbed: boolean; opacity: number };
+  ui: { grabbed: boolean; opacity: number; gameFocused: boolean };
 
   setCampaign: (state: CampaignState) => void;
   setBuild: (build: BuildSummary | null) => void;
@@ -38,6 +38,7 @@ interface AppStore {
   setSourceStatus: (status: SourceStatus) => void;
   setReplayProgress: (progress: ReplayProgress) => void;
   setGrabbed: (grabbed: boolean) => void;
+  setGameFocused: (gameFocused: boolean) => void;
   setOpacity: (opacity: number) => void;
 }
 
@@ -49,7 +50,7 @@ export const useAppStore = create<AppStore>((set) => ({
   route: null,
   source: { mode: 'idle', path: null, error: null },
   replay: { position: 0, total: 0, speed: 'X1', paused: false },
-  ui: { grabbed: true, opacity: 0.85 },
+  ui: { grabbed: true, opacity: 0.85, gameFocused: true },
 
   setCampaign: (campaign) => set({ campaign }),
   setBuild: (build) => set({ build }),
@@ -59,5 +60,6 @@ export const useAppStore = create<AppStore>((set) => ({
     set({ source: { mode: status.mode, path: status.path ?? null, error: status.error ?? null } }),
   setReplayProgress: (replay) => set({ replay }),
   setGrabbed: (grabbed) => set((s) => ({ ui: { ...s.ui, grabbed } })),
+  setGameFocused: (gameFocused) => set((s) => ({ ui: { ...s.ui, gameFocused } })),
   setOpacity: (opacity) => set((s) => ({ ui: { ...s.ui, opacity } })),
 }));

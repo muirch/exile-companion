@@ -1,11 +1,19 @@
 import { useEffect } from 'react';
 
 import { OverlayRoot } from './components/OverlayRoot';
-import { getBuild, getGuidance, getRoute, getSource, getState } from './ipc/commands';
+import {
+  getBuild,
+  getGuidance,
+  getOverlayState,
+  getRoute,
+  getSource,
+  getState,
+} from './ipc/commands';
 import { isTauri } from './ipc/env';
 import {
   onBuildUpdated,
   onCampaignState,
+  onGameFocus,
   onGuidance,
   onOverlayGrab,
   onReplayProgress,
@@ -23,6 +31,7 @@ export function App(): React.JSX.Element {
   const setSourceStatus = useAppStore((s) => s.setSourceStatus);
   const setReplayProgress = useAppStore((s) => s.setReplayProgress);
   const setGrabbed = useAppStore((s) => s.setGrabbed);
+  const setGameFocused = useAppStore((s) => s.setGameFocused);
 
   useEffect(() => {
     // In a plain browser (pnpm dev) there is no backend: drive the UI from the mock instead.
@@ -40,6 +49,7 @@ export function App(): React.JSX.Element {
       onSourceStatus(setSourceStatus),
       onReplayProgress(setReplayProgress),
       onOverlayGrab(setGrabbed),
+      onGameFocus(setGameFocused),
     ]);
 
     // Hydrate current state / build / objective for a late-mounting overlay window.
@@ -48,11 +58,26 @@ export function App(): React.JSX.Element {
     getGuidance().then(setGuidance).catch(noop);
     getRoute().then(setRoute).catch(noop);
     getSource().then(setSourceStatus).catch(noop);
+    getOverlayState()
+      .then((o) => {
+        setGrabbed(o.grabbed);
+        setGameFocused(o.gameFocused);
+      })
+      .catch(noop);
 
     return () => {
       void unlisteners.then((list) => list.forEach((unlisten) => unlisten()));
     };
-  }, [setCampaign, setBuild, setGuidance, setRoute, setSourceStatus, setReplayProgress, setGrabbed]);
+  }, [
+    setCampaign,
+    setBuild,
+    setGuidance,
+    setRoute,
+    setSourceStatus,
+    setReplayProgress,
+    setGrabbed,
+    setGameFocused,
+  ]);
 
   return <OverlayRoot />;
 }
