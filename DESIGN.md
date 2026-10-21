@@ -136,7 +136,7 @@ components:
 
 Every surface poebo draws is a Path of Exile item tooltip. The zone is the item name in a tinted header band, the things to do there are its properties, and the way out is the last line, "Then:". The overlay, the quick menu and each settings group use the same parts: a see-through black body with no frame, a header band with rules along both edges and wedge ends that meet in a diamond, short glowing separators, centered small caps, and text colours that mean what they mean in the game.
 
-The system is dense and quiet. It is read in glances over a busy, dark game scene, so it has no fills, gradients or accents beyond what the game's own tooltips carry, and colour is spent only on meaning: a boss name is red because the game's corrupted red is the danger colour, a waypoint is blue because it is magic. The overlay window is transparent and fitted to its content; only the plate paints. The settings window is an ordinary window, but its groups are still tooltips standing on a dark ground.
+The system is dense and quiet. It is read in glances over a busy, dark game scene, so it has no fills, gradients or accents beyond what the game's own tooltips carry, and colour is spent only on meaning: a boss name is red because the game's corrupted red is the danger colour, a waypoint is blue because it is magic. The overlay window is transparent and fitted to its content; only the plate paints. The settings window has no system frame: a title bar like the overlay's move bar, a 1px Edge window edge, and groups that are still tooltips standing on a dark ground.
 
 It rejects the web-app card (rounded corners, drop shadows, coloured buttons) and the generic brown-and-gold fantasy panel. The chrome is neutral grey and black; the only warm hue in the frame is the sand tint for towns.
 
@@ -214,7 +214,7 @@ The overlay plate is 404px wide at 100 percent text size and is scaled as a whol
 
 The quick menu is a 228px tooltip at the window's top left, 4px in. Rows are full-width, 6px by 12px, label left and state or key hint right.
 
-The settings window centers a column up to 34rem wide with 20px outer padding and 16px between groups. Inside a group, bodies are left-aligned with 20px sides, 12px top, 16px bottom, and rows 8px apart. Each row is at least 28px tall with a fixed 128px label column and a 12px gap; explanatory text under a row indents 140px to line up with the controls.
+The settings window has a 32px title bar on top: "poebo" in Normal Item White and "Settings" in Label Grey on the left, a 24px square close button on the right, black under an Edge rule. Dragging the bar moves the window; the content scrolls under it, with an 8px Edge scrollbar thumb. Below the bar it centers a column up to 34rem wide with 20px outer padding and 16px between groups. Inside a group, bodies are left-aligned with 20px sides, 12px top, 16px bottom, and rows 8px apart. Each row is at least 28px tall with a fixed 128px label column and a 12px gap; explanatory text under a row indents 140px to line up with the controls.
 
 The spacing scale is 4, 6, 8, 12, 16 and 20px. The header band's 7/24/8px padding is its own.
 

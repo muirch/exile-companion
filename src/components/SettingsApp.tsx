@@ -2,6 +2,7 @@ import type { ReactNode } from 'react';
 
 import {
   clearBuild,
+  closeSettings,
   getSettings,
   importBuildFile,
   pasteBuild,
@@ -240,14 +241,45 @@ function HotkeysGroup(): React.JSX.Element {
   );
 }
 
+// The window has no system frame; this bar moves it, like the overlay's move bar.
+function TitleBar(): React.JSX.Element {
+  return (
+    <header
+      data-tauri-drag-region
+      className="flex h-8 shrink-0 cursor-move items-center gap-2 border-b border-edge bg-black pr-1 pl-3"
+    >
+      <span data-tauri-drag-region className="font-caps text-[13px] text-normal">
+        poebo
+      </span>
+      <span data-tauri-drag-region className="font-caps text-[13px] text-label">
+        Settings
+      </span>
+      <button
+        className="btn ml-auto grid size-6 cursor-default place-items-center p-0"
+        aria-label="Close settings"
+        onClick={() => void closeSettings()}
+      >
+        <svg viewBox="0 0 12 12" className="size-3" aria-hidden="true">
+          <path d="M2.5 2.5l7 7M9.5 2.5l-7 7" fill="none" stroke="currentColor" strokeWidth="1.4" />
+        </svg>
+      </button>
+    </header>
+  );
+}
+
 export function SettingsApp(): React.JSX.Element {
   return (
-    <main className="mx-auto flex max-w-[34rem] flex-col gap-4 px-5 py-5">
-      <DisplaySection />
-      <RouteSection />
-      <LogSection />
-      <BuildSection />
-      <HotkeysGroup />
-    </main>
+    <div className="flex h-full flex-col">
+      <TitleBar />
+      <div className="min-h-0 flex-1 overflow-y-auto">
+        <main className="mx-auto flex max-w-[34rem] flex-col gap-4 px-5 py-5">
+          <DisplaySection />
+          <RouteSection />
+          <LogSection />
+          <BuildSection />
+          <HotkeysGroup />
+        </main>
+      </div>
+    </div>
   );
 }

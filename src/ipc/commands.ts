@@ -4,6 +4,7 @@
 // fully explorable without a backend.
 
 import { invoke } from '@tauri-apps/api/core';
+import { getCurrentWindow } from '@tauri-apps/api/window';
 import { readText } from '@tauri-apps/plugin-clipboard-manager';
 
 import { isTauri } from './env';
@@ -163,6 +164,9 @@ export const startMove = (): Promise<void> =>
 
 export const closeMenu = (): Promise<void> =>
   isTauri() ? invoke('close_menu') : Promise.resolve();
+
+export const closeSettings = (): Promise<void> =>
+  isTauri() ? getCurrentWindow().hide() : Promise.resolve();
 
 export const quitApp = (): Promise<void> => (isTauri() ? invoke('quit_app') : Promise.resolve());
 

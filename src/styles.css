@@ -66,15 +66,33 @@ body,
   overflow: hidden;
 }
 
-/* The settings window is an ordinary window with its own ground and scrolling. */
+/* The settings window has no system frame: its own ground, a 1px window edge, and the content
+   scrolls under the title bar. */
 html[data-window='settings'],
 html[data-window='settings'] body {
   background: #0a0a0a;
-  overflow: auto;
 }
 html[data-window='settings'] #root {
   display: block;
-  height: auto;
+}
+html[data-window='settings'] #root::after {
+  content: '';
+  position: fixed;
+  inset: 0;
+  border: 1px solid var(--color-edge);
+  pointer-events: none;
+}
+html[data-window='settings'] ::-webkit-scrollbar {
+  width: 8px;
+}
+html[data-window='settings'] ::-webkit-scrollbar-track {
+  background: transparent;
+}
+html[data-window='settings'] ::-webkit-scrollbar-thumb {
+  background: var(--color-edge);
+}
+html[data-window='settings'] ::-webkit-scrollbar-thumb:hover {
+  background: var(--color-edge-bright);
 }
 html[data-window='menu'] #root {
   align-items: flex-start;
