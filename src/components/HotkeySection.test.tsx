@@ -15,7 +15,7 @@ vi.mock('../ipc/commands', () => ({
 
 const CFG: HotkeySettings = {
   hotkeys: {
-    menuHold: 'Escape',
+    menuHold: 'Backquote',
     moveOverlay: 'Alt+KeyM',
     routePrev: 'Alt+ArrowLeft',
     routeNext: 'Alt+ArrowRight',
@@ -43,8 +43,8 @@ describe('shortcutLabel', () => {
 
 describe('holdLabel', () => {
   it('names the hold keys and passes others through', () => {
-    expect(holdLabel('Escape')).toBe('Esc');
-    expect(holdLabel('Backquote')).toBe('`');
+    expect(holdLabel('Backquote')).toBe('Tilde');
+    expect(holdLabel('Tab')).toBe('Tab');
     expect(holdLabel('KeyQ')).toBe('KeyQ');
   });
 });

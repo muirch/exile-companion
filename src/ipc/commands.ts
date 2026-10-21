@@ -180,7 +180,7 @@ export const setRouteEnabled = (enabled: boolean): Promise<void> =>
 
 const DEFAULT_HOTKEYS: HotkeySettings = {
   hotkeys: {
-    menuHold: 'Escape',
+    menuHold: 'Backquote',
     moveOverlay: 'Alt+KeyM',
     routePrev: 'Alt+ArrowLeft',
     routeNext: 'Alt+ArrowRight',

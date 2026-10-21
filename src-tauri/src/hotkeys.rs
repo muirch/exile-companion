@@ -24,11 +24,24 @@ pub struct Hotkeys {
 impl Default for Hotkeys {
     fn default() -> Self {
         Self {
-            menu_hold: "Escape".into(),
+            menu_hold: "Backquote".into(),
             move_overlay: "Alt+KeyM".into(),
             route_prev: "Alt+ArrowLeft".into(),
             route_next: "Alt+ArrowRight".into(),
             relog: "F9".into(),
+        }
+    }
+}
+
+// Esc isn't offered: the game acts on it first (closes panels, or quits from the main screen)
+// and takes focus back from the menu.
+const HOLD_KEYS: [&str; 2] = ["Backquote", "Tab"];
+
+impl Hotkeys {
+    /// Replaces a hold key that is no longer offered with the default.
+    pub fn normalize(&mut self) {
+        if !HOLD_KEYS.contains(&self.menu_hold.as_str()) {
+            self.menu_hold = Self::default().menu_hold;
         }
     }
 }

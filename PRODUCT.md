@@ -29,14 +29,14 @@ poebo reads only the game's `Client.txt` log, knows which area the player is in 
 
 - Used while playing, in windowed or windowed-fullscreen mode. The overlay is always on top, transparent, click-through by default.
 - Read in short glances during combat and loading screens, over a busy, dark game scene.
-- Holding Esc in the game opens a quick menu at the cursor (feature toggles, settings, move, quit). Settings live in their own frameless window, styled like the overlay and moved by its title bar, also reachable from the tray. Alt+M unlocks the overlay for dragging.
+- Holding the tilde key (left of 1) in the game opens a quick menu at the cursor (feature toggles, settings, move, quit). Settings live in their own frameless window, styled like the overlay and moved by its title bar, also reachable from the tray. Alt+M unlocks the overlay for dragging.
 - It shows only while the game (or the overlay itself) is the foreground window. At startup without the game it shows a short "running in the background" notice.
 
 ## Capabilities and Constraints
 
 - Inputs allowed: `Client.txt`, user hotkeys, the clipboard on request, local PoB files. It must never inject into the game, read its memory, hook rendering, or automate play. This follows GGG's third-party tool policy and is non-negotiable.
 - One opt-in exception to "sends nothing to the game": the relog key types `/exit` in chat, one command per key press, only while the game is in front, off by default (decided by the user on 2026-10-21, modelled on Awakened PoE Trade's F9).
-- All hotkeys are configurable. Defaults: hold Esc for the quick menu, Alt+M to move the overlay, Alt+Left / Alt+Right to step the route, F9 to relog when enabled.
+- All hotkeys are configurable. Defaults: hold the tilde key for the quick menu (Tab is the other choice; Esc isn't offered because the game acts on it first), Alt+M to move the overlay, Alt+Left / Alt+Right to step the route, F9 to relog when enabled.
 - Route steps come typed: kill, arena, enter area, waypoint, portal, logout, quest hand-in, quest item, trial, ascend, crafting recipe, direction (8-way compass), copy text.
 - Campaign data (areas, quests, rewards, trials) is extracted from the game files per patch.
 - The overlay window is fitted to its content and anchored by its bottom center to a fraction of the monitor, so it survives resolution changes and the route stays put when the move bar opens above it.

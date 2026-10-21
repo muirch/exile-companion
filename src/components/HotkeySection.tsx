@@ -13,9 +13,8 @@ const ROWS: { key: Bindable; label: string }[] = [
 ];
 
 const HOLD_KEYS: { value: string; label: string }[] = [
-  { value: 'Escape', label: 'Esc' },
+  { value: 'Backquote', label: 'Tilde' },
   { value: 'Tab', label: 'Tab' },
-  { value: 'Backquote', label: '`' },
 ];
 
 const KEY_NAMES: Record<string, string> = {
@@ -37,7 +36,7 @@ const KEY_NAMES: Record<string, string> = {
 };
 
 export function holdLabel(key: string): string {
-  return ({ Escape: 'Esc', Tab: 'Tab', Backquote: '`' } as Record<string, string>)[key] ?? key;
+  return HOLD_KEYS.find((k) => k.value === key)?.label ?? key;
 }
 
 export function shortcutLabel(shortcut: string): string {

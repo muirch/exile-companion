@@ -56,7 +56,7 @@ export const useAppStore = create<AppStore>((set) => ({
   route: null,
   routeEnabled: true,
   hotkeys: {
-    menuHold: 'Escape',
+    menuHold: 'Backquote',
     moveOverlay: 'Alt+KeyM',
     routePrev: 'Alt+ArrowLeft',
     routeNext: 'Alt+ArrowRight',

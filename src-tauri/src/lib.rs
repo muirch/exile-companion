@@ -56,7 +56,7 @@ pub fn run() {
             let grabbed = !cfg!(windows);
             overlay::set_grab(app.handle(), grabbed);
             overlay::watch_game_focus(app.handle().clone());
-            menu::watch_esc_hold(app.handle().clone());
+            menu::watch_menu_hold(app.handle().clone());
 
             for e in hotkeys::register_all(app.handle()) {
                 log::warn!("hotkey {} ({}): {}", e.action, e.shortcut, e.error);

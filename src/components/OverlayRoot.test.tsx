@@ -45,7 +45,7 @@ describe('OverlayRoot', () => {
 
   it('starts with the notice and no route', () => {
     render(<OverlayRoot />);
-    expect(screen.getByRole('status')).toHaveTextContent('Hold Esc in the game for the menu.');
+    expect(screen.getByRole('status')).toHaveTextContent('Hold Tilde in the game for the menu.');
     expect(routeBox()).not.toBeVisible();
   });
 
@@ -97,7 +97,7 @@ describe('StatusPanel in the overlay', () => {
 
   it('points to the settings when Client.txt is missing', () => {
     render(<OverlayRoot />);
-    expect(screen.getByText(/Client\.txt not found\. Hold Esc in the game/)).toBeInTheDocument();
+    expect(screen.getByText(/Client\.txt not found\. Hold Tilde in the game/)).toBeInTheDocument();
   });
 
   it('shows the zone, act, level and step with the here and then parts', () => {

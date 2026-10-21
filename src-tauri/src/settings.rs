@@ -51,7 +51,9 @@ pub fn load(app: &AppHandle) -> Result<Settings, String> {
         return Ok(Settings::default());
     }
     let data = std::fs::read_to_string(&path).map_err(|e| e.to_string())?;
-    Ok(serde_json::from_str(&data).unwrap_or_default())
+    let mut settings: Settings = serde_json::from_str(&data).unwrap_or_default();
+    settings.hotkeys.normalize();
+    Ok(settings)
 }
 
 pub fn save(app: &AppHandle, settings: &Settings) -> Result<(), String> {
