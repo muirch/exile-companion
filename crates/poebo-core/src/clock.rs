@@ -1,23 +1,15 @@
-//! A pluggable clock so replay pacing is testable.
-//!
-//! Production uses [`TokioSleeper`] (real time); tests inject [`InstantSleeper`] so replay
-//! integration tests run in milliseconds and deterministically.
+//! Replay pacing goes through [`Sleeper`] so tests can swap in [`InstantSleeper`].
 
+use std::future::Future;
 use std::time::Duration;
 
-use async_trait::async_trait;
-
-/// Something that can asynchronously wait for a duration.
-#[async_trait]
 pub trait Sleeper: Send + Sync + 'static {
-    async fn sleep(&self, dur: Duration);
+    fn sleep(&self, dur: Duration) -> impl Future<Output = ()> + Send;
 }
 
-/// Real wall-clock sleeping via Tokio.
 #[derive(Debug, Clone, Copy, Default)]
 pub struct TokioSleeper;
 
-#[async_trait]
 impl Sleeper for TokioSleeper {
     async fn sleep(&self, dur: Duration) {
         if !dur.is_zero() {
@@ -26,11 +18,9 @@ impl Sleeper for TokioSleeper {
     }
 }
 
-/// Test sleeper that returns immediately, so replay pacing collapses to nothing.
 #[derive(Debug, Clone, Copy, Default)]
 pub struct InstantSleeper;
 
-#[async_trait]
 impl Sleeper for InstantSleeper {
     async fn sleep(&self, _dur: Duration) {}
 }
