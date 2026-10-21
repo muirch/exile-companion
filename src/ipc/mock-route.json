@@ -1,339 +1,365 @@
 [
   {
-    "section": "Act 1",
-    "edge": 0,
-    "edge_count": 233,
-    "here": [
-      {
-        "parts": [
-          {
-            "kind": "text",
-            "text": "Find and kill "
-          },
-          {
-            "kind": "kill",
-            "name": "Hillock"
-          }
-        ],
-        "sub_steps": []
-      }
-    ],
-    "then": {
-      "parts": [
+    "act": 1,
+    "town": false,
+    "view": {
+      "area_id": "1_1_1",
+      "edge": 0,
+      "edge_count": 233,
+      "here": [
         {
-          "kind": "text",
-          "text": "➞ "
-        },
-        {
-          "kind": "enter",
-          "id": "1_1_town",
-          "name": "Lioneye's Watch"
-        }
-      ],
-      "sub_steps": []
-    }
-  },
-  {
-    "section": "Act 1",
-    "edge": 1,
-    "edge_count": 233,
-    "here": [
-      {
-        "parts": [
-          {
-            "kind": "text",
-            "text": "Hand in "
-          },
-          {
-            "kind": "quest",
-            "id": "a1q1",
-            "name": "Enemy at the Gate"
-          }
-        ],
-        "sub_steps": []
-      }
-    ],
-    "then": {
-      "parts": [
-        {
-          "kind": "text",
-          "text": "➞ "
-        },
-        {
-          "kind": "enter",
-          "id": "1_1_2",
-          "name": "The Coast"
-        }
-      ],
-      "sub_steps": []
-    }
-  },
-  {
-    "section": "Act 1",
-    "edge": 2,
-    "edge_count": 233,
-    "here": [
-      {
-        "parts": [
-          {
-            "kind": "text",
-            "text": "Get "
-          },
-          {
-            "kind": "waypoint_get"
-          }
-        ],
-        "sub_steps": []
-      }
-    ],
-    "then": {
-      "parts": [
-        {
-          "kind": "text",
-          "text": "➞ "
-        },
-        {
-          "kind": "enter",
-          "id": "1_1_3",
-          "name": "The Mud Flats"
-        }
-      ],
-      "sub_steps": []
-    }
-  },
-  {
-    "section": "Act 1",
-    "edge": 3,
-    "edge_count": 233,
-    "here": [
-      {
-        "parts": [
-          {
-            "kind": "text",
-            "text": "Find 3x"
-          },
-          {
-            "kind": "quest_text",
-            "text": "Glyph"
-          }
-        ],
-        "sub_steps": [
-          [
+          "parts": [
             {
               "kind": "text",
-              "text": "Little streams connect the 3 Rhoa nests"
-            }
-          ],
-          [
-            {
-              "kind": "text",
-              "text": "Usually form a triangle, but will rarely form a line"
-            }
-          ]
-        ]
-      }
-    ],
-    "then": {
-      "parts": [
-        {
-          "kind": "text",
-          "text": "➞ "
-        },
-        {
-          "kind": "enter",
-          "id": "1_1_4_1",
-          "name": "The Submerged Passage"
-        }
-      ],
-      "sub_steps": []
-    }
-  },
-  {
-    "section": "Act 1",
-    "edge": 4,
-    "edge_count": 233,
-    "here": [],
-    "then": {
-      "parts": [
-        {
-          "kind": "waypoint_use",
-          "id": "1_1_2",
-          "name": "The Coast"
-        }
-      ],
-      "sub_steps": []
-    }
-  },
-  {
-    "section": "Act 1",
-    "edge": 5,
-    "edge_count": 233,
-    "here": [],
-    "then": {
-      "parts": [
-        {
-          "kind": "text",
-          "text": "➞ "
-        },
-        {
-          "kind": "enter",
-          "id": "1_1_2a",
-          "name": "The Tidal Island"
-        }
-      ],
-      "sub_steps": []
-    }
-  },
-  {
-    "section": "Act 1",
-    "edge": 6,
-    "edge_count": 233,
-    "here": [
-      {
-        "parts": [
-          {
-            "kind": "text",
-            "text": "Find and kill "
-          },
-          {
-            "kind": "kill",
-            "name": "Hailrake"
-          },
-          {
-            "kind": "text",
-            "text": ", take "
-          },
-          {
-            "kind": "quest_text",
-            "text": "Medicine Chest"
-          }
-        ],
-        "sub_steps": [
-          [
-            {
-              "kind": "text",
-              "text": "Go "
+              "text": "Find and kill "
             },
             {
-              "kind": "dir",
-              "degrees": 270
+              "kind": "kill",
+              "name": "Hillock"
             }
           ],
-          [
+          "sub_steps": []
+        }
+      ],
+      "section": "Act 1",
+      "then": {
+        "parts": [
+          {
+            "kind": "text",
+            "text": "➞ "
+          },
+          {
+            "id": "1_1_town",
+            "kind": "enter",
+            "name": "Lioneye's Watch"
+          }
+        ],
+        "sub_steps": []
+      }
+    },
+    "zone": "The Twilight Strand"
+  },
+  {
+    "act": 1,
+    "town": true,
+    "view": {
+      "area_id": "1_1_town",
+      "edge": 1,
+      "edge_count": 233,
+      "here": [
+        {
+          "parts": [
             {
               "kind": "text",
-              "text": "If you find a ledge, turn around and go "
+              "text": "Hand in "
             },
             {
-              "kind": "dir",
-              "degrees": 90
+              "id": "a1q1",
+              "kind": "quest",
+              "name": "Enemy at the Gate"
             }
           ],
-          [
+          "sub_steps": []
+        }
+      ],
+      "section": "Act 1",
+      "then": {
+        "parts": [
+          {
+            "kind": "text",
+            "text": "➞ "
+          },
+          {
+            "id": "1_1_2",
+            "kind": "enter",
+            "name": "The Coast"
+          }
+        ],
+        "sub_steps": []
+      }
+    },
+    "zone": "Lioneye's Watch"
+  },
+  {
+    "act": 1,
+    "town": false,
+    "view": {
+      "area_id": "1_1_2",
+      "edge": 2,
+      "edge_count": 233,
+      "here": [
+        {
+          "parts": [
             {
               "kind": "text",
-              "text": "Recommended Level: 4"
+              "text": "Get "
+            },
+            {
+              "kind": "waypoint_get"
             }
+          ],
+          "sub_steps": []
+        }
+      ],
+      "section": "Act 1",
+      "then": {
+        "parts": [
+          {
+            "kind": "text",
+            "text": "➞ "
+          },
+          {
+            "id": "1_1_3",
+            "kind": "enter",
+            "name": "The Mud Flats"
+          }
+        ],
+        "sub_steps": []
+      }
+    },
+    "zone": "The Coast"
+  },
+  {
+    "act": 1,
+    "town": false,
+    "view": {
+      "area_id": "1_1_3",
+      "edge": 3,
+      "edge_count": 233,
+      "here": [
+        {
+          "parts": [
+            {
+              "kind": "text",
+              "text": "Find 3x"
+            },
+            {
+              "kind": "quest_text",
+              "text": "Glyph"
+            }
+          ],
+          "sub_steps": [
+            [
+              {
+                "kind": "text",
+                "text": "Little streams connect the 3 Rhoa nests"
+              }
+            ],
+            [
+              {
+                "kind": "text",
+                "text": "Usually form a triangle, but will rarely form a line"
+              }
+            ]
           ]
-        ]
-      }
-    ],
-    "then": {
-      "parts": [
-        {
-          "kind": "logout",
-          "town": "Lioneye's Watch"
         }
       ],
-      "sub_steps": []
-    }
-  },
-  {
-    "section": "Act 1",
-    "edge": 7,
-    "edge_count": 233,
-    "here": [
-      {
+      "section": "Act 1",
+      "then": {
         "parts": [
           {
             "kind": "text",
-            "text": "Hand in "
+            "text": "➞ "
           },
           {
-            "kind": "quest",
-            "id": "a1q4",
-            "name": "Breaking Some Eggs"
-          }
-        ],
-        "sub_steps": []
-      },
-      {
-        "parts": [
-          {
-            "kind": "text",
-            "text": "Hand in "
-          },
-          {
-            "kind": "quest",
-            "id": "a1q5",
-            "name": "Mercy Mission"
+            "id": "1_1_4_1",
+            "kind": "enter",
+            "name": "The Submerged Passage"
           }
         ],
         "sub_steps": []
       }
-    ],
-    "then": {
-      "parts": [
-        {
-          "kind": "waypoint_use",
-          "id": "1_1_4_1",
-          "name": "The Submerged Passage"
-        }
-      ],
-      "sub_steps": []
-    }
+    },
+    "zone": "The Mud Flats"
   },
   {
-    "section": "Act 1",
-    "edge": 8,
-    "edge_count": 233,
-    "here": [],
-    "then": {
-      "parts": [
+    "act": 1,
+    "town": false,
+    "view": {
+      "area_id": "1_1_4_1",
+      "edge": 4,
+      "edge_count": 233,
+      "here": [],
+      "section": "Act 1",
+      "then": {
+        "parts": [
+          {
+            "id": "1_1_2",
+            "kind": "waypoint_use",
+            "name": "The Coast"
+          }
+        ],
+        "sub_steps": []
+      }
+    },
+    "zone": "The Submerged Passage"
+  },
+  {
+    "act": 1,
+    "town": false,
+    "view": {
+      "area_id": "1_1_2",
+      "edge": 5,
+      "edge_count": 233,
+      "here": [],
+      "section": "Act 1",
+      "then": {
+        "parts": [
+          {
+            "kind": "text",
+            "text": "➞ "
+          },
+          {
+            "id": "1_1_2a",
+            "kind": "enter",
+            "name": "The Tidal Island"
+          }
+        ],
+        "sub_steps": []
+      }
+    },
+    "zone": "The Coast"
+  },
+  {
+    "act": 1,
+    "town": false,
+    "view": {
+      "area_id": "1_1_2a",
+      "edge": 6,
+      "edge_count": 233,
+      "here": [
         {
-          "kind": "text",
-          "text": "➞ "
+          "parts": [
+            {
+              "kind": "text",
+              "text": "Find and kill "
+            },
+            {
+              "kind": "kill",
+              "name": "Hailrake"
+            },
+            {
+              "kind": "text",
+              "text": ", take "
+            },
+            {
+              "kind": "quest_text",
+              "text": "Medicine Chest"
+            }
+          ],
+          "sub_steps": [
+            [
+              {
+                "kind": "text",
+                "text": "Go "
+              },
+              {
+                "degrees": 270,
+                "kind": "dir"
+              }
+            ],
+            [
+              {
+                "kind": "text",
+                "text": "If you find a ledge, turn around and go "
+              },
+              {
+                "degrees": 90,
+                "kind": "dir"
+              }
+            ],
+            [
+              {
+                "kind": "text",
+                "text": "Recommended Level: 4"
+              }
+            ]
+          ]
+        }
+      ],
+      "section": "Act 1",
+      "then": {
+        "parts": [
+          {
+            "kind": "logout",
+            "town": "Lioneye's Watch"
+          }
+        ],
+        "sub_steps": []
+      }
+    },
+    "zone": "The Tidal Island"
+  },
+  {
+    "act": 1,
+    "town": true,
+    "view": {
+      "area_id": "1_1_town",
+      "edge": 7,
+      "edge_count": 233,
+      "here": [
+        {
+          "parts": [
+            {
+              "kind": "text",
+              "text": "Hand in "
+            },
+            {
+              "id": "a1q4",
+              "kind": "quest",
+              "name": "Breaking Some Eggs"
+            }
+          ],
+          "sub_steps": []
         },
         {
-          "kind": "enter",
-          "id": "1_1_4_0",
-          "name": "The Flooded Depths"
+          "parts": [
+            {
+              "kind": "text",
+              "text": "Hand in "
+            },
+            {
+              "id": "a1q5",
+              "kind": "quest",
+              "name": "Mercy Mission"
+            }
+          ],
+          "sub_steps": []
         }
       ],
-      "sub_steps": [
-        [
+      "section": "Act 1",
+      "then": {
+        "parts": [
           {
-            "kind": "text",
-            "text": "Go right of the bridge"
+            "id": "1_1_4_1",
+            "kind": "waypoint_use",
+            "name": "The Submerged Passage"
           }
-        ]
-      ]
-    }
+        ],
+        "sub_steps": []
+      }
+    },
+    "zone": "Lioneye's Watch"
   },
   {
-    "section": "Act 1",
-    "edge": 9,
-    "edge_count": 233,
-    "here": [
-      {
+    "act": 1,
+    "town": false,
+    "view": {
+      "area_id": "1_1_4_1",
+      "edge": 8,
+      "edge_count": 233,
+      "here": [],
+      "section": "Act 1",
+      "then": {
         "parts": [
           {
             "kind": "text",
-            "text": "Find and kill "
+            "text": "➞ "
           },
           {
-            "kind": "kill",
-            "name": "The Dweller of the Deep"
+            "id": "1_1_4_0",
+            "kind": "enter",
+            "name": "The Flooded Depths"
           }
         ],
         "sub_steps": [
@@ -342,416 +368,468 @@
               "kind": "text",
               "text": "Go right of the bridge"
             }
-          ],
-          [
-            {
-              "kind": "text",
-              "text": "Search opposite the entrance"
-            }
-          ],
-          [
-            {
-              "kind": "text",
-              "text": "Look for the large empty room"
-            }
           ]
         ]
       }
-    ],
-    "then": {
-      "parts": [
-        {
-          "kind": "text",
-          "text": "Take the "
-        },
-        {
-          "kind": "generic",
-          "text": "Boat"
-        },
-        {
-          "kind": "text",
-          "text": " ➞ "
-        },
-        {
-          "kind": "enter",
-          "id": "1_1_4_1",
-          "name": "The Submerged Passage"
-        }
-      ],
-      "sub_steps": []
-    }
+    },
+    "zone": "The Submerged Passage"
   },
   {
-    "section": "Act 1",
-    "edge": 10,
-    "edge_count": 233,
-    "here": [],
-    "then": {
-      "parts": [
+    "act": 1,
+    "town": false,
+    "view": {
+      "area_id": "1_1_4_0",
+      "edge": 9,
+      "edge_count": 233,
+      "here": [
         {
-          "kind": "text",
-          "text": "➞ "
-        },
-        {
-          "kind": "enter",
-          "id": "1_1_5",
-          "name": "The Ledge"
-        }
-      ],
-      "sub_steps": []
-    }
-  },
-  {
-    "section": "Act 1",
-    "edge": 11,
-    "edge_count": 233,
-    "here": [],
-    "then": {
-      "parts": [
-        {
-          "kind": "text",
-          "text": "➞ "
-        },
-        {
-          "kind": "enter",
-          "id": "1_1_6",
-          "name": "The Climb"
-        }
-      ],
-      "sub_steps": []
-    }
-  },
-  {
-    "section": "Act 1",
-    "edge": 12,
-    "edge_count": 233,
-    "here": [],
-    "then": {
-      "parts": [
-        {
-          "kind": "text",
-          "text": "➞ "
-        },
-        {
-          "kind": "enter",
-          "id": "1_1_7_1",
-          "name": "The Lower Prison"
-        }
-      ],
-      "sub_steps": []
-    }
-  },
-  {
-    "section": "Act 1",
-    "edge": 13,
-    "edge_count": 233,
-    "here": [],
-    "then": {
-      "parts": [
-        {
-          "kind": "waypoint_use",
-          "id": "1_1_town",
-          "name": "Lioneye's Watch"
-        }
-      ],
-      "sub_steps": []
-    }
-  },
-  {
-    "section": "Act 1",
-    "edge": 14,
-    "edge_count": 233,
-    "here": [
-      {
-        "parts": [
-          {
-            "kind": "text",
-            "text": "Hand in "
-          },
-          {
-            "kind": "quest",
-            "id": "a1q7",
-            "name": "The Dweller of the Deep"
-          }
-        ],
-        "sub_steps": []
-      },
-      {
-        "parts": [
-          {
-            "kind": "text",
-            "text": "Hand in "
-          },
-          {
-            "kind": "quest",
-            "id": "a1q2",
-            "name": "The Caged Brute"
-          }
-        ],
-        "sub_steps": []
-      }
-    ],
-    "then": {
-      "parts": [
-        {
-          "kind": "waypoint_use",
-          "id": "1_1_7_1",
-          "name": "The Lower Prison"
-        }
-      ],
-      "sub_steps": []
-    }
-  },
-  {
-    "section": "Act 1",
-    "edge": 15,
-    "edge_count": 233,
-    "here": [
-      {
-        "parts": [
-          {
-            "kind": "text",
-            "text": "Complete "
-          },
-          {
-            "kind": "trial"
-          }
-        ],
-        "sub_steps": [
-          [
+          "parts": [
             {
               "kind": "text",
-              "text": "Usually "
+              "text": "Find and kill "
             },
             {
-              "kind": "dir",
-              "degrees": 45
+              "kind": "kill",
+              "name": "The Dweller of the Deep"
             }
+          ],
+          "sub_steps": [
+            [
+              {
+                "kind": "text",
+                "text": "Go right of the bridge"
+              }
+            ],
+            [
+              {
+                "kind": "text",
+                "text": "Search opposite the entrance"
+              }
+            ],
+            [
+              {
+                "kind": "text",
+                "text": "Look for the large empty room"
+              }
+            ]
           ]
-        ]
-      }
-    ],
-    "then": {
-      "parts": [
-        {
-          "kind": "text",
-          "text": "➞ "
-        },
-        {
-          "kind": "enter",
-          "id": "1_1_7_2",
-          "name": "The Upper Prison"
         }
       ],
-      "sub_steps": []
-    }
-  },
-  {
-    "section": "Act 1",
-    "edge": 16,
-    "edge_count": 233,
-    "here": [
-      {
+      "section": "Act 1",
+      "then": {
         "parts": [
           {
             "kind": "text",
-            "text": "Find "
+            "text": "Take the "
           },
           {
             "kind": "generic",
-            "text": "Chemist's Strongbox"
+            "text": "Boat"
+          },
+          {
+            "kind": "text",
+            "text": " ➞ "
+          },
+          {
+            "id": "1_1_4_1",
+            "kind": "enter",
+            "name": "The Submerged Passage"
           }
         ],
-        "sub_steps": [
-          [
-            {
-              "kind": "text",
-              "text": "Look for map icon, access with nearby switch"
-            }
-          ],
-          [
-            {
-              "kind": "text",
-              "text": "High chance for "
-            },
-            {
-              "kind": "generic",
-              "text": "Quicksilver Flask"
-            }
-          ],
-          [
-            {
-              "kind": "text",
-              "text": "Vendor "
-            },
-            {
-              "kind": "generic",
-              "text": "Quicksilver Flask"
-            },
-            {
-              "kind": "text",
-              "text": " + "
-            },
-            {
-              "kind": "generic",
-              "text": "Orb of Augmentation"
-            },
-            {
-              "kind": "text",
-              "text": " + Normal "
-            },
-            {
-              "kind": "generic",
-              "text": "Boots"
-            }
-          ],
-          [
-            {
-              "kind": "text",
-              "text": "Vendor "
-            },
-            {
-              "kind": "generic",
-              "text": "Quicksilver Flask"
-            },
-            {
-              "kind": "text",
-              "text": " + "
-            },
-            {
-              "kind": "generic",
-              "text": "Orb of Augmentation"
-            },
-            {
-              "kind": "text",
-              "text": " + Movement Speed "
-            },
-            {
-              "kind": "generic",
-              "text": "Boots"
-            }
-          ]
-        ]
-      },
-      {
+        "sub_steps": []
+      }
+    },
+    "zone": "The Flooded Depths"
+  },
+  {
+    "act": 1,
+    "town": false,
+    "view": {
+      "area_id": "1_1_4_1",
+      "edge": 10,
+      "edge_count": 233,
+      "here": [],
+      "section": "Act 1",
+      "then": {
         "parts": [
           {
             "kind": "text",
             "text": "➞ "
           },
           {
-            "kind": "arena",
-            "name": "The Warden's Quarters"
-          },
-          {
-            "kind": "text",
-            "text": ", kill "
-          },
-          {
-            "kind": "kill",
-            "name": "Brutus, Lord Incarcerator"
-          }
-        ],
-        "sub_steps": [
-          [
-            {
-              "kind": "text",
-              "text": "Recommended Level: 8"
-            }
-          ]
-        ]
-      }
-    ],
-    "then": {
-      "parts": [
-        {
-          "kind": "logout",
-          "town": "Lioneye's Watch"
-        }
-      ],
-      "sub_steps": []
-    }
-  },
-  {
-    "section": "Act 1",
-    "edge": 17,
-    "edge_count": 233,
-    "here": [
-      {
-        "parts": [
-          {
-            "kind": "text",
-            "text": "Hand in "
-          },
-          {
-            "kind": "quest",
-            "id": "a1q2",
-            "name": "The Caged Brute"
+            "id": "1_1_5",
+            "kind": "enter",
+            "name": "The Ledge"
           }
         ],
         "sub_steps": []
       }
-    ],
-    "then": {
-      "parts": [
-        {
-          "kind": "waypoint_use",
-          "id": "1_1_8",
-          "name": "Prisoner's Gate"
-        }
-      ],
-      "sub_steps": []
-    }
+    },
+    "zone": "The Submerged Passage"
   },
   {
-    "section": "Act 1",
-    "edge": 18,
-    "edge_count": 233,
-    "here": [],
-    "then": {
-      "parts": [
-        {
-          "kind": "text",
-          "text": "➞ "
-        },
-        {
-          "kind": "enter",
-          "id": "1_1_9",
-          "name": "The Ship Graveyard"
-        }
-      ],
-      "sub_steps": [
-        [
-          {
-            "kind": "text",
-            "text": "Go down the ledge next to the road"
-          }
-        ]
-      ]
-    }
-  },
-  {
-    "section": "Act 1",
-    "edge": 19,
-    "edge_count": 233,
-    "here": [
-      {
+    "act": 1,
+    "town": false,
+    "view": {
+      "area_id": "1_1_5",
+      "edge": 11,
+      "edge_count": 233,
+      "here": [],
+      "section": "Act 1",
+      "then": {
         "parts": [
           {
             "kind": "text",
-            "text": "Kill "
+            "text": "➞ "
           },
           {
-            "kind": "kill",
-            "name": "Captain Fairgraves"
-          },
+            "id": "1_1_6",
+            "kind": "enter",
+            "name": "The Climb"
+          }
+        ],
+        "sub_steps": []
+      }
+    },
+    "zone": "The Ledge"
+  },
+  {
+    "act": 1,
+    "town": false,
+    "view": {
+      "area_id": "1_1_6",
+      "edge": 12,
+      "edge_count": 233,
+      "here": [],
+      "section": "Act 1",
+      "then": {
+        "parts": [
           {
             "kind": "text",
-            "text": ", take "
+            "text": "➞ "
           },
           {
-            "kind": "quest_text",
-            "text": "Allflame"
+            "id": "1_1_7_1",
+            "kind": "enter",
+            "name": "The Lower Prison"
+          }
+        ],
+        "sub_steps": []
+      }
+    },
+    "zone": "The Climb"
+  },
+  {
+    "act": 1,
+    "town": false,
+    "view": {
+      "area_id": "1_1_7_1",
+      "edge": 13,
+      "edge_count": 233,
+      "here": [],
+      "section": "Act 1",
+      "then": {
+        "parts": [
+          {
+            "id": "1_1_town",
+            "kind": "waypoint_use",
+            "name": "Lioneye's Watch"
+          }
+        ],
+        "sub_steps": []
+      }
+    },
+    "zone": "The Lower Prison"
+  },
+  {
+    "act": 1,
+    "town": true,
+    "view": {
+      "area_id": "1_1_town",
+      "edge": 14,
+      "edge_count": 233,
+      "here": [
+        {
+          "parts": [
+            {
+              "kind": "text",
+              "text": "Hand in "
+            },
+            {
+              "id": "a1q7",
+              "kind": "quest",
+              "name": "The Dweller of the Deep"
+            }
+          ],
+          "sub_steps": []
+        },
+        {
+          "parts": [
+            {
+              "kind": "text",
+              "text": "Hand in "
+            },
+            {
+              "id": "a1q2",
+              "kind": "quest",
+              "name": "The Caged Brute"
+            }
+          ],
+          "sub_steps": []
+        }
+      ],
+      "section": "Act 1",
+      "then": {
+        "parts": [
+          {
+            "id": "1_1_7_1",
+            "kind": "waypoint_use",
+            "name": "The Lower Prison"
+          }
+        ],
+        "sub_steps": []
+      }
+    },
+    "zone": "Lioneye's Watch"
+  },
+  {
+    "act": 1,
+    "town": false,
+    "view": {
+      "area_id": "1_1_7_1",
+      "edge": 15,
+      "edge_count": 233,
+      "here": [
+        {
+          "parts": [
+            {
+              "kind": "text",
+              "text": "Complete "
+            },
+            {
+              "kind": "trial"
+            }
+          ],
+          "sub_steps": [
+            [
+              {
+                "kind": "text",
+                "text": "Usually "
+              },
+              {
+                "degrees": 45,
+                "kind": "dir"
+              }
+            ]
+          ]
+        }
+      ],
+      "section": "Act 1",
+      "then": {
+        "parts": [
+          {
+            "kind": "text",
+            "text": "➞ "
+          },
+          {
+            "id": "1_1_7_2",
+            "kind": "enter",
+            "name": "The Upper Prison"
+          }
+        ],
+        "sub_steps": []
+      }
+    },
+    "zone": "The Lower Prison"
+  },
+  {
+    "act": 1,
+    "town": false,
+    "view": {
+      "area_id": "1_1_7_2",
+      "edge": 16,
+      "edge_count": 233,
+      "here": [
+        {
+          "parts": [
+            {
+              "kind": "text",
+              "text": "Find "
+            },
+            {
+              "kind": "generic",
+              "text": "Chemist's Strongbox"
+            }
+          ],
+          "sub_steps": [
+            [
+              {
+                "kind": "text",
+                "text": "Look for map icon, access with nearby switch"
+              }
+            ],
+            [
+              {
+                "kind": "text",
+                "text": "High chance for "
+              },
+              {
+                "kind": "generic",
+                "text": "Quicksilver Flask"
+              }
+            ],
+            [
+              {
+                "kind": "text",
+                "text": "Vendor "
+              },
+              {
+                "kind": "generic",
+                "text": "Quicksilver Flask"
+              },
+              {
+                "kind": "text",
+                "text": " + "
+              },
+              {
+                "kind": "generic",
+                "text": "Orb of Augmentation"
+              },
+              {
+                "kind": "text",
+                "text": " + Normal "
+              },
+              {
+                "kind": "generic",
+                "text": "Boots"
+              }
+            ],
+            [
+              {
+                "kind": "text",
+                "text": "Vendor "
+              },
+              {
+                "kind": "generic",
+                "text": "Quicksilver Flask"
+              },
+              {
+                "kind": "text",
+                "text": " + "
+              },
+              {
+                "kind": "generic",
+                "text": "Orb of Augmentation"
+              },
+              {
+                "kind": "text",
+                "text": " + Movement Speed "
+              },
+              {
+                "kind": "generic",
+                "text": "Boots"
+              }
+            ]
+          ]
+        },
+        {
+          "parts": [
+            {
+              "kind": "text",
+              "text": "➞ "
+            },
+            {
+              "kind": "arena",
+              "name": "The Warden's Quarters"
+            },
+            {
+              "kind": "text",
+              "text": ", kill "
+            },
+            {
+              "kind": "kill",
+              "name": "Brutus, Lord Incarcerator"
+            }
+          ],
+          "sub_steps": [
+            [
+              {
+                "kind": "text",
+                "text": "Recommended Level: 8"
+              }
+            ]
+          ]
+        }
+      ],
+      "section": "Act 1",
+      "then": {
+        "parts": [
+          {
+            "kind": "logout",
+            "town": "Lioneye's Watch"
+          }
+        ],
+        "sub_steps": []
+      }
+    },
+    "zone": "The Upper Prison"
+  },
+  {
+    "act": 1,
+    "town": true,
+    "view": {
+      "area_id": "1_1_town",
+      "edge": 17,
+      "edge_count": 233,
+      "here": [
+        {
+          "parts": [
+            {
+              "kind": "text",
+              "text": "Hand in "
+            },
+            {
+              "id": "a1q2",
+              "kind": "quest",
+              "name": "The Caged Brute"
+            }
+          ],
+          "sub_steps": []
+        }
+      ],
+      "section": "Act 1",
+      "then": {
+        "parts": [
+          {
+            "id": "1_1_8",
+            "kind": "waypoint_use",
+            "name": "Prisoner's Gate"
+          }
+        ],
+        "sub_steps": []
+      }
+    },
+    "zone": "Lioneye's Watch"
+  },
+  {
+    "act": 1,
+    "town": false,
+    "view": {
+      "area_id": "1_1_8",
+      "edge": 18,
+      "edge_count": 233,
+      "here": [],
+      "section": "Act 1",
+      "then": {
+        "parts": [
+          {
+            "kind": "text",
+            "text": "➞ "
+          },
+          {
+            "id": "1_1_9",
+            "kind": "enter",
+            "name": "The Ship Graveyard"
           }
         ],
         "sub_steps": [
@@ -763,132 +841,156 @@
           ]
         ]
       }
-    ],
-    "then": {
-      "parts": [
-        {
-          "kind": "text",
-          "text": "➞ "
-        },
-        {
-          "kind": "enter",
-          "id": "1_1_11_1",
-          "name": "The Cavern of Wrath"
-        }
-      ],
-      "sub_steps": []
-    }
+    },
+    "zone": "Prisoner's Gate"
   },
   {
-    "section": "Act 1",
-    "edge": 20,
-    "edge_count": 233,
-    "here": [],
-    "then": {
-      "parts": [
+    "act": 1,
+    "town": false,
+    "view": {
+      "area_id": "1_1_9",
+      "edge": 19,
+      "edge_count": 233,
+      "here": [
         {
-          "kind": "waypoint_use",
-          "id": "1_1_town",
-          "name": "Lioneye's Watch"
+          "parts": [
+            {
+              "kind": "text",
+              "text": "Kill "
+            },
+            {
+              "kind": "kill",
+              "name": "Captain Fairgraves"
+            },
+            {
+              "kind": "text",
+              "text": ", take "
+            },
+            {
+              "kind": "quest_text",
+              "text": "Allflame"
+            }
+          ],
+          "sub_steps": [
+            [
+              {
+                "kind": "text",
+                "text": "Go down the ledge next to the road"
+              }
+            ]
+          ]
         }
       ],
-      "sub_steps": []
-    }
-  },
-  {
-    "section": "Act 1",
-    "edge": 21,
-    "edge_count": 233,
-    "here": [
-      {
-        "parts": [
-          {
-            "kind": "text",
-            "text": "Hand in "
-          },
-          {
-            "kind": "quest",
-            "id": "a1q6",
-            "name": "The Marooned Mariner"
-          }
-        ],
-        "sub_steps": []
-      },
-      {
-        "parts": [
-          {
-            "kind": "text",
-            "text": "Hand in "
-          },
-          {
-            "kind": "quest",
-            "id": "a1q3",
-            "name": "The Siren's Cadence"
-          }
-        ],
-        "sub_steps": []
-      }
-    ],
-    "then": {
-      "parts": [
-        {
-          "kind": "waypoint_use",
-          "id": "1_1_11_1",
-          "name": "The Cavern of Wrath"
-        }
-      ],
-      "sub_steps": []
-    }
-  },
-  {
-    "section": "Act 1",
-    "edge": 22,
-    "edge_count": 233,
-    "here": [],
-    "then": {
-      "parts": [
-        {
-          "kind": "text",
-          "text": "➞ "
-        },
-        {
-          "kind": "enter",
-          "id": "1_1_11_2",
-          "name": "The Cavern of Anger"
-        }
-      ],
-      "sub_steps": [
-        [
-          {
-            "kind": "text",
-            "text": "Follow the water"
-          }
-        ]
-      ]
-    }
-  },
-  {
-    "section": "Act 1",
-    "edge": 23,
-    "edge_count": 233,
-    "here": [
-      {
+      "section": "Act 1",
+      "then": {
         "parts": [
           {
             "kind": "text",
             "text": "➞ "
           },
           {
-            "kind": "arena",
-            "name": "Merveil's Lair"
-          },
+            "id": "1_1_11_1",
+            "kind": "enter",
+            "name": "The Cavern of Wrath"
+          }
+        ],
+        "sub_steps": []
+      }
+    },
+    "zone": "The Ship Graveyard"
+  },
+  {
+    "act": 1,
+    "town": false,
+    "view": {
+      "area_id": "1_1_11_1",
+      "edge": 20,
+      "edge_count": 233,
+      "here": [],
+      "section": "Act 1",
+      "then": {
+        "parts": [
+          {
+            "id": "1_1_town",
+            "kind": "waypoint_use",
+            "name": "Lioneye's Watch"
+          }
+        ],
+        "sub_steps": []
+      }
+    },
+    "zone": "The Cavern of Wrath"
+  },
+  {
+    "act": 1,
+    "town": true,
+    "view": {
+      "area_id": "1_1_town",
+      "edge": 21,
+      "edge_count": 233,
+      "here": [
+        {
+          "parts": [
+            {
+              "kind": "text",
+              "text": "Hand in "
+            },
+            {
+              "id": "a1q6",
+              "kind": "quest",
+              "name": "The Marooned Mariner"
+            }
+          ],
+          "sub_steps": []
+        },
+        {
+          "parts": [
+            {
+              "kind": "text",
+              "text": "Hand in "
+            },
+            {
+              "id": "a1q3",
+              "kind": "quest",
+              "name": "The Siren's Cadence"
+            }
+          ],
+          "sub_steps": []
+        }
+      ],
+      "section": "Act 1",
+      "then": {
+        "parts": [
+          {
+            "id": "1_1_11_1",
+            "kind": "waypoint_use",
+            "name": "The Cavern of Wrath"
+          }
+        ],
+        "sub_steps": []
+      }
+    },
+    "zone": "Lioneye's Watch"
+  },
+  {
+    "act": 1,
+    "town": false,
+    "view": {
+      "area_id": "1_1_11_1",
+      "edge": 22,
+      "edge_count": 233,
+      "here": [],
+      "section": "Act 1",
+      "then": {
+        "parts": [
           {
             "kind": "text",
-            "text": ", kill "
+            "text": "➞ "
           },
           {
-            "kind": "kill",
-            "name": "Merveil, the Siren"
+            "id": "1_1_11_2",
+            "kind": "enter",
+            "name": "The Cavern of Anger"
           }
         ],
         "sub_steps": [
@@ -897,110 +999,403 @@
               "kind": "text",
               "text": "Follow the water"
             }
-          ],
-          [
+          ]
+        ]
+      }
+    },
+    "zone": "The Cavern of Wrath"
+  },
+  {
+    "act": 1,
+    "town": false,
+    "view": {
+      "area_id": "1_1_11_2",
+      "edge": 23,
+      "edge_count": 233,
+      "here": [
+        {
+          "parts": [
             {
               "kind": "text",
-              "text": "Follow the water"
+              "text": "➞ "
+            },
+            {
+              "kind": "arena",
+              "name": "Merveil's Lair"
+            },
+            {
+              "kind": "text",
+              "text": ", kill "
+            },
+            {
+              "kind": "kill",
+              "name": "Merveil, the Siren"
             }
           ],
+          "sub_steps": [
+            [
+              {
+                "kind": "text",
+                "text": "Follow the water"
+              }
+            ],
+            [
+              {
+                "kind": "text",
+                "text": "Follow the water"
+              }
+            ],
+            [
+              {
+                "kind": "text",
+                "text": "Recommended Level: 12"
+              }
+            ]
+          ]
+        }
+      ],
+      "section": "Act 1",
+      "then": {
+        "parts": [
+          {
+            "kind": "text",
+            "text": "➞ "
+          },
+          {
+            "id": "1_2_1",
+            "kind": "enter",
+            "name": "The Southern Forest"
+          }
+        ],
+        "sub_steps": []
+      }
+    },
+    "zone": "The Cavern of Anger"
+  },
+  {
+    "act": 2,
+    "town": false,
+    "view": {
+      "area_id": "1_2_1",
+      "edge": 24,
+      "edge_count": 233,
+      "here": [],
+      "section": "Act 2",
+      "then": {
+        "parts": [
+          {
+            "kind": "text",
+            "text": "➞ "
+          },
+          {
+            "id": "1_2_town",
+            "kind": "enter",
+            "name": "The Forest Encampment"
+          }
+        ],
+        "sub_steps": []
+      }
+    },
+    "zone": "The Southern Forest"
+  },
+  {
+    "act": 2,
+    "town": true,
+    "view": {
+      "area_id": "1_2_town",
+      "edge": 25,
+      "edge_count": 233,
+      "here": [],
+      "section": "Act 2",
+      "then": {
+        "parts": [
+          {
+            "kind": "text",
+            "text": "➞ "
+          },
+          {
+            "id": "1_2_2",
+            "kind": "enter",
+            "name": "The Old Fields"
+          }
+        ],
+        "sub_steps": [
           [
             {
               "kind": "text",
-              "text": "Recommended Level: 12"
+              "text": "Go "
+            },
+            {
+              "degrees": 45,
+              "kind": "dir"
             }
           ]
         ]
       }
-    ],
-    "then": {
-      "parts": [
-        {
-          "kind": "text",
-          "text": "➞ "
-        },
-        {
-          "kind": "enter",
-          "id": "1_2_1",
-          "name": "The Southern Forest"
-        }
-      ],
-      "sub_steps": []
-    }
+    },
+    "zone": "The Forest Encampment"
   },
   {
-    "section": "Act 2",
-    "edge": 24,
-    "edge_count": 233,
-    "here": [],
-    "then": {
-      "parts": [
+    "act": 2,
+    "town": false,
+    "view": {
+      "area_id": "1_2_2",
+      "edge": 26,
+      "edge_count": 233,
+      "here": [
         {
-          "kind": "text",
-          "text": "➞ "
-        },
-        {
-          "kind": "enter",
-          "id": "1_2_town",
-          "name": "The Forest Encampment"
+          "parts": [
+            {
+              "kind": "text",
+              "text": "Find "
+            },
+            {
+              "id": "1_2_2a",
+              "kind": "area",
+              "name": "The Den"
+            },
+            {
+              "kind": "text",
+              "text": ", place "
+            },
+            {
+              "kind": "portal_set"
+            }
+          ],
+          "sub_steps": [
+            [
+              {
+                "kind": "text",
+                "text": "Go "
+              },
+              {
+                "degrees": 45,
+                "kind": "dir"
+              }
+            ]
+          ]
         }
       ],
-      "sub_steps": []
-    }
-  },
-  {
-    "section": "Act 2",
-    "edge": 25,
-    "edge_count": 233,
-    "here": [],
-    "then": {
-      "parts": [
-        {
-          "kind": "text",
-          "text": "➞ "
-        },
-        {
-          "kind": "enter",
-          "id": "1_2_2",
-          "name": "The Old Fields"
-        }
-      ],
-      "sub_steps": [
-        [
-          {
-            "kind": "text",
-            "text": "Go "
-          },
-          {
-            "kind": "dir",
-            "degrees": 45
-          }
-        ]
-      ]
-    }
-  },
-  {
-    "section": "Act 2",
-    "edge": 26,
-    "edge_count": 233,
-    "here": [
-      {
+      "section": "Act 2",
+      "then": {
         "parts": [
           {
             "kind": "text",
-            "text": "Find "
+            "text": "➞ "
           },
           {
-            "kind": "area",
+            "id": "1_2_3",
+            "kind": "enter",
+            "name": "The Crossroads"
+          }
+        ],
+        "sub_steps": [
+          [
+            {
+              "kind": "text",
+              "text": "Follow the road"
+            }
+          ]
+        ]
+      }
+    },
+    "zone": "The Old Fields"
+  },
+  {
+    "act": 2,
+    "town": false,
+    "view": {
+      "area_id": "1_2_3",
+      "edge": 27,
+      "edge_count": 233,
+      "here": [
+        {
+          "parts": [],
+          "sub_steps": [
+            [
+              {
+                "kind": "text",
+                "text": "Follow the road"
+              }
+            ]
+          ]
+        }
+      ],
+      "section": "Act 2",
+      "then": {
+        "parts": [
+          {
+            "id": "1_2_town",
+            "kind": "waypoint_use",
+            "name": "The Forest Encampment"
+          }
+        ],
+        "sub_steps": [
+          [
+            {
+              "kind": "text",
+              "text": "Follow the road"
+            }
+          ]
+        ]
+      }
+    },
+    "zone": "The Crossroads"
+  },
+  {
+    "act": 2,
+    "town": true,
+    "view": {
+      "area_id": "1_2_town",
+      "edge": 28,
+      "edge_count": 233,
+      "here": [
+        {
+          "parts": [],
+          "sub_steps": [
+            [
+              {
+                "kind": "text",
+                "text": "Follow the road"
+              }
+            ]
+          ]
+        }
+      ],
+      "section": "Act 2",
+      "then": {
+        "parts": [
+          {
+            "kind": "text",
+            "text": "Take "
+          },
+          {
+            "kind": "portal_use",
+            "name": "The Old Fields"
+          }
+        ],
+        "sub_steps": []
+      }
+    },
+    "zone": "The Forest Encampment"
+  },
+  {
+    "act": 2,
+    "town": false,
+    "view": {
+      "area_id": "1_2_2",
+      "edge": 29,
+      "edge_count": 233,
+      "here": [],
+      "section": "Act 2",
+      "then": {
+        "parts": [
+          {
+            "kind": "text",
+            "text": "➞ "
+          },
+          {
             "id": "1_2_2a",
+            "kind": "enter",
             "name": "The Den"
-          },
+          }
+        ],
+        "sub_steps": []
+      }
+    },
+    "zone": "The Old Fields"
+  },
+  {
+    "act": 2,
+    "town": false,
+    "view": {
+      "area_id": "1_2_2a",
+      "edge": 30,
+      "edge_count": 233,
+      "here": [
+        {
+          "parts": [
+            {
+              "kind": "text",
+              "text": "Find and kill "
+            },
+            {
+              "kind": "kill",
+              "name": "The Great White Beast"
+            }
+          ],
+          "sub_steps": []
+        }
+      ],
+      "section": "Act 2",
+      "then": {
+        "parts": [
+          {
+            "kind": "logout",
+            "town": "The Forest Encampment"
+          }
+        ],
+        "sub_steps": []
+      }
+    },
+    "zone": "The Den"
+  },
+  {
+    "act": 2,
+    "town": true,
+    "view": {
+      "area_id": "1_2_town",
+      "edge": 31,
+      "edge_count": 233,
+      "here": [
+        {
+          "parts": [
+            {
+              "kind": "text",
+              "text": "Hand in "
+            },
+            {
+              "id": "a2q10",
+              "kind": "quest",
+              "name": "The Great White Beast"
+            }
+          ],
+          "sub_steps": []
+        }
+      ],
+      "section": "Act 2",
+      "then": {
+        "parts": [
+          {
+            "id": "1_2_3",
+            "kind": "waypoint_use",
+            "name": "The Crossroads"
+          }
+        ],
+        "sub_steps": []
+      }
+    },
+    "zone": "The Forest Encampment"
+  },
+  {
+    "act": 2,
+    "town": false,
+    "view": {
+      "area_id": "1_2_3",
+      "edge": 32,
+      "edge_count": 233,
+      "here": [],
+      "section": "Act 2",
+      "then": {
+        "parts": [
           {
             "kind": "text",
-            "text": ", place "
+            "text": "➞ "
           },
           {
-            "kind": "portal_set"
+            "id": "1_2_6_1",
+            "kind": "enter",
+            "name": "The Chamber of Sins Level 1"
           }
         ],
         "sub_steps": [
@@ -1010,271 +1405,50 @@
               "text": "Go "
             },
             {
-              "kind": "dir",
-              "degrees": 45
+              "degrees": 315,
+              "kind": "dir"
             }
           ]
         ]
       }
-    ],
-    "then": {
-      "parts": [
-        {
-          "kind": "text",
-          "text": "➞ "
-        },
-        {
-          "kind": "enter",
-          "id": "1_2_3",
-          "name": "The Crossroads"
-        }
-      ],
-      "sub_steps": [
-        [
-          {
-            "kind": "text",
-            "text": "Follow the road"
-          }
-        ]
-      ]
-    }
+    },
+    "zone": "The Crossroads"
   },
   {
-    "section": "Act 2",
-    "edge": 27,
-    "edge_count": 233,
-    "here": [
-      {
-        "parts": [],
-        "sub_steps": [
-          [
-            {
-              "kind": "text",
-              "text": "Follow the road"
-            }
+    "act": 2,
+    "town": false,
+    "view": {
+      "area_id": "1_2_6_1",
+      "edge": 33,
+      "edge_count": 233,
+      "here": [
+        {
+          "parts": [],
+          "sub_steps": [
+            [
+              {
+                "kind": "text",
+                "text": "Go "
+              },
+              {
+                "degrees": 315,
+                "kind": "dir"
+              }
+            ]
           ]
-        ]
-      }
-    ],
-    "then": {
-      "parts": [
-        {
-          "kind": "waypoint_use",
-          "id": "1_2_town",
-          "name": "The Forest Encampment"
         }
       ],
-      "sub_steps": [
-        [
-          {
-            "kind": "text",
-            "text": "Follow the road"
-          }
-        ]
-      ]
-    }
-  },
-  {
-    "section": "Act 2",
-    "edge": 28,
-    "edge_count": 233,
-    "here": [
-      {
-        "parts": [],
-        "sub_steps": [
-          [
-            {
-              "kind": "text",
-              "text": "Follow the road"
-            }
-          ]
-        ]
-      }
-    ],
-    "then": {
-      "parts": [
-        {
-          "kind": "text",
-          "text": "Take "
-        },
-        {
-          "kind": "portal_use",
-          "name": "The Old Fields"
-        }
-      ],
-      "sub_steps": []
-    }
-  },
-  {
-    "section": "Act 2",
-    "edge": 29,
-    "edge_count": 233,
-    "here": [],
-    "then": {
-      "parts": [
-        {
-          "kind": "text",
-          "text": "➞ "
-        },
-        {
-          "kind": "enter",
-          "id": "1_2_2a",
-          "name": "The Den"
-        }
-      ],
-      "sub_steps": []
-    }
-  },
-  {
-    "section": "Act 2",
-    "edge": 30,
-    "edge_count": 233,
-    "here": [
-      {
+      "section": "Act 2",
+      "then": {
         "parts": [
           {
             "kind": "text",
-            "text": "Find and kill "
+            "text": "➞ "
           },
           {
-            "kind": "kill",
-            "name": "The Great White Beast"
-          }
-        ],
-        "sub_steps": []
-      }
-    ],
-    "then": {
-      "parts": [
-        {
-          "kind": "logout",
-          "town": "The Forest Encampment"
-        }
-      ],
-      "sub_steps": []
-    }
-  },
-  {
-    "section": "Act 2",
-    "edge": 31,
-    "edge_count": 233,
-    "here": [
-      {
-        "parts": [
-          {
-            "kind": "text",
-            "text": "Hand in "
-          },
-          {
-            "kind": "quest",
-            "id": "a2q10",
-            "name": "The Great White Beast"
-          }
-        ],
-        "sub_steps": []
-      }
-    ],
-    "then": {
-      "parts": [
-        {
-          "kind": "waypoint_use",
-          "id": "1_2_3",
-          "name": "The Crossroads"
-        }
-      ],
-      "sub_steps": []
-    }
-  },
-  {
-    "section": "Act 2",
-    "edge": 32,
-    "edge_count": 233,
-    "here": [],
-    "then": {
-      "parts": [
-        {
-          "kind": "text",
-          "text": "➞ "
-        },
-        {
-          "kind": "enter",
-          "id": "1_2_6_1",
-          "name": "The Chamber of Sins Level 1"
-        }
-      ],
-      "sub_steps": [
-        [
-          {
-            "kind": "text",
-            "text": "Go "
-          },
-          {
-            "kind": "dir",
-            "degrees": 315
-          }
-        ]
-      ]
-    }
-  },
-  {
-    "section": "Act 2",
-    "edge": 33,
-    "edge_count": 233,
-    "here": [
-      {
-        "parts": [],
-        "sub_steps": [
-          [
-            {
-              "kind": "text",
-              "text": "Go "
-            },
-            {
-              "kind": "dir",
-              "degrees": 315
-            }
-          ]
-        ]
-      }
-    ],
-    "then": {
-      "parts": [
-        {
-          "kind": "text",
-          "text": "➞ "
-        },
-        {
-          "kind": "enter",
-          "id": "1_2_6_2",
-          "name": "The Chamber of Sins Level 2"
-        }
-      ],
-      "sub_steps": [
-        [
-          {
-            "kind": "text",
-            "text": "Go in same direction as "
-          },
-          {
-            "kind": "waypoint"
-          }
-        ]
-      ]
-    }
-  },
-  {
-    "section": "Act 2",
-    "edge": 34,
-    "edge_count": 233,
-    "here": [
-      {
-        "parts": [
-          {
-            "kind": "text",
-            "text": "Complete "
-          },
-          {
-            "kind": "trial"
+            "id": "1_2_6_2",
+            "kind": "enter",
+            "name": "The Chamber of Sins Level 2"
           }
         ],
         "sub_steps": [
@@ -1288,121 +1462,146 @@
             }
           ]
         ]
-      },
-      {
-        "parts": [
-          {
-            "kind": "text",
-            "text": "Kill "
-          },
-          {
-            "kind": "kill",
-            "name": "Fidelitas, the Mourning"
-          },
-          {
-            "kind": "text",
-            "text": ", take "
-          },
-          {
-            "kind": "quest_text",
-            "text": "Baleful Gem"
-          }
-        ],
-        "sub_steps": [
-          [
-            {
-              "kind": "text",
-              "text": "Look for the long hallway"
-            }
-          ],
-          [
-            {
-              "kind": "text",
-              "text": "Recommended Level: 14-15"
-            }
-          ]
-        ]
       }
-    ],
-    "then": {
-      "parts": [
-        {
-          "kind": "logout",
-          "town": "The Forest Encampment"
-        }
-      ],
-      "sub_steps": []
-    }
+    },
+    "zone": "The Chamber of Sins Level 1"
   },
   {
-    "section": "Act 2",
-    "edge": 35,
-    "edge_count": 233,
-    "here": [
-      {
+    "act": 2,
+    "town": false,
+    "view": {
+      "area_id": "1_2_6_2",
+      "edge": 34,
+      "edge_count": 233,
+      "here": [
+        {
+          "parts": [
+            {
+              "kind": "text",
+              "text": "Complete "
+            },
+            {
+              "kind": "trial"
+            }
+          ],
+          "sub_steps": [
+            [
+              {
+                "kind": "text",
+                "text": "Go in same direction as "
+              },
+              {
+                "kind": "waypoint"
+              }
+            ]
+          ]
+        },
+        {
+          "parts": [
+            {
+              "kind": "text",
+              "text": "Kill "
+            },
+            {
+              "kind": "kill",
+              "name": "Fidelitas, the Mourning"
+            },
+            {
+              "kind": "text",
+              "text": ", take "
+            },
+            {
+              "kind": "quest_text",
+              "text": "Baleful Gem"
+            }
+          ],
+          "sub_steps": [
+            [
+              {
+                "kind": "text",
+                "text": "Look for the long hallway"
+              }
+            ],
+            [
+              {
+                "kind": "text",
+                "text": "Recommended Level: 14-15"
+              }
+            ]
+          ]
+        }
+      ],
+      "section": "Act 2",
+      "then": {
         "parts": [
           {
-            "kind": "text",
-            "text": "Hand in "
-          },
-          {
-            "kind": "quest",
-            "id": "a2q6",
-            "name": "Intruders in Black"
+            "kind": "logout",
+            "town": "The Forest Encampment"
           }
         ],
         "sub_steps": []
       }
-    ],
-    "then": {
-      "parts": [
-        {
-          "kind": "waypoint_use",
-          "id": "1_2_3",
-          "name": "The Crossroads"
-        }
-      ],
-      "sub_steps": []
-    }
+    },
+    "zone": "The Chamber of Sins Level 2"
   },
   {
-    "section": "Act 2",
-    "edge": 36,
-    "edge_count": 233,
-    "here": [],
-    "then": {
-      "parts": [
+    "act": 2,
+    "town": true,
+    "view": {
+      "area_id": "1_2_town",
+      "edge": 35,
+      "edge_count": 233,
+      "here": [
         {
-          "kind": "text",
-          "text": "➞ "
-        },
-        {
-          "kind": "enter",
-          "id": "1_2_15",
-          "name": "The Fellshrine Ruins"
+          "parts": [
+            {
+              "kind": "text",
+              "text": "Hand in "
+            },
+            {
+              "id": "a2q6",
+              "kind": "quest",
+              "name": "Intruders in Black"
+            }
+          ],
+          "sub_steps": []
         }
       ],
-      "sub_steps": [
-        [
+      "section": "Act 2",
+      "then": {
+        "parts": [
+          {
+            "id": "1_2_3",
+            "kind": "waypoint_use",
+            "name": "The Crossroads"
+          }
+        ],
+        "sub_steps": []
+      }
+    },
+    "zone": "The Forest Encampment"
+  },
+  {
+    "act": 2,
+    "town": false,
+    "view": {
+      "area_id": "1_2_3",
+      "edge": 36,
+      "edge_count": 233,
+      "here": [],
+      "section": "Act 2",
+      "then": {
+        "parts": [
           {
             "kind": "text",
-            "text": "Go "
+            "text": "➞ "
           },
           {
-            "kind": "dir",
-            "degrees": 135
+            "id": "1_2_15",
+            "kind": "enter",
+            "name": "The Fellshrine Ruins"
           }
-        ]
-      ]
-    }
-  },
-  {
-    "section": "Act 2",
-    "edge": 37,
-    "edge_count": 233,
-    "here": [
-      {
-        "parts": [],
+        ],
         "sub_steps": [
           [
             {
@@ -1410,48 +1609,50 @@
               "text": "Go "
             },
             {
-              "kind": "dir",
-              "degrees": 135
+              "degrees": 135,
+              "kind": "dir"
             }
           ]
         ]
       }
-    ],
-    "then": {
-      "parts": [
-        {
-          "kind": "text",
-          "text": "➞ "
-        },
-        {
-          "kind": "enter",
-          "id": "1_2_5_1",
-          "name": "The Crypt Level 1"
-        }
-      ],
-      "sub_steps": [
-        [
-          {
-            "kind": "text",
-            "text": "Follow the road"
-          }
-        ]
-      ]
-    }
+    },
+    "zone": "The Crossroads"
   },
   {
-    "section": "Act 2",
-    "edge": 38,
-    "edge_count": 233,
-    "here": [
-      {
+    "act": 2,
+    "town": false,
+    "view": {
+      "area_id": "1_2_15",
+      "edge": 37,
+      "edge_count": 233,
+      "here": [
+        {
+          "parts": [],
+          "sub_steps": [
+            [
+              {
+                "kind": "text",
+                "text": "Go "
+              },
+              {
+                "degrees": 135,
+                "kind": "dir"
+              }
+            ]
+          ]
+        }
+      ],
+      "section": "Act 2",
+      "then": {
         "parts": [
           {
             "kind": "text",
-            "text": "Complete "
+            "text": "➞ "
           },
           {
-            "kind": "trial"
+            "id": "1_2_5_1",
+            "kind": "enter",
+            "name": "The Crypt Level 1"
           }
         ],
         "sub_steps": [
@@ -1463,57 +1664,1222 @@
           ]
         ]
       }
-    ],
-    "then": {
-      "parts": [
-        {
-          "kind": "text",
-          "text": "➞ "
-        },
-        {
-          "kind": "enter",
-          "id": "1_2_5_2",
-          "name": "The Crypt Level 2"
-        }
-      ],
-      "sub_steps": []
-    }
+    },
+    "zone": "The Fellshrine Ruins"
   },
   {
-    "section": "Act 2",
-    "edge": 39,
-    "edge_count": 233,
-    "here": [
-      {
+    "act": 2,
+    "town": false,
+    "view": {
+      "area_id": "1_2_5_1",
+      "edge": 38,
+      "edge_count": 233,
+      "here": [
+        {
+          "parts": [
+            {
+              "kind": "text",
+              "text": "Complete "
+            },
+            {
+              "kind": "trial"
+            }
+          ],
+          "sub_steps": [
+            [
+              {
+                "kind": "text",
+                "text": "Follow the road"
+              }
+            ]
+          ]
+        }
+      ],
+      "section": "Act 2",
+      "then": {
         "parts": [
           {
             "kind": "text",
-            "text": "Find "
+            "text": "➞ "
           },
           {
-            "kind": "quest_text",
-            "text": "Altar"
-          },
-          {
-            "kind": "text",
-            "text": ", take "
-          },
-          {
-            "kind": "quest_text",
-            "text": "Golden Hand"
+            "id": "1_2_5_2",
+            "kind": "enter",
+            "name": "The Crypt Level 2"
           }
         ],
         "sub_steps": []
       }
-    ],
-    "then": {
-      "parts": [
+    },
+    "zone": "The Crypt Level 1"
+  },
+  {
+    "act": 2,
+    "town": false,
+    "view": {
+      "area_id": "1_2_5_2",
+      "edge": 39,
+      "edge_count": 233,
+      "here": [
         {
-          "kind": "logout",
-          "town": "The Forest Encampment"
+          "parts": [
+            {
+              "kind": "text",
+              "text": "Find "
+            },
+            {
+              "kind": "quest_text",
+              "text": "Altar"
+            },
+            {
+              "kind": "text",
+              "text": ", take "
+            },
+            {
+              "kind": "quest_text",
+              "text": "Golden Hand"
+            }
+          ],
+          "sub_steps": []
         }
       ],
-      "sub_steps": []
-    }
+      "section": "Act 2",
+      "then": {
+        "parts": [
+          {
+            "kind": "logout",
+            "town": "The Forest Encampment"
+          }
+        ],
+        "sub_steps": []
+      }
+    },
+    "zone": "The Crypt Level 2"
+  },
+  {
+    "act": 2,
+    "town": true,
+    "view": {
+      "area_id": "1_2_town",
+      "edge": 40,
+      "edge_count": 233,
+      "here": [
+        {
+          "parts": [
+            {
+              "kind": "text",
+              "text": "Hand in "
+            },
+            {
+              "id": "a2q5",
+              "kind": "quest",
+              "name": "Through Sacred Ground"
+            }
+          ],
+          "sub_steps": []
+        }
+      ],
+      "section": "Act 2",
+      "then": {
+        "parts": [
+          {
+            "kind": "text",
+            "text": "➞ "
+          },
+          {
+            "id": "1_2_7",
+            "kind": "enter",
+            "name": "The Riverways"
+          }
+        ],
+        "sub_steps": [
+          [
+            {
+              "kind": "text",
+              "text": "Go "
+            },
+            {
+              "degrees": 225,
+              "kind": "dir"
+            }
+          ]
+        ]
+      }
+    },
+    "zone": "The Forest Encampment"
+  },
+  {
+    "act": 2,
+    "town": false,
+    "view": {
+      "area_id": "1_2_7",
+      "edge": 41,
+      "edge_count": 233,
+      "here": [
+        {
+          "parts": [
+            {
+              "kind": "text",
+              "text": "Get "
+            },
+            {
+              "kind": "waypoint_get"
+            }
+          ],
+          "sub_steps": [
+            [
+              {
+                "kind": "text",
+                "text": "Go "
+              },
+              {
+                "degrees": 225,
+                "kind": "dir"
+              }
+            ],
+            [
+              {
+                "kind": "text",
+                "text": "Follow the road"
+              }
+            ]
+          ]
+        }
+      ],
+      "section": "Act 2",
+      "then": {
+        "parts": [
+          {
+            "kind": "text",
+            "text": "➞ "
+          },
+          {
+            "id": "1_2_9",
+            "kind": "enter",
+            "name": "The Western Forest"
+          }
+        ],
+        "sub_steps": [
+          [
+            {
+              "kind": "text",
+              "text": "Follow the road"
+            }
+          ]
+        ]
+      }
+    },
+    "zone": "The Riverways"
+  },
+  {
+    "act": 2,
+    "town": false,
+    "view": {
+      "area_id": "1_2_9",
+      "edge": 42,
+      "edge_count": 233,
+      "here": [
+        {
+          "parts": [
+            {
+              "kind": "text",
+              "text": "Get "
+            },
+            {
+              "kind": "waypoint_get"
+            }
+          ],
+          "sub_steps": [
+            [
+              {
+                "kind": "text",
+                "text": "Follow the road"
+              }
+            ],
+            [
+              {
+                "kind": "text",
+                "text": "Follow the road"
+              }
+            ]
+          ]
+        }
+      ],
+      "section": "Act 2",
+      "then": {
+        "parts": [
+          {
+            "kind": "text",
+            "text": "➞ "
+          },
+          {
+            "id": "1_2_10",
+            "kind": "enter",
+            "name": "The Weaver's Chambers"
+          }
+        ],
+        "sub_steps": [
+          [
+            {
+              "kind": "text",
+              "text": "Search the side of road opposite "
+            },
+            {
+              "kind": "waypoint"
+            }
+          ]
+        ]
+      }
+    },
+    "zone": "The Western Forest"
+  },
+  {
+    "act": 2,
+    "town": false,
+    "view": {
+      "area_id": "1_2_10",
+      "edge": 43,
+      "edge_count": 233,
+      "here": [
+        {
+          "parts": [
+            {
+              "kind": "text",
+              "text": "➞ "
+            },
+            {
+              "kind": "arena",
+              "name": "The Weaver's Nest"
+            },
+            {
+              "kind": "text",
+              "text": ", kill "
+            },
+            {
+              "kind": "kill",
+              "name": "The Weaver"
+            },
+            {
+              "kind": "text",
+              "text": ", take "
+            },
+            {
+              "kind": "quest_text",
+              "text": "Maligaro's Spike"
+            }
+          ],
+          "sub_steps": [
+            [
+              {
+                "kind": "text",
+                "text": "Search the side of road opposite "
+              },
+              {
+                "kind": "waypoint"
+              }
+            ],
+            [
+              {
+                "kind": "text",
+                "text": "Try go "
+              },
+              {
+                "degrees": 270,
+                "kind": "dir"
+              },
+              {
+                "kind": "text",
+                "text": ", if it's blocked go "
+              },
+              {
+                "degrees": 45,
+                "kind": "dir"
+              }
+            ],
+            [
+              {
+                "kind": "text",
+                "text": "Recommended Level: 16"
+              }
+            ]
+          ]
+        }
+      ],
+      "section": "Act 2",
+      "then": {
+        "parts": [
+          {
+            "kind": "logout",
+            "town": "The Forest Encampment"
+          }
+        ],
+        "sub_steps": []
+      }
+    },
+    "zone": "The Weaver's Chambers"
+  },
+  {
+    "act": 2,
+    "town": true,
+    "view": {
+      "area_id": "1_2_town",
+      "edge": 44,
+      "edge_count": 233,
+      "here": [
+        {
+          "parts": [
+            {
+              "kind": "text",
+              "text": "Hand in "
+            },
+            {
+              "id": "a2q4",
+              "kind": "quest",
+              "name": "Sharp and Cruel"
+            }
+          ],
+          "sub_steps": []
+        }
+      ],
+      "section": "Act 2",
+      "then": {
+        "parts": [
+          {
+            "kind": "text",
+            "text": "➞ "
+          },
+          {
+            "id": "1_2_8",
+            "kind": "enter",
+            "name": "The Northern Forest"
+          }
+        ],
+        "sub_steps": [
+          [
+            {
+              "kind": "text",
+              "text": "S shape or L shape leads to exit"
+            }
+          ]
+        ]
+      }
+    },
+    "zone": "The Forest Encampment"
+  },
+  {
+    "act": 2,
+    "town": false,
+    "view": {
+      "area_id": "1_2_8",
+      "edge": 45,
+      "edge_count": 233,
+      "here": [
+        {
+          "parts": [],
+          "sub_steps": [
+            [
+              {
+                "kind": "text",
+                "text": "S shape or L shape leads to exit"
+              }
+            ]
+          ]
+        }
+      ],
+      "section": "Act 2",
+      "then": {
+        "parts": [
+          {
+            "kind": "text",
+            "text": "➞ "
+          },
+          {
+            "id": "1_2_14_2",
+            "kind": "enter",
+            "name": "The Caverns"
+          }
+        ],
+        "sub_steps": []
+      }
+    },
+    "zone": "The Northern Forest"
+  },
+  {
+    "act": 2,
+    "town": false,
+    "view": {
+      "area_id": "1_2_14_2",
+      "edge": 46,
+      "edge_count": 233,
+      "here": [
+        {
+          "parts": [
+            {
+              "kind": "text",
+              "text": "Get "
+            },
+            {
+              "kind": "crafting"
+            }
+          ],
+          "sub_steps": []
+        }
+      ],
+      "section": "Act 2",
+      "then": {
+        "parts": [
+          {
+            "kind": "text",
+            "text": "➞ "
+          },
+          {
+            "id": "1_2_14_3",
+            "kind": "enter",
+            "name": "The Ancient Pyramid"
+          }
+        ],
+        "sub_steps": []
+      }
+    },
+    "zone": "The Caverns"
+  },
+  {
+    "act": 2,
+    "town": false,
+    "view": {
+      "area_id": "1_2_14_3",
+      "edge": 47,
+      "edge_count": 233,
+      "here": [
+        {
+          "parts": [
+            {
+              "kind": "text",
+              "text": "➞ "
+            },
+            {
+              "kind": "arena",
+              "name": "Pyramid Apex"
+            },
+            {
+              "kind": "text",
+              "text": ", kill "
+            },
+            {
+              "kind": "kill",
+              "name": "Vaal Oversoul"
+            }
+          ],
+          "sub_steps": [
+            [
+              {
+                "kind": "text",
+                "text": "First floor exit will be in one of the 3 corners"
+              }
+            ],
+            [
+              {
+                "kind": "text",
+                "text": "Remaining floors will have the exit diagonally across from the entrance"
+              }
+            ],
+            [
+              {
+                "kind": "text",
+                "text": "Recommended Level: 20-22"
+              }
+            ]
+          ]
+        },
+        {
+          "parts": [
+            {
+              "kind": "text",
+              "text": "Get "
+            },
+            {
+              "kind": "crafting"
+            }
+          ],
+          "sub_steps": []
+        }
+      ],
+      "section": "Act 2",
+      "then": {
+        "parts": [
+          {
+            "kind": "text",
+            "text": "➞ "
+          },
+          {
+            "id": "1_3_1",
+            "kind": "enter",
+            "name": "The City of Sarn"
+          }
+        ],
+        "sub_steps": []
+      }
+    },
+    "zone": "The Ancient Pyramid"
+  },
+  {
+    "act": 3,
+    "town": false,
+    "view": {
+      "area_id": "1_3_1",
+      "edge": 48,
+      "edge_count": 233,
+      "here": [
+        {
+          "parts": [
+            {
+              "kind": "text",
+              "text": "Get "
+            },
+            {
+              "kind": "crafting"
+            }
+          ],
+          "sub_steps": []
+        },
+        {
+          "parts": [
+            {
+              "kind": "text",
+              "text": "Help and talk to "
+            },
+            {
+              "kind": "generic",
+              "text": "Clarissa"
+            }
+          ],
+          "sub_steps": []
+        }
+      ],
+      "section": "Act 3",
+      "then": {
+        "parts": [
+          {
+            "kind": "text",
+            "text": "➞ "
+          },
+          {
+            "id": "1_3_town",
+            "kind": "enter",
+            "name": "The Sarn Encampment"
+          }
+        ],
+        "sub_steps": []
+      }
+    },
+    "zone": "The City of Sarn"
+  },
+  {
+    "act": 3,
+    "town": true,
+    "view": {
+      "area_id": "1_3_town",
+      "edge": 49,
+      "edge_count": 233,
+      "here": [],
+      "section": "Act 3",
+      "then": {
+        "parts": [
+          {
+            "kind": "text",
+            "text": "➞ "
+          },
+          {
+            "id": "1_3_2",
+            "kind": "enter",
+            "name": "The Slums"
+          }
+        ],
+        "sub_steps": [
+          [
+            {
+              "kind": "text",
+              "text": "Go "
+            },
+            {
+              "degrees": 0,
+              "kind": "dir"
+            }
+          ]
+        ]
+      }
+    },
+    "zone": "The Sarn Encampment"
+  },
+  {
+    "act": 3,
+    "town": false,
+    "view": {
+      "area_id": "1_3_2",
+      "edge": 50,
+      "edge_count": 233,
+      "here": [
+        {
+          "parts": [],
+          "sub_steps": [
+            [
+              {
+                "kind": "text",
+                "text": "Go "
+              },
+              {
+                "degrees": 0,
+                "kind": "dir"
+              }
+            ]
+          ]
+        }
+      ],
+      "section": "Act 3",
+      "then": {
+        "parts": [
+          {
+            "kind": "text",
+            "text": "➞ "
+          },
+          {
+            "id": "1_3_3_1",
+            "kind": "enter",
+            "name": "The Crematorium"
+          }
+        ],
+        "sub_steps": [
+          [
+            {
+              "kind": "text",
+              "text": "Follow Stairs"
+            }
+          ]
+        ]
+      }
+    },
+    "zone": "The Slums"
+  },
+  {
+    "act": 3,
+    "town": false,
+    "view": {
+      "area_id": "1_3_3_1",
+      "edge": 51,
+      "edge_count": 233,
+      "here": [
+        {
+          "parts": [
+            {
+              "kind": "text",
+              "text": "Complete "
+            },
+            {
+              "kind": "trial"
+            }
+          ],
+          "sub_steps": [
+            [
+              {
+                "kind": "text",
+                "text": "Follow Stairs"
+              }
+            ]
+          ]
+        },
+        {
+          "parts": [
+            {
+              "kind": "text",
+              "text": "Find and kill "
+            },
+            {
+              "kind": "kill",
+              "name": "Piety"
+            },
+            {
+              "kind": "text",
+              "text": ", take "
+            },
+            {
+              "kind": "quest_text",
+              "text": "Tolman's Bracelet"
+            }
+          ],
+          "sub_steps": []
+        },
+        {
+          "parts": [
+            {
+              "kind": "text",
+              "text": "Get "
+            },
+            {
+              "kind": "crafting"
+            }
+          ],
+          "sub_steps": []
+        }
+      ],
+      "section": "Act 3",
+      "then": {
+        "parts": [
+          {
+            "kind": "logout",
+            "town": "The Sarn Encampment"
+          }
+        ],
+        "sub_steps": []
+      }
+    },
+    "zone": "The Crematorium"
+  },
+  {
+    "act": 3,
+    "town": true,
+    "view": {
+      "area_id": "1_3_town",
+      "edge": 52,
+      "edge_count": 233,
+      "here": [
+        {
+          "parts": [
+            {
+              "kind": "text",
+              "text": "Talk to "
+            },
+            {
+              "kind": "generic",
+              "text": "Clarissa"
+            },
+            {
+              "kind": "text",
+              "text": ", take "
+            },
+            {
+              "kind": "quest_text",
+              "text": "Sewer Keys"
+            }
+          ],
+          "sub_steps": []
+        },
+        {
+          "parts": [
+            {
+              "kind": "text",
+              "text": "Hand in "
+            },
+            {
+              "id": "a3q1",
+              "kind": "quest",
+              "name": "Lost in Love"
+            }
+          ],
+          "sub_steps": []
+        }
+      ],
+      "section": "Act 3",
+      "then": {
+        "parts": [
+          {
+            "kind": "text",
+            "text": "➞ "
+          },
+          {
+            "id": "1_3_2",
+            "kind": "enter",
+            "name": "The Slums"
+          }
+        ],
+        "sub_steps": [
+          [
+            {
+              "kind": "text",
+              "text": "Go "
+            },
+            {
+              "degrees": 0,
+              "kind": "dir"
+            }
+          ]
+        ]
+      }
+    },
+    "zone": "The Sarn Encampment"
+  },
+  {
+    "act": 3,
+    "town": false,
+    "view": {
+      "area_id": "1_3_2",
+      "edge": 53,
+      "edge_count": 233,
+      "here": [
+        {
+          "parts": [],
+          "sub_steps": [
+            [
+              {
+                "kind": "text",
+                "text": "Go "
+              },
+              {
+                "degrees": 0,
+                "kind": "dir"
+              }
+            ]
+          ]
+        }
+      ],
+      "section": "Act 3",
+      "then": {
+        "parts": [
+          {
+            "kind": "text",
+            "text": "➞ "
+          },
+          {
+            "id": "1_3_10_1",
+            "kind": "enter",
+            "name": "The Sewers"
+          }
+        ],
+        "sub_steps": []
+      }
+    },
+    "zone": "The Slums"
+  },
+  {
+    "act": 3,
+    "town": false,
+    "view": {
+      "area_id": "1_3_10_1",
+      "edge": 54,
+      "edge_count": 233,
+      "here": [
+        {
+          "parts": [
+            {
+              "kind": "text",
+              "text": "Find 1x"
+            },
+            {
+              "kind": "quest_text",
+              "text": "Platinum Bust"
+            }
+          ],
+          "sub_steps": []
+        },
+        {
+          "parts": [
+            {
+              "kind": "text",
+              "text": "Get "
+            },
+            {
+              "kind": "waypoint_get"
+            }
+          ],
+          "sub_steps": []
+        },
+        {
+          "parts": [
+            {
+              "kind": "text",
+              "text": "Find 2x"
+            },
+            {
+              "kind": "quest_text",
+              "text": "Platinum Bust"
+            }
+          ],
+          "sub_steps": []
+        }
+      ],
+      "section": "Act 3",
+      "then": {
+        "parts": [
+          {
+            "kind": "text",
+            "text": "➞ "
+          },
+          {
+            "id": "1_3_5",
+            "kind": "enter",
+            "name": "The Marketplace"
+          }
+        ],
+        "sub_steps": []
+      }
+    },
+    "zone": "The Sewers"
+  },
+  {
+    "act": 3,
+    "town": false,
+    "view": {
+      "area_id": "1_3_5",
+      "edge": 55,
+      "edge_count": 233,
+      "here": [
+        {
+          "parts": [
+            {
+              "kind": "text",
+              "text": "Get "
+            },
+            {
+              "kind": "waypoint_get"
+            }
+          ],
+          "sub_steps": []
+        }
+      ],
+      "section": "Act 3",
+      "then": {
+        "parts": [
+          {
+            "kind": "text",
+            "text": "➞ "
+          },
+          {
+            "id": "1_3_6",
+            "kind": "enter",
+            "name": "The Catacombs"
+          }
+        ],
+        "sub_steps": [
+          [
+            {
+              "kind": "text",
+              "text": "Look around nearby"
+            }
+          ]
+        ]
+      }
+    },
+    "zone": "The Marketplace"
+  },
+  {
+    "act": 3,
+    "town": false,
+    "view": {
+      "area_id": "1_3_6",
+      "edge": 56,
+      "edge_count": 233,
+      "here": [
+        {
+          "parts": [
+            {
+              "kind": "text",
+              "text": "Complete "
+            },
+            {
+              "kind": "trial"
+            }
+          ],
+          "sub_steps": [
+            [
+              {
+                "kind": "text",
+                "text": "Look around nearby"
+              }
+            ]
+          ]
+        },
+        {
+          "parts": [
+            {
+              "kind": "text",
+              "text": "Get "
+            },
+            {
+              "kind": "crafting"
+            }
+          ],
+          "sub_steps": []
+        }
+      ],
+      "section": "Act 3",
+      "then": {
+        "parts": [
+          {
+            "kind": "logout",
+            "town": "The Sarn Encampment"
+          }
+        ],
+        "sub_steps": []
+      }
+    },
+    "zone": "The Catacombs"
+  },
+  {
+    "act": 3,
+    "town": true,
+    "view": {
+      "area_id": "1_3_town",
+      "edge": 57,
+      "edge_count": 233,
+      "here": [
+        {
+          "parts": [
+            {
+              "kind": "text",
+              "text": "Hand in "
+            },
+            {
+              "id": "a3q11",
+              "kind": "quest",
+              "name": "Victario's Secrets"
+            }
+          ],
+          "sub_steps": []
+        }
+      ],
+      "section": "Act 3",
+      "then": {
+        "parts": [
+          {
+            "id": "1_3_5",
+            "kind": "waypoint_use",
+            "name": "The Marketplace"
+          }
+        ],
+        "sub_steps": []
+      }
+    },
+    "zone": "The Sarn Encampment"
+  },
+  {
+    "act": 3,
+    "town": false,
+    "view": {
+      "area_id": "1_3_5",
+      "edge": 58,
+      "edge_count": 233,
+      "here": [],
+      "section": "Act 3",
+      "then": {
+        "parts": [
+          {
+            "kind": "text",
+            "text": "➞ "
+          },
+          {
+            "id": "1_3_7",
+            "kind": "enter",
+            "name": "The Battlefront"
+          }
+        ],
+        "sub_steps": [
+          [
+            {
+              "kind": "text",
+              "text": "Search "
+            },
+            {
+              "degrees": 0,
+              "kind": "dir"
+            }
+          ]
+        ]
+      }
+    },
+    "zone": "The Marketplace"
+  },
+  {
+    "act": 3,
+    "town": false,
+    "view": {
+      "area_id": "1_3_7",
+      "edge": 59,
+      "edge_count": 233,
+      "here": [
+        {
+          "parts": [
+            {
+              "kind": "text",
+              "text": "Get "
+            },
+            {
+              "kind": "waypoint_get"
+            }
+          ],
+          "sub_steps": [
+            [
+              {
+                "kind": "text",
+                "text": "Search "
+              },
+              {
+                "degrees": 0,
+                "kind": "dir"
+              }
+            ],
+            [
+              {
+                "kind": "text",
+                "text": "Go "
+              },
+              {
+                "degrees": 315,
+                "kind": "dir"
+              }
+            ]
+          ]
+        },
+        {
+          "parts": [
+            {
+              "kind": "text",
+              "text": "Find and take "
+            },
+            {
+              "kind": "quest_text",
+              "text": "Ribbon Spool"
+            }
+          ],
+          "sub_steps": [
+            [
+              {
+                "kind": "text",
+                "text": "Go "
+              },
+              {
+                "degrees": 225,
+                "kind": "dir"
+              }
+            ]
+          ]
+        }
+      ],
+      "section": "Act 3",
+      "then": {
+        "parts": [
+          {
+            "kind": "text",
+            "text": "➞ "
+          },
+          {
+            "id": "1_3_8_1",
+            "kind": "enter",
+            "name": "The Solaris Temple Level 1"
+          }
+        ],
+        "sub_steps": [
+          [
+            {
+              "kind": "text",
+              "text": "Go "
+            },
+            {
+              "degrees": 45,
+              "kind": "dir"
+            }
+          ]
+        ]
+      }
+    },
+    "zone": "The Battlefront"
   }
 ]

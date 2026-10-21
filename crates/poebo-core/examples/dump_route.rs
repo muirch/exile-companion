@@ -19,7 +19,19 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
     let defines = HashSet::from(["LEAGUE_START".to_string()]);
     let source = poebo_data::ROUTE_ACTS.join("\n");
     let (route, _) = parse_route(&source, &pack.zones, &pack.quests, &defines);
-    let views: Vec<_> = (0..count).filter_map(|e| route.view(e)).collect();
+    // The mock also needs the zone each view belongs to, to fill the header.
+    let views: Vec<_> = (0..count)
+        .filter_map(|e| route.view(e))
+        .map(|view| {
+            let zone = pack.zones.by_id(&view.area_id);
+            serde_json::json!({
+                "view": view,
+                "zone": zone.map(|z| z.name.clone()),
+                "act": zone.map(|z| z.act),
+                "town": zone.is_some_and(|z| z.is_town),
+            })
+        })
+        .collect();
     println!("{}", serde_json::to_string_pretty(&views)?);
     Ok(())
 }

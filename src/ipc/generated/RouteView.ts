@@ -7,6 +7,10 @@ import type { Step } from "./Step";
  */
 export type RouteView = { section: string, edge: number, edge_count: number, 
 /**
+ * The area this edge expects the player to be in.
+ */
+area_id: string, 
+/**
  * What to do in this area. The move that brought the player here is already done, so it is
  * cut from the first step.
  */

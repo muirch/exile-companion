@@ -20,7 +20,13 @@ import { useAppStore } from '../store/useAppStore';
 // Real views from the bundled route (`cargo run -p poebo-core --example dump_route`).
 import MOCK_ROUTE from './mock-route.json';
 
-const ROUTE = MOCK_ROUTE as RouteView[];
+interface MockView {
+  view: RouteView;
+  zone: string | null;
+  act: number | null;
+  town: boolean;
+}
+const ROUTE = MOCK_ROUTE as MockView[];
 let routeIndex = 0;
 
 /** A fake imported build, shown once "imported" in dev mode. */
@@ -254,12 +260,23 @@ export function getGuidanceMock(): NextObjective {
 }
 
 export function routeMock(): RouteView | null {
-  return ROUTE[routeIndex] ?? null;
+  return ROUTE[routeIndex]?.view ?? null;
 }
 
+// Keeps the header on the zone the shown steps belong to.
 export function moveRouteMock(delta: number): RouteView | null {
   routeIndex = Math.min(ROUTE.length - 1, Math.max(0, routeIndex + delta));
-  const view = routeMock();
-  useAppStore.getState().setRoute(view);
-  return view;
+  const entry = ROUTE[routeIndex];
+  const st = useAppStore.getState();
+  st.setRoute(entry?.view ?? null);
+  if (entry?.zone) {
+    st.setCampaign({
+      ...st.campaign,
+      zone: { name: entry.zone, id: entry.view.area_id, act: entry.act },
+      act: entry.act,
+      area_id: entry.view.area_id,
+      location_kind: entry.town ? 'town' : 'combat',
+    });
+  }
+  return entry?.view ?? null;
 }
