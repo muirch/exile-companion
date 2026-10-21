@@ -7,7 +7,7 @@ import { useAppStore } from '../store/useAppStore';
 import { shortcutLabel } from './HotkeySection';
 import { TooltipHeader, TooltipSep } from './Tooltip';
 
-const TINT = 'var(--color-normal)';
+const TINT = 'var(--color-currency)';
 
 function Row({
   label,

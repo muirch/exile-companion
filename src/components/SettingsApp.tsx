@@ -33,7 +33,7 @@ async function save(patch: Partial<Settings>): Promise<void> {
 function Section({ title, children }: { title: string; children: ReactNode }): React.JSX.Element {
   return (
     <section className="tooltip bg-black/80">
-      <TooltipHeader tint="var(--color-normal)" title={title} />
+      <TooltipHeader tint="var(--color-currency)" title={title} />
       <div className="flex flex-col gap-2 px-5 pt-3 pb-4 text-left">{children}</div>
     </section>
   );

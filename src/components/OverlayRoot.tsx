@@ -25,7 +25,7 @@ function StartupNotice(): React.JSX.Element {
         shown ? 'opacity-100' : 'opacity-0',
       ].join(' ')}
     >
-      <TooltipHeader tint="var(--color-normal)" title="poebo" subtitle="Running in the background" />
+      <TooltipHeader tint="var(--color-currency)" title="poebo" subtitle="Running in the background" />
       <p className="px-4 pt-2 pb-3 font-body text-[13px] leading-snug text-label italic">
         It appears over Path of Exile while the game is focused. Hold{' '}
         {holdLabel(holdKey)} in the game for the menu.

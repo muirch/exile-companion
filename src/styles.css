@@ -117,38 +117,43 @@ body {
     font-weight: 500;
   }
 
-  /* The band is filled with the tint and carries one closed inner frame, with a diamond set on
-     the middle of each short side, so every line meets another. */
+  /* Rules run along both edges of the band; each end is a wedge drawn from the two corners in to
+     a point on the middle, with a diamond on the point, so every line meets another. */
   .tooltip-header {
     position: relative;
-    padding: 7px 24px 8px;
+    padding: 7px 30px 8px;
+    border-top: 1px solid color-mix(in srgb, var(--tint) 80%, transparent);
+    border-bottom: 1px solid color-mix(in srgb, var(--tint) 80%, transparent);
     background:
-      linear-gradient(180deg, rgb(255 255 255 / 0.07), transparent 40%, rgb(0 0 0 / 0.4)),
-      color-mix(in srgb, var(--tint) 30%, #050505);
+      linear-gradient(180deg, rgb(255 255 255 / 0.06), transparent 40%, rgb(0 0 0 / 0.4)),
+      color-mix(in srgb, var(--tint) 28%, #050505);
     color: var(--tint);
   }
-  .tooltip-header::before {
-    content: '';
+  .tooltip-header > .end {
     position: absolute;
-    inset: 3px;
-    border: 1px solid color-mix(in srgb, var(--tint) 70%, transparent);
-    pointer-events: none;
+    top: 0;
+    width: 14px;
+    height: 100%;
+    color: color-mix(in srgb, var(--tint) 80%, transparent);
+    overflow: visible;
   }
-  .tooltip-header > .gem {
+  .tooltip-header > .end-start {
+    left: 0;
+  }
+  .tooltip-header > .end-end {
+    right: 0;
+    transform: scaleX(-1);
+  }
+  .tooltip-header > .end > .gem {
     position: absolute;
     top: 50%;
+    left: 11px;
     width: 7px;
     height: 7px;
-    margin-top: -3.5px;
+    margin: -3.5px 0 0 -3.5px;
     background: var(--tint);
     box-shadow: 0 0 0 1px #050505;
     transform: rotate(45deg);
-  }
-  .tooltip-header > .gem-start {
-    left: 0;
-  }
-  .tooltip-header > .gem-end {
-    right: 0;
   }
 
   /* Short separator, brightest in the middle like the game's. */

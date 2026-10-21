@@ -4,9 +4,8 @@ import { holdLabel, shortcutLabel } from './HotkeySection';
 import { HereSteps, PassThrough, ThenStep, hasActions } from './RoutePanel';
 import { TooltipHeader, TooltipSep } from './Tooltip';
 
-// Towns take the currency item's sand tint, everything else the normal item's white.
-const TINT_TOWN = 'var(--color-currency)';
-const TINT_AREA = 'var(--color-normal)';
+// Sand (the currency item's tint) for every header; towns are told apart by the subtitle.
+const TINT = 'var(--color-currency)';
 
 function Prop({ label, value }: { label: string; value: string | number }): React.JSX.Element {
   return (
@@ -75,7 +74,7 @@ export function StatusPanel(): React.JSX.Element {
   const route = useAppStore((s) => s.route);
   const actions = hasActions(route);
 
-  const tint = location === 'town' ? TINT_TOWN : TINT_AREA;
+  const tint = TINT;
   const subtitle = act != null ? `Act ${act}${location === 'town' ? ' town' : ''}` : undefined;
 
   return (
