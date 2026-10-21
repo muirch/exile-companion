@@ -6,6 +6,7 @@ import {
   getGuidance,
   getOverlayState,
   getRoute,
+  getSettings,
   getSource,
   getState,
 } from './ipc/commands';
@@ -58,6 +59,12 @@ export function App(): React.JSX.Element {
     getGuidance().then(setGuidance).catch(noop);
     getRoute().then(setRoute).catch(noop);
     getSource().then(setSourceStatus).catch(noop);
+    getSettings()
+      .then((s) => {
+        useAppStore.getState().setOpacity(s.opacity);
+        useAppStore.getState().setTextScale(s.textScale);
+      })
+      .catch(noop);
     getOverlayState()
       .then((o) => {
         setGrabbed(o.grabbed);

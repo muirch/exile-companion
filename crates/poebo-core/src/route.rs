@@ -473,6 +473,37 @@ fn edge_levels(edges: &[String], zones: &ZoneTable) -> Vec<Option<u32>> {
     out
 }
 
+fn is_move(part: &Part) -> bool {
+    matches!(
+        part,
+        Part::Enter { .. }
+            | Part::WaypointUse { .. }
+            | Part::Logout { .. }
+            | Part::PortalUse { .. }
+            | Part::Ascend { .. }
+    )
+}
+
+// Cuts everything up to the last move in the step, plus the ", " that joined it to the rest.
+fn drop_arrival(step: &mut Step) {
+    let Some(last_move) = step.parts.iter().rposition(is_move) else {
+        return;
+    };
+    step.parts.drain(..=last_move);
+    if let Some(Part::Text { text }) = step.parts.first_mut() {
+        let trimmed = text.trim_start_matches([',', ' ']);
+        if trimmed.is_empty() {
+            step.parts.remove(0);
+        } else {
+            let mut t = trimmed.to_string();
+            if let Some(c) = t.get(..1) {
+                t.replace_range(..1, &c.to_uppercase());
+            }
+            *text = t;
+        }
+    }
+}
+
 fn split_comment(line: &str) -> (&str, Option<&str>) {
     let mut depth = 0u32;
     for (i, c) in line.char_indices() {
@@ -501,8 +532,11 @@ pub struct RouteView {
     pub section: String,
     pub edge: u32,
     pub edge_count: u32,
-    pub steps: Vec<Step>,
-    pub next_steps: Vec<Step>,
+    /// What to do in this area. The move that brought the player here is already done, so it is
+    /// cut from the first step.
+    pub here: Vec<Step>,
+    /// The step that leaves for the next area.
+    pub then: Option<Step>,
 }
 
 impl Route {
@@ -529,14 +563,32 @@ impl Route {
     }
 
     pub fn view(&self, edge: usize) -> Option<RouteView> {
-        let (section, steps) = self.group(edge)?;
-        let next_steps = self.group(edge + 1).map(|(_, s)| s).unwrap_or_default();
+        let (section, mut here) = self.group(edge)?;
+        if edge > 0 {
+            if let Some(first) = here.first_mut() {
+                drop_arrival(first);
+            }
+            if here.first().is_some_and(|s| s.parts.is_empty()) {
+                let rest = here.remove(0);
+                // Hints under the arrival line ("Go right of the bridge") still apply here.
+                if let Some(next) = here.first_mut() {
+                    next.sub_steps.splice(0..0, rest.sub_steps);
+                } else if !rest.sub_steps.is_empty() {
+                    here.push(Step {
+                        parts: Vec::new(),
+                        sub_steps: rest.sub_steps,
+                        edge: None,
+                    });
+                }
+            }
+        }
+        let then = self.group(edge + 1).and_then(|(_, s)| s.into_iter().next());
         Some(RouteView {
             section: section.to_string(),
             edge: edge as u32,
             edge_count: self.edges.len() as u32,
-            steps,
-            next_steps,
+            here,
+            then,
         })
     }
 }
@@ -752,11 +804,30 @@ Take {portal|use}
     }
 
     #[test]
-    fn view_groups_steps_until_the_next_edge() {
+    fn view_drops_the_arrival_and_names_the_way_out() {
         let (route, _) = parse(ROUTE, &[]);
         let view = route.view(1).unwrap();
         assert_eq!(view.section, "Act 1");
-        assert_eq!(view.steps.len(), 2);
-        assert_eq!(view.next_steps.len(), 1);
+        // "➞ Lioneye's Watch" is how the player got here; only the hand-in remains
+        assert_eq!(view.here.len(), 1);
+        assert!(matches!(view.here[0].parts[1], Part::Quest { .. }));
+        let then = view.then.unwrap();
+        assert!(then
+            .parts
+            .iter()
+            .any(|p| matches!(p, Part::Enter { id, .. } if id == "1_1_2")));
+
+        // "➞ The Tidal Island, place portal" keeps "Place portal"
+        let view = route.view(3).unwrap();
+        assert_eq!(
+            view.here[0].parts,
+            [
+                Part::Text {
+                    text: "Place ".into()
+                },
+                Part::PortalSet
+            ]
+        );
+        assert_eq!(view.here[0].sub_steps[0][1], Part::Dir { degrees: 270 });
     }
 }

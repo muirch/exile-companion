@@ -112,7 +112,13 @@ export const setClickThrough = (ignore: boolean): Promise<void> =>
 export const getSettings = (): Promise<Settings> =>
   isTauri()
     ? invoke('get_settings')
-    : Promise.resolve({ opacity: 0.85, lastLogPath: null, routeEdge: 0, leagueStart: true });
+    : Promise.resolve({
+        opacity: 0.8,
+        lastLogPath: null,
+        routeEdge: 0,
+        leagueStart: true,
+        textScale: 1,
+      });
 
 export const saveSettings = (settings: Settings): Promise<void> =>
   isTauri() ? invoke('save_settings', { settings }) : Promise.resolve();

@@ -24,6 +24,7 @@ export interface Settings {
   opacity: number;
   lastLogPath: string | null;
   routeEdge: number;
+  textScale: number;
   leagueStart: boolean;
 }
 

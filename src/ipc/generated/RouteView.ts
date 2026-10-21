@@ -5,4 +5,13 @@ import type { Step } from "./Step";
  * What the overlay shows: the steps for the area the player should be in now, plus the next group
  * as a preview.
  */
-export type RouteView = { section: string, edge: number, edge_count: number, steps: Array<Step>, next_steps: Array<Step>, };
+export type RouteView = { section: string, edge: number, edge_count: number, 
+/**
+ * What to do in this area. The move that brought the player here is already done, so it is
+ * cut from the first step.
+ */
+here: Array<Step>, 
+/**
+ * The step that leaves for the next area.
+ */
+then: Step | null, };

@@ -1,30 +1,31 @@
+import { routeNext, routePrev } from '../ipc/commands';
 import { useAppStore } from '../store/useAppStore';
-import { RoutePanel } from './RoutePanel';
+import { HereSteps, ThenStep } from './RoutePanel';
+import { TooltipHeader, TooltipSep } from './Tooltip';
 
-function ZoneHeader(): React.JSX.Element {
-  const zone = useAppStore((s) => s.campaign.zone);
-  const act = useAppStore((s) => s.campaign.act);
+// Towns take the currency item's sand tint, everything else the normal item's white.
+const TINT_TOWN = 'var(--color-currency)';
+const TINT_AREA = '#c8c8c8';
+
+function Prop({ label, value }: { label: string; value: string | number }): React.JSX.Element {
+  return (
+    <span>
+      <span className="text-label">{label} </span>
+      <span className="text-value">{value}</span>
+    </span>
+  );
+}
+
+function Properties(): React.JSX.Element | null {
   const level = useAppStore((s) => s.campaign.level);
   const klass = useAppStore((s) => s.campaign.class);
   const route = useAppStore((s) => s.route);
-
-  const facts = [
-    act != null ? `Act ${act}` : null,
-    level > 0 ? `Level ${level}${klass ? ` ${klass}` : ''}` : null,
-    route ? `Step ${route.edge + 1} of ${route.edge_count}` : null,
-  ].filter(Boolean);
-
+  if (level === 0 && !route) return null;
   return (
-    <header className="flex flex-col items-center gap-1">
-      <div className="flex w-full items-center gap-3">
-        <div className="rule" />
-        <h1 className="max-w-[75%] truncate font-caps text-[20px] leading-none font-bold tracking-[0.03em] text-gold">
-          {zone?.name ?? 'Waiting for the game'}
-        </h1>
-        <div className="rule rule-end" />
-      </div>
-      {facts.length > 0 && <p className="text-[12px] text-ash-dim">{facts.join(' · ')}</p>}
-    </header>
+    <p className="flex justify-center gap-4 text-[13px]">
+      {level > 0 && <Prop label={klass ? `${klass} level` : 'Level'} value={level} />}
+      {route && <Prop label="Step" value={`${route.edge + 1} / ${route.edge_count}`} />}
+    </p>
   );
 }
 
@@ -32,28 +33,7 @@ function ZoneHeader(): React.JSX.Element {
 function GemClaim(): React.JSX.Element | null {
   const guidance = useAppStore((s) => s.guidance);
   if (guidance?.kind !== 'quest_reward') return null;
-
-  return (
-    <>
-      <div className="separator" />
-      <p className="text-[13px] leading-snug text-gem">
-        {guidance.headline}
-        {guidance.detail && <span className="text-ash-dim"> · {guidance.detail}</span>}
-      </p>
-    </>
-  );
-}
-
-function BuildLine(): React.JSX.Element | null {
-  const build = useAppStore((s) => s.build);
-  const deaths = useAppStore((s) => s.campaign.deaths);
-  if (!build && deaths === 0) return null;
-
-  const klass = build ? [build.class_name, build.ascend_class_name].filter(Boolean).join(' ') : '';
-  const parts = build ? [klass || 'Build', build.active_spec_title, build.main_skill] : [];
-  if (deaths > 0) parts.push(`${deaths} ${deaths === 1 ? 'death' : 'deaths'} this session`);
-
-  return <p className="truncate text-center text-[11px] text-ash-faint">{parts.filter(Boolean).join(' · ')}</p>;
+  return <p className="text-[14px] leading-snug text-gem">{guidance.headline}</p>;
 }
 
 function NoLogHint(): React.JSX.Element | null {
@@ -61,24 +41,49 @@ function NoLogHint(): React.JSX.Element | null {
   const error = useAppStore((s) => s.source.error);
   if (mode !== 'idle') return null;
   return (
-    <p className="text-center text-[13px] leading-snug text-trial">
+    <p className="font-body text-[13px] leading-snug text-unique">
       {error ?? 'Client.txt not found.'} Unlock with Ctrl+Alt+Space, then pick logs/Client.txt in
       the game folder.
     </p>
   );
 }
 
+function RouteNav(): React.JSX.Element {
+  return (
+    <div className="flex items-center justify-center gap-1.5 pt-1">
+      <button className="btn" onClick={() => void routePrev()}>
+        Back
+      </button>
+      <span className="font-body text-[11px] text-label">Ctrl+Alt+PageUp / PageDown</span>
+      <button className="btn" onClick={() => void routeNext()}>
+        Next
+      </button>
+    </div>
+  );
+}
+
 export function StatusPanel(): React.JSX.Element {
+  const zone = useAppStore((s) => s.campaign.zone);
+  const act = useAppStore((s) => s.campaign.act);
+  const location = useAppStore((s) => s.campaign.location_kind);
   const grabbed = useAppStore((s) => s.ui.grabbed);
 
+  const tint = location === 'town' ? TINT_TOWN : TINT_AREA;
+  const subtitle = act != null ? `Act ${act}${location === 'town' ? ' town' : ''}` : undefined;
+
   return (
-    <div className="flex flex-col gap-2.5">
-      <ZoneHeader />
-      <NoLogHint />
-      <div className="separator" />
-      <RoutePanel />
-      <GemClaim />
-      {grabbed && <BuildLine />}
+    <div className="tooltip">
+      <TooltipHeader tint={tint} title={zone?.name ?? 'Waiting for the game'} subtitle={subtitle} />
+      <div className="px-4 pt-1.5 pb-3">
+        <Properties />
+        <TooltipSep tint={tint} />
+        <NoLogHint />
+        <HereSteps />
+        <GemClaim />
+        <TooltipSep tint={tint} />
+        <ThenStep />
+        {grabbed && <RouteNav />}
+      </div>
     </div>
   );
 }

@@ -12,6 +12,7 @@ pub struct Settings {
     pub opacity: f64,
     pub last_log_path: Option<String>,
     pub route_edge: usize,
+    pub text_scale: f64,
     /// Read once at startup: the edges differ between the two route variants.
     pub league_start: bool,
 }
@@ -19,9 +20,10 @@ pub struct Settings {
 impl Default for Settings {
     fn default() -> Self {
         Self {
-            opacity: 0.85,
+            opacity: 0.8,
             last_log_path: None,
             route_edge: 0,
+            text_scale: 1.0,
             league_start: true,
         }
     }

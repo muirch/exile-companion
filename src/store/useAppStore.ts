@@ -29,7 +29,7 @@ interface AppStore {
   route: RouteView | null;
   source: { mode: SourceMode; path: string | null; error: string | null };
   replay: ReplayProgress;
-  ui: { grabbed: boolean; opacity: number; gameFocused: boolean };
+  ui: { grabbed: boolean; opacity: number; gameFocused: boolean; textScale: number };
 
   setCampaign: (state: CampaignState) => void;
   setBuild: (build: BuildSummary | null) => void;
@@ -40,6 +40,7 @@ interface AppStore {
   setGrabbed: (grabbed: boolean) => void;
   setGameFocused: (gameFocused: boolean) => void;
   setOpacity: (opacity: number) => void;
+  setTextScale: (textScale: number) => void;
 }
 
 /** Single source of truth for push-based state; IPC listeners are its only writers. */
@@ -52,7 +53,7 @@ export const useAppStore = create<AppStore>((set) => ({
   replay: { position: 0, total: 0, speed: 'X1', paused: false },
   // Hidden and locked until the backend (or the browser mock) says otherwise, so the first frame
   // never flashes the full overlay over the desktop.
-  ui: { grabbed: false, opacity: 0.85, gameFocused: false },
+  ui: { grabbed: false, opacity: 0.8, gameFocused: false, textScale: 1 },
 
   setCampaign: (campaign) => set({ campaign }),
   setBuild: (build) => set({ build }),
@@ -64,4 +65,5 @@ export const useAppStore = create<AppStore>((set) => ({
   setGrabbed: (grabbed) => set((s) => ({ ui: { ...s.ui, grabbed } })),
   setGameFocused: (gameFocused) => set((s) => ({ ui: { ...s.ui, gameFocused } })),
   setOpacity: (opacity) => set((s) => ({ ui: { ...s.ui, opacity } })),
+  setTextScale: (textScale) => set((s) => ({ ui: { ...s.ui, textScale } })),
 }));

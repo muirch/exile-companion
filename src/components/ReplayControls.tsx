@@ -36,10 +36,10 @@ export function ReplayControls(): React.JSX.Element | null {
         </div>
       </div>
       <div className="flex items-center gap-2">
-        <div className="h-[3px] flex-1 bg-umber-raised shadow-[0_0_0_1px_#000]">
-          <div className="h-full bg-bronze-bright" style={{ width: `${pct}%` }} />
+        <div className="h-[3px] flex-1 bg-frame-dark shadow-[0_0_0_1px_#000]">
+          <div className="h-full bg-currency" style={{ width: `${pct}%` }} />
         </div>
-        <span className="text-[11px] text-ash-dim">
+        <span className="text-[11px] text-label">
           {replay.position}/{replay.total} lines
         </span>
       </div>
