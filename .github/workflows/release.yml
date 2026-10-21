@@ -37,7 +37,8 @@ jobs:
       # An installer run over the same version can keep the old exe, so each run gets its own.
       - name: Stamp the build version
         shell: bash
-        run: sed -i 's/"version": "0\.1\.0"/"version": "0.1.${{ github.run_number }}"/' src-tauri/tauri.conf.json
+        run: |
+          sed -i 's/"version": "0\.1\.0"/"version": "0.1.${{ github.run_number }}"/' src-tauri/tauri.conf.json
 
       # Asset names carry the version now, so old installers would pile up on the release.
       - name: Remove old installers from the dev release
