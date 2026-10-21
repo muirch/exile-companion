@@ -43,7 +43,7 @@ function NoLogHint(): React.JSX.Element | null {
   const holdKey = useAppStore((s) => s.hotkeys.menuHold);
   if (mode !== 'idle') return null;
   return (
-    <p className="font-body text-[13px] leading-snug text-unique">
+    <p className="font-body text-[13px] leading-snug text-value">
       {error ?? 'Client.txt not found.'} Hold {holdLabel(holdKey)} in the game, open Settings
       and pick logs/Client.txt in the game folder.
     </p>
