@@ -5,6 +5,7 @@ import {
   pasteBuild,
   pickLogFile,
   saveSettings,
+  snapOverlayBottomCenter,
   startLive,
   startReplay,
   stopSource,
@@ -51,7 +52,7 @@ export function SettingsPanel(): React.JSX.Element {
   };
 
   return (
-    <div className="mt-2 flex flex-col gap-2 border-t border-slate-700/50 pt-2 text-xs">
+    <div className="flex flex-col gap-2 text-xs">
       <label className="flex items-center gap-2">
         <span className="text-slate-400">Opacity</span>
         <input
@@ -63,6 +64,12 @@ export function SettingsPanel(): React.JSX.Element {
           onChange={(e) => void onOpacityChange(Number(e.target.value))}
           className="flex-1"
         />
+        <button
+          className="rounded bg-slate-700 px-2 py-0.5 hover:bg-slate-600"
+          onClick={() => void snapOverlayBottomCenter()}
+        >
+          Bottom center
+        </button>
       </label>
       <div className="flex flex-wrap gap-1">
         <button

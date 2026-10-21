@@ -28,4 +28,4 @@ poebo-data = { path = "../crates/poebo-data" }
 poebo-pob = { path = "../crates/poebo-pob" }
 
 [target.'cfg(windows)'.dependencies]
-windows-sys = { version = "=0.61.2", features = ["Win32_Foundation", "Win32_UI_WindowsAndMessaging"] }
+windows-sys = { version = "=0.61.2", features = ["Win32_Foundation", "Win32_UI_Accessibility", "Win32_UI_WindowsAndMessaging"] }

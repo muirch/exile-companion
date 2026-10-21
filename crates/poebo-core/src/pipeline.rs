@@ -48,3 +48,17 @@ where
     }
     Ok(())
 }
+
+/// Folds already-written log text into `machine`, so the overlay starts from where the player is
+/// instead of waiting for the next zone change. The first line may be cut, which is fine:
+/// `split_line` rejects it.
+pub fn prime_from_history(machine: &mut CampaignMachine, text: &str, locale: &LocalePack) {
+    for line in text.lines() {
+        let Some(raw) = crate::parser::split_line(line) else {
+            continue;
+        };
+        if let Some(event) = classify(&raw.body, locale) {
+            machine.apply(event, raw.ts);
+        }
+    }
+}

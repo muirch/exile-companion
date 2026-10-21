@@ -15,7 +15,7 @@ use poebo_core::data::DataPack;
 use poebo_core::error::DataError;
 use poebo_core::guidance::GuidanceEngine;
 use poebo_core::locale::LocalePack;
-use poebo_core::pipeline::run_pipeline;
+use poebo_core::pipeline::{prime_from_history, run_pipeline};
 use poebo_core::route::{parse_route, Route, RouteTracker, RouteView};
 use poebo_core::source::{
     EventSource, LineStream, LiveTail, ReplayControl, ReplaySource, SpeedMultiplier,
@@ -167,6 +167,25 @@ pub fn current_guidance(app: &AppHandle) -> poebo_core::guidance::NextObjective 
     objective
 }
 
+// Enough for the last few zones of a session; Client.txt itself can be hundreds of MB.
+const HISTORY_BYTES: u64 = 512 * 1024;
+
+fn read_log_tail(path: &str) -> String {
+    use std::io::{Read, Seek, SeekFrom};
+    let Ok(mut file) = std::fs::File::open(path) else {
+        return String::new();
+    };
+    let len = file.metadata().map(|m| m.len()).unwrap_or(0);
+    let mut buf = Vec::new();
+    if file
+        .seek(SeekFrom::Start(len.saturating_sub(HISTORY_BYTES)))
+        .is_ok()
+    {
+        let _ = file.read_to_end(&mut buf);
+    }
+    String::from_utf8_lossy(&buf).into_owned()
+}
+
 pub fn current_source(app: &AppHandle) -> SourceStatus {
     let app_state = app.state::<AppState>();
     let run = lock(&app_state.run);
@@ -283,8 +302,18 @@ pub fn start_live(app: AppHandle, path: String) -> Result<CampaignState, String>
     *lock(&state.tracker) = RouteTracker::at(saved.route_edge);
     saved.last_log_path = Some(path.clone());
     let _ = settings::save(&app, &saved);
+
+    let mut machine = CampaignMachine::new(Arc::new(state.data.zones.clone()));
+    prime_from_history(&mut machine, &read_log_tail(&path), &LocalePack::EN);
+    let primed = machine.snapshot().clone();
+    let _ = state.state_tx.send(primed.clone());
+    let _ = app.emit("campaign://state-updated", &primed);
+    if let Some(area_id) = &primed.area_id {
+        lock(&state.tracker).on_area_generated(&state.route, area_id);
+        save_route_edge(&app);
+    }
     emit_route(&app);
-    let machine = CampaignMachine::new(Arc::new(state.data.zones.clone()));
+
     let stream = Box::new(LiveTail::open(&path)).into_stream();
     let task = spawn_pipeline(app.clone(), stream, machine);
 

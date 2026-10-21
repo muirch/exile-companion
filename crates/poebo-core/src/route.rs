@@ -529,15 +529,35 @@ impl RouteTracker {
         self.active
     }
 
-    /// Feed the area id from a `Generating level .. area "<id>"` line. Moves forward only when it
-    /// is the area the next edge expects, so town visits and detours don't jump the route around.
+    /// Feed the area id from a `Generating level .. area "<id>"` line. The expected next area
+    /// steps forward; any other area on the route snaps to its nearest edge, so a character that
+    /// is further along (or went back to town) lands on the right steps. Areas off the route
+    /// (hideouts, maps) leave the position alone.
     pub fn on_area_generated(&mut self, route: &Route, area_id: &str) -> bool {
-        match route.edges.get(self.active + 1) {
-            Some(next) if next == area_id => {
-                self.active += 1;
+        if route
+            .edges
+            .get(self.active + 1)
+            .is_some_and(|e| e == area_id)
+        {
+            self.active += 1;
+            return true;
+        }
+        if route.edges.get(self.active).is_some_and(|e| e == area_id) {
+            return false;
+        }
+        let nearest = route
+            .edges
+            .iter()
+            .enumerate()
+            .filter(|(_, e)| *e == area_id)
+            .min_by_key(|(i, _)| (i.abs_diff(self.active), *i < self.active))
+            .map(|(i, _)| i);
+        match nearest {
+            Some(i) => {
+                self.active = i;
                 true
             }
-            _ => false,
+            None => false,
         }
     }
 
@@ -640,15 +660,30 @@ Take {portal|use}
         assert_eq!(warnings[0].line, 1);
     }
 
+    // edges: 0 1_1_1, 1 1_1_town, 2 1_1_2, 3 1_1_2a, 4 1_1_town
     #[test]
-    fn tracker_only_follows_the_expected_area() {
+    fn tracker_steps_forward_on_the_expected_area() {
         let (route, _) = parse(ROUTE, &[]);
         let mut t = RouteTracker::default();
-        assert!(!t.on_area_generated(&route, "1_1_2"));
         assert!(t.on_area_generated(&route, "1_1_town"));
         assert!(t.on_area_generated(&route, "1_1_2"));
-        assert!(!t.on_area_generated(&route, "1_1_town"));
         assert_eq!(t.active(), 2);
+        assert!(!t.on_area_generated(&route, "1_1_2"));
+    }
+
+    #[test]
+    fn tracker_snaps_to_the_nearest_matching_area() {
+        let (route, _) = parse(ROUTE, &[]);
+        let mut t = RouteTracker::default();
+        assert!(t.on_area_generated(&route, "1_1_2a"));
+        assert_eq!(t.active(), 3);
+        // a trip to town picks the closer town edge, and coming back restores the zone
+        assert!(t.on_area_generated(&route, "1_1_town"));
+        assert_eq!(t.active(), 4);
+        assert!(t.on_area_generated(&route, "1_1_2a"));
+        assert_eq!(t.active(), 3);
+        assert!(!t.on_area_generated(&route, "HideoutFelled"));
+        assert_eq!(t.active(), 3);
     }
 
     #[test]

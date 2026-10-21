@@ -139,3 +139,6 @@ export interface OverlayState {
 
 export const getOverlayState = (): Promise<OverlayState> =>
   isTauri() ? invoke('get_overlay_state') : Promise.resolve({ grabbed: true, gameFocused: true });
+
+export const snapOverlayBottomCenter = (): Promise<void> =>
+  isTauri() ? invoke('snap_overlay_bottom_center') : Promise.resolve();

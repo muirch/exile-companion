@@ -39,39 +39,36 @@ export function OverlayRoot(): React.JSX.Element {
 
   const visible = gameFocused || grabbed;
 
+  // Anchored to the bottom of the window: unlocking adds controls above the route, so the route
+  // itself stays where the player put it. Hiding is instant to match the game window.
   return (
-    <div className="relative">
-      {!seenGame && (
-        <div className="absolute inset-x-0 top-0">
-          <StartupToast />
-        </div>
-      )}
+    <div className="flex h-full flex-col justify-end">
+      {!seenGame && <StartupToast />}
       <div
         className={[
-          'm-2 overflow-hidden rounded-xl text-slate-100 backdrop-blur-sm transition-opacity duration-300',
+          'm-2 overflow-hidden rounded-xl text-slate-100 backdrop-blur-sm',
           grabbed ? 'pointer-events-auto ring-1 ring-cyan-400/50' : 'pointer-events-none',
-          visible ? 'opacity-100' : 'opacity-0',
+          visible ? 'opacity-100 transition-opacity duration-150' : 'opacity-0',
         ].join(' ')}
         style={{ backgroundColor: `rgba(2, 6, 23, ${opacity})` }}
       >
         {grabbed && (
-          <div
-            data-tauri-drag-region
-            className="flex cursor-move items-center justify-between px-3 py-1 text-[10px] uppercase tracking-wider text-cyan-300/70"
-          >
-            <span data-tauri-drag-region>poebo</span>
-            <span className="text-slate-400">drag to move · Ctrl+Alt+Space to lock</span>
-          </div>
+          <>
+            <div
+              data-tauri-drag-region
+              className="flex cursor-move items-center justify-between px-3 py-1 text-[10px] uppercase tracking-wider text-cyan-300/70"
+            >
+              <span data-tauri-drag-region>poebo</span>
+              <span className="text-slate-400">drag to move · Ctrl+Alt+Space to lock</span>
+            </div>
+            <div className="border-b border-slate-700/50 px-3 pb-2">
+              <SettingsPanel />
+              <ReplayControls />
+            </div>
+          </>
         )}
-
         <div className="px-3 pb-3 pt-2">
           <StatusPanel />
-          {grabbed && (
-            <>
-              <ReplayControls />
-              <SettingsPanel />
-            </>
-          )}
         </div>
       </div>
     </div>

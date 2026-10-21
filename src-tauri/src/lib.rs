@@ -21,7 +21,12 @@ pub fn run() {
         .plugin(tauri_plugin_fs::init())
         .plugin(tauri_plugin_clipboard_manager::init())
         .plugin(tauri_plugin_store::Builder::default().build())
-        .plugin(tauri_plugin_window_state::Builder::default().build())
+        .plugin(
+            // Position only: the size is fixed in tauri.conf.json and an old saved size would win.
+            tauri_plugin_window_state::Builder::default()
+                .with_state_flags(tauri_plugin_window_state::StateFlags::POSITION)
+                .build(),
+        )
         .plugin(tauri_plugin_global_shortcut::Builder::new().build())
         .setup(|app| {
             let data = runtime::load_data_pack()?;
@@ -86,6 +91,7 @@ pub fn run() {
             commands::get_route,
             commands::get_source,
             commands::get_overlay_state,
+            commands::snap_overlay_bottom_center,
             commands::route_next,
             commands::route_prev,
             commands::route_reset,

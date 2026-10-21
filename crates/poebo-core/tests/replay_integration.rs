@@ -255,3 +255,21 @@ async fn live_tail_reads_appended_lines() {
         .expect("ok");
     assert!(b.body.contains("is now level 3"), "got: {}", b.body);
 }
+
+#[test]
+fn history_primes_the_campaign_state() {
+    use poebo_core::pipeline::prime_from_history;
+
+    let zones = Arc::new(
+        ZoneTable::from_json_bytes(poebo_data::AREAS_JSON, poebo_data::AREAS_SCHEMA_VERSION)
+            .unwrap(),
+    );
+    let mut machine = CampaignMachine::new(zones);
+    let text = "ef] cut-off first line\n\
+        2024/06/01 20:00:06 1006233 9c8 [INFO Client 1234] Generating level 2 area \"1_1_2\" with seed 1\n\
+        2024/06/01 20:00:07 1007188 9c8 [INFO Client 1234] : You have entered The Coast.\n";
+    prime_from_history(&mut machine, text, &LocalePack::EN);
+    let st = machine.snapshot();
+    assert_eq!(st.area_id.as_deref(), Some("1_1_2"));
+    assert_eq!(st.act, Some(1));
+}
