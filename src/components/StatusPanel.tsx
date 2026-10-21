@@ -1,50 +1,32 @@
-import type { ObjectiveKind } from '../ipc/types';
 import { useAppStore } from '../store/useAppStore';
 import { RoutePanel } from './RoutePanel';
 
-const actLabel = (act: number | null): string => (act == null ? '-' : `Act ${act}`);
-
-function ActZoneDisplay(): React.JSX.Element {
+function ZoneHeader(): React.JSX.Element {
   const zone = useAppStore((s) => s.campaign.zone);
   const act = useAppStore((s) => s.campaign.act);
-  const location = useAppStore((s) => s.campaign.location_kind);
-
-  return (
-    <div className="min-w-0">
-      <div className="text-[10px] uppercase tracking-wider text-cyan-300/70">{actLabel(act)}</div>
-      <div className="truncate text-lg font-semibold leading-tight">
-        {zone?.name ?? 'Waiting for log...'}
-      </div>
-      {(location === 'town' || location === 'hideout') && (
-        <div className="text-[10px] capitalize text-slate-400">{location}</div>
-      )}
-    </div>
-  );
-}
-
-function LevelBadge(): React.JSX.Element {
   const level = useAppStore((s) => s.campaign.level);
   const klass = useAppStore((s) => s.campaign.class);
+  const route = useAppStore((s) => s.route);
+
+  const facts = [
+    act != null ? `Act ${act}` : null,
+    level > 0 ? `Level ${level}${klass ? ` ${klass}` : ''}` : null,
+    route ? `Step ${route.edge + 1} of ${route.edge_count}` : null,
+  ].filter(Boolean);
 
   return (
-    <div className="flex shrink-0 flex-col items-end">
-      <div className="font-mono text-2xl font-bold leading-none tabular-nums">
-        {level > 0 ? level : '-'}
+    <header className="flex flex-col items-center gap-1">
+      <div className="flex w-full items-center gap-3">
+        <div className="rule" />
+        <h1 className="max-w-[75%] truncate font-caps text-[20px] leading-none font-bold tracking-[0.03em] text-gold">
+          {zone?.name ?? 'Waiting for the game'}
+        </h1>
+        <div className="rule rule-end" />
       </div>
-      <div className="text-[10px] text-slate-400">{klass ?? 'level'}</div>
-    </div>
+      {facts.length > 0 && <p className="text-[12px] text-ash-dim">{facts.join(' · ')}</p>}
+    </header>
   );
 }
-
-// Accent colour per objective kind so the eye can tell them apart at a glance.
-const KIND_ACCENT: Record<ObjectiveKind, string> = {
-  quest_reward: 'border-emerald-400/60 bg-emerald-500/10 text-emerald-200',
-  proceed_to_zone: 'border-cyan-400/60 bg-cyan-500/10 text-cyan-200',
-  lab_trial: 'border-amber-400/60 bg-amber-500/10 text-amber-200',
-  passive_points: 'border-violet-400/60 bg-violet-500/10 text-violet-200',
-  build_spec: 'border-indigo-400/60 bg-indigo-500/10 text-indigo-200',
-  idle: 'border-slate-600/60 bg-slate-800/40 text-slate-300',
-};
 
 // The route covers where to go; from the old guidance only the build's gem claims add anything.
 function GemClaim(): React.JSX.Element | null {
@@ -52,30 +34,26 @@ function GemClaim(): React.JSX.Element | null {
   if (guidance?.kind !== 'quest_reward') return null;
 
   return (
-    <div className={`rounded-md border px-2 py-1 ${KIND_ACCENT[guidance.kind]}`}>
-      <div className="text-xs font-semibold leading-snug">{guidance.headline}</div>
-      {guidance.detail && (
-        <div className="text-[10px] leading-tight opacity-80">{guidance.detail}</div>
-      )}
-    </div>
+    <>
+      <div className="separator" />
+      <p className="text-[13px] leading-snug text-gem">
+        {guidance.headline}
+        {guidance.detail && <span className="text-ash-dim"> · {guidance.detail}</span>}
+      </p>
+    </>
   );
 }
 
 function BuildLine(): React.JSX.Element | null {
   const build = useAppStore((s) => s.build);
-  if (!build) return null;
+  const deaths = useAppStore((s) => s.campaign.deaths);
+  if (!build && deaths === 0) return null;
 
-  const klass = [build.class_name, build.ascend_class_name].filter(Boolean).join(' / ');
-  const parts = [klass || 'Build', build.active_spec_title, build.main_skill].filter(Boolean);
+  const klass = build ? [build.class_name, build.ascend_class_name].filter(Boolean).join(' ') : '';
+  const parts = build ? [klass || 'Build', build.active_spec_title, build.main_skill] : [];
+  if (deaths > 0) parts.push(`${deaths} ${deaths === 1 ? 'death' : 'deaths'} this session`);
 
-  return (
-    <div className="flex items-center gap-1 text-[10px] text-slate-400">
-      <span className="rounded bg-slate-700/60 px-1 py-px uppercase tracking-wider text-slate-300">
-        Build
-      </span>
-      <span className="truncate">{parts.join(' - ')}</span>
-    </div>
-  );
+  return <p className="truncate text-center text-[11px] text-ash-faint">{parts.filter(Boolean).join(' · ')}</p>;
 }
 
 function NoLogHint(): React.JSX.Element | null {
@@ -83,27 +61,24 @@ function NoLogHint(): React.JSX.Element | null {
   const error = useAppStore((s) => s.source.error);
   if (mode !== 'idle') return null;
   return (
-    <div className="rounded-md border border-amber-400/50 bg-amber-500/10 px-2 py-1 text-xs text-amber-200">
-      {error ?? 'Game log not found.'} Press Ctrl+Alt+Space if the controls are hidden, then use
-      Watch Client.txt and pick logs/Client.txt in the game folder.
-    </div>
+    <p className="text-center text-[13px] leading-snug text-trial">
+      {error ?? 'Client.txt not found.'} Unlock with Ctrl+Alt+Space, then pick logs/Client.txt in
+      the game folder.
+    </p>
   );
 }
 
 export function StatusPanel(): React.JSX.Element {
-  const deaths = useAppStore((s) => s.campaign.deaths);
+  const grabbed = useAppStore((s) => s.ui.grabbed);
 
   return (
-    <div className="flex flex-col gap-1.5">
-      <div className="flex items-start justify-between gap-3">
-        <ActZoneDisplay />
-        <LevelBadge />
-      </div>
+    <div className="flex flex-col gap-2.5">
+      <ZoneHeader />
       <NoLogHint />
+      <div className="separator" />
       <RoutePanel />
       <GemClaim />
-      <BuildLine />
-      {deaths > 0 && <div className="text-xs text-rose-400/80">Deaths: {deaths}</div>}
+      {grabbed && <BuildLine />}
     </div>
   );
 }

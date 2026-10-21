@@ -14,29 +14,20 @@ export function ReplayControls(): React.JSX.Element | null {
   const pct = replay.total > 0 ? Math.round((replay.position / replay.total) * 100) : 0;
 
   return (
-    <div className="mt-2 flex flex-col gap-1 border-t border-slate-700/50 pt-2">
-      <div className="flex items-center gap-1">
-        <button
-          className="rounded bg-slate-700 px-2 py-0.5 text-xs hover:bg-slate-600"
-          onClick={replay.paused ? replayResume : replayPause}
-        >
+    <div className="mt-2.5 flex flex-col gap-1.5">
+      <div className="flex items-center gap-1.5">
+        <button className="btn" onClick={replay.paused ? replayResume : replayPause}>
           {replay.paused ? 'Play' : 'Pause'}
         </button>
-        <button
-          className="rounded bg-slate-700 px-2 py-0.5 text-xs hover:bg-slate-600 disabled:opacity-40"
-          onClick={replayStep}
-          disabled={!replay.paused}
-        >
+        <button className="btn" onClick={replayStep} disabled={!replay.paused}>
           Step
         </button>
-        <div className="ml-auto flex gap-0.5">
+        <div className="ml-auto flex gap-1">
           {SPEEDS.map((s) => (
             <button
               key={s}
-              className={[
-                'rounded px-1.5 py-0.5 text-xs',
-                replay.speed === s ? 'bg-cyan-600 text-white' : 'bg-slate-700 hover:bg-slate-600',
-              ].join(' ')}
+              className="btn font-body"
+              aria-pressed={replay.speed === s}
               onClick={() => replaySetSpeed(s)}
             >
               {speedLabel(s)}
@@ -44,11 +35,13 @@ export function ReplayControls(): React.JSX.Element | null {
           ))}
         </div>
       </div>
-      <div className="h-1 w-full overflow-hidden rounded bg-slate-800">
-        <div className="h-full bg-cyan-500" style={{ width: `${pct}%` }} />
-      </div>
-      <div className="text-right text-[10px] tabular-nums text-slate-400">
-        {replay.position}/{replay.total}
+      <div className="flex items-center gap-2">
+        <div className="h-[3px] flex-1 bg-umber-raised shadow-[0_0_0_1px_#000]">
+          <div className="h-full bg-bronze-bright" style={{ width: `${pct}%` }} />
+        </div>
+        <span className="text-[11px] text-ash-dim">
+          {replay.position}/{replay.total} lines
+        </span>
       </div>
     </div>
   );

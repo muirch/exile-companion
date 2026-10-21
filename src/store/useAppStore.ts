@@ -50,7 +50,9 @@ export const useAppStore = create<AppStore>((set) => ({
   route: null,
   source: { mode: 'idle', path: null, error: null },
   replay: { position: 0, total: 0, speed: 'X1', paused: false },
-  ui: { grabbed: true, opacity: 0.85, gameFocused: true },
+  // Hidden and locked until the backend (or the browser mock) says otherwise, so the first frame
+  // never flashes the full overlay over the desktop.
+  ui: { grabbed: false, opacity: 0.85, gameFocused: false },
 
   setCampaign: (campaign) => set({ campaign }),
   setBuild: (build) => set({ build }),

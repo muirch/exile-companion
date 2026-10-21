@@ -117,6 +117,8 @@ See [tools/data-extractor/README.md](tools/data-extractor/README.md) for the det
 
 ## Data and licensing
 
+The overlay uses Alegreya Sans and Alegreya Sans SC by Huerta Tipográfica, bundled in `src/assets/fonts` under the SIL Open Font License (`OFL.txt` there).
+
 The leveling route in `data-pack/routes/exile-leveling` is written by the exile-leveling authors and kept under its MIT license (see the `LICENSE` file there). `npm run routes` in `tools/data-extractor` refreshes it from a pinned commit.
 
 

@@ -182,7 +182,17 @@ export function startMock(): void {
   });
   // Pretend a build is already imported so the build + guidance panels are populated in dev.
   useAppStore.getState().setBuild(MOCK_BUILD);
+  // ?view=locked or ?view=notice previews the in-game and startup states.
+  const view = new URLSearchParams(window.location.search).get('view');
+  useAppStore.getState().setGrabbed(view !== 'locked' && view !== 'notice');
+  useAppStore.getState().setGameFocused(view !== 'notice');
   restartMock();
+  // ?edge=N freezes the mock on that route view.
+  const edge = Number(new URLSearchParams(window.location.search).get('edge'));
+  if (edge > 0) {
+    pauseMock();
+    moveRouteMock(edge);
+  }
 }
 
 export function stopMock(): void {

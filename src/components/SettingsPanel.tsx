@@ -52,64 +52,49 @@ export function SettingsPanel(): React.JSX.Element {
   };
 
   return (
-    <div className="flex flex-col gap-2 text-xs">
-      <label className="flex items-center gap-2">
-        <span className="text-slate-400">Opacity</span>
-        <input
-          type="range"
-          min={0.2}
-          max={1}
-          step={0.05}
-          value={opacity}
-          onChange={(e) => void onOpacityChange(Number(e.target.value))}
-          className="flex-1"
-        />
-        <button
-          className="rounded bg-slate-700 px-2 py-0.5 hover:bg-slate-600"
-          onClick={() => void snapOverlayBottomCenter()}
-        >
-          Bottom center
+    <div className="flex flex-col gap-2.5 text-[13px]">
+      <div className="flex items-center gap-3">
+        <label className="flex flex-1 items-center gap-2">
+          <span className="font-caps text-ash-dim">Opacity</span>
+          <input
+            type="range"
+            min={0.2}
+            max={1}
+            step={0.05}
+            value={opacity}
+            onChange={(e) => void onOpacityChange(Number(e.target.value))}
+            className="flex-1"
+          />
+        </label>
+        <button className="btn" onClick={() => void snapOverlayBottomCenter()}>
+          Move to bottom center
         </button>
-      </label>
-      <div className="flex flex-wrap gap-1">
-        <button
-          className="rounded bg-emerald-700 px-2 py-0.5 hover:bg-emerald-600"
-          onClick={watchLive}
-        >
-          Watch Client.txt
+      </div>
+      <div className="flex flex-wrap items-center gap-1.5">
+        <span className="w-12 font-caps text-ash-dim">Log</span>
+        <button className="btn" onClick={watchLive}>
+          Pick Client.txt
         </button>
-        <button
-          className="rounded bg-indigo-700 px-2 py-0.5 hover:bg-indigo-600"
-          onClick={replayLog}
-        >
-          Replay log...
+        <button className="btn" onClick={replayLog}>
+          Replay a log
         </button>
         {mode !== 'idle' && (
-          <button className="rounded bg-slate-700 px-2 py-0.5 hover:bg-slate-600" onClick={stopSource}>
+          <button className="btn" onClick={stopSource}>
             Stop
           </button>
         )}
       </div>
-      <div className="flex flex-wrap items-center gap-1">
-        <span className="mr-1 text-slate-400">Build</span>
-        <button
-          className="rounded bg-fuchsia-800 px-2 py-0.5 hover:bg-fuchsia-700"
-          onClick={importFromFile}
-        >
-          Import file...
+      <div className="flex flex-wrap items-center gap-1.5">
+        <span className="w-12 font-caps text-ash-dim">Build</span>
+        <button className="btn" onClick={importFromFile}>
+          Import PoB file
         </button>
-        <button
-          className="rounded bg-fuchsia-800 px-2 py-0.5 hover:bg-fuchsia-700"
-          onClick={importFromClipboard}
-        >
-          Paste
+        <button className="btn" onClick={importFromClipboard}>
+          Paste PoB code
         </button>
         {hasBuild && (
-          <button
-            className="rounded bg-slate-700 px-2 py-0.5 hover:bg-slate-600"
-            onClick={() => void clearBuild()}
-          >
-            Clear
+          <button className="btn" onClick={() => void clearBuild()}>
+            Clear build
           </button>
         )}
       </div>

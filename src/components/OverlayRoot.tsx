@@ -5,27 +5,32 @@ import { ReplayControls } from './ReplayControls';
 import { SettingsPanel } from './SettingsPanel';
 import { StatusPanel } from './StatusPanel';
 
-const TOAST_MS = 5000;
+const NOTICE_MS = 5000;
 
-// Shown once at startup when the game isn't focused, so the player knows poebo is running.
-function StartupToast(): React.JSX.Element {
+// Shown once when poebo starts without the game in front, instead of the route plate.
+function StartupNotice(): React.JSX.Element {
   const [shown, setShown] = useState(true);
   useEffect(() => {
-    const t = setTimeout(() => setShown(false), TOAST_MS);
+    const t = setTimeout(() => setShown(false), NOTICE_MS);
     return () => clearTimeout(t);
   }, []);
 
   return (
     <div
+      role="status"
       className={[
-        'pointer-events-none m-2 rounded-xl bg-slate-950/90 px-3 py-2 text-xs text-slate-200 transition-opacity duration-700',
+        'plate pointer-events-none absolute inset-x-0 bottom-2 mx-auto w-72 bg-umber/95 px-4 py-3 text-center transition-opacity duration-700',
         shown ? 'opacity-100' : 'opacity-0',
       ].join(' ')}
     >
-      <div className="font-semibold text-cyan-300">poebo is running</div>
-      <div className="text-slate-400">
-        It shows up over Path of Exile. Ctrl+Alt+Space to move it or open settings.
+      <div className="flex items-center gap-3">
+        <div className="rule" />
+        <p className="font-caps text-[15px] font-bold text-gold">poebo is running</p>
+        <div className="rule rule-end" />
       </div>
+      <p className="mt-1 text-[12px] leading-snug text-ash-dim">
+        It appears over Path of Exile while the game is focused. Ctrl+Alt+Space unlocks it.
+      </p>
     </div>
   );
 }
@@ -34,40 +39,43 @@ export function OverlayRoot(): React.JSX.Element {
   const grabbed = useAppStore((s) => s.ui.grabbed);
   const opacity = useAppStore((s) => s.ui.opacity);
   const gameFocused = useAppStore((s) => s.ui.gameFocused);
-  const [seenGame, setSeenGame] = useState(gameFocused);
-  if (gameFocused && !seenGame) setSeenGame(true);
-
   const visible = gameFocused || grabbed;
+  const [shownOnce, setShownOnce] = useState(false);
+  if (visible && !shownOnce) setShownOnce(true);
 
   // Anchored to the bottom of the window: unlocking adds controls above the route, so the route
   // itself stays where the player put it. Hiding is instant to match the game window.
   return (
-    <div className="flex h-full flex-col justify-end">
-      {!seenGame && <StartupToast />}
+    <div className="relative flex h-full flex-col justify-end p-2">
+      {!shownOnce && <StartupNotice />}
       <div
         className={[
-          'm-2 overflow-hidden rounded-xl text-slate-100 backdrop-blur-sm',
-          grabbed ? 'pointer-events-auto ring-1 ring-cyan-400/50' : 'pointer-events-none',
+          'plate',
+          grabbed ? 'pointer-events-auto border-bronze-bright' : 'pointer-events-none',
           visible ? 'opacity-100 transition-opacity duration-150' : 'opacity-0',
         ].join(' ')}
-        style={{ backgroundColor: `rgba(2, 6, 23, ${opacity})` }}
+        style={{ backgroundColor: `rgb(14 11 8 / ${opacity})` }}
       >
         {grabbed && (
           <>
             <div
               data-tauri-drag-region
-              className="flex cursor-move items-center justify-between px-3 py-1 text-[10px] uppercase tracking-wider text-cyan-300/70"
+              className="flex cursor-move items-baseline justify-between border-b border-bronze/70 px-3 pt-1.5 pb-1"
             >
-              <span data-tauri-drag-region>poebo</span>
-              <span className="text-slate-400">drag to move · Ctrl+Alt+Space to lock</span>
+              <span data-tauri-drag-region className="font-caps text-[13px] font-bold text-gold">
+                poebo
+              </span>
+              <span data-tauri-drag-region className="text-[11px] text-ash-faint">
+                Drag to move. Ctrl+Alt+Space locks it.
+              </span>
             </div>
-            <div className="border-b border-slate-700/50 px-3 pb-2">
+            <div className="border-b border-bronze/70 px-3 py-2.5">
               <SettingsPanel />
               <ReplayControls />
             </div>
           </>
         )}
-        <div className="px-3 pb-3 pt-2">
+        <div className="px-4 pt-3 pb-3.5">
           <StatusPanel />
         </div>
       </div>
