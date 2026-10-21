@@ -34,6 +34,21 @@ jobs:
       - name: Install frontend deps
         run: pnpm install --frozen-lockfile
 
+      # An installer run over the same version can keep the old exe, so each run gets its own.
+      - name: Stamp the build version
+        shell: bash
+        run: sed -i 's/"version": "0\.1\.0"/"version": "0.1.${{ github.run_number }}"/' src-tauri/tauri.conf.json
+
+      # Asset names carry the version now, so old installers would pile up on the release.
+      - name: Remove old installers from the dev release
+        shell: bash
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          for asset in $(gh release view dev --json assets -q '.assets[].name' 2>/dev/null); do
+            gh release delete-asset dev "$asset" -y
+          done
+
       - name: Build installer and refresh the rolling dev pre-release
         uses: tauri-apps/tauri-action@v0
         env:
@@ -44,6 +59,7 @@ jobs:
           releaseName: Development build
           releaseBody: >
             Automated Windows build of the latest `main`. This is a rolling development
-            pre-release, not a stable version. Grab the `.exe` (or `.msi`) below.
+            pre-release, not a stable version. Grab the setup `.exe` below; it updates an
+            existing install in place.
           releaseDraft: false
           prerelease: true

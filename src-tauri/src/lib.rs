@@ -29,7 +29,7 @@ pub fn run() {
         .plugin(tauri_plugin_store::Builder::default().build())
         .plugin(tauri_plugin_global_shortcut::Builder::new().build())
         .setup(|app| {
-            log::info!("poebo {} starting", env!("CARGO_PKG_VERSION"));
+            log::info!("poebo {} starting", app.package_info().version);
             let data = runtime::load_data_pack()?;
             let saved = settings::load(app.handle()).unwrap_or_default();
             let route = runtime::load_route(&data, saved.league_start);
