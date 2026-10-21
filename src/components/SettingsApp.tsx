@@ -50,7 +50,7 @@ function Row({ label, children }: { label: string; children: ReactNode }): React
 
 function Toggle({ on, onChange }: { on: boolean; onChange: (v: boolean) => void }): React.JSX.Element {
   return (
-    <button className="btn" role="switch" aria-checked={on} aria-pressed={on} onClick={() => onChange(!on)}>
+    <button className="btn" role="switch" aria-checked={on} onClick={() => onChange(!on)}>
       {on ? 'On' : 'Off'}
     </button>
   );

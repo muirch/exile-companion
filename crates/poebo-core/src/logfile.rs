@@ -87,4 +87,39 @@ mod tests {
             ]
         );
     }
+
+    #[test]
+    fn skips_vdf_lines_that_are_not_paths() {
+        let vdf = "\"1\"\n{\n\t\"label\"\t\t\"\"\n\t\"path\"\t\t\"E:\\\\Games\"\n\t\"path\"\n}\n";
+        assert_eq!(library_paths(vdf), [PathBuf::from(r"E:\Games")]);
+    }
+
+    #[test]
+    fn lists_the_steam_root_and_its_vdf_libraries() {
+        let steam = tempfile::tempdir().unwrap();
+        let library = tempfile::tempdir().unwrap();
+        let vdf = format!("\t\t\"path\"\t\t\"{}\"\n", library.path().display());
+        std::fs::create_dir_all(steam.path().join("steamapps")).unwrap();
+        std::fs::write(steam.path().join("steamapps/libraryfolders.vdf"), vdf).unwrap();
+
+        assert_eq!(
+            steam_libraries(steam.path()),
+            [steam.path().to_path_buf(), library.path().to_path_buf()]
+        );
+    }
+
+    #[test]
+    fn keeps_the_saved_path_while_it_exists() {
+        let dir = tempfile::tempdir().unwrap();
+        let log = dir.path().join("Client.txt");
+        std::fs::write(&log, "").unwrap();
+        assert_eq!(find_client_log(log.to_str()), Some(log));
+    }
+
+    #[test]
+    fn ignores_a_saved_path_that_is_gone() {
+        let dir = tempfile::tempdir().unwrap();
+        let gone = dir.path().join("Client.txt");
+        assert_ne!(find_client_log(gone.to_str()), Some(gone));
+    }
 }

@@ -88,6 +88,10 @@ cargo run -p poebo-core --example replay_log
 pnpm install
 pnpm dev
 
+# UI component tests and lint
+pnpm test
+pnpm lint
+
 # or build it for production
 pnpm build
 ```
@@ -143,7 +147,7 @@ Every change goes through a pull request, CI and my review before it lands on `m
 
 ## Contributing
 
-Issues and pull requests are welcome. `poebo-core` is the heart of the project and it is covered by tests, so please keep it that way (`cargo test -p poebo-core`). CI runs formatting, Clippy with warnings treated as errors, the test suite, and a check that the TypeScript bindings are up to date.
+Issues and pull requests are welcome. `poebo-core` is the heart of the project and it is covered by tests, so please keep it that way (`cargo test -p poebo-core`). The UI has its own tests (`pnpm test`). CI runs formatting, Clippy with warnings treated as errors, the Rust and UI tests, the UI lint, and a check that the TypeScript bindings are up to date.
 
 ## License
 

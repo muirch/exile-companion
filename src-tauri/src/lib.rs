@@ -3,7 +3,6 @@
 
 mod commands;
 mod hotkeys;
-mod logfile;
 mod menu;
 mod overlay;
 mod runtime;
@@ -34,7 +33,8 @@ pub fn run() {
             ));
             overlay::restore_anchor(app.handle(), &saved);
 
-            if let Some(log) = logfile::find_client_log(saved.last_log_path.as_deref()) {
+            if let Some(log) = poebo_core::logfile::find_client_log(saved.last_log_path.as_deref())
+            {
                 let path = log.to_string_lossy().into_owned();
                 if let Err(e) = runtime::start_live(app.handle().clone(), path) {
                     eprintln!("could not watch {}: {e}", log.display());

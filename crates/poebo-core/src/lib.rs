@@ -23,6 +23,7 @@ pub mod error;
 pub mod events;
 pub mod guidance;
 pub mod locale;
+pub mod logfile;
 pub mod parser;
 pub mod pipeline;
 pub mod recorder;

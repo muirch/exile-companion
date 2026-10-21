@@ -59,6 +59,12 @@ jobs:
             exit 1
           fi
 
+      - name: Frontend lint
+        run: pnpm lint
+
+      - name: Frontend tests
+        run: pnpm test
+
       - name: Frontend typecheck + build
         run: pnpm build
 

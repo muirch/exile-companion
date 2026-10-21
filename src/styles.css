@@ -189,7 +189,8 @@ body {
     opacity: 0.4;
     pointer-events: none;
   }
-  .btn[aria-pressed='true'] {
+  .btn[aria-pressed='true'],
+  .btn[role='switch'][aria-checked='true'] {
     border-color: var(--color-normal);
     color: var(--color-value);
   }

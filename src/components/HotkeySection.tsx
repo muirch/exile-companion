@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'react';
+import { useCallback, useEffect, useState } from 'react';
 
 import { getHotkeys, pauseHotkeys, resumeHotkeys, setHotkeys } from '../ipc/commands';
 import type { BindError, HotkeySettings, Hotkeys } from '../ipc/types';
@@ -82,11 +82,11 @@ export function HotkeySection(): React.JSX.Element {
     void getHotkeys().then(setCfg);
   }, []);
 
-  const commit = async (next: HotkeySettings): Promise<void> => {
+  const commit = useCallback(async (next: HotkeySettings): Promise<void> => {
     setCfg(next);
     useAppStore.getState().setHotkeys(next.hotkeys);
     setErrors(await setHotkeys(next));
-  };
+  }, []);
 
   useEffect(() => {
     if (!recording || !cfg) return;
@@ -105,7 +105,7 @@ export function HotkeySection(): React.JSX.Element {
     };
     window.addEventListener('keydown', onKey);
     return () => window.removeEventListener('keydown', onKey);
-  }, [recording, cfg]);
+  }, [recording, cfg, commit]);
 
   if (!cfg) return <p className="text-[13px] text-label">Loading hotkeys…</p>;
   const errorFor = (key: string): BindError | undefined => errors.find((e) => e.action === key);
@@ -150,7 +150,6 @@ export function HotkeySection(): React.JSX.Element {
           className="btn"
           role="switch"
           aria-checked={cfg.relogEnabled}
-          aria-pressed={cfg.relogEnabled}
           onClick={() => void commit({ ...cfg, relogEnabled: !cfg.relogEnabled })}
         >
           {cfg.relogEnabled ? 'On' : 'Off'}
