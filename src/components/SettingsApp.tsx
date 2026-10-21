@@ -19,6 +19,7 @@ import {
 } from '../ipc/commands';
 import type { Settings } from '../ipc/types';
 import { useAppStore } from '../store/useAppStore';
+import { HotkeySection } from './HotkeySection';
 import { ReplayControls } from './ReplayControls';
 import { TooltipHeader } from './Tooltip';
 
@@ -231,24 +232,10 @@ function BuildSection(): React.JSX.Element {
   );
 }
 
-const HOTKEYS: [string, string][] = [
-  ['Hold Esc', 'Open the quick menu'],
-  ['Ctrl+Alt+Space', 'Move the overlay, press again to lock'],
-  ['Ctrl+Alt+PageDown', 'Next route step'],
-  ['Ctrl+Alt+PageUp', 'Previous route step'],
-];
-
-function HotkeySection(): React.JSX.Element {
+function HotkeysGroup(): React.JSX.Element {
   return (
     <Section title="Hotkeys">
-      <dl className="grid grid-cols-[8rem_1fr] gap-x-3 gap-y-1.5 text-[13px]">
-        {HOTKEYS.map(([key, what]) => (
-          <div key={key} className="contents">
-            <dt className="text-value">{key}</dt>
-            <dd className="text-label">{what}</dd>
-          </div>
-        ))}
-      </dl>
+      <HotkeySection />
     </Section>
   );
 }
@@ -260,7 +247,7 @@ export function SettingsApp(): React.JSX.Element {
       <RouteSection />
       <LogSection />
       <BuildSection />
-      <HotkeySection />
+      <HotkeysGroup />
     </main>
   );
 }

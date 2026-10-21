@@ -42,3 +42,23 @@ export interface ReplayProgress {
   speed: SpeedMultiplier;
   paused: boolean;
 }
+
+/** Mirrors `poebo_app::hotkeys::Hotkeys`: global-hotkey syntax such as "Alt+ArrowLeft". */
+export interface Hotkeys {
+  menuHold: string;
+  moveOverlay: string;
+  routePrev: string;
+  routeNext: string;
+  relog: string;
+}
+
+export interface HotkeySettings {
+  hotkeys: Hotkeys;
+  relogEnabled: boolean;
+}
+
+export interface BindError {
+  action: string;
+  shortcut: string;
+  error: string;
+}

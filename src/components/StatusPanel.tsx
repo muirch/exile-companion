@@ -1,5 +1,6 @@
 import { routeNext, routePrev } from '../ipc/commands';
 import { useAppStore } from '../store/useAppStore';
+import { holdLabel, shortcutLabel } from './HotkeySection';
 import { HereSteps, PassThrough, ThenStep, hasActions } from './RoutePanel';
 import { TooltipHeader, TooltipSep } from './Tooltip';
 
@@ -39,22 +40,26 @@ function GemClaim(): React.JSX.Element | null {
 function NoLogHint(): React.JSX.Element | null {
   const mode = useAppStore((s) => s.source.mode);
   const error = useAppStore((s) => s.source.error);
+  const holdKey = useAppStore((s) => s.hotkeys.menuHold);
   if (mode !== 'idle') return null;
   return (
     <p className="font-body text-[13px] leading-snug text-unique">
-      {error ?? 'Client.txt not found.'} Unlock with Ctrl+Alt+Space, then pick logs/Client.txt in
-      the game folder.
+      {error ?? 'Client.txt not found.'} Hold {holdLabel(holdKey)} in the game, open Settings
+      and pick logs/Client.txt in the game folder.
     </p>
   );
 }
 
 function RouteNav(): React.JSX.Element {
+  const keys = useAppStore((s) => s.hotkeys);
   return (
     <div className="flex items-center justify-center gap-1.5 pt-1">
       <button className="btn" onClick={() => void routePrev()}>
         Back
       </button>
-      <span className="font-body text-[11px] text-label">Ctrl+Alt+PageUp / PageDown</span>
+      <span className="font-body text-[11px] text-label">
+        {shortcutLabel(keys.routePrev)} / {shortcutLabel(keys.routeNext)}
+      </span>
       <button className="btn" onClick={() => void routeNext()}>
         Next
       </button>

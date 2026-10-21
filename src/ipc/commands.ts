@@ -12,6 +12,8 @@ import { useAppStore } from '../store/useAppStore';
 import type {
   BuildSummary,
   CampaignState,
+  BindError,
+  HotkeySettings,
   NextObjective,
   RouteView,
   Settings,
@@ -171,3 +173,30 @@ export const setRouteEnabled = (enabled: boolean): Promise<void> =>
   isTauri()
     ? invoke('set_route_enabled', { enabled })
     : Promise.resolve(useAppStore.getState().setRouteEnabled(enabled));
+
+const DEFAULT_HOTKEYS: HotkeySettings = {
+  hotkeys: {
+    menuHold: 'Escape',
+    moveOverlay: 'Alt+KeyM',
+    routePrev: 'Alt+ArrowLeft',
+    routeNext: 'Alt+ArrowRight',
+    relog: 'F9',
+  },
+  relogEnabled: false,
+};
+let mockHotkeys = DEFAULT_HOTKEYS;
+
+export const getHotkeys = (): Promise<HotkeySettings> =>
+  isTauri() ? invoke('get_hotkeys') : Promise.resolve(mockHotkeys);
+
+export const setHotkeys = (value: HotkeySettings): Promise<BindError[]> => {
+  if (isTauri()) return invoke('set_hotkeys', { value });
+  mockHotkeys = value;
+  return Promise.resolve([]);
+};
+
+export const pauseHotkeys = (): Promise<void> =>
+  isTauri() ? invoke('pause_hotkeys') : Promise.resolve();
+
+export const resumeHotkeys = (): Promise<BindError[]> =>
+  isTauri() ? invoke('resume_hotkeys') : Promise.resolve([]);

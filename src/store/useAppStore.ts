@@ -2,6 +2,7 @@ import { create } from 'zustand';
 
 import type {
   BuildSummary,
+  Hotkeys,
   CampaignState,
   NextObjective,
   ReplayProgress,
@@ -28,6 +29,7 @@ interface AppStore {
   guidance: NextObjective | null;
   route: RouteView | null;
   routeEnabled: boolean;
+  hotkeys: Hotkeys;
   source: { mode: SourceMode; path: string | null; error: string | null };
   replay: ReplayProgress;
   ui: { grabbed: boolean; opacity: number; gameFocused: boolean; textScale: number };
@@ -37,6 +39,7 @@ interface AppStore {
   setGuidance: (guidance: NextObjective | null) => void;
   setRoute: (route: RouteView | null) => void;
   setRouteEnabled: (routeEnabled: boolean) => void;
+  setHotkeys: (hotkeys: Hotkeys) => void;
   setSourceStatus: (status: SourceStatus) => void;
   setReplayProgress: (progress: ReplayProgress) => void;
   setGrabbed: (grabbed: boolean) => void;
@@ -52,6 +55,13 @@ export const useAppStore = create<AppStore>((set) => ({
   guidance: null,
   route: null,
   routeEnabled: true,
+  hotkeys: {
+    menuHold: 'Escape',
+    moveOverlay: 'Alt+KeyM',
+    routePrev: 'Alt+ArrowLeft',
+    routeNext: 'Alt+ArrowRight',
+    relog: 'F9',
+  },
   source: { mode: 'idle', path: null, error: null },
   replay: { position: 0, total: 0, speed: 'X1', paused: false },
   // Hidden and locked until the backend (or the browser mock) says otherwise, so the first frame
@@ -63,6 +73,7 @@ export const useAppStore = create<AppStore>((set) => ({
   setGuidance: (guidance) => set({ guidance }),
   setRoute: (route) => set({ route }),
   setRouteEnabled: (routeEnabled) => set({ routeEnabled }),
+  setHotkeys: (hotkeys) => set({ hotkeys }),
   setSourceStatus: (status) =>
     set({ source: { mode: status.mode, path: status.path ?? null, error: status.error ?? null } }),
   setReplayProgress: (replay) => set({ replay }),

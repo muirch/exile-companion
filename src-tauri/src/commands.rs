@@ -165,6 +165,53 @@ pub fn set_route_enabled(app: AppHandle, enabled: bool) {
     crate::menu::set_route_enabled(&app, enabled);
 }
 
+#[derive(Clone, serde::Serialize, serde::Deserialize)]
+#[serde(rename_all = "camelCase")]
+pub struct HotkeySettings {
+    hotkeys: crate::hotkeys::Hotkeys,
+    relog_enabled: bool,
+}
+
+#[tauri::command]
+pub fn get_hotkeys(app: AppHandle) -> HotkeySettings {
+    let s = settings::load(&app).unwrap_or_default();
+    HotkeySettings {
+        hotkeys: s.hotkeys,
+        relog_enabled: s.relog_enabled,
+    }
+}
+
+/// Saves and re-registers; returns the bindings that failed.
+#[tauri::command]
+pub fn set_hotkeys(
+    app: AppHandle,
+    value: HotkeySettings,
+) -> Result<Vec<crate::hotkeys::BindError>, String> {
+    let mut s = settings::load(&app)?;
+    s.hotkeys = value.hotkeys;
+    s.relog_enabled = value.relog_enabled;
+    settings::save(&app, &s)?;
+    let _ = app.emit(
+        "hotkeys://changed",
+        HotkeySettings {
+            hotkeys: s.hotkeys.clone(),
+            relog_enabled: s.relog_enabled,
+        },
+    );
+    Ok(crate::hotkeys::register_all(&app))
+}
+
+// While the settings window records a new shortcut, the old ones must not fire.
+#[tauri::command]
+pub fn pause_hotkeys(app: AppHandle) {
+    crate::hotkeys::pause(&app);
+}
+
+#[tauri::command]
+pub fn resume_hotkeys(app: AppHandle) -> Vec<crate::hotkeys::BindError> {
+    crate::hotkeys::register_all(&app)
+}
+
 #[tauri::command]
 pub fn fit_overlay(app: AppHandle, width: f64, height: f64) -> Result<(), String> {
     crate::overlay::fit(&app, width, height).map_err(|e| e.to_string())

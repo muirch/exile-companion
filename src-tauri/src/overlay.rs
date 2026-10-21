@@ -180,6 +180,7 @@ fn on_foreground_changed(app: &AppHandle, is_game: bool, is_own: bool) {
     if !is_game && !is_own && state.grabbed.load(Ordering::SeqCst) {
         set_grab(app, false);
     }
+    state.game_foreground.store(is_game, Ordering::SeqCst);
     let focused = is_game || is_own;
     if state.game_focused.swap(focused, Ordering::SeqCst) != focused {
         let _ = app.emit("overlay://game-focus", focused);

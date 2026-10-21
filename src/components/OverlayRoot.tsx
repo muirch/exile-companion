@@ -1,6 +1,7 @@
 import { useEffect, useLayoutEffect, useRef, useState } from 'react';
 
 import { fitOverlay } from '../ipc/commands';
+import { holdLabel, shortcutLabel } from './HotkeySection';
 import { useAppStore } from '../store/useAppStore';
 import { StatusPanel } from './StatusPanel';
 import { TooltipHeader } from './Tooltip';
@@ -9,6 +10,7 @@ const NOTICE_MS = 5000;
 
 // Shown once when poebo starts without the game in front, instead of the route.
 function StartupNotice(): React.JSX.Element {
+  const holdKey = useAppStore((s) => s.hotkeys.menuHold);
   const [shown, setShown] = useState(true);
   useEffect(() => {
     const t = setTimeout(() => setShown(false), NOTICE_MS);
@@ -25,7 +27,8 @@ function StartupNotice(): React.JSX.Element {
     >
       <TooltipHeader tint="var(--color-normal)" title="poebo" subtitle="Running in the background" />
       <p className="px-4 pt-2 pb-3 font-body text-[13px] leading-snug text-label italic">
-        It appears over Path of Exile while the game is focused. Hold Esc in the game for the menu.
+        It appears over Path of Exile while the game is focused. Hold{' '}
+        {holdLabel(holdKey)} in the game for the menu.
       </p>
     </div>
   );
@@ -37,6 +40,7 @@ export function OverlayRoot(): React.JSX.Element {
   const textScale = useAppStore((s) => s.ui.textScale);
   const gameFocused = useAppStore((s) => s.ui.gameFocused);
   const routeEnabled = useAppStore((s) => s.routeEnabled);
+  const hotkeys = useAppStore((s) => s.hotkeys);
   const visible = (gameFocused && routeEnabled) || grabbed;
   const [shownOnce, setShownOnce] = useState(false);
   if (visible && !shownOnce) setShownOnce(true);
@@ -79,7 +83,8 @@ export function OverlayRoot(): React.JSX.Element {
                 poebo
               </span>
               <span data-tauri-drag-region className="text-[11px] text-label">
-                Drag to move, Ctrl+Alt+Space to lock. Hold Esc for the menu.
+                Drag to move, {shortcutLabel(hotkeys.moveOverlay)} to lock.
+                Hold {holdLabel(hotkeys.menuHold)} for the menu.
               </span>
             </div>
           </>

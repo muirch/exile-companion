@@ -4,6 +4,7 @@ import { closeMenu, openSettings, quitApp, setRouteEnabled, startMove } from '..
 import { isTauri } from '../ipc/env';
 import { onMenuOpened } from '../ipc/events';
 import { useAppStore } from '../store/useAppStore';
+import { shortcutLabel } from './HotkeySection';
 import { TooltipHeader, TooltipSep } from './Tooltip';
 
 const TINT = 'var(--color-normal)';
@@ -40,6 +41,7 @@ function Row({
 
 export function MenuApp(): React.JSX.Element {
   const routeEnabled = useAppStore((s) => s.routeEnabled);
+  const moveKey = useAppStore((s) => s.hotkeys.moveOverlay);
   const panel = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
@@ -71,7 +73,11 @@ export function MenuApp(): React.JSX.Element {
       />
       <TooltipSep tint={TINT} />
       <Row label="Settings" onClick={() => void openSettings()} />
-      <Row label="Move overlay" hint="Ctrl+Alt+Space" onClick={() => void startMove()} />
+      <Row
+        label="Move overlay"
+        hint={shortcutLabel(moveKey)}
+        onClick={() => void startMove()}
+      />
       <TooltipSep tint={TINT} />
       <Row label="Quit poebo" onClick={() => void quitApp()} />
     </div>

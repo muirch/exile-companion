@@ -3,6 +3,7 @@ import { useEffect } from 'react';
 import {
   getBuild,
   getGuidance,
+  getHotkeys,
   getOverlayState,
   getRoute,
   getRouteEnabled,
@@ -16,6 +17,7 @@ import {
   onCampaignState,
   onGameFocus,
   onGuidance,
+  onHotkeysChanged,
   onOverlayGrab,
   onReplayProgress,
   onRouteEnabled,
@@ -53,6 +55,7 @@ export function useBackendSync(): void {
       onOverlayGrab(st.setGrabbed),
       onGameFocus(st.setGameFocused),
       onSettingsChanged(applySettings),
+      onHotkeysChanged((v) => st.setHotkeys(v.hotkeys)),
     ]);
 
     getState().then(st.setCampaign).catch(noop);
@@ -62,6 +65,9 @@ export function useBackendSync(): void {
     getRouteEnabled().then(st.setRouteEnabled).catch(noop);
     getSource().then(st.setSourceStatus).catch(noop);
     getSettings().then(applySettings).catch(noop);
+    getHotkeys()
+      .then((v) => st.setHotkeys(v.hotkeys))
+      .catch(noop);
     getOverlayState()
       .then((o) => {
         st.setGrabbed(o.grabbed);

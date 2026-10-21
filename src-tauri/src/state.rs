@@ -53,7 +53,10 @@ pub struct AppState {
     pub build: Mutex<BuildState>,
     /// Whether the overlay is in interactive ("grabbed") mode.
     pub grabbed: AtomicBool,
+    /// The game, or one of our own windows, is in front.
     pub game_focused: AtomicBool,
+    /// The game itself is in front.
+    pub game_foreground: AtomicBool,
     pub route: Arc<Route>,
     pub anchor: Mutex<(f64, f64)>,
     pub tracker: Mutex<RouteTracker>,
@@ -76,6 +79,7 @@ impl AppState {
             // Global shortcuts don't fire on Wayland, so off Windows the controls stay reachable.
             grabbed: AtomicBool::new(!cfg!(windows)),
             game_focused: AtomicBool::new(!cfg!(windows)),
+            game_foreground: AtomicBool::new(false),
             route,
             anchor: Mutex::new(crate::overlay::DEFAULT_ANCHOR),
             tracker: Mutex::new(RouteTracker::at(route_edge)),

@@ -23,10 +23,12 @@ poebo only reads a text log the game already writes to disk, and shows you thing
 - inject into the game process,
 - read game memory,
 - hook DirectX, Vulkan or OpenGL,
-- automate anything or send fake keyboard/mouse input,
+- automate anything,
 - touch the game process in any way.
 
 The only inputs it looks at are the `Client.txt` log, a few optional hotkeys, an optional clipboard read, and (later) your local Path of Building files.
+
+It sends nothing to the game, with one opt-in exception: the relog key (off by default, F9 when on) types `/exit` into the game chat, the same way Awakened PoE Trade does. That is one chat command per key press, only while the game is in front, which GGG's third-party policy allows.
 
 This project is not affiliated with or endorsed by Grinding Gear Games. Path of Exile is a trademark of Grinding Gear Games. It is a free, non-commercial fan tool.
 
@@ -36,7 +38,7 @@ This project is not affiliated with or endorsed by Grinding Gear Games. Path of 
 - **Sensible progress detection.** Logouts, portals, town and hideout visits, and re-entering the same zone all behave the way you'd expect. It also handles the fact that Acts 6-10 reuse the zone names from Acts 1-5 (there is a "Lioneye's Watch" in both Act 1 and Act 6), telling them apart from where you are in the run and from the game's internal area id.
 - **Replay.** Feed a recorded log back through the same pipeline, with pause, single-step, and 1x / 2x / 5x / 20x / 100x speeds. Handy for testing and for reproducing bugs.
 - **Recording.** A recording is just another `Client.txt`, so it plays back exactly.
-- **Leveling route.** The overlay shows what to do in the current area and what comes next, using the route from [exile-leveling](https://github.com/HeartofPhos/exile-leveling) (MIT). It follows the area the game loads, and your level tells repeat town visits apart; Ctrl+Alt+PageDown and Ctrl+Alt+PageUp step it by hand. The position is saved between sessions.
+- **Leveling route.** The overlay shows what to do in the current area and what comes next, using the route from [exile-leveling](https://github.com/HeartofPhos/exile-leveling) (MIT). It follows the area the game loads, and your level tells repeat town visits apart; Alt+Right and Alt+Left step it by hand (all hotkeys can be changed in settings). The position is saved between sessions.
 - **Quick menu and settings.** Hold Esc in the game for a menu under the cursor: turn features on or off, open the settings window, move the overlay, quit. poebo only watches the key; the game still gets it.
 - **The overlay.** A borderless, transparent, always-on-top window that is click-through by default, so the game keeps the mouse. Press Ctrl+Alt+Space to grab it when you want to move it or change a setting, and again to let go.
 - **Data straight from the game.** The 155-area campaign map is generated from Path of Exile's own game files for the current patch, so it does not depend on someone else's dataset staying current.

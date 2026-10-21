@@ -68,6 +68,14 @@ pub fn set_route_enabled(app: &AppHandle, enabled: bool) {
     let _ = app.emit("features://route", enabled);
 }
 
+/// Which key is watched for the hold: "Escape", "Tab" or "Backquote".
+pub fn set_hold_key(name: &str) {
+    #[cfg(windows)]
+    win::set_hold_key(name);
+    #[cfg(not(windows))]
+    let _ = name;
+}
+
 /// Holding Esc opens the menu, as in Exile-UI. The hook only watches: every key event is passed
 /// on to the game untouched.
 pub fn watch_esc_hold(app: AppHandle) {
@@ -83,10 +91,12 @@ mod win {
     use std::sync::OnceLock;
     use std::time::Duration;
 
+    use std::sync::atomic::AtomicU32;
     use tauri::AppHandle;
     use windows_sys::Win32::Foundation::{LPARAM, LRESULT, WPARAM};
     use windows_sys::Win32::System::LibraryLoader::GetModuleHandleW;
-    use windows_sys::Win32::UI::Input::KeyboardAndMouse::VK_ESCAPE;
+
+    use windows_sys::Win32::UI::Input::KeyboardAndMouse::{VK_ESCAPE, VK_OEM_3, VK_TAB};
     use windows_sys::Win32::UI::WindowsAndMessaging::{
         CallNextHookEx, DispatchMessageW, GetMessageW, SetWindowsHookExW, TranslateMessage,
         KBDLLHOOKSTRUCT, MSG, WH_KEYBOARD_LL, WM_KEYDOWN, WM_KEYUP, WM_SYSKEYDOWN, WM_SYSKEYUP,
@@ -96,6 +106,16 @@ mod win {
 
     static APP: OnceLock<AppHandle> = OnceLock::new();
     static HELD: AtomicBool = AtomicBool::new(false);
+    static HOLD_VK: AtomicU32 = AtomicU32::new(VK_ESCAPE as u32);
+
+    pub fn set_hold_key(name: &str) {
+        let vk = match name {
+            "Tab" => VK_TAB,
+            "Backquote" => VK_OEM_3,
+            _ => VK_ESCAPE,
+        };
+        HOLD_VK.store(u32::from(vk), Ordering::SeqCst);
+    }
     // Bumped on every fresh press so a stale timer from an earlier press does nothing.
     static PRESS: AtomicU64 = AtomicU64::new(0);
 
@@ -122,7 +142,7 @@ mod win {
     unsafe extern "system" fn on_key(code: i32, wparam: WPARAM, lparam: LPARAM) -> LRESULT {
         if code >= 0 {
             let info = unsafe { &*(lparam as *const KBDLLHOOKSTRUCT) };
-            if info.vkCode == u32::from(VK_ESCAPE) {
+            if info.vkCode == HOLD_VK.load(Ordering::SeqCst) {
                 match wparam as u32 {
                     WM_KEYDOWN | WM_SYSKEYDOWN => pressed(),
                     WM_KEYUP | WM_SYSKEYUP => HELD.store(false, Ordering::SeqCst),

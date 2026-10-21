@@ -2,6 +2,7 @@
 //! campaign logic to `poebo-core`.
 
 mod commands;
+mod hotkeys;
 mod logfile;
 mod menu;
 mod overlay;
@@ -9,9 +10,7 @@ mod runtime;
 mod settings;
 mod state;
 
-use runtime::RouteMove;
 use tauri::Manager;
-use tauri_plugin_global_shortcut::{Code, GlobalShortcutExt, Modifiers, Shortcut, ShortcutState};
 
 pub use state::AppState;
 
@@ -42,35 +41,14 @@ pub fn run() {
                 }
             }
 
-            // The overlay starts interactive so its controls are reachable without a hotkey.
-            // Ctrl+Alt+Space toggles click-through on X11; on Wayland global shortcuts do not fire.
-            let toggle = Shortcut::new(Some(Modifiers::CONTROL | Modifiers::ALT), Code::Space);
-            app.global_shortcut()
-                .on_shortcut(toggle, move |app, _shortcut, event| {
-                    if event.state() == ShortcutState::Pressed {
-                        overlay::toggle_grab(app);
-                    }
-                })?;
-
             overlay::create_tray(app.handle())?;
             let grabbed = !cfg!(windows);
             overlay::set_grab(app.handle(), grabbed);
             overlay::watch_game_focus(app.handle().clone());
             menu::watch_esc_hold(app.handle().clone());
 
-            for (code, mv) in [(Code::PageDown, 0), (Code::PageUp, 1)] {
-                let shortcut = Shortcut::new(Some(Modifiers::CONTROL | Modifiers::ALT), code);
-                app.global_shortcut()
-                    .on_shortcut(shortcut, move |app, _shortcut, event| {
-                        if event.state() == ShortcutState::Pressed {
-                            let mv = if mv == 0 {
-                                RouteMove::Next
-                            } else {
-                                RouteMove::Prev
-                            };
-                            runtime::move_route(app, mv);
-                        }
-                    })?;
+            for e in hotkeys::register_all(app.handle()) {
+                eprintln!("hotkey {} ({}): {}", e.action, e.shortcut, e.error);
             }
 
             Ok(())
@@ -115,6 +93,10 @@ pub fn run() {
             commands::quit_app,
             commands::get_route_enabled,
             commands::set_route_enabled,
+            commands::get_hotkeys,
+            commands::set_hotkeys,
+            commands::pause_hotkeys,
+            commands::resume_hotkeys,
             commands::route_next,
             commands::route_prev,
             commands::route_reset,

@@ -16,6 +16,9 @@ pub struct Settings {
     /// Overlay position as fractions of its monitor: horizontal center and bottom edge.
     pub anchor: Option<(f64, f64)>,
     pub route_enabled: bool,
+    pub hotkeys: crate::hotkeys::Hotkeys,
+    /// Off by default: it is the one feature that sends input to the game.
+    pub relog_enabled: bool,
     /// Read once at startup: the edges differ between the two route variants.
     pub league_start: bool,
 }
@@ -29,6 +32,8 @@ impl Default for Settings {
             text_scale: 1.0,
             anchor: None,
             route_enabled: true,
+            hotkeys: crate::hotkeys::Hotkeys::default(),
+            relog_enabled: false,
             league_start: true,
         }
     }

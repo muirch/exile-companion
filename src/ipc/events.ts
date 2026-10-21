@@ -7,6 +7,7 @@ import type {
   CampaignState,
   NextObjective,
   ReplayProgress,
+  HotkeySettings,
   RouteView,
   Settings,
   SourceStatus,
@@ -53,3 +54,6 @@ export const onRouteEnabled = (cb: (enabled: boolean) => void): Promise<Unlisten
 
 export const onMenuOpened = (cb: () => void): Promise<UnlistenFn> =>
   listen('menu://opened', () => cb());
+
+export const onHotkeysChanged = (cb: (value: HotkeySettings) => void): Promise<UnlistenFn> =>
+  listen<HotkeySettings>('hotkeys://changed', (e) => cb(e.payload));
