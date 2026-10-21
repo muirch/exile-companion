@@ -65,6 +65,13 @@ body,
   overflow: hidden;
 }
 
+/* In Tauri the window is fitted to the content; in the browser mock this keeps it bottom center. */
+#root {
+  display: flex;
+  align-items: flex-end;
+  justify-content: center;
+}
+
 body {
   font-family: var(--font-body);
   color: var(--color-plain);

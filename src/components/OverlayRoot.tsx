@@ -1,5 +1,6 @@
-import { useEffect, useState } from 'react';
+import { useEffect, useLayoutEffect, useRef, useState } from 'react';
 
+import { fitOverlay } from '../ipc/commands';
 import { useAppStore } from '../store/useAppStore';
 import { ReplayControls } from './ReplayControls';
 import { SettingsPanel } from './SettingsPanel';
@@ -20,7 +21,7 @@ function StartupNotice(): React.JSX.Element {
     <div
       role="status"
       className={[
-        'tooltip pointer-events-none absolute inset-x-0 bottom-2 mx-auto w-72 bg-black/85 transition-opacity duration-700',
+        'tooltip pointer-events-none w-72 bg-black/85 transition-opacity duration-700',
         shown ? 'opacity-100' : 'opacity-0',
       ].join(' ')}
     >
@@ -41,17 +42,33 @@ export function OverlayRoot(): React.JSX.Element {
   const [shownOnce, setShownOnce] = useState(false);
   if (visible && !shownOnce) setShownOnce(true);
 
-  // Anchored to the bottom of the window: unlocking adds controls above the route, so the route
-  // itself stays where the player put it. Hiding is instant to match the game window.
+  // The window is sized to this box and keeps its bottom center fixed, so the route stays where
+  // the player put it when the controls open above it or the text grows.
+  const box = useRef<HTMLDivElement>(null);
+  useLayoutEffect(() => {
+    const el = box.current;
+    if (!el) return;
+    const report = (): void => {
+      const r = el.getBoundingClientRect();
+      void fitOverlay(Math.ceil(r.width), Math.ceil(r.height));
+    };
+    const ro = new ResizeObserver(report);
+    ro.observe(el);
+    report();
+    return () => ro.disconnect();
+  }, []);
+
+  // Hiding is instant to match the game window.
   return (
-    <div className="relative flex h-full flex-col justify-end p-2">
+    <div ref={box} className="inline-block p-2">
       {!shownOnce && <StartupNotice />}
       <div
+        hidden={!shownOnce}
         className={[
           grabbed ? 'pointer-events-auto outline outline-1 outline-offset-2 outline-currency/60' : 'pointer-events-none',
           visible ? 'opacity-100 transition-opacity duration-150' : 'opacity-0',
         ].join(' ')}
-        style={{ backgroundColor: `rgb(0 0 0 / ${opacity})`, zoom: textScale }}
+        style={{ backgroundColor: `rgb(0 0 0 / ${opacity})`, zoom: textScale, width: 404 }}
       >
         {grabbed && (
           <>

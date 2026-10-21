@@ -1,17 +1,29 @@
 use std::sync::atomic::Ordering;
+use std::sync::{Mutex, MutexGuard};
 
 use tauri::menu::{Menu, MenuItem};
 use tauri::tray::TrayIconBuilder;
-use tauri::{AppHandle, Emitter, Manager};
+use tauri::{
+    AppHandle, Emitter, Manager, Monitor, PhysicalPosition, PhysicalSize, WebviewWindow, Window,
+};
 
+use crate::settings::{self, Settings};
 use crate::state::AppState;
 
 const OVERLAY_LABEL: &str = "overlay";
 
+fn lock<T>(m: &Mutex<T>) -> MutexGuard<'_, T> {
+    m.lock().unwrap_or_else(|poisoned| poisoned.into_inner())
+}
+
 /// Grabbed means the overlay takes the mouse (drag, buttons); otherwise clicks go to the game.
 pub fn set_grab(app: &AppHandle, grabbed: bool) {
     let state = app.state::<AppState>();
-    state.grabbed.store(grabbed, Ordering::SeqCst);
+    let was = state.grabbed.swap(grabbed, Ordering::SeqCst);
+    // Dragging is only possible while unlocked, so locking is when a new position is final.
+    if was && !grabbed {
+        save_anchor(app);
+    }
     if let Some(window) = app.get_webview_window(OVERLAY_LABEL) {
         let _ = window.set_ignore_cursor_events(!grabbed);
     }
@@ -23,21 +35,94 @@ pub fn toggle_grab(app: &AppHandle) {
     set_grab(app, !grabbed);
 }
 
-// PoE's skill bar and flasks take roughly the bottom 15% of the screen.
-const ABOVE_SKILL_BAR: f64 = 0.15;
+// Center of the screen, bottom edge above PoE's skill bar and flasks (about the bottom 15%).
+pub const DEFAULT_ANCHOR: (f64, f64) = (0.5, 0.85);
 
-pub fn snap_bottom_center(app: &AppHandle) -> tauri::Result<()> {
-    let Some(window) = app.get_webview_window(OVERLAY_LABEL) else {
-        return Ok(());
-    };
-    let Some(monitor) = window.current_monitor()? else {
+fn monitor_of(window: &WebviewWindow) -> Option<Monitor> {
+    window
+        .current_monitor()
+        .ok()
+        .flatten()
+        .or_else(|| window.primary_monitor().ok().flatten())
+}
+
+// Keeps the anchor point (bottom center) where it is, whatever size the window takes.
+fn place(window: &WebviewWindow, anchor: (f64, f64)) -> tauri::Result<()> {
+    let Some(monitor) = monitor_of(window) else {
         return Ok(());
     };
     let (mpos, msize) = (monitor.position(), monitor.size());
     let size = window.outer_size()?;
-    let x = mpos.x + (msize.width as i32 - size.width as i32) / 2;
-    let bottom = mpos.y + msize.height as i32 - (msize.height as f64 * ABOVE_SKILL_BAR) as i32;
-    window.set_position(tauri::PhysicalPosition::new(x, bottom - size.height as i32))
+    let (w, h) = (size.width as i32, size.height as i32);
+    let (mw, mh) = (msize.width as i32, msize.height as i32);
+    let x = mpos.x + (anchor.0 * mw as f64) as i32 - w / 2;
+    let y = mpos.y + (anchor.1 * mh as f64) as i32 - h;
+    let x = x.clamp(mpos.x, mpos.x + (mw - w).max(0));
+    let y = y.clamp(mpos.y, mpos.y + (mh - h).max(0));
+    window.set_position(PhysicalPosition::new(x, y))
+}
+
+pub fn restore_anchor(app: &AppHandle, saved: &Settings) {
+    if let Some(a) = saved.anchor {
+        *lock(&app.state::<AppState>().anchor) = a;
+    }
+}
+
+/// Sizes the window to the overlay content (CSS pixels) and re-places it on its anchor.
+pub fn fit(app: &AppHandle, width: f64, height: f64) -> tauri::Result<()> {
+    let Some(window) = app.get_webview_window(OVERLAY_LABEL) else {
+        return Ok(());
+    };
+    let scale = window.scale_factor()?;
+    let size = PhysicalSize::new(
+        (width * scale).ceil().max(1.0) as u32,
+        (height * scale).ceil().max(1.0) as u32,
+    );
+    if window.outer_size()? != size {
+        window.set_size(size)?;
+    }
+    let anchor = *lock(&app.state::<AppState>().anchor);
+    place(&window, anchor)
+}
+
+/// Remembers where the player dragged the overlay, as an anchor relative to the monitor.
+pub fn on_moved(window: &Window) {
+    if window.label() != OVERLAY_LABEL {
+        return;
+    }
+    let app = window.app_handle();
+    let state = app.state::<AppState>();
+    if !state.grabbed.load(Ordering::SeqCst) {
+        return;
+    }
+    let (Ok(pos), Ok(size), Some(monitor)) = (
+        window.outer_position(),
+        window.outer_size(),
+        window.current_monitor().ok().flatten(),
+    ) else {
+        return;
+    };
+    let (mpos, msize) = (monitor.position(), monitor.size());
+    let x = (pos.x - mpos.x) as f64 + size.width as f64 / 2.0;
+    let bottom = (pos.y - mpos.y) as f64 + size.height as f64;
+    *lock(&state.anchor) = (x / msize.width as f64, bottom / msize.height as f64);
+}
+
+fn save_anchor(app: &AppHandle) {
+    let anchor = *lock(&app.state::<AppState>().anchor);
+    if let Ok(mut s) = settings::load(app) {
+        s.anchor = Some(anchor);
+        let _ = settings::save(app, &s);
+    }
+}
+
+pub fn snap_bottom_center(app: &AppHandle) -> tauri::Result<()> {
+    *lock(&app.state::<AppState>().anchor) = DEFAULT_ANCHOR;
+    save_anchor(app);
+    match app.get_webview_window(OVERLAY_LABEL) {
+        Some(window) => place(&window, DEFAULT_ANCHOR),
+        None => Ok(()),
+    }
 }
 
 pub fn game_focused(app: &AppHandle) -> bool {

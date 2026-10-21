@@ -13,6 +13,8 @@ pub struct Settings {
     pub last_log_path: Option<String>,
     pub route_edge: usize,
     pub text_scale: f64,
+    /// Overlay position as fractions of its monitor: horizontal center and bottom edge.
+    pub anchor: Option<(f64, f64)>,
     /// Read once at startup: the edges differ between the two route variants.
     pub league_start: bool,
 }
@@ -24,6 +26,7 @@ impl Default for Settings {
             last_log_path: None,
             route_edge: 0,
             text_scale: 1.0,
+            anchor: None,
             league_start: true,
         }
     }

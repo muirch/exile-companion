@@ -55,6 +55,7 @@ pub struct AppState {
     pub grabbed: AtomicBool,
     pub game_focused: AtomicBool,
     pub route: Arc<Route>,
+    pub anchor: Mutex<(f64, f64)>,
     pub tracker: Mutex<RouteTracker>,
 }
 
@@ -70,6 +71,7 @@ impl AppState {
             grabbed: AtomicBool::new(!cfg!(windows)),
             game_focused: AtomicBool::new(!cfg!(windows)),
             route,
+            anchor: Mutex::new(crate::overlay::DEFAULT_ANCHOR),
             tracker: Mutex::new(RouteTracker::at(route_edge)),
         }
     }

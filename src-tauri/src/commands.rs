@@ -136,6 +136,11 @@ pub fn get_overlay_state(app: AppHandle, state: State<'_, AppState>) -> OverlayS
 }
 
 #[tauri::command]
+pub fn fit_overlay(app: AppHandle, width: f64, height: f64) -> Result<(), String> {
+    crate::overlay::fit(&app, width, height).map_err(|e| e.to_string())
+}
+
+#[tauri::command]
 pub fn snap_overlay_bottom_center(app: AppHandle) -> Result<(), String> {
     crate::overlay::snap_bottom_center(&app).map_err(|e| e.to_string())
 }

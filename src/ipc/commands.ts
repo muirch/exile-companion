@@ -148,3 +148,6 @@ export const getOverlayState = (): Promise<OverlayState> =>
 
 export const snapOverlayBottomCenter = (): Promise<void> =>
   isTauri() ? invoke('snap_overlay_bottom_center') : Promise.resolve();
+
+export const fitOverlay = (width: number, height: number): Promise<void> =>
+  isTauri() ? invoke('fit_overlay', { width, height }) : Promise.resolve();

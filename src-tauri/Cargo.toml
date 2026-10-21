@@ -18,7 +18,6 @@ tauri-plugin-dialog = "=2.7.1"
 tauri-plugin-fs = "=2.5.1"
 tauri-plugin-clipboard-manager = "=2.3.2"
 tauri-plugin-store = "=2.4.3"
-tauri-plugin-window-state = "=2.4.1"
 tauri-plugin-global-shortcut = "=2.3.2"
 serde = { workspace = true }
 serde_json = { workspace = true }

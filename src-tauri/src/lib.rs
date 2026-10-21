@@ -21,18 +21,13 @@ pub fn run() {
         .plugin(tauri_plugin_fs::init())
         .plugin(tauri_plugin_clipboard_manager::init())
         .plugin(tauri_plugin_store::Builder::default().build())
-        .plugin(
-            // Position only: the size is fixed in tauri.conf.json and an old saved size would win.
-            tauri_plugin_window_state::Builder::default()
-                .with_state_flags(tauri_plugin_window_state::StateFlags::POSITION)
-                .build(),
-        )
         .plugin(tauri_plugin_global_shortcut::Builder::new().build())
         .setup(|app| {
             let data = runtime::load_data_pack()?;
             let saved = settings::load(app.handle()).unwrap_or_default();
             let route = runtime::load_route(&data, saved.league_start);
             app.manage(AppState::new(data, route, saved.route_edge));
+            overlay::restore_anchor(app.handle(), &saved);
 
             if let Some(log) = logfile::find_client_log(saved.last_log_path.as_deref()) {
                 let path = log.to_string_lossy().into_owned();
@@ -73,6 +68,11 @@ pub fn run() {
 
             Ok(())
         })
+        .on_window_event(|window, event| {
+            if let tauri::WindowEvent::Moved(_) = event {
+                overlay::on_moved(window);
+            }
+        })
         .invoke_handler(tauri::generate_handler![
             commands::pick_log_file,
             commands::start_live,
@@ -92,6 +92,7 @@ pub fn run() {
             commands::get_source,
             commands::get_overlay_state,
             commands::snap_overlay_bottom_center,
+            commands::fit_overlay,
             commands::route_next,
             commands::route_prev,
             commands::route_reset,
