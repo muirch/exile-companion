@@ -177,6 +177,12 @@ fn on_foreground_changed(app: &AppHandle, is_game: bool, is_own: bool) {
     state.game_foreground.store(is_game, Ordering::SeqCst);
     let focused = is_game || is_own;
     if state.game_focused.swap(focused, Ordering::SeqCst) != focused {
+        if is_game {
+            // The game coming back to the front can end up above the overlay after a fast Alt-Tab.
+            if let Some(w) = app.get_webview_window("overlay") {
+                let _ = w.set_always_on_top(true);
+            }
+        }
         let _ = app.emit("overlay://game-focus", focused);
     }
 }
@@ -190,7 +196,7 @@ mod win {
     use windows_sys::Win32::UI::Accessibility::{SetWinEventHook, HWINEVENTHOOK};
     use windows_sys::Win32::UI::WindowsAndMessaging::{
         DispatchMessageW, GetClassNameW, GetForegroundWindow, GetMessageW, GetWindowTextW,
-        TranslateMessage, EVENT_SYSTEM_FOREGROUND, MSG, WINEVENT_OUTOFCONTEXT,
+        SetTimer, TranslateMessage, EVENT_SYSTEM_FOREGROUND, MSG, WINEVENT_OUTOFCONTEXT,
     };
 
     // PoE 1 and PoE 2 both use this window class; the title check covers anything else.
@@ -216,6 +222,9 @@ mod win {
                 0,
                 WINEVENT_OUTOFCONTEXT,
             );
+            // A fast Alt-Tab can leave the task switcher as the last event, with no event for the
+            // game coming back. Rechecking every half second catches that.
+            SetTimer(std::ptr::null_mut(), 0, 500, Some(on_timer));
             let mut msg: MSG = std::mem::zeroed();
             while GetMessageW(&mut msg, std::ptr::null_mut(), 0, 0) > 0 {
                 TranslateMessage(&msg);
@@ -224,16 +233,21 @@ mod win {
         });
     }
 
+    // The event's window can already be stale by the time it arrives; ask for the current one.
     unsafe extern "system" fn on_event(
         _hook: HWINEVENTHOOK,
         _event: u32,
-        hwnd: HWND,
+        _hwnd: HWND,
         _object: i32,
         _child: i32,
         _thread: u32,
         _time: u32,
     ) {
-        report(hwnd);
+        report(GetForegroundWindow());
+    }
+
+    unsafe extern "system" fn on_timer(_hwnd: HWND, _msg: u32, _id: usize, _time: u32) {
+        report(GetForegroundWindow());
     }
 
     fn report(hwnd: HWND) {
