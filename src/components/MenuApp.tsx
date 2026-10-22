@@ -23,7 +23,7 @@ function Row({
   state,
   first,
 }: {
-  label: string;
+  label: React.ReactNode;
   hint?: string;
   onClick: () => void;
   state?: boolean;
@@ -92,7 +92,14 @@ export function MenuApp(): React.JSX.Element {
         onClick={() => void startMove()}
       />
       <TooltipSep tint={TINT} />
-      <Row label="Quit poebo" onClick={() => void quitApp()} />
+      <Row
+        label={
+          <>
+            Quit <Brand />
+          </>
+        }
+        onClick={() => void quitApp()}
+      />
     </div>
   );
 }
