@@ -192,6 +192,7 @@ export function startMock(): void {
   const view = new URLSearchParams(window.location.search).get('view');
   useAppStore.getState().setGrabbed(view !== 'locked' && view !== 'notice');
   useAppStore.getState().setGameFocused(view !== 'notice');
+  useAppStore.getState().setCompact(new URLSearchParams(window.location.search).has('compact'));
   restartMock();
   // ?edge=N freezes the mock on that route view.
   const edge = Number(new URLSearchParams(window.location.search).get('edge'));

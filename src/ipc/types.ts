@@ -27,6 +27,9 @@ export interface Settings {
   textScale: number;
   leagueStart: boolean;
   gemHints: GemHints;
+  compact: boolean;
+  /** Seconds without a route change before the overlay fades out; 0 keeps it shown. */
+  fadeAfter: number;
 }
 
 /** Which gem steps the route shows (mirrors `poebo_core::gemplan::GemHints`). */

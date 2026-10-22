@@ -249,8 +249,11 @@ The signature component. A tint is passed in; the band fills with it mixed 30 pe
 ### Tooltip body
 See-through black, centered, small caps. Order on the overlay: properties line (label grey name, value white number, 16px apart), separator, actions (or "Nothing to do here" plus the way out in value white, gem steps after their quest), separator, "Then:" line. Hints under an action are flavour type in Label Grey. When unlocked, a move bar sits above the band with "poebo" on the left and the key hint on the right, and under it a row of Back / Next buttons with the step shortcuts between them, each closed by an Edge rule. Nothing opens below the band, so the route keeps its place when the overlay locks again.
 
+### Compact overlay
+The same see-through black plate at 340px, with no header band, properties line, separators or hints. A Label line names the zone and act ("Lioneye's Watch · Act 1"), then the actions at Body size and the "Then:" line, all centered small caps at 4px gaps inside 12px sides, 6px top and 8px bottom. It is for players who know the campaign and want the route to cover less of the game. Either layout can fade out after 5, 10 or 30 seconds without a new step, over 700ms; a new step, a new area or the game coming back to the front shows it again at once, and it never fades while unlocked.
+
 ### Quick menu
-A tooltip whose header band carries only the title. Rows are body-small Value White text, no border; hover and keyboard focus fill the row with white at 6 percent and drop the outline. Toggle rows show "On" in Quest Green or "Off" in Label Grey on the right. Separators split the toggles, the window actions and Quit. Esc closes it, and the first row takes focus on open.
+A tooltip whose header band carries only the title. Rows are body-small Value White text, no border; hover and keyboard focus fill the row with white at 6 percent and drop the outline. Toggle rows (Leveling route, Compact) show "On" in Quest Green or "Off" in Label Grey on the right. Separators split the toggles, the window actions and Quit. Esc closes it, and the first row takes focus on open.
 
 ### Settings groups
 Each group is its own tooltip at 80 percent black with a Normal Item White header band. Rows pair a small-caps grey label with controls: buttons, value text in Value White, sliders with a live percentage, and file paths in Alegreya Sans, truncated with the full path in the title.

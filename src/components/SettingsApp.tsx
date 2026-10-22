@@ -10,25 +10,19 @@ import {
   routeNext,
   routePrev,
   routeReset,
-  saveSettings,
   setRouteEnabled,
   snapOverlayBottomCenter,
   startLive,
   startMove,
   startReplay,
   stopSource,
+  updateSettings,
 } from '../ipc/commands';
-import type { GemHints, Settings } from '../ipc/types';
+import type { GemHints } from '../ipc/types';
 import { useAppStore } from '../store/useAppStore';
 import { HotkeySection } from './HotkeySection';
 import { ReplayControls } from './ReplayControls';
 import { TooltipHeader } from './Tooltip';
-
-// Read-modify-write: the backend saves the route position and anchor into the same file.
-async function save(patch: Partial<Settings>): Promise<void> {
-  const current = await getSettings();
-  await saveSettings({ ...current, ...patch });
-}
 
 // Each group is its own item tooltip: a header band over a see-through black body.
 function Section({ title, children }: { title: string; children: ReactNode }): React.JSX.Element {
@@ -57,7 +51,46 @@ function Toggle({ on, onChange }: { on: boolean; onChange: (v: boolean) => void 
   );
 }
 
+function Choice<T extends string | number | boolean>({
+  value,
+  options,
+  onChange,
+}: {
+  value: T;
+  options: { value: T; label: string; literal?: boolean }[];
+  onChange: (v: T) => void;
+}): React.JSX.Element {
+  return (
+    <>
+      {options.map((o) => (
+        <button
+          key={String(o.value)}
+          className={o.literal ? 'btn font-body' : 'btn'}
+          aria-pressed={value === o.value}
+          onClick={() => onChange(o.value)}
+        >
+          {o.label}
+        </button>
+      ))}
+    </>
+  );
+}
+
+const LAYOUTS = [
+  { value: false, label: 'Full' },
+  { value: true, label: 'Compact' },
+];
+
+const FADES = [
+  { value: 0, label: 'Off' },
+  { value: 5, label: '5 s', literal: true },
+  { value: 10, label: '10 s', literal: true },
+  { value: 30, label: '30 s', literal: true },
+];
+
 function DisplaySection(): React.JSX.Element {
+  const compact = useAppStore((s) => s.ui.compact);
+  const fadeAfter = useAppStore((s) => s.ui.fadeAfter);
   const opacity = useAppStore((s) => s.ui.opacity);
   const textScale = useAppStore((s) => s.ui.textScale);
   const setOpacity = useAppStore((s) => s.setOpacity);
@@ -75,7 +108,7 @@ function DisplaySection(): React.JSX.Element {
           onChange={(e) => {
             const v = Number(e.target.value);
             setTextScale(v);
-            void save({ textScale: v });
+            void updateSettings({ textScale: v });
           }}
           className="flex-1"
         />
@@ -92,12 +125,26 @@ function DisplaySection(): React.JSX.Element {
           onChange={(e) => {
             const v = Number(e.target.value);
             setOpacity(v);
-            void save({ opacity: v });
+            void updateSettings({ opacity: v });
           }}
           className="flex-1"
         />
         <span className="w-11 text-right text-[13px] text-value">{Math.round(opacity * 100)}%</span>
       </Row>
+      <Row label="Layout">
+        <Choice value={compact} options={LAYOUTS} onChange={(v) => void updateSettings({ compact: v })} />
+      </Row>
+      <Row label="Fade out">
+        <Choice
+          value={fadeAfter}
+          options={FADES}
+          onChange={(v) => void updateSettings({ fadeAfter: v })}
+        />
+      </Row>
+      <p className="ml-35 font-body text-[12px] leading-snug text-label italic">
+        Hides the overlay after that long without a new step. It comes back with the next area or
+        step.
+      </p>
       <Row label="Position">
         <button className="btn" onClick={() => void snapOverlayBottomCenter()}>
           Bottom center
@@ -208,7 +255,7 @@ function GemHintsRow(): React.JSX.Element {
           aria-pressed={hints === h.value}
           onClick={() => {
             setHints(h.value);
-            void save({ gemHints: h.value });
+            void updateSettings({ gemHints: h.value });
           }}
         >
           {h.label}

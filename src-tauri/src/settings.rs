@@ -22,6 +22,10 @@ pub struct Settings {
     /// Read once at startup: the edges differ between the two route variants.
     pub league_start: bool,
     pub gem_hints: poebo_core::gemplan::GemHints,
+    /// Route only, without the header band and properties line.
+    pub compact: bool,
+    /// Seconds without a route change before the overlay fades out; 0 keeps it shown.
+    pub fade_after: u32,
 }
 
 impl Default for Settings {
@@ -37,6 +41,8 @@ impl Default for Settings {
             relog_enabled: false,
             league_start: true,
             gem_hints: Default::default(),
+            compact: false,
+            fade_after: 0,
         }
     }
 }

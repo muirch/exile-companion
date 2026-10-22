@@ -32,6 +32,8 @@ import { useAppStore } from './store/useAppStore';
 function applySettings(s: Settings): void {
   useAppStore.getState().setOpacity(s.opacity);
   useAppStore.getState().setTextScale(s.textScale);
+  useAppStore.getState().setCompact(s.compact ?? false);
+  useAppStore.getState().setFadeAfter(s.fadeAfter ?? 0);
 }
 
 /** Each window is its own web page, so each one subscribes and hydrates by itself. */

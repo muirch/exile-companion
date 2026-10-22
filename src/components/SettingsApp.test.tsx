@@ -33,9 +33,15 @@ describe('SettingsApp', () => {
     );
     await userEvent.click(rewards);
     expect(rewards).toHaveAttribute('aria-pressed', 'true');
-    expect(commands.saveSettings).toHaveBeenCalledWith(
-      expect.objectContaining({ gemHints: 'rewards' }),
-    );
+    expect(commands.updateSettings).toHaveBeenCalledWith({ gemHints: 'rewards' });
+  });
+
+  it('switches the overlay to compact and sets the fade time', async () => {
+    render(<SettingsApp />);
+    await userEvent.click(screen.getByRole('button', { name: 'Compact' }));
+    expect(commands.updateSettings).toHaveBeenCalledWith({ compact: true });
+    await userEvent.click(screen.getByRole('button', { name: '10 s' }));
+    expect(commands.updateSettings).toHaveBeenCalledWith({ fadeAfter: 10 });
   });
 
   it('closes from its own title bar', async () => {
