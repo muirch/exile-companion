@@ -11,7 +11,7 @@ The project language is English: code, comments, docs, commits, issues.
 - Before committing: `cargo fmt --all`, `cargo clippy --workspace --exclude poebo-app --all-targets -- -D warnings`, `cargo test --workspace --exclude poebo-app`, `pnpm lint`, `pnpm test`, `pnpm build`. The Tauri app is checked for Windows locally with `RC=$PWD/tools/fake-llvm-rc cargo clippy -p poebo-app --target x86_64-pc-windows-msvc --all-targets -- -D warnings`; installers come from the manual Release workflow.
 - Data under `data-pack/` is generated; regenerate it with `tools/data-extractor`, don't edit it by hand. Third-party data (routes from exile-leveling) keeps its license and attribution.
 - UI and visual work goes through the impeccable skill (`.claude/skills/impeccable`). `PRODUCT.md` holds the product facts and `DESIGN.md` the design system; keep both current when the UI changes.
-- Every task gets its own branch and a pull request. Squash-merge into `main` after CI passes; never commit to `main` directly.
+- Code goes to main through pull requests: one per feature, and one per round of fixes after an in-game test, with a commit per change inside. Rebase-merge after CI passes so those commits stay. Changes that only touch docs (\*.md) can be committed to main directly.
 - After any UI change, run `tools/ui-shots.sh` (needs `pnpm dev --port 5199`) and give the user the paths to `.ui-shots/overview.png` and `.ui-shots/settings.png`.
 
 ## Writing style: code comments and prose
