@@ -140,7 +140,10 @@ fn fetch_build_code(url: &str) -> Result<String, String> {
         .get(url)
         .call()
         .and_then(|mut r| r.body_mut().read_to_string())
-        .map_err(|e| format!("Couldn't download the build: {e}"))
+        .map_err(|e| {
+            log::warn!("build download from {url}: {e}");
+            "Couldn't download the build. Check the link and your connection.".to_string()
+        })
 }
 
 /// Forget the currently-loaded build.

@@ -161,10 +161,16 @@ export function hasActions(route: { here: Step[] } | null): boolean {
 export function ThenStep(): React.JSX.Element | null {
   const then = useAppStore((s) => s.route?.then);
   if (!then) return null;
+  // "Then:" already says what comes next, so a leading arrow is dropped.
+  const [first, ...rest] = then.parts;
+  const parts =
+    first?.kind === 'text' && first.text.trimStart().startsWith('➞')
+      ? [{ ...first, text: first.text.trimStart().slice(1).trimStart() }, ...rest]
+      : then.parts;
   return (
-    <div className="text-[15px] leading-snug">
+    <div className="text-[14px] leading-snug">
       <span className="text-plain">Then: </span>
-      <Parts parts={then.parts} />
+      <Parts parts={parts} />
     </div>
   );
 }

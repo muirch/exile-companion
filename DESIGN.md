@@ -193,8 +193,8 @@ These are route semantics, never decoration.
 ### Hierarchy
 - **Display** (500, 19px, 1.25): the tooltip title (zone name, "poebo", settings group name). Truncates on one line.
 - **Subtitle** (500, 14px, 1.25, 85 percent opacity): the line under the title; on the overlay it carries act, class level and step.
-- **Body** (500, 15px, 1.375): this area's actions and the "Then:" line.
-- **Body small** (500, 14px, 1.375): quick menu rows, gem claims, "route didn't load".
+- **Body** (500, 15px, 1.375): this area's actions.
+- **Body small** (500, 14px, 1.375): the "Then:" line, one step under the current actions so they win the first glance; quick menu rows, "route didn't load".
 - **Label** (500, 13px, 1.375): the compact zone line, "Nothing to do here", settings row labels and values, the move bar's "poebo".
 - **Button** (500, 12px, 1): every button and the hold-key select.
 - **Flavour** (Alegreya Sans italic, 400, 13px, 1.375): route hints, the startup notice, the missing-log hint (upright).

@@ -4,7 +4,7 @@ import { describe, expect, it, vi } from 'vitest';
 
 import * as commands from '../ipc/commands';
 import { useAppStore } from '../store/useAppStore';
-import { SettingsApp } from './SettingsApp';
+import { SettingsApp, presetName } from './SettingsApp';
 
 vi.mock('../ipc/commands', async (importOriginal) => {
   const real = await importOriginal<typeof commands>();
@@ -15,6 +15,14 @@ vi.mock('../ipc/commands', async (importOriginal) => {
     ...stubs,
     getHotkeys: vi.fn(() => new Promise(() => {})),
   };
+});
+
+describe('presetName', () => {
+  it('strips the dashes PoB separators are drawn with', () => {
+    expect(presetName('----- Mapping -----', 1)).toBe('Mapping');
+    expect(presetName('=== ===', 2)).toBe('Preset 3');
+    expect(presetName('Act 3 {2}', 0)).toBe('Act 3 {2}');
+  });
 });
 
 describe('SettingsApp', () => {

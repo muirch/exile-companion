@@ -59,6 +59,20 @@ describe('RoutePanel', () => {
     expect(screen.getByText(/The leveling route didn't load\. Restart poebo/)).toBeInTheDocument();
   });
 
+  it('drops a leading arrow after Then', () => {
+    const then = {
+      parts: [
+        { kind: 'text' as const, text: '➞ ' },
+        { kind: 'enter' as const, id: '1_1_2', name: 'The Coast' },
+      ],
+      sub_steps: [],
+    };
+    useAppStore.setState({ route: route([step({ kind: 'kill', name: 'Hillock' })], then) });
+    const { container } = render(<ThenStep />);
+    expect(container.querySelector('svg')).toBeNull();
+    expect(screen.getByText('The Coast')).toBeInTheDocument();
+  });
+
   it('shows the step that leaves the area after Then', () => {
     const then = step({ kind: 'enter', id: '1_1_3', name: 'The Coast' });
     useAppStore.setState({ route: route([step({ kind: 'kill', name: 'Hillock' })], then) });

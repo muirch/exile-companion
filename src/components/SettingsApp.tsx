@@ -184,7 +184,7 @@ function DisplaySection(): React.JSX.Element {
           Bottom center
         </button>
         <button className="btn" onClick={() => void startMove()}>
-          Move by hand
+          Move overlay
         </button>
       </Row>
     </Section>
@@ -219,6 +219,9 @@ function RouteSection(): React.JSX.Element {
           onConfirm={() => void routeReset()}
         />
       </Row>
+      <p className="ml-35 font-body text-[12px] leading-snug text-label italic">
+        The route is exile-leveling's (MIT), the speedrun route by HeartofPhos and contributors.
+      </p>
     </Section>
   );
 }
@@ -231,8 +234,13 @@ function LogSection(): React.JSX.Element {
   return (
     <Section title="Game log">
       <Row label="Client.txt">
-        <span className="min-w-0 flex-1 truncate font-body text-[13px] text-value" title={path ?? ''}>
-          {mode === 'idle' ? 'Not found' : (path ?? '')}
+        {/* Cut from the left, so the end of the path, logs\Client.txt, stays in view. */}
+        <span
+          dir="rtl"
+          className="min-w-0 flex-1 truncate text-left font-body text-[13px] text-value"
+          title={path ?? ''}
+        >
+          <bdi>{mode === 'idle' ? 'Not found' : (path ?? '')}</bdi>
         </span>
       </Row>
       <Row label="">
@@ -247,14 +255,11 @@ function LogSection(): React.JSX.Element {
         </button>
       </Row>
       <Row label="Testing">
-        <button
-          className="btn"
-          aria-expanded={showTesting}
-          disabled={mode === 'replay'}
-          onClick={() => setTesting(!testing)}
-        >
-          {showTesting ? 'Hide' : 'Show'}
-        </button>
+        {mode !== 'replay' && (
+          <button className="btn" aria-expanded={showTesting} onClick={() => setTesting(!testing)}>
+            {showTesting ? 'Hide' : 'Show'}
+          </button>
+        )}
         {showTesting && (
           <>
             <button
@@ -338,6 +343,12 @@ function stageFrom(value: string): PresetStage {
   return value as PresetStage;
 }
 
+// Separator presets are often "----- Mapping -----"; the dashes are only there for PoB's list.
+export function presetName(title: string | null, i: number): string {
+  const name = (title ?? '').replace(/^[\s\-=_*~#]+|[\s\-=_*~#]+$/g, '');
+  return name || `Preset ${i + 1}`;
+}
+
 function autoLabel(level: number | null): string {
   if (level === null) return 'Auto, by gem level';
   if (level >= 100) return 'Auto, endgame';
@@ -367,10 +378,14 @@ function PresetRows(): React.JSX.Element | null {
       {presets.map((p, i) => (
         <Row key={i} label={i === 0 ? 'Presets' : ''}>
           <span
-            className="min-w-0 flex-1 truncate font-body text-[13px] text-value"
+            className={
+              p.gem_count === 0
+                ? 'min-w-0 flex-1 truncate font-body text-[13px] text-label italic'
+                : 'min-w-0 flex-1 truncate font-body text-[13px] text-value'
+            }
             title={p.title ?? ''}
           >
-            {p.title || `Preset ${i + 1}`}
+            {presetName(p.title, i)}
           </span>
           {p.gem_count === 0 ? (
             <span className="font-body text-[12px] text-label italic">No gems</span>
