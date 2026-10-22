@@ -43,6 +43,22 @@ describe('OverlayRoot', () => {
 
   beforeEach(() => useAppStore.setState(initial, true));
 
+  // Gem steps come with the route; the old per-act claim list ignored timing and the gem setting.
+  it('shows no gem claim from the old guidance', () => {
+    act(() =>
+      useAppStore.setState({
+        route: ROUTE,
+        guidance: {
+          kind: 'quest_reward',
+          headline: 'Claim Arrow Nova Support from Nessa (+9 more)',
+          detail: null,
+        },
+      }),
+    );
+    render(<OverlayRoot />);
+    expect(screen.queryByText(/Claim Arrow Nova/)).not.toBeInTheDocument();
+  });
+
   it('starts with the notice and no route', () => {
     render(<OverlayRoot />);
     expect(screen.getByRole('status')).toHaveTextContent('Hold Tilde in the game for the menu.');

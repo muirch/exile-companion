@@ -29,13 +29,6 @@ function Properties(): React.JSX.Element | null {
   );
 }
 
-// The route covers where to go; from the old guidance only the build's gem claims add anything.
-function GemClaim(): React.JSX.Element | null {
-  const guidance = useAppStore((s) => s.guidance);
-  if (guidance?.kind !== 'quest_reward') return null;
-  return <p className="text-[14px] leading-snug text-gem">{guidance.headline}</p>;
-}
-
 function NoLogHint(): React.JSX.Element | null {
   const mode = useAppStore((s) => s.source.mode);
   const error = useAppStore((s) => s.source.error);
@@ -85,7 +78,6 @@ export function StatusPanel(): React.JSX.Element {
         <TooltipSep tint={tint} />
         <NoLogHint />
         {route && !actions ? <PassThrough /> : <HereSteps />}
-        <GemClaim />
         {actions && (
           <>
             <TooltipSep tint={tint} />
