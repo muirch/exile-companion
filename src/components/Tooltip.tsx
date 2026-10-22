@@ -40,3 +40,8 @@ export function TooltipHeader({
 export function TooltipSep({ tint }: { tint: string }): React.JSX.Element {
   return <div className="tooltip-sep" style={{ '--tint': tint } as CSSProperties} />;
 }
+
+// The name is lower case; small caps would print it as POEBO.
+export function Brand(): React.JSX.Element {
+  return <span className="font-body">poebo</span>;
+}

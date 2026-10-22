@@ -22,7 +22,7 @@ import type { GemHints, PresetStage } from '../ipc/types';
 import { useAppStore } from '../store/useAppStore';
 import { HotkeySection } from './HotkeySection';
 import { ReplayControls } from './ReplayControls';
-import { TooltipHeader } from './Tooltip';
+import { Brand, TooltipHeader } from './Tooltip';
 
 // Each group is its own item tooltip: a header band over a see-through black body.
 function Section({ title, children }: { title: string; children: ReactNode }): React.JSX.Element {
@@ -483,8 +483,8 @@ function TitleBar(): React.JSX.Element {
       data-tauri-drag-region
       className="flex h-8 shrink-0 cursor-move items-center gap-2 border-b border-edge bg-black pr-1 pl-3"
     >
-      <span data-tauri-drag-region className="font-caps text-[13px] text-normal">
-        poebo
+      <span data-tauri-drag-region className="text-[13px] text-normal">
+        <Brand />
       </span>
       <span data-tauri-drag-region className="font-caps text-[13px] text-label">
         Settings

@@ -5,7 +5,7 @@ import { isTauri } from '../ipc/env';
 import { holdLabel, shortcutLabel } from './HotkeySection';
 import { useAppStore } from '../store/useAppStore';
 import { CompactPanel, RouteNav, StatusPanel } from './StatusPanel';
-import { TooltipHeader } from './Tooltip';
+import { Brand, TooltipHeader } from './Tooltip';
 
 const NOTICE_MS = 5000;
 const FULL_WIDTH = 404;
@@ -49,7 +49,11 @@ function StartupNotice(): React.JSX.Element {
         shown ? 'opacity-100' : 'opacity-0',
       ].join(' ')}
     >
-      <TooltipHeader tint="var(--color-currency)" title="poebo" subtitle="Running in the background" />
+      <TooltipHeader
+        tint="var(--color-currency)"
+        title={<Brand />}
+        subtitle="Running in the background"
+      />
       <p className="px-4 pt-2 pb-3 font-body text-[13px] leading-snug text-plain italic">
         It appears over Path of Exile while the game is focused. Hold{' '}
         {holdLabel(holdKey)} in the game for the menu.
@@ -119,8 +123,8 @@ export function OverlayRoot(): React.JSX.Element {
               data-tauri-drag-region
               className="flex cursor-move items-baseline justify-between border-b border-edge px-3 pt-1.5 pb-1"
             >
-              <span data-tauri-drag-region className="font-caps text-[13px] text-normal">
-                poebo
+              <span data-tauri-drag-region className="text-[13px] text-normal">
+                <Brand />
               </span>
               <span data-tauri-drag-region className="text-[11px] text-plain">
                 Drag to move, {shortcutLabel(hotkeys.moveOverlay)} to lock.

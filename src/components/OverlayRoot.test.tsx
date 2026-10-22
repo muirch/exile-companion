@@ -72,6 +72,11 @@ describe('OverlayRoot', () => {
     expect(screen.queryByText(/Claim Arrow Nova/)).not.toBeInTheDocument();
   });
 
+  it('sets the name in the lower-case face, not small caps', () => {
+    render(<OverlayRoot />);
+    expect(screen.getByText('poebo')).toHaveClass('font-body');
+  });
+
   it('starts with the notice and no route', () => {
     render(<OverlayRoot />);
     expect(screen.getByRole('status')).toHaveTextContent('Hold Tilde in the game for the menu.');

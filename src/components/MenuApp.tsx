@@ -12,7 +12,7 @@ import { isTauri } from '../ipc/env';
 import { onMenuOpened } from '../ipc/events';
 import { useAppStore } from '../store/useAppStore';
 import { shortcutLabel } from './HotkeySection';
-import { TooltipHeader, TooltipSep } from './Tooltip';
+import { Brand, TooltipHeader, TooltipSep } from './Tooltip';
 
 const TINT = 'var(--color-currency)';
 
@@ -71,7 +71,7 @@ export function MenuApp(): React.JSX.Element {
 
   return (
     <div ref={panel} role="menu" className="tooltip m-1 w-[228px] bg-black/90 pb-1.5">
-      <TooltipHeader tint={TINT} title="poebo" />
+      <TooltipHeader tint={TINT} title={<Brand />} />
       <div className="h-1.5" />
       <Row
         first
