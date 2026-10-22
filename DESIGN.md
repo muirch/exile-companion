@@ -79,7 +79,7 @@ spacing:
   2xl: "20px"
 components:
   tooltip-header-area:
-    textColor: "{colors.normal}"
+    textColor: "{colors.currency}"
     typography: "{typography.display}"
     rounded: "{rounded.none}"
     padding: "6px 46px 7px"
