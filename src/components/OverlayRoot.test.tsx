@@ -199,6 +199,28 @@ describe('OverlayRoot', () => {
       expect(routeBox()).toHaveClass('opacity-0');
     });
 
+    it('shows the hints in compact for a few seconds on a tap of the menu key', () => {
+      useAppStore.setState({
+        route: {
+          ...ROUTE,
+          here: [
+            {
+              parts: [{ kind: 'text', text: 'Find the glyph' }],
+              sub_steps: [[{ kind: 'text', text: 'Near the nests' }]],
+            },
+          ],
+        },
+      });
+      ui({ compact: true, gameFocused: true });
+      render(<OverlayRoot />);
+      expect(screen.queryByText('Near the nests')).not.toBeInTheDocument();
+
+      act(() => useAppStore.getState().peek());
+      expect(screen.getByText('Near the nests')).toBeInTheDocument();
+      act(() => vi.advanceTimersByTime(6000));
+      expect(screen.queryByText('Near the nests')).not.toBeInTheDocument();
+    });
+
     it('never fades while the overlay is unlocked', () => {
       useAppStore.setState({ route: ROUTE });
       ui({ fadeAfter: 5, gameFocused: true, grabbed: true });

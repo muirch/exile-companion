@@ -1,3 +1,5 @@
+import { useEffect, useState } from 'react';
+
 import { routeNext, routePrev } from '../ipc/commands';
 import { useAppStore } from '../store/useAppStore';
 import { holdLabel, shortcutLabel } from './HotkeySection';
@@ -66,7 +68,24 @@ function OffRouteNote(): React.JSX.Element | null {
 }
 
 // No header band, properties line or hints: where you are in one grey line, then the route.
+const PEEK_HINTS_MS = 6000;
+
+// A tap of the menu key shows the step's hints for a few seconds; compact has no room for them
+// otherwise.
+function usePeekHints(): boolean {
+  const peeks = useAppStore((s) => s.ui.peeks);
+  const [state, setState] = useState({ peeks, on: false });
+  if (state.peeks !== peeks) setState({ peeks, on: true });
+  useEffect(() => {
+    if (!state.on) return;
+    const t = setTimeout(() => setState((s) => ({ ...s, on: false })), PEEK_HINTS_MS);
+    return () => clearTimeout(t);
+  }, [state]);
+  return state.on;
+}
+
 export function CompactPanel(): React.JSX.Element {
+  const hints = usePeekHints();
   const zone = useAppStore((s) => s.campaign.zone);
   const act = useAppStore((s) => s.campaign.act);
   const route = useAppStore((s) => s.route);
@@ -85,7 +104,7 @@ export function CompactPanel(): React.JSX.Element {
       <ActDone />
       <OffRouteNote />
       <NoLogHint />
-      {route && !actions ? <PassThrough /> : <HereSteps hints={false} />}
+      {route && !actions ? <PassThrough /> : <HereSteps hints={hints} />}
       {actions && <ThenStep />}
     </div>
   );
