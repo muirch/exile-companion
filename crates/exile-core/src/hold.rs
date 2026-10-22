@@ -1,7 +1,7 @@
 //! Long-press detection for the quick menu key, fed by a keyboard hook that only watches keys.
 
 /// Tracks one key. Key repeat sends more key-downs while the key is held, so only a fresh press
-/// starts a hold; a key-up the hook never saw is recovered on the next real press.
+/// starts a hold. A key-up the hook never saw is recovered on the next real press.
 #[derive(Debug, Default)]
 pub struct HoldKey {
     held: bool,

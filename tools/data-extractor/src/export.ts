@@ -27,7 +27,7 @@ import {
 } from './transform/quests.js';
 import { transformTrials, type RawLabyrinthTrial, type TrialInfo } from './transform/trials.js';
 
-// Each data file carries its own schema_version; the Rust loaders validate per file.
+// Each data file carries its own schema_version. The Rust loaders validate per file.
 const AREAS_SCHEMA = 1;
 const QUESTS_SCHEMA = 1;
 const TRIALS_SCHEMA = 1;
@@ -53,7 +53,7 @@ function runFetch(): void {
   try {
     execFileSync(process.execPath, [cliPath], { cwd: extractorDir, stdio: 'inherit' });
   } catch {
-    // The cold CDN fetch occasionally exits non-zero after writing valid output; tolerate it here
+    // The cold CDN fetch occasionally exits non-zero after writing valid output. Tolerate it here
     // and let the output validation below be the real gate.
     console.warn('[regen] pathofexile-dat exited non-zero - validating its output before failing.');
   }
@@ -126,7 +126,7 @@ function validateTrialAnchors(trials: TrialInfo[]): void {
   if (!lowerPrisonAct1) {
     throw new Error('Anchor failed: no Act-1 "The Lower Prison" trial - not writing.');
   }
-  // 6 Normal Labyrinth trials live in acts 1-3; the campaign has 12 in total (acts 1-10).
+  // 6 Normal Labyrinth trials live in acts 1-3. The campaign has 12 in total (acts 1-10).
   const normalLab = trials.filter((t) => t.act <= 3).length;
   if (normalLab !== 6 || trials.length !== 12) {
     throw new Error(`Anchor failed: expected 6 acts-1-3 trials and 12 total, got ${normalLab} and ${trials.length} - not writing.`);

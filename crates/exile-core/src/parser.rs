@@ -10,7 +10,7 @@
 //!    with a channel symbol (`@ # $ % & <`) and thus never starts with `": "`, so it falls through
 //!    to `None`. Two no-colon system lines (`Connecting...`, `Generating...`) are matched explicitly.
 //!
-//! Everything returns `Option`; nothing panics on malformed input.
+//! Everything returns `Option`. Nothing panics on malformed input.
 
 use std::sync::LazyLock;
 
@@ -21,7 +21,7 @@ use time::PrimitiveDateTime;
 use crate::events::{DeathCause, LogEvent, RawLine, TimedEvent};
 use crate::locale::LocalePack;
 
-/// `<char> (<class>) is now level <N>` - char names have no spaces; class is a single token.
+/// `<char> (<class>) is now level <N>` - char names have no spaces. Class is a single token.
 static LEVEL_UP: LazyLock<Regex> =
     LazyLock::new(|| Regex::new(r"^(\S+) \(([^)]+)\) is now level (\d+)$").expect("valid regex"));
 
@@ -51,7 +51,7 @@ pub fn split_line(line: &str) -> Option<RawLine> {
         // Session banner: `<ts> ***** LOG FILE OPENING *****` - no bracketed prefix.
         line.get(20..).unwrap_or(line)
     } else {
-        // Unframed line we don't recognize; hand the post-timestamp remainder to the classifier.
+        // Unframed line we don't recognize. Hand the post-timestamp remainder to the classifier.
         line.get(20..).unwrap_or(line)
     };
 

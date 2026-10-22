@@ -53,7 +53,7 @@ pub struct CampaignState {
     /// Raw id from the `Generating level` line, kept even for areas the pack doesn't know (the
     /// labyrinth). The route tracker keys off this.
     pub area_id: Option<String>,
-    /// When the current zone was entered. Internal (drives future "time in zone"); not serialized.
+    /// When the current zone was entered. Internal (drives future "time in zone"). Not serialized.
     #[serde(skip)]
     #[cfg_attr(feature = "ts", ts(skip))]
     pub last_zone_change: Option<PrimitiveDateTime>,

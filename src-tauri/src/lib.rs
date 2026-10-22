@@ -106,7 +106,7 @@ pub fn run() {
             tauri::WindowEvent::Focused(false) if window.label() == menu::MENU_LABEL => {
                 let _ = window.hide();
             }
-            // Settings is created once at startup; closing it only hides it.
+            // Settings is created once at startup. Closing it only hides it.
             tauri::WindowEvent::CloseRequested { api, .. }
                 if window.label() == menu::SETTINGS_LABEL =>
             {

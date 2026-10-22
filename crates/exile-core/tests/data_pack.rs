@@ -25,7 +25,7 @@ fn committed_pack_parses_and_has_act1_anchors() {
 
     assert!(!table.is_empty(), "data pack has no areas");
 
-    // The Twilight Strand is the Act 1 starting zone (id 1_1_1); an Act 6 copy also exists.
+    // The Twilight Strand is the Act 1 starting zone (id 1_1_1). An Act 6 copy also exists.
     let strand = table.zones_named("The Twilight Strand");
     assert!(
         strand.iter().any(|z| z.act == 1 && z.id == "1_1_1"),
@@ -106,7 +106,7 @@ fn committed_quests_grant_the_expected_passive_points() {
 #[test]
 fn committed_trials_cover_the_normal_lab() {
     let pack = committed_pack();
-    // 6 Normal Labyrinth trials live in acts 1-3; 12 campaign trials in total.
+    // 6 Normal Labyrinth trials live in acts 1-3. 12 campaign trials in total.
     assert_eq!(
         pack.trials.all().len(),
         12,

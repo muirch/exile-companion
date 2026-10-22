@@ -1,7 +1,7 @@
 //! Typed events decoded from `Client.txt` lines.
 //!
 //! The parser turns a raw line into an optional [`RawLine`] (timestamp + body) and then classifies
-//! the body into a [`LogEvent`]. The state machine consumes [`LogEvent`]s; replay pacing uses the
+//! the body into a [`LogEvent`]. The state machine consumes [`LogEvent`]s. Replay pacing uses the
 //! timestamp carried alongside on [`TimedEvent`].
 
 use time::PrimitiveDateTime;
@@ -29,7 +29,7 @@ pub enum LogEvent {
 
     /// `: <name> has been slain.` / `: <name> has committed suicide.`
     ///
-    /// Note: this fires for *any* player in the instance (party members too); the state machine
+    /// Note: this fires for *any* player in the instance (party members too). The state machine
     /// attributes it to the local character by name.
     Death { name: String, cause: DeathCause },
 
@@ -38,7 +38,7 @@ pub enum LogEvent {
 
     /// `Generating level <level> area "<world_area_id>" with seed <seed>`.
     ///
-    /// `world_area_id` is the language-independent internal id (e.g. `1_1_town`); captured now as
+    /// `world_area_id` is the language-independent internal id (e.g. `1_1_town`). Captured now as
     /// the join key for the Phase 2 gem/quest resolvers even though Phase 1 keys off zone names.
     AreaGenerated {
         level: u32,
@@ -64,7 +64,7 @@ pub enum DeathCause {
 #[derive(Debug, Clone, PartialEq, Eq)]
 pub struct RawLine {
     /// Log timestamp in the client's local time (the log carries no timezone, so this is a naive
-    /// datetime); `None` if the line had no parseable timestamp. Replay pacing uses deltas, for
+    /// datetime). `None` if the line had no parseable timestamp. Replay pacing uses deltas, for
     /// which the missing offset cancels out.
     pub ts: Option<PrimitiveDateTime>,
     /// The message body - the classifier's input.

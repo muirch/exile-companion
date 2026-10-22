@@ -199,7 +199,7 @@ fn read_gem(e: &BytesStart<'_>) -> Gem {
     }
 }
 
-/// Support gems are identifiable from any of the three ids; `gemId` is the most reliable.
+/// Support gems are identifiable from any of the three ids. `gemId` is the most reliable.
 fn derive_is_support(
     gem_id: Option<&str>,
     skill_id: Option<&str>,
@@ -210,7 +210,7 @@ fn derive_is_support(
         || name_spec.is_some_and(|n| n.trim_end().ends_with("Support"))
 }
 
-/// PoB writes "None"/"Nothing" for an unset ascendancy/source; treat those (and empties) as absent.
+/// PoB writes "None"/"Nothing" for an unset ascendancy/source. Treat those (and empties) as absent.
 fn is_meaningful(s: &String) -> bool {
     !s.is_empty() && s != "None" && s != "Nothing"
 }

@@ -17,7 +17,7 @@ export function screenZoom(height: number): number {
   return Math.min(2, Math.max(0.75, height / 1080));
 }
 
-// True once `seconds` pass with the same `id`; any new id, or 0 seconds, shows it again.
+// True once `seconds` pass with the same `id`. Any new id, or 0 seconds, shows it again.
 function useFaded(id: string, seconds: number): boolean {
   const [state, setState] = useState({ id, faded: false });
   if (state.id !== id) setState({ id, faded: false });

@@ -14,7 +14,7 @@ pub enum DataError {
     #[error("data pack schema version {found} is unsupported (this build expects {expected})")]
     SchemaMismatch { found: u32, expected: u32 },
 
-    /// Reading the pack from disk failed (used by the file-based loader; the embedded loader
+    /// Reading the pack from disk failed (used by the file-based loader, the embedded loader
     /// takes bytes directly).
     #[error("failed to read data pack file {path}: {source}")]
     Read {

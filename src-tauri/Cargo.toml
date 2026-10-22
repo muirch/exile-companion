@@ -4,7 +4,7 @@ version = "0.1.0"
 edition.workspace = true
 license.workspace = true
 publish = false
-description = "Exile Companion - Tauri v2 desktop shell for the PoE1 campaign assistant."
+description = "The Exile Companion desktop app."
 
 [lib]
 name = "exile_companion"

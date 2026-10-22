@@ -6,7 +6,7 @@ import { holdLabel, shortcutLabel } from './HotkeySection';
 import { ActDone, HereSteps, PassThrough, ThenStep, hasActions } from './RoutePanel';
 import { TooltipHeader, TooltipSep } from './Tooltip';
 
-// Sand (the currency item's tint) for every header; towns are told apart by the subtitle.
+// Sand (the currency item's tint) for every header. Towns are told apart by the subtitle.
 const TINT = 'var(--color-currency)';
 
 // Act, level and step share the band's subtitle, so the first line under the band is an action.
@@ -70,7 +70,7 @@ function OffRouteNote(): React.JSX.Element | null {
 // No header band, properties line or hints: where you are in one grey line, then the route.
 const PEEK_HINTS_MS = 6000;
 
-// A tap of the menu key shows the step's hints for a few seconds; compact has no room for them
+// A tap of the menu key shows the step's hints for a few seconds. Compact has no room for them
 // otherwise.
 function usePeekHints(): boolean {
   const peeks = useAppStore((s) => s.ui.peeks);

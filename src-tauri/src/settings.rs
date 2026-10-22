@@ -24,9 +24,9 @@ pub struct Settings {
     pub gem_hints: exile_core::gemplan::GemHints,
     /// Route only, without the header band and properties line.
     pub compact: bool,
-    /// Seconds without a route change before the overlay fades out; 0 keeps it shown.
+    /// Seconds without a route change before the overlay fades out. 0 keeps it shown.
     pub fade_after: u32,
-    /// Per skill set of the loaded build, in order; reset when a build is imported.
+    /// Per skill set of the loaded build, in order. Reset when a build is imported.
     pub preset_stages: Vec<exile_core::gemplan::PresetStage>,
 }
 
@@ -64,7 +64,7 @@ pub fn load(app: &AppHandle) -> Result<Settings, String> {
     let data = std::fs::read_to_string(&path).map_err(|e| e.to_string())?;
     let mut settings: Settings = serde_json::from_str(&data).unwrap_or_default();
     settings.hotkeys.normalize();
-    // Below 70% the plate washes out over snow and bright light; older builds allowed 50%.
+    // Below 70% the plate washes out over snow and bright light. Older builds allowed 50%.
     settings.opacity = settings.opacity.clamp(0.7, 1.0);
     Ok(settings)
 }

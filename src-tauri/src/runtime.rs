@@ -1,6 +1,6 @@
 //! Wires a `exile_core` source into a running pipeline whose updates are emitted to the frontend.
 //!
-//! Live and replay both spawn `run_pipeline` on Tauri's async runtime; the pipeline's `on_update`
+//! Live and replay both spawn `run_pipeline` on Tauri's async runtime. The pipeline's `on_update`
 //! emits `campaign://state-updated` and pushes into the state watch channel. Replay additionally
 //! runs a small poller that emits `replay://progress`. Stopping aborts the task(s) and, for replay,
 //! cancels via `ReplayControl`.
@@ -239,7 +239,7 @@ pub fn current_guidance(app: &AppHandle) -> exile_core::guidance::NextObjective 
     objective
 }
 
-// Enough for the last few zones of a session; Client.txt itself can be hundreds of MB.
+// Enough for the last few zones of a session. Client.txt itself can be hundreds of MB.
 const HISTORY_BYTES: u64 = 512 * 1024;
 
 fn read_log_tail(path: &str) -> String {

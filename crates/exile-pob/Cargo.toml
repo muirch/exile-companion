@@ -5,7 +5,7 @@ edition.workspace = true
 license.workspace = true
 publish = false
 rust-version.workspace = true
-description = "Path of Building build import (decode + parse) for the Exile Companion PoE1 leveling assistant."
+description = "Reads Path of Building builds for Exile Companion."
 
 [dependencies]
 thiserror = { workspace = true }

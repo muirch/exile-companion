@@ -5,6 +5,6 @@
  */
 export type PresetInfo = { title: string | null, gem_count: number, 
 /**
- * The level the planner gives the set by itself; `None` until a set names a level or act.
+ * The level the planner gives the set by itself. `None` until a set names a level or act.
  */
 auto_level: number | null, };

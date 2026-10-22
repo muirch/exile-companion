@@ -12,18 +12,18 @@ The UI is a web page rendered inside a Tauri v2 window on Windows (WebView2). Li
 
 Path of Exile 1 players leveling a character through the ten-act campaign, usually at a league start. Two kinds, served by one route:
 
-- regular players who run the campaign once or twice a league and don't want to open guides or alt-tab;
+- regular players who run the campaign once or twice a league and don't want to open guides or alt-tab,
 - experienced players and speedrunners who know the campaign and want the shortest route with as little text as possible.
 
 The first user is the author, who also tests it live in the game. The tool is meant to be shared with the community later.
 
 ## Product Purpose
 
-Exile Companion is a passive overlay that sits over the game and tells the player what to do in the area they are in: where to go next, which quest to hand in, where to place a portal, which boss to kill, where the trial is. Success means the player levels through the campaign without alt-tabbing to a guide or to Path of Building.
+Exile Companion is a passive overlay that sits over the game and tells the player what to do in the area they are in. That means where to go next, which quest to hand in, where to place a portal, which boss to kill and where the trial is. Success means the player levels through the campaign without alt-tabbing to a guide or to Path of Building.
 
 ## Positioning
 
-Exile Companion reads only the game's `Client.txt` log, knows which area the player is in from the log's internal area ids, and shows the matching steps of a speedrunning route (exile-leveling's, MIT). It is a native Windows app with the route engine in Rust, built to grow into a multi-tool overlay: build guidance from Path of Building and an AI build assistant that answers from real PoB calculations.
+Exile Companion reads only the game's `Client.txt` log, knows which area the player is in from the log's internal area ids, and shows the matching steps of a speedrunning route (exile-leveling's, MIT). It is a native Windows app with the route engine in Rust. It is meant to grow into a bigger overlay with build guidance from Path of Building and an AI build assistant that answers from real PoB calculations.
 
 ## Operating Context
 
@@ -36,20 +36,20 @@ Exile Companion reads only the game's `Client.txt` log, knows which area the pla
 
 - Inputs allowed: `Client.txt`, user hotkeys, the clipboard on request, local PoB files, and a PoB build link the user pastes (downloaded once from the build site, the way PoB itself imports it). It must never inject into the game, read its memory, hook rendering, or automate play. This follows GGG's third-party tool policy and is non-negotiable.
 - One opt-in exception to "sends nothing to the game": the relog key types `/exit` in chat, one command per key press, only while the game is in front, off by default (decided by the user on 2026-10-21, modelled on Awakened PoE Trade's F9).
-- All hotkeys are configurable. Defaults: hold the tilde key for the quick menu (Tab is the other choice; Esc isn't offered because the game acts on it first), Alt+M to move the overlay, Alt+Left / Alt+Right to step the route, F9 to relog when enabled.
-- Route steps come typed: kill, arena, enter area, waypoint, portal, logout, quest hand-in, quest item, trial, ascend, crafting recipe, direction (8-way compass), copy text.
+- All hotkeys are configurable. By default you hold the tilde key for the quick menu, press Alt+M to move the overlay, Alt+Left and Alt+Right to step the route, and F9 to relog when it's on. Tab can replace tilde. Esc isn't offered because the game acts on it first.
+- Every route step has a type, such as kill, arena, enter area, waypoint, portal, logout, quest hand-in, quest item, trial, ascend, crafting recipe, direction (8-way compass) or copy text.
 - Campaign data (areas, quests, rewards, trials) is extracted from the game files per patch.
 - The overlay window is fitted to its content and anchored by its bottom center to a fraction of the monitor (by default in the gap between the flask bar and the skill bar, clear of the play field and the stash and vendor windows), so it survives resolution changes and the route stays put when the move bar opens above it.
 - UI language: English, matching the game client and the route text.
-- With a Path of Building build imported, the route lists its gems after the quest hand-in where to take them as the reward or buy them from a vendor. A gem is placed at the point the build needs it: preset titles ("Act 3", "lvl 28", "Bossing"), preset order and the gem's required level decide that. Gems the campaign never gives are listed apart. Exile Companion keeps the last imported build until it is cleared, also across restarts. The settings list the build's presets with what Exile Companion reads from each, and the player can set the act a preset is for, mark it endgame or leave it out. Settings choose whether the route shows these gem steps at all, only the quest rewards, or rewards and vendor buys (the default).
-- The compact layout is the default: the zone, act and step on one grey line, then the actions and the way out. The full layout adds the header band, the class level and the route hints, for players new to the campaign. It can be switched from the quick menu or the settings. Either layout can fade out after a few seconds without a new step and comes back with the next step or area, or with a tap of the menu key. In compact the same tap shows the step's hints for a few seconds.
-- Planned features that share the overlay: gem and passive-tree guidance from a PoB build, an AI build assistant (chat), and Path of Exile 2 support after its 1.0 release.
+- With a Path of Building build imported, the route lists its gems after the quest hand-in where to take them as the reward or buy them from a vendor. A gem is placed at the point the build needs it. Preset titles ("Act 3", "lvl 28", "Bossing"), preset order and the gem's required level decide that. Gems the campaign never gives are listed apart. Exile Companion keeps the last imported build until it is cleared, also across restarts. The settings list the build's presets with what Exile Companion reads from each, and the player can set the act a preset is for, mark it endgame or leave it out. Settings choose whether the route shows these gem steps at all, only the quest rewards, or rewards and vendor buys (the default).
+- The compact layout is the default. It has the zone, act and step on one grey line, then the actions and the way out. The full layout adds the header band, the class level and the route hints, for players new to the campaign. It can be switched from the quick menu or the settings. Either layout can fade out after a few seconds without a new step and comes back with the next step or area, or with a tap of the menu key. In compact the same tap shows the step's hints for a few seconds.
+- Planned next are passive tree guidance from a PoB build, an AI build assistant to chat with, and Path of Exile 2 after its 1.0 release.
 
 ## Brand Commitments
 
 - Name: Exile Companion, two words, both capitalised. Not shortened to "EC" in the UI.
-- Not affiliated with or endorsed by Grinding Gear Games; Path of Exile is their trademark. The app must not imitate GGG branding or logos.
-- Third-party content keeps its attribution: the leveling route is exile-leveling's (MIT).
+- Not affiliated with or endorsed by Grinding Gear Games. Path of Exile is their trademark. The app must not imitate GGG branding or logos.
+- Third-party content keeps its attribution. The leveling route is exile-leveling's (MIT).
 
 ## Evidence on Hand
 
@@ -59,10 +59,10 @@ Exile Companion reads only the game's `Client.txt` log, knows which area the pla
 
 ## Product Principles
 
-1. Glanceable over complete: the player reads it mid-fight, so the next action must be clear in one look.
-2. Invisible until needed: no clicks stolen from the game, no presence outside the game.
+1. Glanceable over complete. The player reads it mid-fight, so the next action must be clear in one look.
+2. Invisible until needed. No clicks stolen from the game, nothing on screen outside the game.
 3. Feels like part of the game, not a web app placed on top of it.
-4. Honest about what it knows: when the log or route position is unknown, say so and say how to fix it.
+4. Honest about what it knows. When the log or route position is unknown, say so and say how to fix it.
 5. Read-only toward the game, always.
 
 ## Accessibility & Inclusion

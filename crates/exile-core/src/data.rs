@@ -9,7 +9,7 @@
 //!
 //! PoE's Acts 6-10 revisit Acts 1-5 with the **same display names** (e.g. "Lioneye's Watch" is both
 //! `1_1_town` in Act 1 and `2_6_town` in Act 6). So [`ZoneTable::zones_named`] returns *all*
-//! candidates for a name; disambiguation by progression context is the state machine's job.
+//! candidates for a name. Disambiguation by progression context is the state machine's job.
 
 use std::collections::HashMap;
 
@@ -45,7 +45,7 @@ pub struct ZoneInfo {
     pub connections: Vec<String>,
 }
 
-/// Indexed, queryable view over the area table. `by_id` is unique; `by_name` maps a (lowercased)
+/// Indexed, queryable view over the area table. `by_id` is unique. `by_name` maps a (lowercased)
 /// display name to *all* areas sharing it, because names repeat across Acts 1-5 / 6-10.
 #[derive(Debug, Clone)]
 pub struct ZoneTable {
@@ -163,7 +163,7 @@ pub struct QuestInfo {
     pub id: String,
     pub act: i32,
     pub name: String,
-    /// The NPC you claim this quest's reward from (e.g. "Tarkleigh"); `None` if unresolved.
+    /// The NPC you claim this quest's reward from (e.g. "Tarkleigh"). `None` if unresolved.
     #[serde(default)]
     pub npc: Option<String>,
     /// Passive skill points this quest grants (usually 0 or 1).
@@ -320,7 +320,7 @@ impl TrialTable {
 // --- The aggregate pack -----------------------------------------------------------------------
 
 /// The whole campaign knowledge base: zones (act inference), quests (gem rewards), and lab trials.
-/// The guidance engine reads it read-only; the Tauri shell builds it once from the embedded bytes.
+/// The guidance engine reads it read-only. The Tauri shell builds it once from the embedded bytes.
 #[derive(Debug, Clone)]
 pub struct DataPack {
     pub zones: ZoneTable,

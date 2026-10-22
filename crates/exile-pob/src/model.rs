@@ -21,7 +21,7 @@ pub struct PobBuild {
     pub main_socket_group: Option<u32>,
     /// `Build/@targetVersion`, used to tell PoE1 from PoE2 builds.
     pub target_version: Option<String>,
-    /// 1-based index of the selected spec (`Tree/@activeSpec`); defaults to 1.
+    /// 1-based index of the selected spec (`Tree/@activeSpec`). Defaults to 1.
     pub active_spec: usize,
     /// `Skills/@activeSkillSet` - the id (not index) of the selected skill set.
     pub active_skill_set_id: Option<u32>,
@@ -86,7 +86,7 @@ impl PobBuild {
     }
 }
 
-/// One passive-tree snapshot. Carries no level/act; the title is the only leveling-stage hint.
+/// One passive-tree snapshot. Carries no level/act. The title is the only leveling-stage hint.
 #[derive(Debug, Clone, Default, PartialEq, Eq)]
 pub struct TreeSpec {
     /// Free-text label, e.g. "Level 12 (Act 2)", "Leaguestart", "Endgame"; often absent.

@@ -47,11 +47,11 @@ pub struct AppState {
     /// The campaign knowledge base (zones, quests, trials), shared read-only.
     pub data: Arc<DataPack>,
     pub gems: Arc<GemTable>,
-    /// The running source (guarded; commands mutate it).
+    /// The running source (guarded, commands mutate it).
     pub run: Mutex<RunState>,
     /// Latest campaign snapshot, so `get_state` can hydrate a late-mounting UI synchronously.
     pub state_tx: watch::Sender<CampaignState>,
-    /// The currently-imported Path of Building build (guarded; import commands mutate it).
+    /// The currently-imported Path of Building build (guarded, import commands mutate it).
     pub build: Mutex<BuildState>,
     /// Whether the overlay is in interactive ("grabbed") mode.
     pub grabbed: AtomicBool,

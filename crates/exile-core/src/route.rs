@@ -124,7 +124,7 @@ struct Parser<'a> {
 }
 
 /// Parses a whole route (all act files joined in order). `defines` switches `#ifdef` blocks, e.g.
-/// `LEAGUE_START`. Problems don't stop parsing; they come back as warnings.
+/// `LEAGUE_START`. Problems don't stop parsing. They come back as warnings.
 pub fn parse_route(
     source: &str,
     zones: &ZoneTable,
@@ -614,7 +614,7 @@ impl Route {
     }
 }
 
-// Players run a few levels over the zone; past this the nearest visit is probably the wrong one.
+// Players run a few levels over the zone. Past this the nearest visit is probably the wrong one.
 const LEVEL_SLACK: u32 = 5;
 
 #[derive(Debug, Clone, Default)]
@@ -632,7 +632,7 @@ impl RouteTracker {
     }
 
     /// Feed the area id from a `Generating level .. area "<id>"` line. The expected next area
-    /// steps forward; any other area on the route snaps to its nearest edge, so a character that
+    /// steps forward. Any other area on the route snaps to its nearest edge, so a character that
     /// is further along (or went back to town) lands on the right steps. Areas off the route
     /// (hideouts, maps) leave the position alone.
     pub fn on_area_generated(&mut self, route: &Route, area_id: &str) -> bool {
@@ -862,7 +862,7 @@ Find and kill {kill|Hillock}
         assert_eq!(view.section, "Act 1");
         assert_eq!(view.section_edge, 1);
         assert_eq!(view.section_edge_count, view.edge_count);
-        // "➞ Lioneye's Watch" is how the player got here; only the hand-in remains
+        // "➞ Lioneye's Watch" is how the player got here. Only the hand-in remains
         assert_eq!(view.here.len(), 1);
         assert!(matches!(view.here[0].parts[1], Part::Quest { .. }));
         let then = view.then.unwrap();

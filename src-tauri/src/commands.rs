@@ -1,5 +1,5 @@
-//! The Tauri command surface. These are thin; the work lives in `runtime`/`settings`/`overlay`.
-//! Errors cross the IPC boundary as `String`; core keeps its typed errors.
+//! The Tauri command surface. These are thin. The work lives in `runtime`/`settings`/`overlay`.
+//! Errors cross the IPC boundary as `String`. Core keeps its typed errors.
 
 use std::path::Path;
 use std::time::Duration;
@@ -16,7 +16,7 @@ use crate::runtime::{self, RouteMove};
 use crate::settings::{self, Settings};
 use crate::state::AppState;
 
-/// Open a file dialog to pick a `Client.txt` (or recording); returns the chosen path.
+/// Open a file dialog to pick a `Client.txt` (or recording). Returns the chosen path.
 #[tauri::command]
 pub async fn pick_log_file(
     app: AppHandle,
@@ -124,7 +124,7 @@ pub async fn import_build_code(app: AppHandle, code: String) -> Result<BuildSumm
 }
 
 fn fetch_build_code(url: &str) -> Result<String, String> {
-    // The default roots are a bundled Mozilla list that schannel rejects; use the Windows store.
+    // The default roots are a bundled Mozilla list that schannel rejects. Use the Windows store.
     let tls = ureq::tls::TlsConfig::builder()
         .provider(ureq::tls::TlsProvider::NativeTls)
         .root_certs(ureq::tls::RootCerts::PlatformVerifier)
@@ -230,7 +230,7 @@ pub fn get_hotkeys(app: AppHandle) -> HotkeySettings {
     }
 }
 
-/// Saves and re-registers; returns the bindings that failed.
+/// Saves and re-registers. Returns the bindings that failed.
 #[tauri::command]
 pub fn set_hotkeys(
     app: AppHandle,

@@ -139,7 +139,7 @@ export function HereSteps({ hints = true }: { hints?: boolean }): React.JSX.Elem
   if (!route) {
     return (
       <p className="text-[14px] text-plain">
-        The leveling route didn't load. Restart Exile Companion; if it stays, reinstall it.
+        The leveling route didn't load. Restart Exile Companion, and if that doesn't help, reinstall it.
       </p>
     );
   }

@@ -2,7 +2,7 @@
 //!
 //! Polling is the source of truth (the file never rotates, grows unbounded, and the game holds it
 //! open - so we must re-`stat` and read from a tracked offset regardless of any fs-notify signal).
-//! Each tick: stat the length; if it shrank, the file was truncated/recreated -> reset to 0; if it
+//! Each tick: stat the length. If it shrank, the file was truncated/recreated -> reset to 0. If it
 //! grew, read the appended bytes (shared read), split complete `\r\n` lines, and yield decoded
 //! [`RawLine`]s. On start we seek to EOF so history isn't replayed.
 

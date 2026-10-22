@@ -6,7 +6,7 @@
 // QuestRewards.Reward -> BaseItemTypes (gem id/name) and QuestRewards.Characters -> Characters
 // (class names). The reward NPC comes from NPCTalk.QuestRewardOffersKey -> the same offer, resolving
 // NPCTalk.NPCKey -> NPCs.Name. Foreign keys export as row *indices* into the referenced table, same
-// as the WorldAreas connections; we resolve them here.
+// as the WorldAreas connections. We resolve them here.
 //
 // Two standard rewards are kept per quest: gem rewards (Reward whose BaseItemType id is under
 // `Metadata/Items/Gems/`) and passive skill points (a "Book of Skill" quest item = +1 point). Other
@@ -76,7 +76,7 @@ const NPC_OVERRIDES: Record<string, string> = {
   a4q6: 'Tasuni', // An Indomitable Spirit (Book of Skill)
 };
 
-// The Book-of-Skill quest item grants one passive skill point; "Book of Regrets" is a respec, not a
+// The Book-of-Skill quest item grants one passive skill point. "Book of Regrets" is a respec, not a
 // point, so it is excluded.
 const PASSIVE_POINT_ITEM = 'Book of Skill';
 

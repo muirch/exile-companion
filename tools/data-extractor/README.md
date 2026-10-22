@@ -10,12 +10,12 @@ This is a standalone Node toolchain and is not part of the Rust app build. The a
 2. `src/transform/*.ts` reshape the raw rows into Exile Companion's flat schemas, resolving the row-index references into ids:
    - `areas.ts` -> `ZoneInfo` (zone -> act table + connectivity).
    - `quests.ts` -> `QuestInfo` (every campaign quest, with per-class gem rewards, passive points and the reward NPC). Join: `QuestRewards.RewardOffer -> QuestRewardOffers.QuestKey -> Quest`, plus `Reward -> BaseItemTypes` (gem id/name, or a Book of Skill for a passive point) and `Characters -> Characters` (class names). Routes reference quests without rewards too, so all of them are kept.
-   - `trials.ts` -> `TrialInfo` (campaign Trials of Ascendancy). Join: `LabyrinthTrials.WorldAreas -> WorldAreas`; endgame (Uber Lab, act 11) trials are dropped.
-3. `src/export.ts` writes `../../data-pack/{areas,quests,trials}.json` and `manifest.json` (each file with a sha256), and validates each against known anchors (The Twilight Strand is act 1; a1q1 rewards a Witch starter gem; The Lower Prison is an act 1 trial; 6 trials in acts 1-3, 12 total).
+   - `trials.ts` -> `TrialInfo` (campaign Trials of Ascendancy). Join: `LabyrinthTrials.WorldAreas -> WorldAreas`. Endgame (Uber Lab, act 11) trials are dropped.
+3. `src/export.ts` writes `../../data-pack/{areas,quests,trials}.json` and `manifest.json` (each file with a sha256), and validates each against known anchors (The Twilight Strand is act 1, a1q1 rewards a Witch starter gem, The Lower Prison is an act 1 trial, there are 6 trials in acts 1-3 and 12 in total).
 
 ### Data not extracted here (known gaps)
 
-- **Vendor (purchasable) gems** have no clean `.dat` table (only quest gem rewards do). Deferred; would need the PoE Wiki `vendor_rewards` cargo table or exile-leveling's compilation.
+- **Vendor (purchasable) gems** have no clean `.dat` table (only quest gem rewards do). The app takes them from exile-leveling's data, which comes from the PoE Wiki `vendor_rewards` table.
 - The bandit choice in act 2 (kill all for +2 passives) is a branch, not a Book of Skill, so it isn't counted.
 
 ## Regenerate
@@ -32,7 +32,7 @@ Then review the `data-pack/*.json` diff and commit it. For a new league, update 
 ## Versioning
 
 - `config.json` `patch`: the pinned game version the facts come from. This changes every league.
-- Each data file carries its own `schema_version` (`AREAS_SCHEMA`/`QUESTS_SCHEMA`/`TRIALS_SCHEMA` in `src/export.ts`, mirrored by the `*_SCHEMA_VERSION` consts in `crates/exile-data`). Bump a file's version and its Rust const together only when that file's shape changes; the Rust loader rejects a mismatch.
+- Each data file carries its own `schema_version` (`AREAS_SCHEMA`/`QUESTS_SCHEMA`/`TRIALS_SCHEMA` in `src/export.ts`, mirrored by the `*_SCHEMA_VERSION` consts in `crates/exile-data`). Bump a file's version and its Rust const together only when that file's shape changes. The Rust loader rejects a mismatch.
 
 ## Notes and gotchas
 

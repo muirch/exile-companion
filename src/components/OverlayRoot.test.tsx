@@ -26,12 +26,12 @@ const ROUTE: RouteView = {
   then: { parts: [{ kind: 'enter', id: '1_1_3', name: 'The Coast' }], sub_steps: [] },
 };
 
-// Most cases look at the full layout; compact ones switch it on themselves.
+// Most cases look at the full layout. Compact ones switch it on themselves.
 const initial = { ...useAppStore.getState(), ui: { ...useAppStore.getState().ui, compact: false } };
 const ui = (patch: Partial<typeof initial.ui>): void =>
   act(() => useAppStore.setState((s) => ({ ui: { ...s.ui, ...patch } })));
 
-// The box that carries opacity and zoom; the tooltip header inside it has a style of its own.
+// The box that carries opacity and zoom. The tooltip header inside it has a style of its own.
 const routeBox = (): HTMLElement =>
   screen.getByText('Waiting for the game').closest('[style*="zoom"]') as HTMLElement;
 
@@ -58,7 +58,7 @@ describe('OverlayRoot', () => {
 
   beforeEach(() => useAppStore.setState(initial, true));
 
-  // Gem steps come with the route; the old per-act claim list ignored timing and the gem setting.
+  // Gem steps come with the route. The old per-act claim list ignored timing and the gem setting.
   it('shows no gem claim from the old guidance', () => {
     act(() =>
       useAppStore.setState({

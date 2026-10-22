@@ -355,7 +355,7 @@ function autoLabel(level: number | null): string {
   return `Auto, from level ${level}`;
 }
 
-// Gems are planned from the first skill set that has them; this lets the player say which act a
+// Gems are planned from the first skill set that has them. This lets the player say which act a
 // set is for when its name doesn't, or leave a set out.
 function PresetRows(): React.JSX.Element | null {
   const presets = useAppStore((s) => s.build?.presets);
@@ -498,7 +498,7 @@ function HotkeysGroup(): React.JSX.Element {
   );
 }
 
-// The window has no system frame; this bar moves it, like the overlay's move bar.
+// The window has no system frame. This bar moves it, like the overlay's move bar.
 function TitleBar(): React.JSX.Element {
   return (
     <header

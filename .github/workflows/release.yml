@@ -55,12 +55,12 @@ jobs:
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         with:
-          # A single reusable tag/release; each run overwrites its installer assets.
+          # One tag and release, reused. Each run replaces its installer.
           tagName: dev
           releaseName: Development build
           releaseBody: >
-            Automated Windows build of the latest `main`. This is a rolling development
-            pre-release, not a stable version. Grab the setup `.exe` below; it updates an
-            existing install in place.
+            A Windows build of the latest `main`. It's a rolling dev pre-release, not a
+            stable version. Download the setup `.exe` below. It updates an existing install
+            in place.
           releaseDraft: false
           prerelease: true

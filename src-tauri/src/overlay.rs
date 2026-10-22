@@ -16,14 +16,14 @@ fn lock<T>(m: &Mutex<T>) -> MutexGuard<'_, T> {
     m.lock().unwrap_or_else(|poisoned| poisoned.into_inner())
 }
 
-/// Grabbed means the overlay takes the mouse (drag, buttons); otherwise clicks go to the game.
+/// Grabbed means the overlay takes the mouse (drag, buttons). Otherwise clicks go to the game.
 pub fn set_grab(app: &AppHandle, grabbed: bool) {
     let state = app.state::<AppState>();
     let was = state.grabbed.swap(grabbed, Ordering::SeqCst);
     // Dragging is only possible while unlocked, so locking is when a new position is final.
     if was && !grabbed {
         save_anchor(app);
-        // Moving took keyboard focus from the game; hand it back so its keys work again.
+        // Moving took keyboard focus from the game. Hand it back so its keys work again.
         #[cfg(windows)]
         win::focus_game_if_own();
     }
@@ -164,7 +164,7 @@ pub fn create_tray(app: &AppHandle) -> tauri::Result<()> {
 
 /// Hides the overlay while neither the game nor the overlay itself is the foreground window.
 /// The window stays shown and the UI goes transparent: showing a hidden window would steal focus
-/// from the game. Only implemented on Windows; elsewhere the overlay is always visible.
+/// from the game. Only implemented on Windows. Elsewhere the overlay is always visible.
 pub fn watch_game_focus(app: AppHandle) {
     #[cfg(windows)]
     win::watch(app);
@@ -206,7 +206,7 @@ mod win {
         WINEVENT_OUTOFCONTEXT,
     };
 
-    // PoE 1 and PoE 2 both use this window class; the title check covers anything else.
+    // PoE 1 and PoE 2 both use this window class. The title check covers anything else.
     const GAME_CLASS: &str = "POEWindowClass";
     const GAME_TITLES: [&str; 2] = ["Path of Exile", "Path of Exile 2"];
 
@@ -241,7 +241,7 @@ mod win {
         });
     }
 
-    // The event's window can already be stale by the time it arrives; ask for the current one.
+    // The event's window can already be stale by the time it arrives. Ask for the current one.
     unsafe extern "system" fn on_event(
         _hook: HWINEVENTHOOK,
         _event: u32,

@@ -14,7 +14,7 @@ use crate::data::DataPack;
 use crate::state::CampaignState;
 
 /// Roughly the character level a fresh character reaches at the start of each act. Used to compare a
-/// spec titled by act against a player tracked by level, and vice versa. Monotonic; approximate.
+/// spec titled by act against a player tracked by level, and vice versa. Monotonic. Approximate.
 pub fn act_expected_level(act: u8) -> u32 {
     match act {
         0 | 1 => 1,
@@ -35,7 +35,7 @@ fn spec_target_level(spec: &TreeSpec) -> Option<u32> {
     title_target_level(spec.title.as_deref()?)
 }
 
-/// The level a free-text PoB title ("Act 3", "lvl 28", "Endgame") points at; 100 for endgame.
+/// The level a free-text PoB title ("Act 3", "lvl 28", "Endgame") points at. 100 for endgame.
 pub(crate) fn title_target_level(title: &str) -> Option<u32> {
     let title = title.to_ascii_lowercase();
 
@@ -102,7 +102,7 @@ pub enum SpecReason {
     OnlySpec,
     /// Chosen because its title matched the player's progress.
     TitleMatch,
-    /// No title gave a usable signal; fell back to the build's `activeSpec`.
+    /// No title gave a usable signal. Fell back to the build's `activeSpec`.
     ActiveSpecFallback,
 }
 
@@ -166,7 +166,7 @@ impl TreeResolver {
 }
 
 /// From (index, target-level) pairs, choose the most-advanced spec the player has reached (greatest
-/// target <= progress); if the player is below every target, choose the earliest (lowest target).
+/// target <= progress). If the player is below every target, choose the earliest (lowest target).
 fn pick_by_progress(targeted: &[(usize, u32)], progress: u32) -> Option<usize> {
     if targeted.is_empty() {
         return None;
@@ -187,7 +187,7 @@ pub struct GemPick {
     pub gem_id: String,
     pub gem_name: String,
     pub quest_name: String,
-    /// The NPC you claim it from (e.g. "Tarkleigh"); `None` if unknown.
+    /// The NPC you claim it from (e.g. "Tarkleigh"). `None` if unknown.
     pub npc: Option<String>,
     pub act: i32,
     pub reward_level: u32,
@@ -377,7 +377,7 @@ mod tests {
     fn gem_resolver_surfaces_current_act_build_gems_for_class() {
         let data = pack();
         let build = build_using(&["g/Freezing", "g/Herald", "g/Unused"], "Witch");
-        // In act 1: Freezing Pulse is a Witch reward here; Cleave is Duelist-only; Herald is act 2.
+        // In act 1: Freezing Pulse is a Witch reward here. Cleave is Duelist-only. Herald is act 2.
         let picks = GemResolver::available_now(&state_at(3, Some(1)), &data, &build);
         assert_eq!(picks.len(), 1);
         assert_eq!(picks[0].gem_name, "Freezing Pulse");
@@ -388,7 +388,7 @@ mod tests {
     #[test]
     fn gem_resolver_respects_class_filter() {
         let data = pack();
-        // A Duelist build using Cleave gets it in act 1; a Witch using Cleave would not.
+        // A Duelist build using Cleave gets it in act 1. A Witch using Cleave would not.
         let duelist = build_using(&["g/Cleave"], "Duelist");
         assert_eq!(
             GemResolver::available_now(&state_at(1, Some(1)), &data, &duelist).len(),

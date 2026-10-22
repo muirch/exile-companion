@@ -127,7 +127,7 @@ impl GemTable {
                 }
             }
         }
-        // Quest ids sort as text ("a10q1" before "a1q2"); sort by act and quest number instead.
+        // Quest ids sort as text ("a10q1" before "a1q2"). Sort by act and quest number instead.
         sources.sort_by_key(|s| (s.act, quest_number(&s.quest_id)));
         Ok(Self { gems, sources })
     }
@@ -191,7 +191,7 @@ mod tests {
             .unwrap()
     }
 
-    // PoB writes the class as className; the data has to use the same names.
+    // PoB writes the class as className. The data has to use the same names.
     #[test]
     fn the_data_names_the_seven_pob_classes() {
         let t = table();

@@ -3,7 +3,7 @@
 //!
 //! Every gem gets the level from which the build needs it. Leveling builds keep one skill set per
 //! stage ("Act 1", "lvl 28", or just in order), so a gem is needed from the first set it shows up
-//! in. A build with a single final set has no stages; then a gem is needed from its own required
+//! in. A build with a single final set has no stages. Then a gem is needed from its own required
 //! level. A quest reward goes to the gem needed soonest, and a vendor buy waits until the act the
 //! gem is needed in, so the first town doesn't list the whole campaign.
 
@@ -73,7 +73,7 @@ pub enum PresetStage {
 pub struct PresetInfo {
     pub title: Option<String>,
     pub gem_count: u32,
-    /// The level the planner gives the set by itself; `None` until a set names a level or act.
+    /// The level the planner gives the set by itself. `None` until a set names a level or act.
     pub auto_level: Option<u32>,
 }
 
@@ -192,7 +192,7 @@ pub fn plan(build: &PobBuild, class: &str, gems: &GemTable) -> GemPlan {
     plan_with_stages(build, class, gems, &[])
 }
 
-/// `stages` are per skill set, in document order; missing ones count as auto.
+/// `stages` are per skill set, in document order. Missing ones count as auto.
 pub fn plan_with_stages(
     build: &PobBuild,
     class: &str,

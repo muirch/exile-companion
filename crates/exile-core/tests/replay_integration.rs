@@ -132,7 +132,7 @@ async fn pause_and_step_release_exactly_one_line_each() {
         "only one line per step"
     );
 
-    // Resume -> the remainder flows; drain to completion.
+    // Resume -> the remainder flows. Drain to completion.
     ctl.resume();
     let mut count = 1;
     while (tokio::time::timeout(Duration::from_millis(500), stream.next()).await)

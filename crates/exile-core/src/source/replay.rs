@@ -114,7 +114,7 @@ impl ReplayControl {
         self.notify.notify_waiters();
     }
 
-    /// End the replay; the stream terminates promptly.
+    /// End the replay. The stream terminates promptly.
     pub fn stop(&self) {
         self.stop.cancel();
         self.notify.notify_waiters();
@@ -136,7 +136,7 @@ enum Gate {
     Stop,
 }
 
-/// Block while paused (releasing one line per `step`); return `Stop` if cancelled.
+/// Block while paused (releasing one line per `step`). Return `Stop` if cancelled.
 async fn gate(ctl: &ReplayControl) -> Gate {
     loop {
         if ctl.stop.is_cancelled() {

@@ -2,7 +2,7 @@
 //! rather than a parser rewrite.
 //!
 //! `Client.txt` localizes both the "You have entered ..." template *and* zone names. Phase 1 ships the
-//! English pack only; the seam exists so [`LocalePack::EN`] can be joined by other packs (eventually
+//! English pack only. The seam exists so [`LocalePack::EN`] can be joined by other packs (eventually
 //! sourced from the data pack) without touching the parser.
 
 /// The set of localized substrings the parser matches for system events.

@@ -1,4 +1,4 @@
-//! Errors from importing a Path of Building build. One focused [`thiserror`] enum; the caller (the
+//! Errors from importing a Path of Building build. One focused [`thiserror`] enum. The caller (the
 //! Tauri shell) flattens it to a string at the IPC boundary.
 
 use std::path::PathBuf;
