@@ -158,9 +158,21 @@ export function hasActions(route: { here: Step[] } | null): boolean {
   return !!route && route.here.some((s) => s.parts.length > 0);
 }
 
+// Quest Green, the game's colour for a finished quest.
+export function ActDone(): React.JSX.Element | null {
+  const finished = useAppStore((s) => s.route?.finished_section);
+  if (!finished) return null;
+  return <p className="text-[13px] text-quest">{finished} done</p>;
+}
+
 export function ThenStep(): React.JSX.Element | null {
   const then = useAppStore((s) => s.route?.then);
-  if (!then) return null;
+  const last = useAppStore((s) => !!s.route && s.route.edge + 1 === s.route.edge_count);
+  if (!then) {
+    return last ? (
+      <p className="text-[14px] leading-snug text-quest">That's the campaign. On to the maps.</p>
+    ) : null;
+  }
   // "Then:" already says what comes next, so a leading arrow is dropped.
   const [first, ...rest] = then.parts;
   const parts =

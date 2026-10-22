@@ -535,6 +535,9 @@ pub struct RouteView {
     /// Position of `edge` among the edges of its section, and how many that section has.
     pub section_edge: u32,
     pub section_edge_count: u32,
+    /// The section the player just left, on the first edge of the next one ("Act 1" on the
+    /// first step of act 2).
+    pub finished_section: Option<String>,
     /// The area this edge expects the player to be in.
     pub area_id: String,
     /// What to do in this area. The move that brought the player here is already done, so it is
@@ -594,12 +597,16 @@ impl Route {
             .iter()
             .filter_map(|s| s.edge)
             .collect();
+        let section_edge = section_edges.iter().position(|&e| e == edge).unwrap_or(0);
+        let finished_section =
+            (section_edge == 0 && si > 0).then(|| self.sections[si - 1].name.clone());
         Some(RouteView {
             section: section.to_string(),
             edge: edge as u32,
             edge_count: self.edges.len() as u32,
-            section_edge: section_edges.iter().position(|&e| e == edge).unwrap_or(0) as u32,
+            section_edge: section_edge as u32,
             section_edge_count: section_edges.len() as u32,
+            finished_section,
             area_id: self.edges.get(edge).cloned().unwrap_or_default(),
             here,
             then,
@@ -842,6 +849,10 @@ Find and kill {kill|Hillock}
                 ("Act 2".to_string(), 1, 2),
             ]
         );
+        let finished: Vec<_> = (0..4)
+            .map(|e| route.view(e).unwrap().finished_section)
+            .collect();
+        assert_eq!(finished, [None, None, Some("Act 1".to_string()), None]);
     }
 
     #[test]

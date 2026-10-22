@@ -20,6 +20,7 @@ const ROUTE: RouteView = {
   edge_count: 233,
   section_edge: 2,
   section_edge_count: 40,
+  finished_section: null,
   area_id: '1_1_town',
   here: [{ parts: [{ kind: 'quest', id: 'a1q1', name: 'Enemy at the Gate' }], sub_steps: [] }],
   then: { parts: [{ kind: 'enter', id: '1_1_3', name: 'The Coast' }], sub_steps: [] },

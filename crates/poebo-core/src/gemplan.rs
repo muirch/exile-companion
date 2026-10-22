@@ -568,6 +568,7 @@ mod tests {
             edge_count: 2,
             section_edge: 1,
             section_edge_count: 2,
+            finished_section: None,
             area_id: "1_1_town".into(),
             here,
             then: None,

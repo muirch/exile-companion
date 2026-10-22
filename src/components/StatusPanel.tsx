@@ -1,7 +1,7 @@
 import { routeNext, routePrev } from '../ipc/commands';
 import { useAppStore } from '../store/useAppStore';
 import { holdLabel, shortcutLabel } from './HotkeySection';
-import { HereSteps, PassThrough, ThenStep, hasActions } from './RoutePanel';
+import { ActDone, HereSteps, PassThrough, ThenStep, hasActions } from './RoutePanel';
 import { TooltipHeader, TooltipSep } from './Tooltip';
 
 // Sand (the currency item's tint) for every header; towns are told apart by the subtitle.
@@ -82,6 +82,7 @@ export function CompactPanel(): React.JSX.Element {
   return (
     <div className="tooltip flex flex-col gap-1 px-3 pt-1.5 pb-2">
       <p className="truncate text-[13px] text-plain">{where}</p>
+      <ActDone />
       <OffRouteNote />
       <NoLogHint />
       {route && !actions ? <PassThrough /> : <HereSteps hints={false} />}
@@ -101,6 +102,7 @@ export function StatusPanel(): React.JSX.Element {
     <div className="tooltip">
       <TooltipHeader tint={tint} title={zone?.name ?? 'Waiting for the game'} subtitle={subtitle} />
       <div className="px-4 pt-2 pb-3">
+        <ActDone />
         <OffRouteNote />
         <NoLogHint />
         {route && !actions ? <PassThrough /> : <HereSteps />}

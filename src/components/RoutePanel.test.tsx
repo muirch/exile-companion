@@ -3,7 +3,7 @@ import { beforeEach, describe, expect, it } from 'vitest';
 
 import type { Part, RouteView, Step } from '../ipc/types';
 import { useAppStore } from '../store/useAppStore';
-import { HereSteps, PassThrough, ThenStep, hasActions } from './RoutePanel';
+import { ActDone, HereSteps, PassThrough, ThenStep, hasActions } from './RoutePanel';
 
 const step = (...parts: Part[]): Step => ({ parts, sub_steps: [] });
 
@@ -14,6 +14,7 @@ function route(here: Step[], then: Step | null = null): RouteView {
     edge_count: 10,
     section_edge: 0,
     section_edge_count: 10,
+    finished_section: null,
     area_id: '1_1_2',
     here,
     then,
@@ -57,6 +58,20 @@ describe('RoutePanel', () => {
   it('says so when the route did not load', () => {
     render(<HereSteps />);
     expect(screen.getByText(/The leveling route didn't load\. Restart poebo/)).toBeInTheDocument();
+  });
+
+  it('marks the act the player just finished', () => {
+    useAppStore.setState({ route: { ...route([]), finished_section: 'Act 1' } });
+    render(<ActDone />);
+    expect(screen.getByText('Act 1 done')).toHaveClass('text-quest');
+  });
+
+  it('ends the campaign instead of a Then line on the last step', () => {
+    useAppStore.setState({
+      route: { ...route([step({ kind: 'kill', name: 'Kitava' })]), edge: 9, edge_count: 10 },
+    });
+    render(<ThenStep />);
+    expect(screen.getByText("That's the campaign. On to the maps.")).toBeInTheDocument();
   });
 
   it('drops a leading arrow after Then', () => {

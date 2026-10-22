@@ -30,7 +30,7 @@ poebo reads only the game's `Client.txt` log, knows which area the player is in 
 - Used while playing, in windowed or windowed-fullscreen mode. The overlay is always on top, transparent, click-through by default.
 - Read in short glances during combat and loading screens, over a busy, dark game scene.
 - Holding the tilde key (left of 1) in the game opens a quick menu at the cursor (route and layout toggles, previous and next step, settings, move, quit). Settings live in their own frameless window, styled like the overlay and moved by its title bar, also reachable from the tray. Alt+M unlocks the overlay for dragging.
-- It shows only while the game (or the overlay itself) is the foreground window. At startup without the game it shows a short "running in the background" notice that also names the menu key, the step keys and, in compact, where to turn on the full layout. In a hideout, a map or an area off the route it says it is showing the last step.
+- It shows only while the game (or the overlay itself) is the foreground window. At startup without the game it shows a short "running in the background" notice that also names the menu key, the step keys and, in compact, where to turn on the full layout. In a hideout, a map or an area off the route it says it is showing the last step. It marks each finished act on the first step of the next one and says when the campaign is done.
 
 ## Capabilities and Constraints
 

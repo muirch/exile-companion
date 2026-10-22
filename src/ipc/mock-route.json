@@ -6,6 +6,7 @@
       "area_id": "1_1_1",
       "edge": 0,
       "edge_count": 233,
+      "finished_section": null,
       "here": [
         {
           "parts": [
@@ -48,6 +49,7 @@
       "area_id": "1_1_town",
       "edge": 1,
       "edge_count": 233,
+      "finished_section": null,
       "here": [
         {
           "parts": [
@@ -122,6 +124,7 @@
       "area_id": "1_1_2",
       "edge": 2,
       "edge_count": 233,
+      "finished_section": null,
       "here": [
         {
           "parts": [
@@ -163,6 +166,7 @@
       "area_id": "1_1_3",
       "edge": 3,
       "edge_count": 233,
+      "finished_section": null,
       "here": [
         {
           "parts": [
@@ -218,6 +222,7 @@
       "area_id": "1_1_4_1",
       "edge": 4,
       "edge_count": 233,
+      "finished_section": null,
       "here": [],
       "section": "Act 1",
       "section_edge": 4,
@@ -242,6 +247,7 @@
       "area_id": "1_1_2",
       "edge": 5,
       "edge_count": 233,
+      "finished_section": null,
       "here": [],
       "section": "Act 1",
       "section_edge": 5,
@@ -270,6 +276,7 @@
       "area_id": "1_1_2a",
       "edge": 6,
       "edge_count": 233,
+      "finished_section": null,
       "here": [
         {
           "parts": [
@@ -342,6 +349,7 @@
       "area_id": "1_1_town",
       "edge": 7,
       "edge_count": 233,
+      "finished_section": null,
       "here": [
         {
           "parts": [
@@ -395,6 +403,7 @@
       "area_id": "1_1_4_1",
       "edge": 8,
       "edge_count": 233,
+      "finished_section": null,
       "here": [],
       "section": "Act 1",
       "section_edge": 8,
@@ -430,6 +439,7 @@
       "area_id": "1_1_4_0",
       "edge": 9,
       "edge_count": 233,
+      "finished_section": null,
       "here": [
         {
           "parts": [
@@ -499,6 +509,7 @@
       "area_id": "1_1_4_1",
       "edge": 10,
       "edge_count": 233,
+      "finished_section": null,
       "here": [],
       "section": "Act 1",
       "section_edge": 10,
@@ -527,6 +538,7 @@
       "area_id": "1_1_5",
       "edge": 11,
       "edge_count": 233,
+      "finished_section": null,
       "here": [],
       "section": "Act 1",
       "section_edge": 11,
@@ -555,6 +567,7 @@
       "area_id": "1_1_6",
       "edge": 12,
       "edge_count": 233,
+      "finished_section": null,
       "here": [],
       "section": "Act 1",
       "section_edge": 12,
@@ -583,6 +596,7 @@
       "area_id": "1_1_7_1",
       "edge": 13,
       "edge_count": 233,
+      "finished_section": null,
       "here": [],
       "section": "Act 1",
       "section_edge": 13,
@@ -607,6 +621,7 @@
       "area_id": "1_1_town",
       "edge": 14,
       "edge_count": 233,
+      "finished_section": null,
       "here": [
         {
           "parts": [
@@ -686,6 +701,7 @@
       "area_id": "1_1_7_1",
       "edge": 15,
       "edge_count": 233,
+      "finished_section": null,
       "here": [
         {
           "parts": [
@@ -738,6 +754,7 @@
       "area_id": "1_1_7_2",
       "edge": 16,
       "edge_count": 233,
+      "finished_section": null,
       "here": [
         {
           "parts": [
@@ -872,6 +889,7 @@
       "area_id": "1_1_town",
       "edge": 17,
       "edge_count": 233,
+      "finished_section": null,
       "here": [
         {
           "parts": [
@@ -937,6 +955,7 @@
       "area_id": "1_1_8",
       "edge": 18,
       "edge_count": 233,
+      "finished_section": null,
       "here": [],
       "section": "Act 1",
       "section_edge": 18,
@@ -972,6 +991,7 @@
       "area_id": "1_1_9",
       "edge": 19,
       "edge_count": 233,
+      "finished_section": null,
       "here": [
         {
           "parts": [
@@ -1029,6 +1049,7 @@
       "area_id": "1_1_11_1",
       "edge": 20,
       "edge_count": 233,
+      "finished_section": null,
       "here": [],
       "section": "Act 1",
       "section_edge": 20,
@@ -1053,6 +1074,7 @@
       "area_id": "1_1_town",
       "edge": 21,
       "edge_count": 233,
+      "finished_section": null,
       "here": [
         {
           "parts": [
@@ -1106,6 +1128,7 @@
       "area_id": "1_1_11_1",
       "edge": 22,
       "edge_count": 233,
+      "finished_section": null,
       "here": [],
       "section": "Act 1",
       "section_edge": 22,
@@ -1141,6 +1164,7 @@
       "area_id": "1_1_11_2",
       "edge": 23,
       "edge_count": 233,
+      "finished_section": null,
       "here": [
         {
           "parts": [
@@ -1210,6 +1234,7 @@
       "area_id": "1_2_1",
       "edge": 24,
       "edge_count": 233,
+      "finished_section": "Act 1",
       "here": [],
       "section": "Act 2",
       "section_edge": 0,
@@ -1238,6 +1263,7 @@
       "area_id": "1_2_town",
       "edge": 25,
       "edge_count": 233,
+      "finished_section": null,
       "here": [],
       "section": "Act 2",
       "section_edge": 1,
@@ -1277,6 +1303,7 @@
       "area_id": "1_2_2",
       "edge": 26,
       "edge_count": 233,
+      "finished_section": null,
       "here": [
         {
           "parts": [
@@ -1345,6 +1372,7 @@
       "area_id": "1_2_3",
       "edge": 27,
       "edge_count": 233,
+      "finished_section": null,
       "here": [
         {
           "parts": [],
@@ -1388,6 +1416,7 @@
       "area_id": "1_2_town",
       "edge": 28,
       "edge_count": 233,
+      "finished_section": null,
       "here": [
         {
           "parts": [],
@@ -1427,6 +1456,7 @@
       "area_id": "1_2_2",
       "edge": 29,
       "edge_count": 233,
+      "finished_section": null,
       "here": [],
       "section": "Act 2",
       "section_edge": 5,
@@ -1455,6 +1485,7 @@
       "area_id": "1_2_2a",
       "edge": 30,
       "edge_count": 233,
+      "finished_section": null,
       "here": [
         {
           "parts": [
@@ -1492,6 +1523,7 @@
       "area_id": "1_2_town",
       "edge": 31,
       "edge_count": 233,
+      "finished_section": null,
       "here": [
         {
           "parts": [
@@ -1531,6 +1563,7 @@
       "area_id": "1_2_3",
       "edge": 32,
       "edge_count": 233,
+      "finished_section": null,
       "here": [],
       "section": "Act 2",
       "section_edge": 8,
@@ -1570,6 +1603,7 @@
       "area_id": "1_2_6_1",
       "edge": 33,
       "edge_count": 233,
+      "finished_section": null,
       "here": [
         {
           "parts": [],
@@ -1624,6 +1658,7 @@
       "area_id": "1_2_6_2",
       "edge": 34,
       "edge_count": 233,
+      "finished_section": null,
       "here": [
         {
           "parts": [
@@ -1704,6 +1739,7 @@
       "area_id": "1_2_town",
       "edge": 35,
       "edge_count": 233,
+      "finished_section": null,
       "here": [
         {
           "parts": [
@@ -1743,6 +1779,7 @@
       "area_id": "1_2_3",
       "edge": 36,
       "edge_count": 233,
+      "finished_section": null,
       "here": [],
       "section": "Act 2",
       "section_edge": 12,
@@ -1782,6 +1819,7 @@
       "area_id": "1_2_15",
       "edge": 37,
       "edge_count": 233,
+      "finished_section": null,
       "here": [
         {
           "parts": [],
@@ -1833,6 +1871,7 @@
       "area_id": "1_2_5_1",
       "edge": 38,
       "edge_count": 233,
+      "finished_section": null,
       "here": [
         {
           "parts": [
@@ -1881,6 +1920,7 @@
       "area_id": "1_2_5_2",
       "edge": 39,
       "edge_count": 233,
+      "finished_section": null,
       "here": [
         {
           "parts": [
@@ -1926,6 +1966,7 @@
       "area_id": "1_2_town",
       "edge": 40,
       "edge_count": 233,
+      "finished_section": null,
       "here": [
         {
           "parts": [
@@ -1980,6 +2021,7 @@
       "area_id": "1_2_7",
       "edge": 41,
       "edge_count": 233,
+      "finished_section": null,
       "here": [
         {
           "parts": [
@@ -2045,6 +2087,7 @@
       "area_id": "1_2_9",
       "edge": 42,
       "edge_count": 233,
+      "finished_section": null,
       "here": [
         {
           "parts": [
@@ -2109,6 +2152,7 @@
       "area_id": "1_2_10",
       "edge": 43,
       "edge_count": 233,
+      "finished_section": null,
       "here": [
         {
           "parts": [
@@ -2196,6 +2240,7 @@
       "area_id": "1_2_town",
       "edge": 44,
       "edge_count": 233,
+      "finished_section": null,
       "here": [
         {
           "parts": [
@@ -2246,6 +2291,7 @@
       "area_id": "1_2_8",
       "edge": 45,
       "edge_count": 233,
+      "finished_section": null,
       "here": [
         {
           "parts": [],
@@ -2286,6 +2332,7 @@
       "area_id": "1_2_14_2",
       "edge": 46,
       "edge_count": 233,
+      "finished_section": null,
       "here": [
         {
           "parts": [
@@ -2327,6 +2374,7 @@
       "area_id": "1_2_14_3",
       "edge": 47,
       "edge_count": 233,
+      "finished_section": null,
       "here": [
         {
           "parts": [
@@ -2408,6 +2456,7 @@
       "area_id": "1_3_1",
       "edge": 48,
       "edge_count": 233,
+      "finished_section": "Act 2",
       "here": [
         {
           "parts": [
@@ -2462,6 +2511,7 @@
       "area_id": "1_3_town",
       "edge": 49,
       "edge_count": 233,
+      "finished_section": null,
       "here": [],
       "section": "Act 3",
       "section_edge": 1,
@@ -2501,6 +2551,7 @@
       "area_id": "1_3_2",
       "edge": 50,
       "edge_count": 233,
+      "finished_section": null,
       "here": [
         {
           "parts": [],
@@ -2552,6 +2603,7 @@
       "area_id": "1_3_3_1",
       "edge": 51,
       "edge_count": 233,
+      "finished_section": null,
       "here": [
         {
           "parts": [
@@ -2628,6 +2680,7 @@
       "area_id": "1_3_town",
       "edge": 52,
       "edge_count": 233,
+      "finished_section": null,
       "here": [
         {
           "parts": [
@@ -2703,6 +2756,7 @@
       "area_id": "1_3_2",
       "edge": 53,
       "edge_count": 233,
+      "finished_section": null,
       "here": [
         {
           "parts": [],
@@ -2747,6 +2801,7 @@
       "area_id": "1_3_10_1",
       "edge": 54,
       "edge_count": 233,
+      "finished_section": null,
       "here": [
         {
           "parts": [
@@ -2814,6 +2869,7 @@
       "area_id": "1_3_5",
       "edge": 55,
       "edge_count": 233,
+      "finished_section": null,
       "here": [
         {
           "parts": [
@@ -2862,6 +2918,7 @@
       "area_id": "1_3_6",
       "edge": 56,
       "edge_count": 233,
+      "finished_section": null,
       "here": [
         {
           "parts": [
@@ -2917,6 +2974,7 @@
       "area_id": "1_3_town",
       "edge": 57,
       "edge_count": 233,
+      "finished_section": null,
       "here": [
         {
           "parts": [
@@ -2956,6 +3014,7 @@
       "area_id": "1_3_5",
       "edge": 58,
       "edge_count": 233,
+      "finished_section": null,
       "here": [],
       "section": "Act 3",
       "section_edge": 10,
@@ -2995,6 +3054,7 @@
       "area_id": "1_3_7",
       "edge": 59,
       "edge_count": 233,
+      "finished_section": null,
       "here": [
         {
           "parts": [

@@ -11,6 +11,11 @@ export type RouteView = { section: string, edge: number, edge_count: number,
  */
 section_edge: number, section_edge_count: number, 
 /**
+ * The section the player just left, on the first edge of the next one ("Act 1" on the
+ * first step of act 2).
+ */
+finished_section: string | null, 
+/**
  * The area this edge expects the player to be in.
  */
 area_id: string, 
