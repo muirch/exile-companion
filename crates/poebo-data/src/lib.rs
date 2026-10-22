@@ -22,6 +22,12 @@ pub const QUESTS_JSON: &[u8] = include_bytes!("../../../data-pack/quests.json");
 /// Raw bytes of the committed lab-trials pack (`data-pack/trials.json`).
 pub const TRIALS_JSON: &[u8] = include_bytes!("../../../data-pack/trials.json");
 
+/// exile-leveling's gem list (MIT), keyed by the gem's base item id.
+pub const GEMS_JSON: &[u8] = include_bytes!("../../../data-pack/routes/exile-leveling/gems.json");
+/// exile-leveling's quest rewards and vendor gems per quest (MIT).
+pub const GEM_SOURCES_JSON: &[u8] =
+    include_bytes!("../../../data-pack/routes/exile-leveling/quests.json");
+
 /// exile-leveling's route, one file per act in order (MIT, see `data-pack/routes/exile-leveling`).
 pub const ROUTE_ACTS: [&str; 10] = [
     include_str!("../../../data-pack/routes/exile-leveling/act-1.txt"),
@@ -42,7 +48,13 @@ mod tests {
 
     #[test]
     fn embedded_packs_are_non_empty_json_objects() {
-        for pack in [AREAS_JSON, QUESTS_JSON, TRIALS_JSON] {
+        for pack in [
+            AREAS_JSON,
+            QUESTS_JSON,
+            TRIALS_JSON,
+            GEMS_JSON,
+            GEM_SOURCES_JSON,
+        ] {
             assert!(!pack.is_empty());
             // Cheap sanity check without pulling in a JSON parser dependency.
             assert_eq!(pack.iter().find(|b| !b.is_ascii_whitespace()), Some(&b'{'));

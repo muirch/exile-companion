@@ -1,5 +1,7 @@
-// Vendors exile-leveling's hand-written leveling route into data-pack/routes/exile-leveling/.
-// Run with `npm run routes`. Bump COMMIT to pick up a newer route, then review the diff.
+// Vendors exile-leveling's hand-written leveling route into data-pack/routes/exile-leveling/,
+// together with its gem list and quest rewards: the game files don't carry what vendors sell
+// after each quest. Run with `npm run routes`. Bump COMMIT to pick up a newer route, then review
+// the diff.
 
 import { mkdirSync, writeFileSync } from 'node:fs';
 import { dirname, resolve } from 'node:path';
@@ -25,10 +27,13 @@ for (let act = 1; act <= ACTS; act++) {
   const name = `act-${act}.txt`;
   writeFileSync(resolve(outDir, name), await fetchText(`common/data/routes/${name}`));
 }
+for (const name of ['gems.json', 'quests.json']) {
+  writeFileSync(resolve(outDir, name), await fetchText(`common/data/json/${name}`));
+}
 writeFileSync(resolve(outDir, 'LICENSE'), await fetchText('LICENSE'));
 writeFileSync(
   resolve(outDir, 'SOURCE.md'),
-  `Leveling route from https://github.com/${REPO} at commit ${COMMIT}, MIT licensed (see LICENSE).\n` +
+  `Leveling route, gem list and quest rewards from https://github.com/${REPO} at commit ${COMMIT}, MIT licensed (see LICENSE).\n` +
     'Regenerate with `npm run routes` in tools/data-extractor. Do not edit these files by hand.\n',
 );
 console.log(`[routes] wrote ${ACTS} acts from ${REPO}@${COMMIT.slice(0, 7)}`);

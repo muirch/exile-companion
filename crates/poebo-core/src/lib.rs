@@ -21,6 +21,7 @@ pub mod clock;
 pub mod data;
 pub mod error;
 pub mod events;
+pub mod gems;
 pub mod guidance;
 pub mod hold;
 pub mod locale;
