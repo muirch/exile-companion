@@ -43,7 +43,14 @@ crates/poebo-core/bindings/
 .impeccable/questions/
 .impeccable/mocks/
 .impeccable/build/
-.impeccable/critique/
+.impeccable/history/
+.impeccable/live/
+.impeccable/provider-smoke/
+**/.impeccable/hook.cache.json
+**/.impeccable/hook.pending.json
+# Critique snapshots are per-run and hold absolute paths; ignore.md is shared.
+.impeccable/critique/*
+!.impeccable/critique/ignore.md
 
 # Personal Claude Code notes and UI screenshots
 CLAUDE.local.md
