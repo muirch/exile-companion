@@ -4,7 +4,7 @@ The project language is English: code, comments, docs, commits, issues.
 
 ## Project essentials
 
-- `poebo` is a passive Path of Exile tool. It must never inject into the game, read its memory, hook rendering, or automate play. Inputs are `Client.txt`, user hotkeys (global shortcuts and a low-level keyboard hook that only watches and passes every key on), the clipboard and local Path of Building files.
+- `poebo` is a passive Path of Exile tool. It must never inject into the game, read its memory, hook rendering, or automate play. Inputs are `Client.txt`, user hotkeys (global shortcuts and a low-level keyboard hook that only watches and passes every key on), the clipboard, local Path of Building files and build links the user pastes (pobb.in, poe.ninja and the other sites PoB imports from).
 - Sending input to the game is allowed only for an explicit, opt-in user key press that performs exactly one game action, and only while the game is in front (GGG's one-action-per-keypress rule). Today that is the relog key (`/exit` in chat). Anything that cuts the game's network connection or chains actions is out.
 - `crates/poebo-core` stays free of Tauri and is covered by tests. Logic goes there; `src-tauri` is a thin shell.
 - Logic changes come with tests: Rust logic in `poebo-core` with `cargo test`, UI behaviour (labels, key handling, what the overlay shows in each state) with Vitest next to the component (`*.test.tsx`).

@@ -2,6 +2,7 @@
 //! Errors cross the IPC boundary as `String`; core keeps its typed errors.
 
 use std::path::Path;
+use std::time::Duration;
 
 use poebo_core::build::BuildSummary;
 use poebo_core::guidance::NextObjective;
@@ -95,11 +96,35 @@ pub async fn import_build_file(app: AppHandle) -> Result<Option<BuildSummary>, S
     runtime::import_build(&app, build).map(Some)
 }
 
-/// Import a Path of Building build from pasted text (an import code or raw XML).
+/// Import a Path of Building build from pasted text: a build link, an import code or raw XML.
 #[tauri::command]
-pub fn import_build_code(app: AppHandle, code: String) -> Result<BuildSummary, String> {
+pub async fn import_build_code(app: AppHandle, code: String) -> Result<BuildSummary, String> {
+    let code = match poebo_pob::code_url(&code) {
+        Some(url) => tauri::async_runtime::spawn_blocking(move || fetch_build_code(&url))
+            .await
+            .map_err(|e| e.to_string())??,
+        None => code,
+    };
     let build = poebo_pob::import_text(&code).map_err(|e| e.to_string())?;
     runtime::import_build(&app, build)
+}
+
+fn fetch_build_code(url: &str) -> Result<String, String> {
+    let tls = ureq::tls::TlsConfig::builder()
+        .provider(ureq::tls::TlsProvider::NativeTls)
+        .build();
+    let agent: ureq::Agent = ureq::Agent::config_builder()
+        .tls_config(tls)
+        .timeout_global(Some(Duration::from_secs(15)))
+        .user_agent(concat!("poebo/", env!("CARGO_PKG_VERSION")))
+        .build()
+        .into();
+    log::info!("downloading build from {url}");
+    agent
+        .get(url)
+        .call()
+        .and_then(|mut r| r.body_mut().read_to_string())
+        .map_err(|e| format!("Couldn't download the build: {e}"))
 }
 
 /// Forget the currently-loaded build.

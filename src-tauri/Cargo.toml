@@ -23,6 +23,7 @@ tauri-plugin-log = "=2.9.2"
 log = "0.4"
 serde = { workspace = true }
 serde_json = { workspace = true }
+ureq = { version = "=3.5.0", default-features = false, features = ["native-tls", "gzip"] }
 tokio = { version = "=1.53.0", features = ["rt-multi-thread", "macros", "sync", "time"] }
 poebo-core = { path = "../crates/poebo-core" }
 poebo-data = { path = "../crates/poebo-data" }

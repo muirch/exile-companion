@@ -219,6 +219,8 @@ function GemHintsRow(): React.JSX.Element {
 function BuildSection(): React.JSX.Element {
   const build = useAppStore((s) => s.build);
   const setBuild = useAppStore((s) => s.setBuild);
+  const [busy, setBusy] = useState(false);
+  const [error, setError] = useState<string | null>(null);
   const summary = build
     ? [
         [build.class_name, build.ascend_class_name].filter(Boolean).join(' '),
@@ -245,15 +247,20 @@ function BuildSection(): React.JSX.Element {
         </button>
         <button
           className="btn"
+          disabled={busy}
           onClick={async () => {
+            setBusy(true);
+            setError(null);
             try {
               setBuild(await pasteBuild());
-            } catch {
-              /* nothing valid on the clipboard - keep the current build */
+            } catch (e) {
+              setError(String(e));
+            } finally {
+              setBusy(false);
             }
           }}
         >
-          Paste code
+          {busy ? 'Loading…' : 'Paste code or link'}
         </button>
         {build && (
           <button className="btn" onClick={() => void clearBuild()}>
@@ -261,6 +268,13 @@ function BuildSection(): React.JSX.Element {
           </button>
         )}
       </Row>
+      {error && (
+        <Row label="">
+          <span role="alert" className="min-w-0 flex-1 font-body text-[12px] text-corrupted">
+            {error}
+          </span>
+        </Row>
+      )}
       <GemHintsRow />
     </Section>
   );

@@ -34,7 +34,7 @@ poebo reads only the game's `Client.txt` log, knows which area the player is in 
 
 ## Capabilities and Constraints
 
-- Inputs allowed: `Client.txt`, user hotkeys, the clipboard on request, local PoB files. It must never inject into the game, read its memory, hook rendering, or automate play. This follows GGG's third-party tool policy and is non-negotiable.
+- Inputs allowed: `Client.txt`, user hotkeys, the clipboard on request, local PoB files, and a PoB build link the user pastes (downloaded once from the build site, the way PoB itself imports it). It must never inject into the game, read its memory, hook rendering, or automate play. This follows GGG's third-party tool policy and is non-negotiable.
 - One opt-in exception to "sends nothing to the game": the relog key types `/exit` in chat, one command per key press, only while the game is in front, off by default (decided by the user on 2026-10-21, modelled on Awakened PoE Trade's F9).
 - All hotkeys are configurable. Defaults: hold the tilde key for the quick menu (Tab is the other choice; Esc isn't offered because the game acts on it first), Alt+M to move the overlay, Alt+Left / Alt+Right to step the route, F9 to relog when enabled.
 - Route steps come typed: kill, arena, enter area, waypoint, portal, logout, quest hand-in, quest item, trial, ascend, crafting recipe, direction (8-way compass), copy text.

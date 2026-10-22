@@ -1,9 +1,10 @@
 //! `poebo-pob` - import a Path of Building build for the poebo PoE1 leveling assistant.
 //!
-//! A build reaches us two ways, both local: an **import code** (pasted from PoB / pobb.in / pastebin,
-//! shaped `url-safe-base64( zlib( xml ) )`) or a **local file** (raw exported XML, or a saved code).
-//! This crate decodes and parses either into a [`PobBuild`]. It is pure and network-free by design
-//! (the app never downloads a build), so it can be unit-tested headless.
+//! A build reaches us as an **import code** (pasted from PoB / pobb.in / pastebin, shaped
+//! `url-safe-base64( zlib( xml ) )`), a **local file** (raw exported XML, or a saved code), or a
+//! **build link**, which the app turns into a code with [`code_url`] and one download. This crate
+//! decodes and parses into a [`PobBuild`] and does no network calls itself, so it can be
+//! unit-tested headless.
 //!
 //! The parse is deliberately forgiving: PoB has no formal schema, so children are matched by element
 //! name and every attribute is optional (see [`model`]).
@@ -12,6 +13,7 @@
 
 pub mod decode;
 pub mod error;
+pub mod link;
 pub mod model;
 pub mod parse;
 
@@ -19,6 +21,7 @@ use std::path::Path;
 
 pub use decode::decode_import_code;
 pub use error::PobError;
+pub use link::code_url;
 pub use model::{Gem, PobBuild, SkillGroup, SkillSet, TreeSpec};
 pub use parse::parse_xml;
 

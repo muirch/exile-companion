@@ -17,6 +17,13 @@ vi.mock('../ipc/commands', async (importOriginal) => {
 });
 
 describe('SettingsApp', () => {
+  it('shows why a pasted build did not load', async () => {
+    vi.mocked(commands.pasteBuild).mockRejectedValueOnce("Couldn't download the build: timeout");
+    render(<SettingsApp />);
+    await userEvent.click(screen.getByRole('button', { name: 'Paste code or link' }));
+    expect(await screen.findByRole('alert')).toHaveTextContent("Couldn't download the build: timeout");
+  });
+
   it('saves which gem steps the route shows', async () => {
     render(<SettingsApp />);
     const rewards = screen.getByRole('button', { name: 'Rewards' });
