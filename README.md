@@ -8,7 +8,7 @@ A leveling overlay for Path of Exile 1. It tells you what to do in the area you'
 [![License: MIT](https://img.shields.io/badge/license-MIT-blue.svg)](LICENSE)
 ![Path of Exile 1](https://img.shields.io/badge/Path%20of%20Exile-1-a68a64.svg)
 
-![The overlay in three areas: a boss to kill, a quest to hand in, a passage with only the way out](docs/images/overlay.png)
+![The full overlay in three areas: a boss to kill, a town step with the gems to take and buy, a passage with only the way out](docs/images/overlay.png)
 
 </div>
 
@@ -18,11 +18,15 @@ Exile Companion sits over the game and looks like one of its item tooltips. The 
 
 It follows you on its own. The game writes every area it loads to its `Client.txt` log, and Exile Companion reads that log to know where you are, including the Act 6-10 towns that share names with Act 1-5. Your level tells repeat visits apart. The route is the speedrunning route from [exile-leveling](https://github.com/HeartofPhos/exile-leveling), and you can step through it by hand when you go off it.
 
-The overlay shows only while the game is in front, and clicks go through it to the game.
+Import your Path of Building build, from a file, a PoB code or a pobb.in or poe.ninja link, and the route also says which gem to take from each quest and what to buy from which vendor, at the point the build needs it.
+
+The overlay shows only while the game is in front, and clicks go through it to the game. It starts in a compact layout of a few lines between the flask bar and the skill bar; the full layout adds the area header and the route's hints.
 
 ## Install
 
 Exile Companion runs on Windows. Download the setup file from the [dev release](https://github.com/muirch/exile-companion/releases/tag/dev) and run it. A newer build installs over the old one. Builds aren't signed yet, so Windows SmartScreen may ask you to confirm.
+
+The app used to be called poebo. If you have poebo installed, uninstall it; Exile Companion picks up its settings and saved build on the first start.
 
 Start Exile Companion before or after the game. It finds `Client.txt` in the usual Steam and standalone install folders; if it doesn't, pick the file in the settings.
 
@@ -32,7 +36,8 @@ All of them can be changed in the settings.
 
 | Key | What it does |
 |---|---|
-| Hold Tilde (left of 1) | Quick menu: route on or off, settings, move the overlay, quit |
+| Hold Tilde (left of 1) | Quick menu: route and layout, previous and next step, settings, move the overlay, quit |
+| Tap Tilde | Show the overlay again after it faded out, and the step's hints in the compact layout |
 | Alt+M | Unlock the overlay to drag it, press again to lock |
 | Alt+Left, Alt+Right | Previous or next step of the route |
 | F9 | Relog to character select, off until you turn it on |
@@ -47,8 +52,7 @@ Exile Companion isn't affiliated with or endorsed by Grinding Gear Games. Path o
 
 ## What's next
 
-- Gems in the route: which gem to take from each quest and what to buy from vendors, based on your Path of Building build.
-- Passive tree guidance from the same build.
+- Passive tree guidance from your Path of Building build.
 - An assistant that answers build questions from real Path of Building numbers.
 - Path of Exile 2, after its 1.0 release.
 
@@ -111,7 +115,9 @@ The leash is in the repo. [AGENTS.md](AGENTS.md) has the project rules: what Exi
 
 ### Contributing
 
-Issues and pull requests are welcome. Logic lives in `exile-core` and comes with tests; UI behaviour is tested with Vitest next to the component. CI runs rustfmt, Clippy with warnings as errors, the Rust and UI tests, the UI lint, and a check that the TypeScript bindings are up to date.
+Issues and pull requests are welcome. Logic lives in `exile-core` and comes with tests; UI behaviour is tested with Vitest next to the component. CI runs rustfmt, Clippy with warnings as errors, the Rust and UI tests, the UI lint, a check that the TypeScript bindings are up to date, and a Windows build. A pull request with the `smoke` label also installs the app on a Windows runner and starts it a few times.
+
+If you open the project in Claude Code, the hooks in `.claude/settings.json` run the impeccable design checks after UI edits. They download the impeccable binary the first time; if you don't want that, turn the hooks off with `/impeccable hooks off` or skip Claude Code altogether, nothing else depends on it.
 
 ## Credits and licenses
 
