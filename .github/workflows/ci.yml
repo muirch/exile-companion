@@ -70,6 +70,8 @@ jobs:
 
   windows-app:
     name: Tauri app compiles (Windows)
+    # Already passed on the PR; Windows minutes count double, so main doesn't run it again.
+    if: github.event_name == 'pull_request'
     runs-on: windows-latest
     steps:
       - uses: actions/checkout@v7.0.0

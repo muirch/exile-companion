@@ -1,10 +1,13 @@
 name: Windows smoke test
 
 # Installs the app on a Windows runner and starts it a few times, so a build that doesn't start
-# shows up here instead of on the player's machine.
+# shows up here instead of on the player's machine. Windows minutes count double on a private
+# repo, so it runs only on PRs labelled "smoke" (add it when windows, focus, the keyboard hook or
+# the installer change) or by hand.
 on:
   workflow_dispatch:
   pull_request:
+    types: [opened, synchronize, reopened, labeled]
     paths: ['src-tauri/**', 'src/**', 'crates/**', 'Cargo.lock', 'package.json', 'pnpm-lock.yaml', 'tools/windows-smoke.ps1', '.github/workflows/smoke.yml']
 
 concurrency:
@@ -17,6 +20,7 @@ env:
 jobs:
   smoke:
     name: Install and start (Windows)
+    if: github.event_name == 'workflow_dispatch' || contains(github.event.pull_request.labels.*.name, 'smoke')
     runs-on: windows-latest
     steps:
       - uses: actions/checkout@v7.0.0
