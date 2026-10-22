@@ -43,6 +43,40 @@ function Row({ label, children }: { label: string; children: ReactNode }): React
   );
 }
 
+// Drops progress, the build or the game log: the first click arms it, the second does it.
+function ConfirmButton({
+  label,
+  confirm,
+  onConfirm,
+}: {
+  label: string;
+  confirm: string;
+  onConfirm: () => void;
+}): React.JSX.Element {
+  const [armed, setArmed] = useState(false);
+  useEffect(() => {
+    if (!armed) return;
+    const t = setTimeout(() => setArmed(false), 3000);
+    return () => clearTimeout(t);
+  }, [armed]);
+  return (
+    <button
+      className="btn"
+      aria-pressed={armed}
+      onClick={() => {
+        if (armed) {
+          setArmed(false);
+          onConfirm();
+        } else {
+          setArmed(true);
+        }
+      }}
+    >
+      {armed ? confirm : label}
+    </button>
+  );
+}
+
 function Toggle({ on, onChange }: { on: boolean; onChange: (v: boolean) => void }): React.JSX.Element {
   return (
     <button className="btn" role="switch" aria-checked={on} onClick={() => onChange(!on)}>
@@ -179,9 +213,11 @@ function RouteSection(): React.JSX.Element {
         <button className="btn" onClick={() => void routeNext()}>
           Next
         </button>
-        <button className="btn" onClick={() => void routeReset()}>
-          Start over
-        </button>
+        <ConfirmButton
+          label="Start over"
+          confirm="Click again to start over"
+          onConfirm={() => void routeReset()}
+        />
       </Row>
     </Section>
   );
@@ -190,6 +226,8 @@ function RouteSection(): React.JSX.Element {
 function LogSection(): React.JSX.Element {
   const mode = useAppStore((s) => s.source.mode);
   const path = useAppStore((s) => s.source.path);
+  const [testing, setTesting] = useState(false);
+  const showTesting = testing || mode === 'replay';
   return (
     <Section title="Game log">
       <Row label="Client.txt">
@@ -207,21 +245,43 @@ function LogSection(): React.JSX.Element {
         >
           Pick Client.txt
         </button>
+      </Row>
+      <Row label="Testing">
         <button
           className="btn"
-          onClick={async () => {
-            const picked = await pickLogFile();
-            if (picked) await startReplay(picked, 'X5');
-          }}
+          aria-expanded={showTesting}
+          disabled={mode === 'replay'}
+          onClick={() => setTesting(!testing)}
         >
-          Replay a log
+          {showTesting ? 'Hide' : 'Show'}
         </button>
-        {mode !== 'idle' && (
-          <button className="btn" onClick={() => void stopSource()}>
-            Stop
-          </button>
+        {showTesting && (
+          <>
+            <button
+              className="btn"
+              onClick={async () => {
+                const picked = await pickLogFile();
+                if (picked) await startReplay(picked, 'X5');
+              }}
+            >
+              Replay a log
+            </button>
+            {mode !== 'idle' && (
+              <ConfirmButton
+                label="Stop"
+                confirm="Click again to stop"
+                onConfirm={() => void stopSource()}
+              />
+            )}
+          </>
         )}
       </Row>
+      {showTesting && (
+        <p className="ml-35 font-body text-[12px] leading-snug text-label italic">
+          Plays a saved log back to check the route without the game. Stop leaves poebo without a
+          log until you pick one again.
+        </p>
+      )}
       {mode === 'replay' && (
         <Row label="Replay">
           <div className="flex-1">
@@ -388,9 +448,11 @@ function BuildSection(): React.JSX.Element {
           {busy ? 'Loading…' : 'Paste code or link'}
         </button>
         {build && (
-          <button className="btn" onClick={() => void clearBuild()}>
-            Clear
-          </button>
+          <ConfirmButton
+            label="Clear"
+            confirm="Click again to clear"
+            onConfirm={() => void clearBuild()}
+          />
         )}
       </Row>
       {error && (

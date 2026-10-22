@@ -73,6 +73,21 @@ describe('SettingsApp', () => {
     expect(commands.updateSettings).toHaveBeenCalledWith({ fadeAfter: 10 });
   });
 
+  it('asks for a second click before starting the route over', async () => {
+    render(<SettingsApp />);
+    await userEvent.click(screen.getByRole('button', { name: 'Start over' }));
+    expect(commands.routeReset).not.toHaveBeenCalled();
+    await userEvent.click(screen.getByRole('button', { name: 'Click again to start over' }));
+    expect(commands.routeReset).toHaveBeenCalledTimes(1);
+  });
+
+  it('keeps log replay behind Testing', async () => {
+    render(<SettingsApp />);
+    expect(screen.queryByRole('button', { name: 'Replay a log' })).not.toBeInTheDocument();
+    await userEvent.click(screen.getByRole('button', { name: 'Show' }));
+    expect(screen.getByRole('button', { name: 'Replay a log' })).toBeInTheDocument();
+  });
+
   it('closes from its own title bar', async () => {
     render(<SettingsApp />);
     await userEvent.click(screen.getByRole('button', { name: 'Close settings' }));
