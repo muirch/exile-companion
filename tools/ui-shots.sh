@@ -43,7 +43,7 @@ overlay overlay-unlocked "view=unlocked&edge=7"
 overlay overlay-compact "view=locked&edge=1&compact"
 overlay overlay-compact-boss "view=locked&edge=9&compact"
 overlay notice "view=notice"
-stage menu "window=menu" 236 256
+stage menu "window=menu" 236 336
 shot menu "file://$OUT/.stage-menu.html" 560 420
 shot settings "$URL/?window=settings" 560 1200
 

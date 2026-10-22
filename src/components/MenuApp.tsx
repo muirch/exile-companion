@@ -1,9 +1,11 @@
-import { useEffect, useRef } from 'react';
+import { useEffect, useRef, useState } from 'react';
 
 import {
   closeMenu,
   openSettings,
   quitApp,
+  routeNext,
+  routePrev,
   setRouteEnabled,
   startMove,
   updateSettings,
@@ -46,10 +48,41 @@ function Row({
   );
 }
 
+// The menu opens under the cursor in the middle of play, so quitting takes a second click.
+function QuitRow(): React.JSX.Element {
+  const [armed, setArmed] = useState(false);
+  useEffect(() => {
+    if (!armed) return;
+    const t = setTimeout(() => setArmed(false), 3000);
+    return () => clearTimeout(t);
+  }, [armed]);
+  return (
+    <Row
+      label={
+        armed ? (
+          'Click again to quit'
+        ) : (
+          <>
+            Quit <Brand />
+          </>
+        )
+      }
+      onClick={() => (armed ? void quitApp() : setArmed(true))}
+    />
+  );
+}
+
+// Up and Down walk the rows, as the menu role promises.
+function moveFocus(panel: HTMLElement, step: number): void {
+  const rows = [...panel.querySelectorAll<HTMLButtonElement>('button')];
+  const at = rows.indexOf(document.activeElement as HTMLButtonElement);
+  rows[(at + step + rows.length) % rows.length]?.focus();
+}
+
 export function MenuApp(): React.JSX.Element {
   const routeEnabled = useAppStore((s) => s.routeEnabled);
   const compact = useAppStore((s) => s.ui.compact);
-  const moveKey = useAppStore((s) => s.hotkeys.moveOverlay);
+  const keys = useAppStore((s) => s.hotkeys);
   const panel = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
@@ -70,36 +103,47 @@ export function MenuApp(): React.JSX.Element {
   }, []);
 
   return (
-    <div ref={panel} role="menu" className="tooltip m-1 w-[228px] bg-black/90 pb-1.5">
+    <div
+      ref={panel}
+      role="menu"
+      tabIndex={-1}
+      className="tooltip m-1 w-[228px] bg-black/90 pb-1.5 outline-none"
+      onKeyDown={(e) => {
+        if (!panel.current) return;
+        if (e.key === 'ArrowDown') moveFocus(panel.current, 1);
+        if (e.key === 'ArrowUp') moveFocus(panel.current, -1);
+      }}
+    >
       <TooltipHeader tint={TINT} title={<Brand />} />
       <div className="h-1.5" />
       <Row
         first
-        label="Leveling route"
+        label="Show route"
         state={routeEnabled}
         onClick={() => void setRouteEnabled(!routeEnabled)}
       />
       <Row
-        label="Compact"
-        state={compact}
+        label="Full layout"
+        state={!compact}
         onClick={() => void updateSettings({ compact: !compact })}
       />
+      <TooltipSep tint={TINT} />
+      {/* The menu stays open so a wrong step can be fixed with a few clicks. */}
+      <Row
+        label="Previous step"
+        hint={shortcutLabel(keys.routePrev)}
+        onClick={() => void routePrev()}
+      />
+      <Row label="Next step" hint={shortcutLabel(keys.routeNext)} onClick={() => void routeNext()} />
       <TooltipSep tint={TINT} />
       <Row label="Settings" onClick={() => void openSettings()} />
       <Row
         label="Move overlay"
-        hint={shortcutLabel(moveKey)}
+        hint={shortcutLabel(keys.moveOverlay)}
         onClick={() => void startMove()}
       />
       <TooltipSep tint={TINT} />
-      <Row
-        label={
-          <>
-            Quit <Brand />
-          </>
-        }
-        onClick={() => void quitApp()}
-      />
+      <QuitRow />
     </div>
   );
 }
