@@ -478,6 +478,13 @@ function BuildSection(): React.JSX.Element {
         </Row>
       )}
       <GemHintsRow />
+      {build && build.not_in_campaign.length > 0 && (
+        <Row label="Not in campaign">
+          <span className="min-w-0 flex-1 font-body text-[13px] text-value">
+            {build.not_in_campaign.join(', ')}
+          </span>
+        </Row>
+      )}
       <PresetRows />
     </Section>
   );

@@ -147,10 +147,8 @@ fn emit_guidance(app: &AppHandle, state: &CampaignState) {
 }
 
 /// Emit the current build summary (`None` when no build is loaded).
-fn emit_build_summary(app: &AppHandle) {
-    let app_state = app.state::<AppState>();
-    let summary = lock(&app_state.build).summary();
-    let _ = app.emit("build://updated", &summary);
+pub fn emit_build_summary(app: &AppHandle) {
+    let _ = app.emit("build://updated", &current_build_summary(app));
 }
 
 fn build_path(app: &AppHandle) -> Option<std::path::PathBuf> {
@@ -196,11 +194,8 @@ pub fn import_build(app: &AppHandle, xml: Vec<u8>) -> Result<BuildSummary, Strin
         }
     }
     let app_state = app.state::<AppState>();
-    let summary = {
-        let mut bs = app_state.build.lock().map_err(|e| e.to_string())?;
-        bs.set(build);
-        bs.summary()
-    };
+    lock(&app_state.build).set(build);
+    let summary = current_build_summary(app);
     emit_build_summary(app);
     emit_guidance(app, &app_state.current_state());
     emit_route(app);
@@ -224,8 +219,16 @@ pub fn clear_build(app: &AppHandle) {
 /// The current build summary, if a build is loaded.
 pub fn current_build_summary(app: &AppHandle) -> Option<BuildSummary> {
     let app_state = app.state::<AppState>();
-    let summary = lock(&app_state.build).summary();
-    summary
+    let builds = lock(&app_state.build);
+    let build = builds.build()?;
+    let mut summary = BuildSummary::from_build(build);
+    if let Some(class) = build.class_name.as_deref() {
+        let stages = settings::load(app).unwrap_or_default().preset_stages;
+        summary.not_in_campaign =
+            poebo_core::gemplan::plan_with_stages(build, class, &app_state.gems, &stages)
+                .not_in_campaign;
+    }
+    Some(summary)
 }
 
 /// The next objective for the current state + loaded build (for on-demand hydration).

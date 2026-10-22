@@ -16,4 +16,8 @@ main_skill: string | null, spec_count: number, gem_count: number,
 /**
  * The build's skill sets, for marking which act each one is for.
  */
-presets: Array<PresetInfo>, };
+presets: Array<PresetInfo>, 
+/**
+ * Gems the campaign won't give this class. Filled by the app, which has the gem data.
+ */
+not_in_campaign: Array<string>, };

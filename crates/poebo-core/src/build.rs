@@ -56,6 +56,8 @@ pub struct BuildSummary {
     pub gem_count: u32,
     /// The build's skill sets, for marking which act each one is for.
     pub presets: Vec<crate::gemplan::PresetInfo>,
+    /// Gems the campaign won't give this class. Filled by the app, which has the gem data.
+    pub not_in_campaign: Vec<String>,
 }
 
 impl BuildSummary {
@@ -75,6 +77,7 @@ impl BuildSummary {
             spec_count: build.specs.len() as u32,
             gem_count: build.gems().count() as u32,
             presets: crate::gemplan::presets(build),
+            not_in_campaign: Vec::new(),
         }
     }
 }

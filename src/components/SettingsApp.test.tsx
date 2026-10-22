@@ -37,6 +37,7 @@ describe('SettingsApp', () => {
           main_skill: null,
           spec_count: 1,
           gem_count: 3,
+          not_in_campaign: ['Vaal Haste', 'Empower Support'],
           presets: [
             { title: 'Leveling', gem_count: 2, auto_level: null },
             { title: '-- separator --', gem_count: 0, auto_level: null },
@@ -47,6 +48,7 @@ describe('SettingsApp', () => {
     );
     render(<SettingsApp />);
     expect(screen.getByText('No gems')).toBeInTheDocument();
+    expect(screen.getByText('Vaal Haste, Empower Support')).toBeInTheDocument();
     await userEvent.selectOptions(screen.getByLabelText('Stage of Switch'), 'From act 4');
     expect(commands.updateSettings).toHaveBeenCalledWith({
       presetStages: ['auto', 'auto', { act: 4 }],

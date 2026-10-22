@@ -314,6 +314,8 @@ pub fn save_settings(app: AppHandle, settings: Settings) -> Result<(), String> {
     // The overlay and settings windows each hold their own copy of the display settings.
     let _ = app.emit("settings://changed", &settings);
     crate::runtime::emit_route(&app);
+    // Preset stages decide which gems the campaign can still give.
+    crate::runtime::emit_build_summary(&app);
     Ok(())
 }
 

@@ -38,6 +38,7 @@ const MOCK_BUILD: BuildSummary = {
   main_skill: 'Raise Zombie',
   spec_count: 3,
   gem_count: 24,
+  not_in_campaign: ['Vaal Haste', 'Empower Support'],
   presets: [
     { title: 'Leveling (Act 1)', gem_count: 6, auto_level: 1 },
     { title: '----- Mapping -----', gem_count: 0, auto_level: 100 },
