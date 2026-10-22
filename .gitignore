@@ -43,6 +43,7 @@ crates/poebo-core/bindings/
 .impeccable/questions/
 .impeccable/mocks/
 .impeccable/build/
+.impeccable/critique/
 
 # Personal Claude Code notes and UI screenshots
 CLAUDE.local.md
