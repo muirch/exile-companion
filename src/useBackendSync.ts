@@ -58,22 +58,26 @@ export function useBackendSync(): void {
       onHotkeysChanged((v) => st.setHotkeys(v.hotkeys)),
     ]);
 
-    getState().then(st.setCampaign).catch(noop);
-    getBuild().then(st.setBuild).catch(noop);
-    getGuidance().then(st.setGuidance).catch(noop);
-    getRoute().then(st.setRoute).catch(noop);
-    getRouteEnabled().then(st.setRouteEnabled).catch(noop);
-    getSource().then(st.setSourceStatus).catch(noop);
-    getSettings().then(applySettings).catch(noop);
-    getHotkeys()
-      .then((v) => st.setHotkeys(v.hotkeys))
-      .catch(noop);
-    getOverlayState()
-      .then((o) => {
-        st.setGrabbed(o.grabbed);
-        st.setGameFocused(o.gameFocused);
-      })
-      .catch(noop);
+    // Read the current state only once the listeners are in: whatever the backend pushes from
+    // here on is heard, and whatever it pushed before is in the reply.
+    void unlisteners.then(() => {
+      getState().then(st.setCampaign).catch(noop);
+      getBuild().then(st.setBuild).catch(noop);
+      getGuidance().then(st.setGuidance).catch(noop);
+      getRoute().then(st.setRoute).catch(noop);
+      getRouteEnabled().then(st.setRouteEnabled).catch(noop);
+      getSource().then(st.setSourceStatus).catch(noop);
+      getSettings().then(applySettings).catch(noop);
+      getHotkeys()
+        .then((v) => st.setHotkeys(v.hotkeys))
+        .catch(noop);
+      getOverlayState()
+        .then((o) => {
+          st.setGrabbed(o.grabbed);
+          st.setGameFocused(o.gameFocused);
+        })
+        .catch(noop);
+    });
 
     return () => {
       void unlisteners.then((list) => list.forEach((unlisten) => unlisten()));

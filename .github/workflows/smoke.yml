@@ -1,0 +1,52 @@
+name: Windows smoke test
+
+# Installs the app on a Windows runner and starts it a few times, so a build that doesn't start
+# shows up here instead of on the player's machine.
+on:
+  workflow_dispatch:
+  pull_request:
+    paths: ['src-tauri/**', 'src/**', 'crates/**', 'Cargo.lock', 'package.json', 'pnpm-lock.yaml', 'tools/windows-smoke.ps1', '.github/workflows/smoke.yml']
+
+concurrency:
+  group: smoke-${{ github.ref }}
+  cancel-in-progress: true
+
+env:
+  CARGO_TERM_COLOR: always
+
+jobs:
+  smoke:
+    name: Install and start (Windows)
+    runs-on: windows-latest
+    steps:
+      - uses: actions/checkout@v7.0.0
+
+      - uses: dtolnay/rust-toolchain@stable
+
+      - uses: Swatinem/rust-cache@v2.9.1
+        with:
+          workspaces: '. -> target'
+
+      - uses: pnpm/action-setup@v6.0.9
+      - uses: actions/setup-node@v7.0.0
+        with:
+          node-version: 22
+          cache: pnpm
+
+      - name: Install frontend deps
+        run: pnpm install --frozen-lockfile
+
+      - name: Build the installer
+        run: pnpm tauri build --bundles nsis
+
+      - name: Install and start poebo
+        shell: pwsh
+        run: |
+          $setup = Get-ChildItem target/release/bundle/nsis/*-setup.exe | Select-Object -First 1
+          tools/windows-smoke.ps1 -Setup $setup.FullName -Out smoke
+
+      - uses: actions/upload-artifact@v7.0.1
+        if: always()
+        with:
+          name: smoke
+          path: smoke

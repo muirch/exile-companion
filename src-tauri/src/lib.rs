@@ -39,6 +39,11 @@ pub fn run() {
                 saved.route_edge,
                 saved.route_enabled,
             ));
+            // The windows are created here, after manage(): their events and the first IPC calls
+            // read AppState, and a panic inside a window procedure aborts the process.
+            for window in app.config().app.windows.clone() {
+                tauri::WebviewWindowBuilder::from_config(app.handle(), &window)?.build()?;
+            }
             overlay::restore_anchor(app.handle(), &saved);
 
             if let Some(log) = poebo_core::logfile::find_client_log(saved.last_log_path.as_deref())

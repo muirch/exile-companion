@@ -248,7 +248,7 @@ fn spawn_pipeline(app: AppHandle, stream: LineStream, machine: CampaignMachine) 
         let cb_app = app.clone();
         let result = run_pipeline(stream, machine, None, LocalePack::EN, move |st, delta| {
             let _ = cb_app.emit("campaign://state-updated", st);
-            let _ = tx.send(st.clone());
+            tx.send_replace(st.clone());
             if delta.zone_changed {
                 if let Some(area_id) = &st.area_id {
                     follow_route(&cb_app, area_id, st.level);
@@ -306,7 +306,7 @@ pub fn start_live(app: AppHandle, path: String) -> Result<CampaignState, String>
     let mut machine = CampaignMachine::new(Arc::new(state.data.zones.clone()));
     prime_from_history(&mut machine, &read_log_tail(&path), &LocalePack::EN);
     let primed = machine.snapshot().clone();
-    let _ = state.state_tx.send(primed.clone());
+    state.state_tx.send_replace(primed.clone());
     let _ = app.emit("campaign://state-updated", &primed);
     if let Some(area_id) = &primed.area_id {
         let level = (primed.level > 0).then_some(primed.level);

@@ -14,6 +14,7 @@
     "windows": [
       {
         "label": "overlay",
+        "create": false,
         "title": "poebo",
         "url": "index.html",
         "width": 420,
@@ -31,6 +32,8 @@
       },
       {
         "label": "menu",
+        "create": false,
+        "focus": false,
         "title": "poebo menu",
         "url": "index.html",
         "width": 236,
@@ -47,6 +50,8 @@
       },
       {
         "label": "settings",
+        "create": false,
+        "focus": false,
         "title": "poebo settings",
         "url": "index.html",
         "width": 520,
