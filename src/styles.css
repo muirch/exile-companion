@@ -139,7 +139,7 @@ body {
      a point on the middle, with a diamond on the point, so every line meets another. */
   .tooltip-header {
     position: relative;
-    padding: 7px 30px 8px;
+    padding: 4px 30px 5px;
     border-top: 1px solid color-mix(in srgb, var(--tint) 80%, transparent);
     border-bottom: 1px solid color-mix(in srgb, var(--tint) 80%, transparent);
     background:

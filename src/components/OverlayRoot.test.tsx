@@ -259,9 +259,7 @@ describe('StatusPanel in the overlay', () => {
     render(<OverlayRoot />);
 
     expect(screen.getByRole('heading', { name: 'Lioneye’s Watch' })).toBeInTheDocument();
-    expect(screen.getByText('Act 1 town')).toBeInTheDocument();
-    expect(screen.getByText('Witch level')).toBeInTheDocument();
-    expect(screen.getByText('3 / 40')).toBeInTheDocument();
+    expect(screen.getByText('Act 1 town · Witch level 4 · Step 3 / 40')).toBeInTheDocument();
     expect(screen.getByText('Enemy at the Gate')).toBeInTheDocument();
     expect(screen.getByText('Then:')).toBeInTheDocument();
     expect(screen.queryByText(/Client\.txt not found/)).not.toBeInTheDocument();

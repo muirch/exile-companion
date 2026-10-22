@@ -82,12 +82,12 @@ components:
     textColor: "{colors.currency}"
     typography: "{typography.display}"
     rounded: "{rounded.none}"
-    padding: "6px 46px 7px"
+    padding: "4px 30px 5px"
   tooltip-header-town:
     textColor: "{colors.currency}"
     typography: "{typography.display}"
     rounded: "{rounded.none}"
-    padding: "6px 46px 7px"
+    padding: "4px 30px 5px"
   tooltip-body:
     backgroundColor: "{colors.void}"
     textColor: "{colors.value}"
@@ -192,10 +192,10 @@ These are route semantics, never decoration.
 
 ### Hierarchy
 - **Display** (500, 19px, 1.25): the tooltip title (zone name, "poebo", settings group name). Truncates on one line.
-- **Subtitle** (500, 14px, 1.25, 85 percent opacity): the act line under the title.
+- **Subtitle** (500, 14px, 1.25, 85 percent opacity): the line under the title; on the overlay it carries act, class level and step.
 - **Body** (500, 15px, 1.375): this area's actions and the "Then:" line.
 - **Body small** (500, 14px, 1.375): quick menu rows, gem claims, "route didn't load".
-- **Label** (500, 13px, 1.375): the properties line, "Nothing to do here", settings row labels and values, the move bar's "poebo".
+- **Label** (500, 13px, 1.375): the compact zone line, "Nothing to do here", settings row labels and values, the move bar's "poebo".
 - **Button** (500, 12px, 1): every button and the hold-key select.
 - **Flavour** (Alegreya Sans italic, 400, 13px, 1.375): route hints, the startup notice, the missing-log hint (upright).
 - **Caption** (Alegreya Sans italic, 400, 12px): settings explanations; upright for bind errors.
@@ -204,7 +204,7 @@ These are route semantics, never decoration.
 ### Named Rules
 **The Small Caps Voice Rule.** Everything in a tooltip is Alegreya Sans SC at 500. Switch to Alegreya Sans for flavour (italic) and for literal strings: key names, file paths, speed multipliers.
 
-**The Size as Rank Rule.** The current actions are the largest body text (15px) and the brightest; the properties line and labels drop to 13px grey; key hints sit at 11px. Do not add a size between these steps.
+**The Size as Rank Rule.** The current actions are the largest body text (15px) and the brightest; the zone line and labels drop to 13px grey; key hints sit at 11px. Do not add a size between these steps.
 
 ## Layout
 
@@ -216,7 +216,7 @@ The quick menu is a 228px tooltip at the window's top left, 4px in. Rows are ful
 
 The settings window has a 32px title bar on top: "poebo" in Normal Item White and "Settings" in Label Grey on the left, a 24px square close button on the right, black under an Edge rule. Dragging the bar moves the window; the content scrolls under it, with an 8px Edge scrollbar thumb. Below the bar it centers a column up to 34rem wide with 20px outer padding and 16px between groups. Inside a group, bodies are left-aligned with 20px sides, 12px top, 16px bottom, and rows 8px apart. Each row is at least 28px tall with a fixed 128px label column and a 12px gap; explanatory text under a row indents 140px to line up with the controls.
 
-The spacing scale is 4, 6, 8, 12, 16 and 20px. The header band's 7/24/8px padding is its own.
+The spacing scale is 4, 6, 8, 12, 16 and 20px. The header band's 4/30/5px padding is its own.
 
 ## Elevation & Depth
 
@@ -247,10 +247,10 @@ Small, dark and neutral, like the game's own panel buttons. Square, a 1px Edge b
 The signature component. A tint is passed in; the band fills with it mixed 30 percent into near-black under the sheen gradient, its title and subtitle are set in the tint, its edge rules and wedge ends are the tint at 80 percent, and the diamonds on the wedge points are solid tint. Title is display type, centered and truncated; the subtitle sits below at 85 percent opacity.
 
 ### Tooltip body
-See-through black, centered, small caps. Order on the overlay: properties line (label grey name, value white number, 16px apart), separator, actions (or "Nothing to do here" plus the way out in value white, gem steps after their quest), separator, "Then:" line. Hints under an action are flavour type in Plain Grey. When the player stands somewhere the current step isn't for (a hideout, a map, an area off the route), a Label-size Plain Grey line "Off route, showing your last step" sits above the actions. When unlocked, a move bar sits above the band with "poebo" on the left and the key hint on the right, and under it a row of Back / Next buttons with the step shortcuts between them, each closed by an Edge rule. Nothing opens below the band, so the route keeps its place when the overlay locks again.
+See-through black, centered, small caps. Order on the overlay: the band (zone name; subtitle with act, class level and step, joined by middle dots), actions (or "Nothing to do here" plus the way out in value white, gem steps after their quest), separator, "Then:" line. Hints under an action are flavour type in Plain Grey. When the player stands somewhere the current step isn't for (a hideout, a map, an area off the route), a Label-size Plain Grey line "Off route, showing your last step" sits above the actions. When unlocked, a move bar sits above the band with "poebo" on the left and the key hint on the right, and under it a row of Back / Next buttons with the step shortcuts between them, each closed by an Edge rule. Nothing opens below the band, so the route keeps its place when the overlay locks again.
 
 ### Compact overlay
-The same see-through black plate at 340px, with no header band, properties line, separators or hints. It is the default layout. A Plain Grey label line names the zone, act and step ("Lioneye's Watch · Act 1 · 2 / 24"), then the actions at Body size and the "Then:" line, all centered small caps at 4px gaps inside 12px sides, 6px top and 8px bottom. It is for players who know the campaign and want the route to cover less of the game. Either layout can fade out after 5, 10 or 30 seconds without a new step, over 700ms; a new step, a new area, the game coming back to the front or a tap of the menu key shows it again at once, and it never fades while unlocked.
+The same see-through black plate at 340px, with no header band, separators or hints. It is the default layout. A Plain Grey label line names the zone, act and step ("Lioneye's Watch · Act 1 · 2 / 24"), then the actions at Body size and the "Then:" line, all centered small caps at 4px gaps inside 12px sides, 6px top and 8px bottom. It is for players who know the campaign and want the route to cover less of the game. Either layout can fade out after 5, 10 or 30 seconds without a new step, over 700ms; a new step, a new area, the game coming back to the front or a tap of the menu key shows it again at once, and it never fades while unlocked.
 
 ### Quick menu
 A tooltip whose header band carries only the title. Rows are body-small Value White text, no border; hover and keyboard focus fill the row with white at 6 percent and drop the outline. Toggle rows (Show route, Full layout) show "On" in Quest Green or "Off" in Label Grey on the right. Separators split four groups: the toggles, Previous step and Next step with their keys (the menu stays open so a wrong step can be fixed in a few clicks), the window actions, and Quit, which asks "Click again to quit" first. Esc closes it, Up and Down walk the rows, and the first row takes focus on open.
