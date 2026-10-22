@@ -44,7 +44,7 @@ function Row({ label, children }: { label: string; children: ReactNode }): React
   return (
     <div className="flex min-h-7 items-center gap-3">
       <span className="w-32 shrink-0 font-caps text-[13px] text-label">{label}</span>
-      <div className="flex flex-1 flex-wrap items-center gap-1.5">{children}</div>
+      <div className="flex min-w-0 flex-1 flex-wrap items-center gap-1.5">{children}</div>
     </div>
   );
 }

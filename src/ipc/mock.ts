@@ -184,7 +184,7 @@ function releaseNext(): void {
 export function startMock(): void {
   useAppStore.getState().setSourceStatus({
     mode: 'replay',
-    path: 'examples/sample-client.txt (mock)',
+    path: 'C:\\Program Files (x86)\\Steam\\steamapps\\common\\Path of Exile\\logs\\Client.txt',
   });
   // Pretend a build is already imported so the build + guidance panels are populated in dev.
   useAppStore.getState().setBuild(MOCK_BUILD);
