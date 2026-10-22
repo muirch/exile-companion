@@ -10,7 +10,7 @@ const TINT = 'var(--color-currency)';
 function Prop({ label, value }: { label: string; value: string | number }): React.JSX.Element {
   return (
     <span>
-      <span className="text-label">{label} </span>
+      <span className="text-plain">{label} </span>
       <span className="text-value">{value}</span>
     </span>
   );
@@ -51,7 +51,7 @@ export function RouteNav(): React.JSX.Element {
       <button className="btn" onClick={() => void routePrev()}>
         Back
       </button>
-      <span className="font-body text-[11px] text-label">
+      <span className="font-body text-[11px] text-plain">
         {shortcutLabel(keys.routePrev)} / {shortcutLabel(keys.routeNext)}
       </span>
       <button className="btn" onClick={() => void routeNext()}>
@@ -73,7 +73,7 @@ export function CompactPanel(): React.JSX.Element {
 
   return (
     <div className="tooltip flex flex-col gap-1 px-3 pt-1.5 pb-2">
-      <p className="truncate text-[13px] text-label">{where}</p>
+      <p className="truncate text-[13px] text-plain">{where}</p>
       <NoLogHint />
       {route && !actions ? <PassThrough /> : <HereSteps hints={false} />}
       {actions && <ThenStep />}

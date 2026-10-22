@@ -64,6 +64,8 @@ pub fn load(app: &AppHandle) -> Result<Settings, String> {
     let data = std::fs::read_to_string(&path).map_err(|e| e.to_string())?;
     let mut settings: Settings = serde_json::from_str(&data).unwrap_or_default();
     settings.hotkeys.normalize();
+    // Below 70% the plate washes out over snow and bright light; older builds allowed 50%.
+    settings.opacity = settings.opacity.clamp(0.7, 1.0);
     Ok(settings)
 }
 

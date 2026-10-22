@@ -141,7 +141,7 @@ The system is dense and quiet. It is read in glances over a busy, dark game scen
 It rejects the web-app card (rounded corners, drop shadows, coloured buttons) and the generic brown-and-gold fantasy panel. The chrome is neutral grey and black; the only warm hue in the frame is the sand tint for towns.
 
 **Key Characteristics:**
-- See-through black bodies, opacity set by the player (50 to 100 percent on the overlay).
+- See-through black bodies, opacity set by the player (70 to 100 percent on the overlay; lower washes out over bright scenes).
 - A header band per tooltip, tinted by kind, with 1px rules along its top and bottom edges and, at each end, a wedge drawn from both corners to a 7px diamond on the middle.
 - Alegreya Sans SC at medium weight for all tooltip text; Alegreya Sans italic for flavour.
 - Square corners everywhere.
@@ -152,10 +152,10 @@ It rejects the web-app card (rounded corners, drop shadows, coloured buttons) an
 A greyscale frame with the game's item text colours as the only hues, each used for its in-game meaning.
 
 ### Primary
-- **Normal Item White** (#c8c8c8): the default tint. Header band, its frame, diamonds and separators for areas, the quick menu and settings groups; button text; the slider thumb; the focus outline; the replay progress fill.
+- **Normal Item White** (#c8c8c8): the chrome colour. Button text and pressed borders, the slider thumb, the focus outline, the replay progress fill.
 
 ### Secondary
-- **Currency Sand** (#aa9e82): the header tint for towns, replacing Normal Item White on that tooltip only.
+- **Currency Sand** (#aa9e82): the one header tint. Every header band, its frame, diamonds and separators use it: overlay, quick menu and settings groups.
 
 ### Tertiary
 These are route semantics, never decoration.
@@ -179,7 +179,7 @@ These are route semantics, never decoration.
 ### Named Rules
 **The Game's Meaning Rule.** A hue appears only where the game uses it for the same meaning. New content picks the matching item text colour; if the game has none for that meaning, it stays grey or white.
 
-**The Grey Ladder Rule.** Brightness is rank: Label Grey for what something is, Plain Grey for running text, Normal Item White for chrome, Value White for what the player acts on.
+**The Grey Ladder Rule.** Brightness is rank: Label Grey for what something is, Plain Grey for running text, Normal Item White for chrome, Value White for what the player acts on. On the overlay every grey starts one step up, at Plain Grey, because the plate sits over snow and bright light as often as over dark ground; Label Grey stays for the menu and settings, which have their own dark ground.
 
 **The Tint by Kind Rule.** One tint per tooltip drives its band, frame, diamonds and separators together. Every header uses Currency Sand, which sits well on the black body; towns are told apart by the "town" subtitle. Buttons and focus stay neutral grey.
 
@@ -220,7 +220,7 @@ The spacing scale is 4, 6, 8, 12, 16 and 20px. The header band's 7/24/8px paddin
 
 ## Elevation & Depth
 
-Flat. Depth comes from see-through black over the game, not from shadows: the tooltip body has no border and no shadow, and the only lift is the header band's own gradient (a 7 percent white sheen at the top fading to 40 percent black at the bottom, over the tint mixed 30 percent into near-black #050505).
+Flat. Depth comes from see-through black over the game, not from shadows: the tooltip body has no border and no shadow, and the only lift is the header band's own gradient (a 6 percent white sheen at the top fading to 40 percent black at the bottom, over the tint mixed 20 percent into near-black #050505, dark enough for the sand title to clear 4.5:1).
 
 ### Shadow Vocabulary
 - **Button inner sheen** (`box-shadow: inset 0 0 0 1px rgb(255 255 255 / 0.04)`): on every button, inside the border.
@@ -256,7 +256,7 @@ The same see-through black plate at 340px, with no header band, properties line,
 A tooltip whose header band carries only the title. Rows are body-small Value White text, no border; hover and keyboard focus fill the row with white at 6 percent and drop the outline. Toggle rows (Leveling route, Compact) show "On" in Quest Green or "Off" in Label Grey on the right. Separators split the toggles, the window actions and Quit. Esc closes it, and the first row takes focus on open.
 
 ### Settings groups
-Each group is its own tooltip at 80 percent black with a Normal Item White header band. Rows pair a small-caps grey label with controls: buttons, value text in Value White, sliders with a live percentage, and file paths in Alegreya Sans, truncated with the full path in the title. The build's presets are one row each under a single "Presets" label: the preset name in Alegreya Sans Value White, truncated, and a 160px stage select on the right, or "No gems" in grey italic for a separator.
+Each group is its own tooltip at 80 percent black with a Currency Sand header band. Rows pair a small-caps grey label with controls: buttons, value text in Value White, sliders with a live percentage, and file paths in Alegreya Sans, truncated with the full path in the title. The build's presets are one row each under a single "Presets" label: the preset name in Alegreya Sans Value White, truncated, and a 160px stage select on the right, or "No gems" in grey italic for a separator.
 
 ### Range slider
 A 3px Soot track with the black keyline and a 9px Normal Item White diamond thumb with a black border, brightening to Value White on hover.

@@ -117,7 +117,7 @@ function DisplaySection(): React.JSX.Element {
       <Row label="Background">
         <input
           type="range"
-          min={0.5}
+          min={0.7}
           max={1}
           step={0.05}
           value={opacity}

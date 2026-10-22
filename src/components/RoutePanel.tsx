@@ -21,7 +21,7 @@ function GoMark(): React.JSX.Element {
   return (
     <svg
       viewBox="0 0 12 12"
-      className="mr-1 inline-block size-3 -translate-y-px align-middle text-label"
+      className="mr-1 inline-block size-3 -translate-y-px align-middle text-plain"
       aria-hidden="true"
     >
       <path d="M1 6h7M5.5 2.5 9 6l-3.5 3.5" fill="none" stroke="currentColor" strokeWidth="1.6" />
@@ -115,7 +115,7 @@ function Parts({ parts }: { parts: Part[] }): React.JSX.Element {
 function Hints({ hints }: { hints: Part[][] }): React.JSX.Element | null {
   if (hints.length === 0) return null;
   return (
-    <ul className="mt-0.5 font-body text-[13px] leading-snug text-label italic">
+    <ul className="mt-0.5 font-body text-[13px] leading-snug text-plain italic">
       {hints.map((h, i) => (
         <li key={i}>
           <Parts parts={h} />
@@ -137,7 +137,7 @@ function StepView({ step, hints }: { step: Step; hints: boolean }): React.JSX.El
 export function HereSteps({ hints = true }: { hints?: boolean }): React.JSX.Element {
   const route = useAppStore((s) => s.route);
   if (!route) {
-    return <p className="text-[14px] text-label">The leveling route didn't load.</p>;
+    return <p className="text-[14px] text-plain">The leveling route didn't load.</p>;
   }
   return (
     <>
@@ -159,7 +159,7 @@ export function ThenStep(): React.JSX.Element | null {
   if (!then) return null;
   return (
     <div className="text-[15px] leading-snug">
-      <span className="text-label">Then: </span>
+      <span className="text-plain">Then: </span>
       <Parts parts={then.parts} />
     </div>
   );
@@ -170,7 +170,7 @@ export function PassThrough(): React.JSX.Element | null {
   const then = useAppStore((s) => s.route?.then);
   return (
     <>
-      <p className="text-[13px] text-label">Nothing to do here</p>
+      <p className="text-[13px] text-plain">Nothing to do here</p>
       {then && (
         <p className="text-[15px] leading-snug text-value">
           <Parts parts={then.parts} />

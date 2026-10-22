@@ -50,7 +50,7 @@ function StartupNotice(): React.JSX.Element {
       ].join(' ')}
     >
       <TooltipHeader tint="var(--color-currency)" title="poebo" subtitle="Running in the background" />
-      <p className="px-4 pt-2 pb-3 font-body text-[13px] leading-snug text-label italic">
+      <p className="px-4 pt-2 pb-3 font-body text-[13px] leading-snug text-plain italic">
         It appears over Path of Exile while the game is focused. Hold{' '}
         {holdLabel(holdKey)} in the game for the menu.
       </p>
@@ -121,7 +121,7 @@ export function OverlayRoot(): React.JSX.Element {
               <span data-tauri-drag-region className="font-caps text-[13px] text-normal">
                 poebo
               </span>
-              <span data-tauri-drag-region className="text-[11px] text-label">
+              <span data-tauri-drag-region className="text-[11px] text-plain">
                 Drag to move, {shortcutLabel(hotkeys.moveOverlay)} to lock.
                 Hold {holdLabel(hotkeys.menuHold)} for the menu.
               </span>
