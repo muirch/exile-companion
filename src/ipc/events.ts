@@ -46,6 +46,10 @@ export const onRouteView = (cb: (view: RouteView | null) => void): Promise<Unlis
 export const onGameFocus = (cb: (focused: boolean) => void): Promise<UnlistenFn> =>
   listen<boolean>(GAME_FOCUS, (e) => cb(e.payload));
 
+/** A tap of the menu key in the game: shows a faded overlay again. */
+export const onOverlayPeek = (cb: () => void): Promise<UnlistenFn> =>
+  listen('overlay://peek', () => cb());
+
 export const onSettingsChanged = (cb: (settings: Settings) => void): Promise<UnlistenFn> =>
   listen<Settings>('settings://changed', (e) => cb(e.payload));
 

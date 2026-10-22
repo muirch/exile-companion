@@ -163,6 +163,12 @@ mod win {
         let Some(press) = hold_key().down(was_down) else {
             return;
         };
+        if let Some(app) = APP.get() {
+            if super::super::overlay::game_focused(app) {
+                use tauri::Emitter;
+                let _ = app.emit("overlay://peek", ());
+            }
+        }
         std::thread::spawn(move || {
             std::thread::sleep(HOLD);
             if hold_key().still_held(press) {

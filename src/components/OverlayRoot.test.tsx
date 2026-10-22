@@ -170,6 +170,19 @@ describe('OverlayRoot', () => {
       expect(routeBox()).toHaveClass('opacity-100');
     });
 
+    it('comes back on a tap of the menu key', () => {
+      useAppStore.setState({ route: ROUTE });
+      ui({ fadeAfter: 5, gameFocused: true });
+      render(<OverlayRoot />);
+      act(() => vi.advanceTimersByTime(5000));
+      expect(routeBox()).toHaveClass('opacity-0');
+
+      act(() => useAppStore.getState().peek());
+      expect(routeBox()).toHaveClass('opacity-100');
+      act(() => vi.advanceTimersByTime(5000));
+      expect(routeBox()).toHaveClass('opacity-0');
+    });
+
     it('never fades while the overlay is unlocked', () => {
       useAppStore.setState({ route: ROUTE });
       ui({ fadeAfter: 5, gameFocused: true, grabbed: true });

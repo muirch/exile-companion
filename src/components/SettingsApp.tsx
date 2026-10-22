@@ -143,7 +143,7 @@ function DisplaySection(): React.JSX.Element {
       </Row>
       <p className="ml-35 font-body text-[12px] leading-snug text-label italic">
         Hides the overlay after that long without a new step. It comes back with the next area or
-        step.
+        step, or when you tap the menu key.
       </p>
       <Row label="Position">
         <button className="btn" onClick={() => void snapOverlayBottomCenter()}>

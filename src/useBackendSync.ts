@@ -19,6 +19,7 @@ import {
   onGuidance,
   onHotkeysChanged,
   onOverlayGrab,
+  onOverlayPeek,
   onReplayProgress,
   onRouteEnabled,
   onRouteView,
@@ -56,6 +57,7 @@ export function useBackendSync(): void {
       onReplayProgress(st.setReplayProgress),
       onOverlayGrab(st.setGrabbed),
       onGameFocus(st.setGameFocused),
+      onOverlayPeek(st.peek),
       onSettingsChanged(applySettings),
       onHotkeysChanged((v) => st.setHotkeys(v.hotkeys)),
     ]);

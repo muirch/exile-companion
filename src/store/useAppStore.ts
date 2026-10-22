@@ -39,6 +39,8 @@ interface AppStore {
     textScale: number;
     compact: boolean;
     fadeAfter: number;
+    /** Counts menu-key taps; each one shows a faded overlay again. */
+    peeks: number;
   };
 
   setCampaign: (state: CampaignState) => void;
@@ -55,6 +57,7 @@ interface AppStore {
   setTextScale: (textScale: number) => void;
   setCompact: (compact: boolean) => void;
   setFadeAfter: (fadeAfter: number) => void;
+  peek: () => void;
 }
 
 /** Single source of truth for push-based state; IPC listeners are its only writers. */
@@ -82,6 +85,7 @@ export const useAppStore = create<AppStore>((set) => ({
     textScale: 1,
     compact: true,
     fadeAfter: 0,
+    peeks: 0,
   },
 
   setCampaign: (campaign) => set({ campaign }),
@@ -99,4 +103,5 @@ export const useAppStore = create<AppStore>((set) => ({
   setTextScale: (textScale) => set((s) => ({ ui: { ...s.ui, textScale } })),
   setCompact: (compact) => set((s) => ({ ui: { ...s.ui, compact } })),
   setFadeAfter: (fadeAfter) => set((s) => ({ ui: { ...s.ui, fadeAfter } })),
+  peek: () => set((s) => ({ ui: { ...s.ui, peeks: s.ui.peeks + 1 } })),
 }));

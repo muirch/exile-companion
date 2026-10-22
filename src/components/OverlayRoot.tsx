@@ -69,8 +69,9 @@ export function OverlayRoot(): React.JSX.Element {
   const fadeAfter = useAppStore((s) => s.ui.fadeAfter);
   const edge = useAppStore((s) => s.route?.edge);
   const zoneId = useAppStore((s) => s.campaign.zone?.id);
-  // Coming back to the game counts as a change too, so an Alt-Tab shows the route again.
-  const faded = useFaded(`${edge}|${zoneId}|${gameFocused}`, grabbed ? 0 : fadeAfter);
+  const peeks = useAppStore((s) => s.ui.peeks);
+  // Coming back to the game and tapping the menu key count as a change too.
+  const faded = useFaded(`${edge}|${zoneId}|${gameFocused}|${peeks}`, grabbed ? 0 : fadeAfter);
   const visible = ((gameFocused && routeEnabled) || grabbed) && !faded;
   const [shownOnce, setShownOnce] = useState(false);
   if (visible && !shownOnce) setShownOnce(true);
