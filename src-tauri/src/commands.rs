@@ -18,10 +18,15 @@ use crate::state::AppState;
 
 /// Open a file dialog to pick a `Client.txt` (or recording); returns the chosen path.
 #[tauri::command]
-pub async fn pick_log_file(app: AppHandle) -> Result<Option<String>, String> {
+pub async fn pick_log_file(
+    app: AppHandle,
+    window: WebviewWindow,
+) -> Result<Option<String>, String> {
     let (tx, rx) = tokio::sync::oneshot::channel();
+    // Owned by the calling window, which stays on top: a dialog without an owner opens under it.
     app.dialog()
         .file()
+        .set_parent(&window)
         .add_filter("PoE log", &["txt", "log"])
         .pick_file(move |file| {
             let _ = tx.send(file);
@@ -76,10 +81,14 @@ pub fn get_state(state: State<'_, AppState>) -> CampaignState {
 /// Open a file dialog to pick a Path of Building export (`.xml` or a saved code), import it, and
 /// return its summary. `None` if the dialog was cancelled.
 #[tauri::command]
-pub async fn import_build_file(app: AppHandle) -> Result<Option<BuildSummary>, String> {
+pub async fn import_build_file(
+    app: AppHandle,
+    window: WebviewWindow,
+) -> Result<Option<BuildSummary>, String> {
     let (tx, rx) = tokio::sync::oneshot::channel();
     app.dialog()
         .file()
+        .set_parent(&window)
         .add_filter("Path of Building", &["xml", "txt"])
         .pick_file(move |file| {
             let _ = tx.send(file);
