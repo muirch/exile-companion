@@ -283,7 +283,7 @@ function LogSection(): React.JSX.Element {
       </Row>
       {showTesting && (
         <p className="ml-35 font-body text-[12px] leading-snug text-label italic">
-          Plays a saved log back to check the route without the game. Stop leaves poebo without a
+          Plays a saved log back to check the route without the game. Stop leaves Exile Companion without a
           log until you pick one again.
         </p>
       )}

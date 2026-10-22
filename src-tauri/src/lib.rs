@@ -1,5 +1,5 @@
-//! The poebo Tauri v2 shell. It owns the overlay window, plugins, and IPC, and delegates all
-//! campaign logic to `poebo-core`.
+//! The Exile Companion Tauri v2 shell. It owns the overlay window, plugins, and IPC, and delegates all
+//! campaign logic to `exile-core`.
 
 mod commands;
 mod hotkeys;
@@ -13,12 +13,40 @@ use tauri::Manager;
 
 pub use state::AppState;
 
+// Builds before the rename kept their data under com.poebo.app.
+fn carry_over_old_install(app: &tauri::AppHandle) {
+    use tauri::Manager;
+    let Ok(new) = app.path().app_config_dir() else {
+        return;
+    };
+    let Some(old) = new.parent().map(|p| p.join("com.poebo.app")) else {
+        return;
+    };
+    match exile_core::migrate::carry_over(&old, &new, &["settings.json", "build.xml"]) {
+        Ok(copied) if !copied.is_empty() => {
+            log::info!("carried over {copied:?} from {}", old.display())
+        }
+        Ok(_) => {}
+        Err(e) => log::warn!("could not carry over {}: {e}", old.display()),
+    }
+}
+
 /// Build and run the application.
 pub fn run() {
     log_panics();
     tauri::Builder::default()
         .plugin(
             tauri_plugin_log::Builder::new()
+                .clear_targets()
+                .target(tauri_plugin_log::Target::new(
+                    tauri_plugin_log::TargetKind::Stdout,
+                ))
+                // The default name is the product name, which has a space in it.
+                .target(tauri_plugin_log::Target::new(
+                    tauri_plugin_log::TargetKind::LogDir {
+                        file_name: Some("exile-companion".into()),
+                    },
+                ))
                 .level(log::LevelFilter::Info)
                 .max_file_size(1_000_000)
                 .build(),
@@ -29,8 +57,9 @@ pub fn run() {
         .plugin(tauri_plugin_store::Builder::default().build())
         .plugin(tauri_plugin_global_shortcut::Builder::new().build())
         .setup(|app| {
-            log::info!("poebo {} starting", app.package_info().version);
+            log::info!("Exile Companion {} starting", app.package_info().version);
             let data = runtime::load_data_pack()?;
+            carry_over_old_install(app.handle());
             let saved = settings::load(app.handle()).unwrap_or_default();
             let route = runtime::load_route(&data, saved.league_start);
             app.manage(AppState::new(
@@ -48,7 +77,7 @@ pub fn run() {
             overlay::restore_anchor(app.handle(), &saved);
             runtime::restore_build(app.handle());
 
-            if let Some(log) = poebo_core::logfile::find_client_log(saved.last_log_path.as_deref())
+            if let Some(log) = exile_core::logfile::find_client_log(saved.last_log_path.as_deref())
             {
                 let path = log.to_string_lossy().into_owned();
                 log::info!("watching {path}");
@@ -125,7 +154,7 @@ pub fn run() {
             commands::save_settings,
         ])
         .run(tauri::generate_context!())
-        .expect("error while running poebo");
+        .expect("error while running Exile Companion");
 }
 
 // The release build has no console, so a panic would vanish without this.

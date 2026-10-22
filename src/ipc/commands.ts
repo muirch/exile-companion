@@ -1,4 +1,4 @@
-// Typed wrappers over the Tauri command surface (`poebo_app::commands`).
+// Typed wrappers over the Tauri command surface (`exile_companion::commands`).
 //
 // In a plain browser (`pnpm dev`, no Tauri) these fall back to the in-browser mock so the UI is
 // fully explorable without a backend.

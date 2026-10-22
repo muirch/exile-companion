@@ -19,11 +19,11 @@ The first user is the author, who also tests it live in the game. The tool is me
 
 ## Product Purpose
 
-poebo is a passive overlay that sits over the game and tells the player what to do in the area they are in: where to go next, which quest to hand in, where to place a portal, which boss to kill, where the trial is. Success means the player levels through the campaign without alt-tabbing to a guide or to Path of Building.
+Exile Companion is a passive overlay that sits over the game and tells the player what to do in the area they are in: where to go next, which quest to hand in, where to place a portal, which boss to kill, where the trial is. Success means the player levels through the campaign without alt-tabbing to a guide or to Path of Building.
 
 ## Positioning
 
-poebo reads only the game's `Client.txt` log, knows which area the player is in from the log's internal area ids, and shows the matching steps of a speedrunning route (exile-leveling's, MIT). It is a native Windows app with the route engine in Rust, built to grow into a multi-tool overlay: build guidance from Path of Building and an AI build assistant that answers from real PoB calculations.
+Exile Companion reads only the game's `Client.txt` log, knows which area the player is in from the log's internal area ids, and shows the matching steps of a speedrunning route (exile-leveling's, MIT). It is a native Windows app with the route engine in Rust, built to grow into a multi-tool overlay: build guidance from Path of Building and an AI build assistant that answers from real PoB calculations.
 
 ## Operating Context
 
@@ -41,13 +41,13 @@ poebo reads only the game's `Client.txt` log, knows which area the player is in 
 - Campaign data (areas, quests, rewards, trials) is extracted from the game files per patch.
 - The overlay window is fitted to its content and anchored by its bottom center to a fraction of the monitor (by default in the gap between the flask bar and the skill bar, clear of the play field and the stash and vendor windows), so it survives resolution changes and the route stays put when the move bar opens above it.
 - UI language: English, matching the game client and the route text.
-- With a Path of Building build imported, the route lists its gems after the quest hand-in where to take them as the reward or buy them from a vendor. A gem is placed at the point the build needs it: preset titles ("Act 3", "lvl 28", "Bossing"), preset order and the gem's required level decide that. Gems the campaign never gives are listed apart. poebo keeps the last imported build until it is cleared, also across restarts. The settings list the build's presets with what poebo reads from each, and the player can set the act a preset is for, mark it endgame or leave it out. Settings choose whether the route shows these gem steps at all, only the quest rewards, or rewards and vendor buys (the default).
+- With a Path of Building build imported, the route lists its gems after the quest hand-in where to take them as the reward or buy them from a vendor. A gem is placed at the point the build needs it: preset titles ("Act 3", "lvl 28", "Bossing"), preset order and the gem's required level decide that. Gems the campaign never gives are listed apart. Exile Companion keeps the last imported build until it is cleared, also across restarts. The settings list the build's presets with what Exile Companion reads from each, and the player can set the act a preset is for, mark it endgame or leave it out. Settings choose whether the route shows these gem steps at all, only the quest rewards, or rewards and vendor buys (the default).
 - The compact layout is the default: the zone, act and step on one grey line, then the actions and the way out. The full layout adds the header band, the class level and the route hints, for players new to the campaign. It can be switched from the quick menu or the settings. Either layout can fade out after a few seconds without a new step and comes back with the next step or area, or with a tap of the menu key. In compact the same tap shows the step's hints for a few seconds.
 - Planned features that share the overlay: gem and passive-tree guidance from a PoB build, an AI build assistant (chat), and Path of Exile 2 support after its 1.0 release.
 
 ## Brand Commitments
 
-- Name: poebo, lower case.
+- Name: Exile Companion, two words, both capitalised. Not shortened to "EC" in the UI.
 - Not affiliated with or endorsed by Grinding Gear Games; Path of Exile is their trademark. The app must not imitate GGG branding or logos.
 - Third-party content keeps its attribution: the leveling route is exile-leveling's (MIT).
 

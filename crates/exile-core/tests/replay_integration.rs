@@ -10,13 +10,13 @@ use std::time::Duration;
 use futures::StreamExt;
 use tokio::io::AsyncWriteExt;
 
-use poebo_core::clock::InstantSleeper;
-use poebo_core::data::ZoneTable;
-use poebo_core::locale::LocalePack;
-use poebo_core::parser::parse_line;
-use poebo_core::pipeline::run_pipeline;
-use poebo_core::source::{EventSource, LiveTail, ReplayControl, ReplaySource, SpeedMultiplier};
-use poebo_core::state::{CampaignMachine, CampaignState};
+use exile_core::clock::InstantSleeper;
+use exile_core::data::ZoneTable;
+use exile_core::locale::LocalePack;
+use exile_core::parser::parse_line;
+use exile_core::pipeline::run_pipeline;
+use exile_core::source::{EventSource, LiveTail, ReplayControl, ReplaySource, SpeedMultiplier};
+use exile_core::state::{CampaignMachine, CampaignState};
 
 const PACK: &str = r#"{
     "schema_version": 1, "patch": "t", "generated_at": "t", "source": "t",
@@ -168,7 +168,7 @@ async fn recording_round_trips_to_identical_state() {
     // Record while replaying, then replay the recording - final states must match.
     let fixture = write_fixture(LOG).await;
     let rec_dir = tempfile::tempdir().expect("dir");
-    let recorder = poebo_core::recorder::Recorder::create(rec_dir.path(), "test")
+    let recorder = exile_core::recorder::Recorder::create(rec_dir.path(), "test")
         .await
         .expect("recorder");
     let recording_path = recorder.path().to_path_buf();
@@ -258,10 +258,10 @@ async fn live_tail_reads_appended_lines() {
 
 #[test]
 fn history_primes_the_campaign_state() {
-    use poebo_core::pipeline::prime_from_history;
+    use exile_core::pipeline::prime_from_history;
 
     let zones = Arc::new(
-        ZoneTable::from_json_bytes(poebo_data::AREAS_JSON, poebo_data::AREAS_SCHEMA_VERSION)
+        ZoneTable::from_json_bytes(exile_data::AREAS_JSON, exile_data::AREAS_SCHEMA_VERSION)
             .unwrap(),
     );
     let mut machine = CampaignMachine::new(zones);

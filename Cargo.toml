@@ -1,7 +1,7 @@
 [workspace]
 resolver = "2"
-members = ["crates/poebo-core", "crates/poebo-data", "crates/poebo-pob", "src-tauri"]
-default-members = ["crates/poebo-core", "crates/poebo-data", "crates/poebo-pob"]
+members = ["crates/exile-core", "crates/exile-data", "crates/exile-pob", "src-tauri"]
+default-members = ["crates/exile-core", "crates/exile-data", "crates/exile-pob"]
 
 [workspace.package]
 edition = "2021"

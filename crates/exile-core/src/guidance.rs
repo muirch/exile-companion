@@ -205,7 +205,7 @@ fn idle_objective(state: &CampaignState, has_build: bool) -> NextObjective {
 mod tests {
     use super::*;
     use crate::state::ZoneRef;
-    use poebo_pob::{Gem, PobBuild, SkillGroup, SkillSet};
+    use exile_pob::{Gem, PobBuild, SkillGroup, SkillSet};
 
     const AREAS: &str = r#"{
         "schema_version":1,"patch":"t","generated_at":"t","source":"t","areas":[

@@ -29,7 +29,7 @@ Thumbs.db
 *.local.*
 *.local
 # ts-rs default export dir (canonical bindings live in src/ipc/generated via TS_RS_EXPORT_DIR)
-crates/poebo-core/bindings/
+crates/exile-core/bindings/
 
 # Personal agent settings and the skill's downloaded binary
 .claude/settings.local.json

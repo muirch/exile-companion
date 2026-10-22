@@ -1,8 +1,8 @@
 {
   "$schema": "https://schema.tauri.app/config/2",
-  "productName": "poebo",
+  "productName": "Exile Companion",
   "version": "0.1.0",
-  "identifier": "com.poebo.app",
+  "identifier": "com.exilecompanion.app",
   "build": {
     "frontendDist": "../dist",
     "devUrl": "http://localhost:1420",
@@ -15,7 +15,7 @@
       {
         "label": "overlay",
         "create": false,
-        "title": "poebo",
+        "title": "Exile Companion",
         "url": "index.html",
         "width": 420,
         "height": 240,
@@ -34,7 +34,7 @@
         "label": "menu",
         "create": false,
         "focus": false,
-        "title": "poebo menu",
+        "title": "Exile Companion menu",
         "url": "index.html",
         "width": 236,
         "height": 336,
@@ -52,7 +52,7 @@
         "label": "settings",
         "create": false,
         "focus": false,
-        "title": "poebo settings",
+        "title": "Exile Companion settings",
         "url": "index.html",
         "width": 520,
         "height": 640,

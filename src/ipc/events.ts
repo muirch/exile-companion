@@ -1,4 +1,4 @@
-// Typed listeners for backend -> frontend events (`poebo_app` emits these).
+// Typed listeners for backend -> frontend events (`exile_companion` emits these).
 
 import { listen, type UnlistenFn } from '@tauri-apps/api/event';
 

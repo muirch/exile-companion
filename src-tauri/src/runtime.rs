@@ -1,4 +1,4 @@
-//! Wires a `poebo_core` source into a running pipeline whose updates are emitted to the frontend.
+//! Wires a `exile_core` source into a running pipeline whose updates are emitted to the frontend.
 //!
 //! Live and replay both spawn `run_pipeline` on Tauri's async runtime; the pipeline's `on_update`
 //! emits `campaign://state-updated` and pushes into the state watch channel. Replay additionally
@@ -9,19 +9,19 @@ use std::collections::HashSet;
 use std::sync::{Arc, Mutex, MutexGuard};
 use std::time::Duration;
 
-use poebo_core::build::BuildSummary;
-use poebo_core::clock::TokioSleeper;
-use poebo_core::data::DataPack;
-use poebo_core::error::DataError;
-use poebo_core::gems::GemTable;
-use poebo_core::guidance::GuidanceEngine;
-use poebo_core::locale::LocalePack;
-use poebo_core::pipeline::{prime_from_history, run_pipeline};
-use poebo_core::route::{parse_route, Route, RouteTracker, RouteView};
-use poebo_core::source::{
+use exile_core::build::BuildSummary;
+use exile_core::clock::TokioSleeper;
+use exile_core::data::DataPack;
+use exile_core::error::DataError;
+use exile_core::gems::GemTable;
+use exile_core::guidance::GuidanceEngine;
+use exile_core::locale::LocalePack;
+use exile_core::pipeline::{prime_from_history, run_pipeline};
+use exile_core::route::{parse_route, Route, RouteTracker, RouteView};
+use exile_core::source::{
     EventSource, LineStream, LiveTail, ReplayControl, ReplaySource, SpeedMultiplier,
 };
-use poebo_core::state::{CampaignMachine, CampaignState};
+use exile_core::state::{CampaignMachine, CampaignState};
 use serde::Serialize;
 use tauri::async_runtime::JoinHandle;
 use tauri::{AppHandle, Emitter, Manager};
@@ -36,12 +36,12 @@ fn lock<T>(m: &Mutex<T>) -> MutexGuard<'_, T> {
 /// Load and index the embedded campaign data pack (zones + quests + trials).
 pub fn load_data_pack() -> Result<Arc<DataPack>, DataError> {
     let pack = DataPack::from_bytes(
-        poebo_data::AREAS_JSON,
-        poebo_data::AREAS_SCHEMA_VERSION,
-        poebo_data::QUESTS_JSON,
-        poebo_data::QUESTS_SCHEMA_VERSION,
-        poebo_data::TRIALS_JSON,
-        poebo_data::TRIALS_SCHEMA_VERSION,
+        exile_data::AREAS_JSON,
+        exile_data::AREAS_SCHEMA_VERSION,
+        exile_data::QUESTS_JSON,
+        exile_data::QUESTS_SCHEMA_VERSION,
+        exile_data::TRIALS_JSON,
+        exile_data::TRIALS_SCHEMA_VERSION,
     )?;
     Ok(Arc::new(pack))
 }
@@ -51,7 +51,7 @@ pub fn load_route(data: &DataPack, league_start: bool) -> Arc<Route> {
     if league_start {
         defines.insert("LEAGUE_START".to_string());
     }
-    let source = poebo_data::ROUTE_ACTS.join("\n");
+    let source = exile_data::ROUTE_ACTS.join("\n");
     let (route, warnings) = parse_route(&source, &data.zones, &data.quests, &defines);
     for w in warnings {
         log::warn!("route line {}: {}", w.line, w.message);
@@ -67,20 +67,20 @@ pub fn current_route_view(app: &AppHandle) -> Option<RouteView> {
     if let Some(build) = builds.build() {
         if let Some(class) = build.class_name.as_deref() {
             let saved = settings::load(app).unwrap_or_default();
-            let plan = poebo_core::gemplan::plan_with_stages(
+            let plan = exile_core::gemplan::plan_with_stages(
                 build,
                 class,
                 &app_state.gems,
                 &saved.preset_stages,
             );
-            poebo_core::gemplan::annotate(&mut view, &plan, saved.gem_hints);
+            exile_core::gemplan::annotate(&mut view, &plan, saved.gem_hints);
         }
     }
     Some(view)
 }
 
 pub fn load_gems() -> Arc<GemTable> {
-    match GemTable::from_json_bytes(poebo_data::GEMS_JSON, poebo_data::GEM_SOURCES_JSON) {
+    match GemTable::from_json_bytes(exile_data::GEMS_JSON, exile_data::GEM_SOURCES_JSON) {
         Ok(t) => Arc::new(t),
         Err(e) => {
             log::error!("gem data: {e}");
@@ -165,7 +165,7 @@ pub fn restore_build(app: &AppHandle) {
     };
     match std::fs::read(&path)
         .map_err(|e| e.to_string())
-        .and_then(|xml| poebo_pob::parse_xml(&xml).map_err(|e| e.to_string()))
+        .and_then(|xml| exile_pob::parse_xml(&xml).map_err(|e| e.to_string()))
     {
         Ok(build) => lock(&app.state::<AppState>().build).set(build),
         Err(e) => log::warn!("saved build {}: {e}", path.display()),
@@ -175,7 +175,7 @@ pub fn restore_build(app: &AppHandle) {
 /// Parse and store a freshly-imported build, save it for the next start, then push the new build
 /// summary, guidance and route.
 pub fn import_build(app: &AppHandle, xml: Vec<u8>) -> Result<BuildSummary, String> {
-    let build = poebo_pob::parse_xml(&xml).map_err(|e| {
+    let build = exile_pob::parse_xml(&xml).map_err(|e| {
         log::warn!("build import: {e}");
         "That's not a Path of Building build.".to_string()
     })?;
@@ -225,14 +225,14 @@ pub fn current_build_summary(app: &AppHandle) -> Option<BuildSummary> {
     if let Some(class) = build.class_name.as_deref() {
         let stages = settings::load(app).unwrap_or_default().preset_stages;
         summary.not_in_campaign =
-            poebo_core::gemplan::plan_with_stages(build, class, &app_state.gems, &stages)
+            exile_core::gemplan::plan_with_stages(build, class, &app_state.gems, &stages)
                 .not_in_campaign;
     }
     Some(summary)
 }
 
 /// The next objective for the current state + loaded build (for on-demand hydration).
-pub fn current_guidance(app: &AppHandle) -> poebo_core::guidance::NextObjective {
+pub fn current_guidance(app: &AppHandle) -> exile_core::guidance::NextObjective {
     let app_state = app.state::<AppState>();
     let state = app_state.current_state();
     let objective = GuidanceEngine::next(&state, &lock(&app_state.build), &app_state.data);

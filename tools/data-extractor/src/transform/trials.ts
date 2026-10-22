@@ -1,4 +1,4 @@
-// Reshapes `LabyrinthTrials` into poebo's flat `TrialInfo` schema: the campaign Trials of
+// Reshapes `LabyrinthTrials` into Exile Companion's flat `TrialInfo` schema: the campaign Trials of
 // Ascendancy and where to find them. Each trial references a WorldArea (exported as a row index);
 // we resolve it to the area's id / name / act and keep only campaign areas (acts 1-10, structured
 // campaign id), dropping the endgame (Uber Lab, act 11) trials.
@@ -11,7 +11,7 @@ export interface RawLabyrinthTrial {
   WorldAreas: number | null;
 }
 
-/** One campaign lab trial location (mirrors `poebo_core::data::TrialInfo`). */
+/** One campaign lab trial location (mirrors `exile_core::data::TrialInfo`). */
 export interface TrialInfo {
   /** WorldArea id the trial is in, e.g. `1_1_7_1` (The Lower Prison). */
   area_id: string;

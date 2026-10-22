@@ -1,4 +1,4 @@
-//! Error types for `poebo-core`. Each subsystem gets a focused [`thiserror`] enum so callers can
+//! Error types for `exile-core`. Each subsystem gets a focused [`thiserror`] enum so callers can
 //! match on precise failure modes. No `unwrap`/`expect` on production paths.
 
 use std::path::PathBuf;

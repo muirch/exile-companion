@@ -1,13 +1,14 @@
 [package]
-name = "poebo-core"
+name = "exile-core"
 version = "0.1.0"
 edition.workspace = true
 license.workspace = true
+publish = false
 rust-version.workspace = true
-description = "Pure, Tauri-free campaign logic for the poebo PoE1 leveling assistant."
+description = "Pure, Tauri-free campaign logic for the Exile Companion PoE1 leveling assistant."
 
 [dependencies]
-poebo-pob = { path = "../poebo-pob" }
+exile-pob = { path = "../exile-pob" }
 serde = { workspace = true }
 serde_json = { workspace = true }
 thiserror = { workspace = true }
@@ -24,6 +25,6 @@ ts-rs = { version = "=12.0.1", optional = true }
 ts = ["dep:ts-rs"]
 
 [dev-dependencies]
-poebo-data = { path = "../poebo-data" }
+exile-data = { path = "../exile-data" }
 tokio = { workspace = true, features = ["rt-multi-thread", "macros", "time", "test-util"] }
 tempfile = "=3.27.0"

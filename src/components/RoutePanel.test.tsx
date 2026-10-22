@@ -57,7 +57,7 @@ describe('RoutePanel', () => {
 
   it('says so when the route did not load', () => {
     render(<HereSteps />);
-    expect(screen.getByText(/The leveling route didn't load\. Restart poebo/)).toBeInTheDocument();
+    expect(screen.getByText(/The leveling route didn't load\. Restart Exile Companion/)).toBeInTheDocument();
   });
 
   it('marks the act the player just finished', () => {

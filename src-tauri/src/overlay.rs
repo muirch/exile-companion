@@ -138,10 +138,10 @@ pub fn game_focused(app: &AppHandle) -> bool {
 pub fn create_tray(app: &AppHandle) -> tauri::Result<()> {
     let grab = MenuItem::with_id(app, "grab", "Move overlay", true, None::<&str>)?;
     let settings = MenuItem::with_id(app, "settings", "Settings", true, None::<&str>)?;
-    let quit = MenuItem::with_id(app, "quit", "Quit poebo", true, None::<&str>)?;
+    let quit = MenuItem::with_id(app, "quit", "Quit Exile Companion", true, None::<&str>)?;
     let menu = Menu::with_items(app, &[&settings, &grab, &quit])?;
     let mut tray = TrayIconBuilder::new()
-        .tooltip("poebo")
+        .tooltip("Exile Companion")
         .menu(&menu)
         .on_menu_event(|app, event| match event.id.as_ref() {
             "grab" => {

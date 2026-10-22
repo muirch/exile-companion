@@ -91,7 +91,7 @@ mod win {
     use std::sync::{Mutex, OnceLock};
     use std::time::Duration;
 
-    use poebo_core::hold::HoldKey;
+    use exile_core::hold::HoldKey;
     use tauri::AppHandle;
     use windows_sys::Win32::Foundation::{LPARAM, LRESULT, WPARAM};
     use windows_sys::Win32::System::LibraryLoader::GetModuleHandleW;

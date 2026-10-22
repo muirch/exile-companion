@@ -23,7 +23,7 @@ describe('MenuApp', () => {
 
   it('asks for a second click before quitting', async () => {
     render(<MenuApp />);
-    await userEvent.click(screen.getByRole('menuitem', { name: 'Quit poebo' }));
+    await userEvent.click(screen.getByRole('menuitem', { name: 'Quit Exile Companion' }));
     expect(commands.quitApp).not.toHaveBeenCalled();
     await userEvent.click(screen.getByRole('menuitem', { name: 'Click again to quit' }));
     expect(commands.quitApp).toHaveBeenCalledTimes(1);
@@ -41,6 +41,6 @@ describe('MenuApp', () => {
     await userEvent.keyboard('{ArrowDown}');
     expect(screen.getByRole('menuitemcheckbox', { name: /Full layout/ })).toHaveFocus();
     await userEvent.keyboard('{ArrowUp}{ArrowUp}');
-    expect(screen.getByRole('menuitem', { name: 'Quit poebo' })).toHaveFocus();
+    expect(screen.getByRole('menuitem', { name: 'Quit Exile Companion' })).toHaveFocus();
   });
 });

@@ -1,4 +1,4 @@
-# Installs the built NSIS setup, starts poebo a few times and collects what each start left behind:
+# Installs the built NSIS setup, starts Exile Companion a few times and collects what each start left behind:
 # a screenshot, whether the process is alive and responding, the log, the app folders, and
 # application errors from the event log. Meant for a GitHub Windows runner.
 #   tools/windows-smoke.ps1 -Setup <path to setup.exe> -Out <dir>
@@ -40,7 +40,7 @@ function Save-Screen([string] $path) {
 # EBWebView is WebView2's cache: large and not ours.
 function Save-AppFiles([string] $dir) {
   foreach ($root in @($env:APPDATA, $env:LOCALAPPDATA)) {
-    $app = Join-Path $root 'com.poebo.app'
+    $app = Join-Path $root 'com.exilecompanion.app'
     if (-not (Test-Path $app)) { "missing: $app" | Add-Content "$dir/files.txt"; continue }
     Get-ChildItem $app -Recurse -Force | Where-Object { $_.FullName -notmatch 'EBWebView' } |
       ForEach-Object { "$($_.FullName)  $($_.Length)" } | Add-Content "$dir/files.txt"
@@ -52,11 +52,11 @@ function Save-AppFiles([string] $dir) {
   }
 }
 
-function Start-Poebo([string] $name, [string] $exe) {
+function Start-App([string] $name, [string] $exe) {
   $dir = Join-Path $Out $name
   New-Item -ItemType Directory -Force $dir | Out-Null
   $p = Start-Process $exe -PassThru
-  # poebo must not take the foreground on start: the overlay would show over the desktop.
+  # Exile Companion must not take the foreground on start: the overlay would show over the desktop.
   foreach ($wait in 2, 6) {
     Start-Sleep -Seconds $wait
     $fg = Get-Foreground
@@ -80,29 +80,29 @@ function Start-Poebo([string] $name, [string] $exe) {
 
 Start-Process $Setup -ArgumentList '/S' -Wait
 # The exe is named after the Rust crate, so take whatever the installer put there.
-$exe = Get-ChildItem "$env:LOCALAPPDATA\poebo", "$env:ProgramFiles\poebo" -Filter *.exe -ErrorAction SilentlyContinue |
+$exe = Get-ChildItem "$env:LOCALAPPDATA\Exile Companion", "$env:ProgramFiles\Exile Companion" -Filter *.exe -ErrorAction SilentlyContinue |
   Where-Object { $_.Name -notmatch 'uninstall' } | Select-Object -First 1 -ExpandProperty FullName
 if (-not $exe) {
   Get-ChildItem "$env:LOCALAPPDATA", "$env:ProgramFiles" -Filter *.exe -Recurse -Depth 2 -ErrorAction SilentlyContinue |
-    Where-Object { $_.FullName -match 'poebo' } | ForEach-Object FullName | Add-Content "$Out/summary.txt"
-  throw 'poebo exe not found after install'
+    Where-Object { $_.FullName -match 'Exile Companion' } | ForEach-Object FullName | Add-Content "$Out/summary.txt"
+  throw 'Exile Companion exe not found after install'
 }
 $script:proc = [IO.Path]::GetFileNameWithoutExtension($exe)
 "installed: $exe" | Tee-Object -Append "$Out/summary.txt"
 
-Start-Poebo 'run1-fresh' $exe
-Start-Poebo 'run2-saved-settings' $exe
+Start-App 'run1-fresh' $exe
+Start-App 'run2-saved-settings' $exe
 
 # The standalone install path find_client_log looks at, with the sample campaign log in it.
 $logs = 'C:\Program Files (x86)\Grinding Gear Games\Path of Exile\logs'
 New-Item -ItemType Directory -Force $logs | Out-Null
 Copy-Item examples/sample-client.txt (Join-Path $logs 'Client.txt')
-Start-Poebo 'run3-with-client-txt' $exe
+Start-App 'run3-with-client-txt' $exe
 
 Get-WinEvent -FilterHashtable @{ LogName = 'Application'; StartTime = $started } -ErrorAction SilentlyContinue |
-  Where-Object { $_.Message -match 'poebo|WebView2|msedgewebview2' } |
+  Where-Object { $_.Message -match 'Exile Companion|exile-companion|WebView2|msedgewebview2' } |
   Format-List TimeCreated, ProviderName, Id, LevelDisplayName, Message |
   Out-String -Width 200 | Set-Content "$Out/events.txt"
 
 Get-Content "$Out/summary.txt"
-if ($script:failed) { throw "poebo didn't stay up: $($script:failed -join ', ')" }
+if ($script:failed) { throw "Exile Companion didn't stay up: $($script:failed -join ', ')" }

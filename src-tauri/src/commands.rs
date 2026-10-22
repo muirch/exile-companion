@@ -4,11 +4,11 @@
 use std::path::Path;
 use std::time::Duration;
 
-use poebo_core::build::BuildSummary;
-use poebo_core::guidance::NextObjective;
-use poebo_core::route::RouteView;
-use poebo_core::source::SpeedMultiplier;
-use poebo_core::state::CampaignState;
+use exile_core::build::BuildSummary;
+use exile_core::guidance::NextObjective;
+use exile_core::route::RouteView;
+use exile_core::source::SpeedMultiplier;
+use exile_core::state::CampaignState;
 use tauri::{AppHandle, Emitter, State, WebviewWindow};
 use tauri_plugin_dialog::DialogExt;
 
@@ -103,20 +103,20 @@ pub async fn import_build_file(
         .into_owned();
     let text = std::fs::read(Path::new(&path)).map_err(|e| e.to_string())?;
     let xml =
-        poebo_pob::xml_from_text(&String::from_utf8_lossy(&text)).map_err(|e| e.to_string())?;
+        exile_pob::xml_from_text(&String::from_utf8_lossy(&text)).map_err(|e| e.to_string())?;
     runtime::import_build(&app, xml).map(Some)
 }
 
 /// Import a Path of Building build from pasted text: a build link, an import code or raw XML.
 #[tauri::command]
 pub async fn import_build_code(app: AppHandle, code: String) -> Result<BuildSummary, String> {
-    let code = match poebo_pob::code_url(&code) {
+    let code = match exile_pob::code_url(&code) {
         Some(url) => tauri::async_runtime::spawn_blocking(move || fetch_build_code(&url))
             .await
             .map_err(|e| e.to_string())??,
         None => code,
     };
-    let xml = poebo_pob::xml_from_text(&code).map_err(|e| {
+    let xml = exile_pob::xml_from_text(&code).map_err(|e| {
         log::warn!("build import: {e}");
         "That's not a Path of Building code or a build link.".to_string()
     })?;
@@ -132,7 +132,7 @@ fn fetch_build_code(url: &str) -> Result<String, String> {
     let agent: ureq::Agent = ureq::Agent::config_builder()
         .tls_config(tls)
         .timeout_global(Some(Duration::from_secs(15)))
-        .user_agent(concat!("poebo/", env!("CARGO_PKG_VERSION")))
+        .user_agent(concat!("exile-companion/", env!("CARGO_PKG_VERSION")))
         .build()
         .into();
     log::info!("downloading build from {url}");
@@ -325,9 +325,9 @@ mod tests {
     #[test]
     #[ignore]
     fn downloads_a_build_over_tls() {
-        let url = poebo_pob::code_url("https://pobb.in/NlUa8ZnB3YGK").unwrap();
+        let url = exile_pob::code_url("https://pobb.in/NlUa8ZnB3YGK").unwrap();
         let code = super::fetch_build_code(&url).unwrap();
-        let build = poebo_pob::import_text(&code).unwrap();
+        let build = exile_pob::import_text(&code).unwrap();
         assert_eq!(build.class_name.as_deref(), Some("Ranger"));
     }
 }

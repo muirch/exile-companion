@@ -9,7 +9,7 @@
 
 use std::collections::HashSet;
 
-use poebo_pob::PobBuild;
+use exile_pob::PobBuild;
 
 use crate::gems::{quest_number, GemSource, GemSourceKind, GemTable};
 use crate::resolve::{act_expected_level, title_target_level};
@@ -358,7 +358,7 @@ fn step(w: &Wanted, s: &GemSource, action: GemAction) -> GemStep {
 
 #[cfg(test)]
 mod tests {
-    use poebo_pob::{Gem, SkillGroup, SkillSet};
+    use exile_pob::{Gem, SkillGroup, SkillSet};
 
     use super::*;
 

@@ -1,5 +1,5 @@
 ---
-name: poebo
+name: Exile Companion
 description: A passive Path of Exile leveling overlay that reads like the game's item tooltip for the area you stand in.
 colors:
   void: "#000000"
@@ -128,13 +128,13 @@ components:
     width: "128px"
 ---
 
-# Design System: poebo
+# Design System: Exile Companion
 
 ## Overview
 
 **Creative North Star: "The Item Tooltip of Where You Stand"**
 
-Every surface poebo draws is a Path of Exile item tooltip. The zone is the item name in a tinted header band, the things to do there are its properties, and the way out is the last line, "Then:". The overlay, the quick menu and each settings group use the same parts: a see-through black body with no frame, a header band with rules along both edges and wedge ends that meet in a diamond, short glowing separators, centered small caps, and text colours that mean what they mean in the game.
+Every surface Exile Companion draws is a Path of Exile item tooltip. The zone is the item name in a tinted header band, the things to do there are its properties, and the way out is the last line, "Then:". The overlay, the quick menu and each settings group use the same parts: a see-through black body with no frame, a header band with rules along both edges and wedge ends that meet in a diamond, short glowing separators, centered small caps, and text colours that mean what they mean in the game.
 
 The system is dense and quiet. It is read in glances over a busy, dark game scene, so it has no fills, gradients or accents beyond what the game's own tooltips carry, and colour is spent only on meaning: a boss name is red because the game's corrupted red is the danger colour, a waypoint is blue because it is magic. The overlay window is transparent and fitted to its content; only the plate paints. The settings window has no system frame: a title bar like the overlay's move bar, a 1px Edge window edge, and groups that are still tooltips standing on a dark ground.
 
@@ -191,11 +191,11 @@ These are route semantics, never decoration.
 **Character:** A humanist sans in true small caps, close to the game's tooltip voice without copying its face. The lowercase cut appears only where the game would switch voice or where caps would garble the text.
 
 ### Hierarchy
-- **Display** (500, 19px, 1.25): the tooltip title (zone name, "poebo", settings group name). Truncates on one line.
+- **Display** (500, 19px, 1.25): the tooltip title (zone name, "Exile Companion", settings group name). Truncates on one line.
 - **Subtitle** (500, 14px, 1.25, 85 percent opacity): the line under the title; on the overlay it carries act, class level and step.
 - **Body** (500, 15px, 1.375): this area's actions.
 - **Body small** (500, 14px, 1.375): the "Then:" line, one step under the current actions so they win the first glance; quick menu rows, "route didn't load".
-- **Label** (500, 13px, 1.375): the compact zone line, "Nothing to do here", settings row labels and values, the move bar's "poebo".
+- **Label** (500, 13px, 1.375): the compact zone line, "Nothing to do here", settings row labels and values, the move bar's "Exile Companion".
 - **Button** (500, 12px, 1): every button and the hold-key select.
 - **Flavour** (Alegreya Sans italic, 400, 13px, 1.375): route hints, the startup notice, the missing-log hint (upright).
 - **Caption** (Alegreya Sans italic, 400, 12px): settings explanations; upright for bind errors.
@@ -214,7 +214,7 @@ The overlay plate is 404px wide at 100 percent text size and is scaled as a whol
 
 The quick menu is a 228px tooltip at the window's top left, 4px in. Rows are full-width, 6px by 12px, label left and state or key hint right.
 
-The settings window has a 32px title bar on top: "poebo" in Normal Item White and "Settings" in Label Grey on the left, a 24px square close button on the right, black under an Edge rule. Dragging the bar moves the window; the content scrolls under it, with an 8px Edge scrollbar thumb. Below the bar it centers a column up to 34rem wide with 20px outer padding and 16px between groups. Inside a group, bodies are left-aligned with 20px sides, 12px top, 16px bottom, and rows 8px apart. Each row is at least 28px tall with a fixed 128px label column and a 12px gap; explanatory text under a row indents 140px to line up with the controls.
+The settings window has a 32px title bar on top: "Exile Companion" in Normal Item White and "Settings" in Label Grey on the left, a 24px square close button on the right, black under an Edge rule. Dragging the bar moves the window; the content scrolls under it, with an 8px Edge scrollbar thumb. Below the bar it centers a column up to 34rem wide with 20px outer padding and 16px between groups. Inside a group, bodies are left-aligned with 20px sides, 12px top, 16px bottom, and rows 8px apart. Each row is at least 28px tall with a fixed 128px label column and a 12px gap; explanatory text under a row indents 140px to line up with the controls.
 
 The spacing scale is 4, 6, 8, 12, 16 and 20px. The header band's 4/30/5px padding is its own.
 
@@ -247,7 +247,7 @@ Small, dark and neutral, like the game's own panel buttons. Square, a 1px Edge b
 The signature component. A tint is passed in; the band fills with it mixed 30 percent into near-black under the sheen gradient, its title and subtitle are set in the tint, its edge rules and wedge ends are the tint at 80 percent, and the diamonds on the wedge points are solid tint. Title is display type, centered and truncated; the subtitle sits below at 85 percent opacity.
 
 ### Tooltip body
-See-through black, centered, small caps. Order on the overlay: the band (zone name; subtitle with act, class level and step, joined by middle dots), actions (or "Nothing to do here" plus the way out in value white, gem steps after their quest), separator, "Then:" line. Hints under an action are flavour type in Plain Grey. When the player stands somewhere the current step isn't for (a hideout, a map, an area off the route), a Label-size Plain Grey line "Off route, showing your last step" sits above the actions. On the first step of an act a Label-size Quest Green "Act N done" for the act just finished sits there too, and on the last step of the campaign "That's the campaign. On to the maps." takes the place of the "Then:" line. When unlocked, a move bar sits above the band with "poebo" on the left, the key hint ("Drag to move. Esc or Alt+M locks.") and a Lock button on the right, and under it a row of Back / Next buttons with the step shortcuts between them, each closed by an Edge rule. Nothing opens below the band, so the route keeps its place when the overlay locks again. Locking hands keyboard focus back to the game.
+See-through black, centered, small caps. Order on the overlay: the band (zone name; subtitle with act, class level and step, joined by middle dots), actions (or "Nothing to do here" plus the way out in value white, gem steps after their quest), separator, "Then:" line. Hints under an action are flavour type in Plain Grey. When the player stands somewhere the current step isn't for (a hideout, a map, an area off the route), a Label-size Plain Grey line "Off route, showing your last step" sits above the actions. On the first step of an act a Label-size Quest Green "Act N done" for the act just finished sits there too, and on the last step of the campaign "That's the campaign. On to the maps." takes the place of the "Then:" line. When unlocked, a move bar sits above the band with "Exile Companion" on the left, the key hint ("Drag to move. Esc or Alt+M locks.") and a Lock button on the right, and under it a row of Back / Next buttons with the step shortcuts between them, each closed by an Edge rule. Nothing opens below the band, so the route keeps its place when the overlay locks again. Locking hands keyboard focus back to the game.
 
 ### Compact overlay
 The same see-through black plate at 340px, with no header band, separators or hints. It is the default layout. Route hints stay hidden, except for six seconds after a tap of the menu key. A Plain Grey label line names the zone, act and step ("Lioneye's Watch · Act 1 · 2 / 24"), then the actions at Body size and the "Then:" line, all centered small caps at 4px gaps inside 12px sides, 6px top and 8px bottom. It is for players who know the campaign and want the route to cover less of the game. Either layout can fade out after 5, 10 or 30 seconds without a new step, over 700ms; a new step, a new area, the game coming back to the front or a tap of the menu key shows it again at once, and it never fades while unlocked.
@@ -280,4 +280,4 @@ Keyboard focus is a 1px Normal Item White outline 2px out, everywhere except men
 - Don't bring back the brown-and-gold fantasy chrome; the frame is neutral grey and black.
 - Don't use a route colour for decoration or for chrome.
 - Don't add a type size between the existing steps (11, 12, 13, 14, 15, 19px).
-- Don't use the game's header art or GGG logos; the header wedges and diamonds are poebo's own.
+- Don't use the game's header art or GGG logos; the header wedges and diamonds are Exile Companion's own.

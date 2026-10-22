@@ -5,7 +5,7 @@
 //! the next objective. Only [`BuildSummary`] crosses the IPC boundary - the raw [`PobBuild`] stays in
 //! the core.
 
-use poebo_pob::PobBuild;
+use exile_pob::PobBuild;
 
 /// Holds the currently-imported build, if any. A missing build is a valid state (guidance still
 /// helps with campaign flow), so this defaults to empty.
@@ -85,7 +85,7 @@ impl BuildSummary {
 #[cfg(test)]
 mod tests {
     use super::*;
-    use poebo_pob::{Gem, PobBuild, SkillGroup, SkillSet, TreeSpec};
+    use exile_pob::{Gem, PobBuild, SkillGroup, SkillSet, TreeSpec};
 
     fn gem(name: &str, support: bool) -> Gem {
         Gem {

@@ -43,7 +43,7 @@ jobs:
       - name: Build the installer
         run: pnpm tauri build --bundles nsis
 
-      - name: Install and start poebo
+      - name: Install and start Exile Companion
         shell: pwsh
         run: |
           $setup = Get-ChildItem target/release/bundle/nsis/*-setup.exe | Select-Object -First 1

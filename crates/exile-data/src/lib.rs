@@ -1,8 +1,8 @@
 //! Committed, versioned PoE campaign data pack, embedded at compile time.
 //!
 //! This crate deliberately carries only **bytes + version metadata**. Parsing lives in
-//! [`poebo_core::data`], so the pure-logic crate never depends on this one. The Tauri shell wires
-//! them together, handing these bytes to `poebo_core::data::DataPack::from_bytes`.
+//! [`exile_core::data`], so the pure-logic crate never depends on this one. The Tauri shell wires
+//! them together, handing these bytes to `exile_core::data::DataPack::from_bytes`.
 //!
 //! The embedded JSON is generated from Path of Exile's game files by `tools/data-extractor` and
 //! committed under `data-pack/`. The app build never runs the extractor. Each file carries its own

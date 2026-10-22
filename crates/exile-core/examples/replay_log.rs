@@ -1,31 +1,31 @@
-//! Replays a Client.txt through poebo-core and prints the campaign progression plus, at each step,
+//! Replays a Client.txt through exile-core and prints the campaign progression plus, at each step,
 //! the guidance engine's next objective. Optionally import a Path of Building build to see gem/tree
 //! guidance too.
 //!
 //! This is a headless way to see the engine work without the overlay (no GUI deps).
 //!
 //! Usage:
-//!   cargo run -p poebo-core --example replay_log                        # sample log, no build
-//!   cargo run -p poebo-core --example replay_log -- <log>               # a real Client.txt/recording
-//!   cargo run -p poebo-core --example replay_log -- <log> <build.xml>   # + a PoB build (file or code)
+//!   cargo run -p exile-core --example replay_log                        # sample log, no build
+//!   cargo run -p exile-core --example replay_log -- <log>               # a real Client.txt/recording
+//!   cargo run -p exile-core --example replay_log -- <log> <build.xml>   # + a PoB build (file or code)
 
 use std::sync::Arc;
 
-use poebo_core::build::BuildState;
-use poebo_core::data::DataPack;
-use poebo_core::guidance::GuidanceEngine;
-use poebo_core::locale::LocalePack;
-use poebo_core::parser::parse_line;
-use poebo_core::state::CampaignMachine;
+use exile_core::build::BuildState;
+use exile_core::data::DataPack;
+use exile_core::guidance::GuidanceEngine;
+use exile_core::locale::LocalePack;
+use exile_core::parser::parse_line;
+use exile_core::state::CampaignMachine;
 
 fn load_pack() -> DataPack {
     DataPack::from_bytes(
-        poebo_data::AREAS_JSON,
-        poebo_data::AREAS_SCHEMA_VERSION,
-        poebo_data::QUESTS_JSON,
-        poebo_data::QUESTS_SCHEMA_VERSION,
-        poebo_data::TRIALS_JSON,
-        poebo_data::TRIALS_SCHEMA_VERSION,
+        exile_data::AREAS_JSON,
+        exile_data::AREAS_SCHEMA_VERSION,
+        exile_data::QUESTS_JSON,
+        exile_data::QUESTS_SCHEMA_VERSION,
+        exile_data::TRIALS_JSON,
+        exile_data::TRIALS_SCHEMA_VERSION,
     )
     .expect("failed to load the committed data pack")
 }
@@ -45,7 +45,7 @@ fn main() {
 
     let mut build_state = BuildState::new();
     if let Some(path) = &build_path {
-        match poebo_pob::from_local_file(std::path::Path::new(path)) {
+        match exile_pob::from_local_file(std::path::Path::new(path)) {
             Ok(build) => build_state.set(build),
             Err(e) => eprintln!("warning: could not import build {path}: {e}"),
         }

@@ -32,7 +32,7 @@ function useFaded(id: string, seconds: number): boolean {
   return seconds > 0 && state.id === id && state.faded;
 }
 
-// Shown once when poebo starts without the game in front, instead of the route.
+// Shown once when Exile Companion starts without the game in front, instead of the route.
 function StartupNotice(): React.JSX.Element {
   const keys = useAppStore((s) => s.hotkeys);
   const compact = useAppStore((s) => s.ui.compact);

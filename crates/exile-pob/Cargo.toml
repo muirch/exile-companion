@@ -1,10 +1,11 @@
 [package]
-name = "poebo-pob"
+name = "exile-pob"
 version = "0.1.0"
 edition.workspace = true
 license.workspace = true
+publish = false
 rust-version.workspace = true
-description = "Path of Building build import (decode + parse) for the poebo PoE1 leveling assistant."
+description = "Path of Building build import (decode + parse) for the Exile Companion PoE1 leveling assistant."
 
 [dependencies]
 thiserror = { workspace = true }

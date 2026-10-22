@@ -8,7 +8,7 @@
 
 use std::collections::HashSet;
 
-use poebo_pob::{PobBuild, TreeSpec};
+use exile_pob::{PobBuild, TreeSpec};
 
 use crate::data::DataPack;
 use crate::state::CampaignState;
@@ -238,7 +238,7 @@ impl GemResolver {
 #[cfg(test)]
 mod tests {
     use super::*;
-    use poebo_pob::{Gem, SkillGroup, SkillSet};
+    use exile_pob::{Gem, SkillGroup, SkillSet};
 
     fn spec(title: Option<&str>) -> TreeSpec {
         TreeSpec {

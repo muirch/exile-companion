@@ -1,4 +1,4 @@
-// Reshapes raw `WorldAreas` rows (as exported by pathofexile-dat) into poebo's flat `ZoneInfo`
+// Reshapes raw `WorldAreas` rows (as exported by pathofexile-dat) into Exile Companion's flat `ZoneInfo`
 // schema. Connectivity is exported as row *indices* into WorldAreas; we resolve those to `Id`s and
 // keep only connections that stay within the emitted campaign set, so the pack is self-contained.
 
@@ -16,7 +16,7 @@ export interface RawWorldArea {
   Connections_WorldAreasKeys: number[];
 }
 
-/** One campaign area in the data pack (mirrors `poebo_core::data::ZoneInfo`). */
+/** One campaign area in the data pack (mirrors `exile_core::data::ZoneInfo`). */
 export interface ZoneInfo {
   id: string;
   name: string;

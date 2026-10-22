@@ -3,12 +3,12 @@
 use std::sync::atomic::AtomicBool;
 use std::sync::{Arc, Mutex};
 
-use poebo_core::build::BuildState;
-use poebo_core::data::DataPack;
-use poebo_core::gems::GemTable;
-use poebo_core::route::{Route, RouteTracker};
-use poebo_core::source::ReplayControl;
-use poebo_core::state::CampaignState;
+use exile_core::build::BuildState;
+use exile_core::data::DataPack;
+use exile_core::gems::GemTable;
+use exile_core::route::{Route, RouteTracker};
+use exile_core::source::ReplayControl;
+use exile_core::state::CampaignState;
 use tauri::async_runtime::JoinHandle;
 use tokio::sync::watch;
 

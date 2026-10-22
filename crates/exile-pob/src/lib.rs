@@ -1,4 +1,4 @@
-//! `poebo-pob` - import a Path of Building build for the poebo PoE1 leveling assistant.
+//! `exile-pob` - import a Path of Building build for the Exile Companion PoE1 leveling assistant.
 //!
 //! A build reaches us as an **import code** (pasted from PoB / pobb.in / pastebin, shaped
 //! `url-safe-base64( zlib( xml ) )`), a **local file** (raw exported XML, or a saved code), or a

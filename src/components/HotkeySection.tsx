@@ -178,7 +178,7 @@ export function HotkeySection(): React.JSX.Element {
       </div>
       <p className="ml-35 font-body text-[12px] leading-snug text-label italic">
         Types /exit in the game chat to go back to character select, like Awakened PoE Trade's F9.
-        This is the only thing poebo sends to the game: one command per key press, only while the
+        This is the only thing Exile Companion sends to the game: one command per key press, only while the
         game is in front.
       </p>
       <p className="font-body text-[12px] text-label italic">

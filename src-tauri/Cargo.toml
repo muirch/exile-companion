@@ -1,12 +1,13 @@
 [package]
-name = "poebo-app"
+name = "exile-companion"
 version = "0.1.0"
 edition.workspace = true
 license.workspace = true
-description = "poebo - Tauri v2 desktop shell for the PoE1 campaign assistant."
+publish = false
+description = "Exile Companion - Tauri v2 desktop shell for the PoE1 campaign assistant."
 
 [lib]
-name = "poebo_app"
+name = "exile_companion"
 crate-type = ["lib", "cdylib", "staticlib"]
 
 [build-dependencies]
@@ -25,9 +26,9 @@ serde = { workspace = true }
 serde_json = { workspace = true }
 ureq = { version = "=3.5.0", default-features = false, features = ["native-tls", "gzip"] }
 tokio = { version = "=1.53.0", features = ["rt-multi-thread", "macros", "sync", "time"] }
-poebo-core = { path = "../crates/poebo-core" }
-poebo-data = { path = "../crates/poebo-data" }
-poebo-pob = { path = "../crates/poebo-pob" }
+exile-core = { path = "../crates/exile-core" }
+exile-data = { path = "../crates/exile-data" }
+exile-pob = { path = "../crates/exile-pob" }
 
 [target.'cfg(windows)'.dependencies]
 windows-sys = { version = "=0.61.2", features = [

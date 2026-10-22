@@ -39,20 +39,20 @@ jobs:
       - name: Install frontend deps
         run: pnpm install --frozen-lockfile
 
-      # The Tauri app (poebo-app) is a Windows target and is NOT built on Linux, so this job needs
+      # The Tauri app (exile-companion) is a Windows target and is NOT built on Linux, so this job needs
       # no webkit/gtk system libraries. It covers the pure crates and the frontend.
       - name: rustfmt
         run: cargo fmt --all --check
 
       - name: clippy (core + data + pob)
-        run: cargo clippy -p poebo-core -p poebo-data -p poebo-pob --all-targets -- -D warnings
+        run: cargo clippy -p exile-core -p exile-data -p exile-pob --all-targets -- -D warnings
 
       - name: Test core + data + pob
-        run: cargo test -p poebo-core -p poebo-data -p poebo-pob
+        run: cargo test -p exile-core -p exile-data -p exile-pob
 
       - name: ts-rs bindings are up to date
         run: |
-          TS_RS_EXPORT_DIR="$PWD/src/ipc/generated" cargo test -p poebo-core --features ts
+          TS_RS_EXPORT_DIR="$PWD/src/ipc/generated" cargo test -p exile-core --features ts
           if ! git diff --quiet -- src/ipc/generated; then
             echo "::error::TypeScript IPC bindings are stale. Run 'pnpm gen:bindings' and commit."
             git diff -- src/ipc/generated
@@ -98,7 +98,7 @@ jobs:
         run: pnpm build
 
       - name: clippy the Tauri app
-        run: cargo clippy -p poebo-app --all-targets -- -D warnings
+        run: cargo clippy -p exile-companion --all-targets -- -D warnings
 
       - name: Build link download works with Windows TLS
-        run: cargo test -p poebo-app -- --ignored downloads_a_build_over_tls
+        run: cargo test -p exile-companion -- --ignored downloads_a_build_over_tls

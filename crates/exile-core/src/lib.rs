@@ -1,4 +1,4 @@
-//! `poebo-core` - pure, Tauri-free campaign logic for the PoE1 leveling assistant.
+//! `exile-core` - pure, Tauri-free campaign logic for the PoE1 leveling assistant.
 //!
 //! # Design
 //!
@@ -7,7 +7,7 @@
 //! tailing and replay are two producers of the same stream, so they are behaviorally identical.
 //!
 //! This crate never depends on Tauri, so it is fully unit-testable headless:
-//! `cargo test -p poebo-core` runs anywhere with no GUI dependencies.
+//! `cargo test -p exile-core` runs anywhere with no GUI dependencies.
 //!
 //! # Error handling
 //!
@@ -27,6 +27,7 @@ pub mod guidance;
 pub mod hold;
 pub mod locale;
 pub mod logfile;
+pub mod migrate;
 pub mod parser;
 pub mod pipeline;
 pub mod recorder;

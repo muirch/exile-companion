@@ -17,7 +17,7 @@ import type {
   SpeedMultiplier,
 } from './types';
 import { useAppStore } from '../store/useAppStore';
-// Real views from the bundled route (`cargo run -p poebo-core --example dump_route`).
+// Real views from the bundled route (`cargo run -p exile-core --example dump_route`).
 import MOCK_ROUTE from './mock-route.json';
 
 interface MockView {

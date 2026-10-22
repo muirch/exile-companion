@@ -1,18 +1,18 @@
 //! Validates that the *committed* data pack (`data-pack/{areas,quests,trials}.json`, embedded via
-//! `poebo-data`) parses at the schema versions this build expects and contains known campaign
+//! `exile-data`) parses at the schema versions this build expects and contains known campaign
 //! anchors. This is the guard that catches data-pack schema drift after a `tools/data-extractor`
 //! regen.
 
-use poebo_core::data::{DataPack, ZoneTable};
+use exile_core::data::{DataPack, ZoneTable};
 
 fn committed_pack() -> DataPack {
     DataPack::from_bytes(
-        poebo_data::AREAS_JSON,
-        poebo_data::AREAS_SCHEMA_VERSION,
-        poebo_data::QUESTS_JSON,
-        poebo_data::QUESTS_SCHEMA_VERSION,
-        poebo_data::TRIALS_JSON,
-        poebo_data::TRIALS_SCHEMA_VERSION,
+        exile_data::AREAS_JSON,
+        exile_data::AREAS_SCHEMA_VERSION,
+        exile_data::QUESTS_JSON,
+        exile_data::QUESTS_SCHEMA_VERSION,
+        exile_data::TRIALS_JSON,
+        exile_data::TRIALS_SCHEMA_VERSION,
     )
     .expect("committed data pack must parse at the expected schema versions")
 }
@@ -20,7 +20,7 @@ fn committed_pack() -> DataPack {
 #[test]
 fn committed_pack_parses_and_has_act1_anchors() {
     let table =
-        ZoneTable::from_json_bytes(poebo_data::AREAS_JSON, poebo_data::AREAS_SCHEMA_VERSION)
+        ZoneTable::from_json_bytes(exile_data::AREAS_JSON, exile_data::AREAS_SCHEMA_VERSION)
             .expect("committed data-pack/areas.json must parse at the expected schema version");
 
     assert!(!table.is_empty(), "data pack has no areas");
@@ -49,7 +49,7 @@ fn committed_pack_parses_and_has_act1_anchors() {
 fn committed_pack_has_cross_act_name_collisions() {
     // The key real-world fact the state machine must handle: names repeat across acts.
     let table =
-        ZoneTable::from_json_bytes(poebo_data::AREAS_JSON, poebo_data::AREAS_SCHEMA_VERSION)
+        ZoneTable::from_json_bytes(exile_data::AREAS_JSON, exile_data::AREAS_SCHEMA_VERSION)
             .expect("parse committed pack");
     let watch = table.zones_named("Lioneye's Watch");
     assert!(
@@ -127,11 +127,11 @@ fn committed_trials_cover_the_normal_lab() {
 
 #[test]
 fn bundled_route_parses_cleanly() {
-    use poebo_core::route::parse_route;
+    use exile_core::route::parse_route;
     use std::collections::HashSet;
 
     let pack = committed_pack();
-    let source = poebo_data::ROUTE_ACTS.join("\n");
+    let source = exile_data::ROUTE_ACTS.join("\n");
     for defines in [HashSet::new(), HashSet::from(["LEAGUE_START".to_string()])] {
         let (route, warnings) = parse_route(&source, &pack.zones, &pack.quests, &defines);
         assert!(warnings.is_empty(), "{warnings:#?}");
@@ -143,11 +143,11 @@ fn bundled_route_parses_cleanly() {
 
 #[test]
 fn tracker_walks_the_bundled_route_end_to_end() {
-    use poebo_core::route::{parse_route, RouteTracker};
+    use exile_core::route::{parse_route, RouteTracker};
     use std::collections::HashSet;
 
     let pack = committed_pack();
-    let source = poebo_data::ROUTE_ACTS.join("\n");
+    let source = exile_data::ROUTE_ACTS.join("\n");
     let (route, _) = parse_route(&source, &pack.zones, &pack.quests, &HashSet::new());
     let mut tracker = RouteTracker::default();
     for (i, area) in route.edges.iter().enumerate().skip(1) {
@@ -165,11 +165,11 @@ fn tracker_walks_the_bundled_route_end_to_end() {
 
 #[test]
 fn high_level_character_in_act1_town_gets_the_last_act1_visit() {
-    use poebo_core::route::{parse_route, RouteTracker};
+    use exile_core::route::{parse_route, RouteTracker};
     use std::collections::HashSet;
 
     let pack = committed_pack();
-    let source = poebo_data::ROUTE_ACTS.join("\n");
+    let source = exile_data::ROUTE_ACTS.join("\n");
     let (route, _) = parse_route(&source, &pack.zones, &pack.quests, &HashSet::new());
     let town_visits: Vec<usize> = (0..route.edges.len())
         .filter(|&i| route.edges[i] == "1_1_town")

@@ -854,6 +854,63 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "dea2df4cf52843e0452895c455a1a2cfbb842a1e7329671acf418fdc53ed4c59"
 
 [[package]]
+name = "exile-companion"
+version = "0.1.0"
+dependencies = [
+ "exile-core",
+ "exile-data",
+ "exile-pob",
+ "log",
+ "serde",
+ "serde_json",
+ "tauri",
+ "tauri-build",
+ "tauri-plugin-clipboard-manager",
+ "tauri-plugin-dialog",
+ "tauri-plugin-fs",
+ "tauri-plugin-global-shortcut",
+ "tauri-plugin-log",
+ "tauri-plugin-store",
+ "tokio",
+ "ureq",
+ "windows-sys 0.61.2",
+]
+
+[[package]]
+name = "exile-core"
+version = "0.1.0"
+dependencies = [
+ "async-stream",
+ "exile-data",
+ "exile-pob",
+ "futures",
+ "regex",
+ "serde",
+ "serde_json",
+ "tempfile",
+ "thiserror 2.0.18",
+ "time",
+ "tokio",
+ "tokio-util",
+ "ts-rs",
+]
+
+[[package]]
+name = "exile-data"
+version = "0.1.0"
+
+[[package]]
+name = "exile-pob"
+version = "0.1.0"
+dependencies = [
+ "base64 0.22.1",
+ "flate2",
+ "quick-xml 0.41.0",
+ "tempfile",
+ "thiserror 2.0.18",
+]
+
+[[package]]
 name = "fastrand"
 version = "2.4.1"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -2554,63 +2611,6 @@ dependencies = [
  "fdeflate",
  "flate2",
  "miniz_oxide",
-]
-
-[[package]]
-name = "poebo-app"
-version = "0.1.0"
-dependencies = [
- "log",
- "poebo-core",
- "poebo-data",
- "poebo-pob",
- "serde",
- "serde_json",
- "tauri",
- "tauri-build",
- "tauri-plugin-clipboard-manager",
- "tauri-plugin-dialog",
- "tauri-plugin-fs",
- "tauri-plugin-global-shortcut",
- "tauri-plugin-log",
- "tauri-plugin-store",
- "tokio",
- "ureq",
- "windows-sys 0.61.2",
-]
-
-[[package]]
-name = "poebo-core"
-version = "0.1.0"
-dependencies = [
- "async-stream",
- "futures",
- "poebo-data",
- "poebo-pob",
- "regex",
- "serde",
- "serde_json",
- "tempfile",
- "thiserror 2.0.18",
- "time",
- "tokio",
- "tokio-util",
- "ts-rs",
-]
-
-[[package]]
-name = "poebo-data"
-version = "0.1.0"
-
-[[package]]
-name = "poebo-pob"
-version = "0.1.0"
-dependencies = [
- "base64 0.22.1",
- "flate2",
- "quick-xml 0.41.0",
- "tempfile",
- "thiserror 2.0.18",
 ]
 
 [[package]]

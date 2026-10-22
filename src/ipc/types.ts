@@ -21,7 +21,7 @@ export type { RouteView } from './generated/RouteView';
 
 export type SourceMode = 'idle' | 'live' | 'replay';
 
-/** Persisted user settings (mirrors `poebo_app::settings::Settings`). */
+/** Persisted user settings (mirrors `exile_companion::settings::Settings`). */
 export interface Settings {
   opacity: number;
   lastLogPath: string | null;
@@ -35,7 +35,7 @@ export interface Settings {
   presetStages: PresetStage[];
 }
 
-/** Which gem steps the route shows (mirrors `poebo_core::gemplan::GemHints`). */
+/** Which gem steps the route shows (mirrors `exile_core::gemplan::GemHints`). */
 export type GemHints = 'off' | 'rewards' | 'rewardsAndVendors';
 
 /** Payload of `source://status`. */
@@ -53,7 +53,7 @@ export interface ReplayProgress {
   paused: boolean;
 }
 
-/** Mirrors `poebo_app::hotkeys::Hotkeys`: global-hotkey syntax such as "Alt+ArrowLeft". */
+/** Mirrors `exile_companion::hotkeys::Hotkeys`: global-hotkey syntax such as "Alt+ArrowLeft". */
 export interface Hotkeys {
   menuHold: string;
   moveOverlay: string;

@@ -74,9 +74,9 @@ describe('OverlayRoot', () => {
     expect(screen.queryByText(/Claim Arrow Nova/)).not.toBeInTheDocument();
   });
 
-  it('sets the name in the lower-case face, not small caps', () => {
+  it('names the app in the startup notice', () => {
     render(<OverlayRoot />);
-    expect(screen.getByText('poebo')).toHaveClass('font-body');
+    expect(screen.getByRole('heading', { name: 'Exile Companion' })).toBeInTheDocument();
   });
 
   it('starts with the notice and no route', () => {

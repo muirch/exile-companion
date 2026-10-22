@@ -1,14 +1,14 @@
 //! Writes the first N route views as JSON, for the browser mock:
-//! `cargo run -p poebo-core --example dump_route -- 60 > src/ipc/mock-route.json`
+//! `cargo run -p exile-core --example dump_route -- 60 > src/ipc/mock-route.json`
 //! The views carry the gem plan for a small Witch build, matching the mock's imported build.
 
 use std::collections::HashSet;
 
-use poebo_core::data::DataPack;
-use poebo_core::gemplan::{annotate, plan, GemHints};
-use poebo_core::gems::GemTable;
-use poebo_core::route::parse_route;
-use poebo_pob::{Gem, PobBuild, SkillGroup, SkillSet};
+use exile_core::data::DataPack;
+use exile_core::gemplan::{annotate, plan, GemHints};
+use exile_core::gems::GemTable;
+use exile_core::route::parse_route;
+use exile_pob::{Gem, PobBuild, SkillGroup, SkillSet};
 
 fn mock_build() -> PobBuild {
     let gem = |id: &str, name: &str, support: bool| Gem {
@@ -46,17 +46,17 @@ fn mock_build() -> PobBuild {
 fn main() -> Result<(), Box<dyn std::error::Error>> {
     let count: usize = std::env::args().nth(1).map_or(Ok(14), |n| n.parse())?;
     let pack = DataPack::from_bytes(
-        poebo_data::AREAS_JSON,
-        poebo_data::AREAS_SCHEMA_VERSION,
-        poebo_data::QUESTS_JSON,
-        poebo_data::QUESTS_SCHEMA_VERSION,
-        poebo_data::TRIALS_JSON,
-        poebo_data::TRIALS_SCHEMA_VERSION,
+        exile_data::AREAS_JSON,
+        exile_data::AREAS_SCHEMA_VERSION,
+        exile_data::QUESTS_JSON,
+        exile_data::QUESTS_SCHEMA_VERSION,
+        exile_data::TRIALS_JSON,
+        exile_data::TRIALS_SCHEMA_VERSION,
     )?;
     let defines = HashSet::from(["LEAGUE_START".to_string()]);
-    let source = poebo_data::ROUTE_ACTS.join("\n");
+    let source = exile_data::ROUTE_ACTS.join("\n");
     let (route, _) = parse_route(&source, &pack.zones, &pack.quests, &defines);
-    let gems = GemTable::from_json_bytes(poebo_data::GEMS_JSON, poebo_data::GEM_SOURCES_JSON)?;
+    let gems = GemTable::from_json_bytes(exile_data::GEMS_JSON, exile_data::GEM_SOURCES_JSON)?;
     let gem_plan = plan(&mock_build(), "Witch", &gems);
     // The mock also needs the zone each view belongs to, to fill the header.
     let views: Vec<_> = (0..count)

@@ -1,5 +1,5 @@
 {
-  "name": "poebo",
+  "name": "Exile Companion",
   "private": true,
   "version": "0.1.0",
   "type": "module",
@@ -11,7 +11,7 @@
     "preview": "vite preview",
     "typecheck": "tsc --noEmit",
     "tauri": "tauri",
-    "gen:bindings": "cd crates/poebo-core && TS_RS_EXPORT_DIR=\"$PWD/../../src/ipc/generated\" cargo test --features ts",
+    "gen:bindings": "cd crates/exile-core && TS_RS_EXPORT_DIR=\"$PWD/../../src/ipc/generated\" cargo test --features ts",
     "test": "vitest run",
     "lint": "oxlint src vite.config.ts vitest.config.ts"
   },

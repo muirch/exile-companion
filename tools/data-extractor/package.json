@@ -1,9 +1,9 @@
 {
-  "name": "poebo-data-extractor",
+  "name": "exile-companion-data-extractor",
   "private": true,
   "version": "0.1.0",
   "type": "module",
-  "description": "Generates poebo's campaign data pack from Path of Exile game files via pathofexile-dat. Not part of the Rust app build.",
+  "description": "Generates Exile Companion's campaign data pack from Path of Exile game files via pathofexile-dat. Not part of the Rust app build.",
   "scripts": {
     "fetch": "pathofexile-dat",
     "regen": "tsx src/export.ts",

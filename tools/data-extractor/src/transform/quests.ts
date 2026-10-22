@@ -1,4 +1,4 @@
-// Reshapes the quest / quest-reward tables (as exported by pathofexile-dat) into poebo's flat
+// Reshapes the quest / quest-reward tables (as exported by pathofexile-dat) into Exile Companion's flat
 // `QuestInfo` schema: one entry per campaign quest, carrying the gem rewards it grants keyed by the
 // classes that can claim them, plus the NPC you claim them from.
 //
@@ -92,7 +92,7 @@ export interface GemReward {
   classes: string[];
 }
 
-/** One campaign quest with its standard rewards (mirrors `poebo_core::data::QuestInfo`). */
+/** One campaign quest with its standard rewards (mirrors `exile_core::data::QuestInfo`). */
 export interface QuestInfo {
   /** Quest id, e.g. `a1q1`. */
   id: string;

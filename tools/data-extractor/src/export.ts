@@ -1,6 +1,6 @@
 // Orchestrates a full data-pack regeneration:
 //   1. run pathofexile-dat (fetch the tables in config.json from GGG's patch CDN -> tables/English/)
-//   2. reshape rows -> poebo's flat schemas (see ./transform/*.ts)
+//   2. reshape rows -> Exile Companion's flat schemas (see ./transform/*.ts)
 //   3. write ../../data-pack/{areas,quests,trials}.json + manifest.json (with sha256), each
 //      validated against anchors so a bad extraction never overwrites a good pack
 //
