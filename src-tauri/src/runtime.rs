@@ -13,6 +13,7 @@ use poebo_core::build::BuildSummary;
 use poebo_core::clock::TokioSleeper;
 use poebo_core::data::DataPack;
 use poebo_core::error::DataError;
+use poebo_core::gems::GemTable;
 use poebo_core::guidance::GuidanceEngine;
 use poebo_core::locale::LocalePack;
 use poebo_core::pipeline::{prime_from_history, run_pipeline};
@@ -62,10 +63,29 @@ pub fn load_route(data: &DataPack, league_start: bool) -> Arc<Route> {
 pub fn current_route_view(app: &AppHandle) -> Option<RouteView> {
     let app_state = app.state::<AppState>();
     let edge = lock(&app_state.tracker).active();
-    app_state.route.view(edge)
+    let mut view = app_state.route.view(edge)?;
+    let builds = lock(&app_state.build);
+    if let Some(build) = builds.build() {
+        if let Some(class) = build.class_name.as_deref() {
+            let plan = poebo_core::gemplan::plan(build, class, &app_state.gems);
+            let hints = settings::load(app).unwrap_or_default().gem_hints;
+            poebo_core::gemplan::annotate(&mut view, &plan, hints);
+        }
+    }
+    Some(view)
 }
 
-fn emit_route(app: &AppHandle) {
+pub fn load_gems() -> Arc<GemTable> {
+    match GemTable::from_json_bytes(poebo_data::GEMS_JSON, poebo_data::GEM_SOURCES_JSON) {
+        Ok(t) => Arc::new(t),
+        Err(e) => {
+            log::error!("gem data: {e}");
+            Arc::new(GemTable::default())
+        }
+    }
+}
+
+pub fn emit_route(app: &AppHandle) {
     let _ = app.emit("route://view", current_route_view(app));
 }
 
@@ -139,6 +159,7 @@ pub fn import_build(app: &AppHandle, build: PobBuild) -> Result<BuildSummary, St
     };
     emit_build_summary(app);
     emit_guidance(app, &app_state.current_state());
+    emit_route(app);
     summary.ok_or_else(|| "imported build produced no summary".to_string())
 }
 
@@ -150,6 +171,7 @@ pub fn clear_build(app: &AppHandle) {
     }
     emit_build_summary(app);
     emit_guidance(app, &app_state.current_state());
+    emit_route(app);
 }
 
 /// The current build summary, if a build is loaded.

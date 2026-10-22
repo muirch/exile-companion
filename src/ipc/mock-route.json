@@ -60,6 +60,37 @@
             }
           ],
           "sub_steps": []
+        },
+        {
+          "parts": [
+            {
+              "kind": "text",
+              "text": "Take "
+            },
+            {
+              "item": "Raise Zombie",
+              "kind": "reward_quest"
+            }
+          ],
+          "sub_steps": []
+        },
+        {
+          "parts": [
+            {
+              "kind": "text",
+              "text": "Buy "
+            },
+            {
+              "cost": null,
+              "item": "Arcane Surge Support",
+              "kind": "reward_vendor"
+            },
+            {
+              "kind": "text",
+              "text": " from Nessa"
+            }
+          ],
+          "sub_steps": []
         }
       ],
       "section": "Act 1",
@@ -576,6 +607,32 @@
             }
           ],
           "sub_steps": []
+        },
+        {
+          "parts": [
+            {
+              "kind": "text",
+              "text": "Take "
+            },
+            {
+              "item": "Summon Skeletons",
+              "kind": "reward_quest"
+            }
+          ],
+          "sub_steps": []
+        },
+        {
+          "parts": [
+            {
+              "kind": "text",
+              "text": "Take "
+            },
+            {
+              "item": "Minion Damage Support",
+              "kind": "reward_quest"
+            }
+          ],
+          "sub_steps": []
         }
       ],
       "section": "Act 1",
@@ -792,6 +849,32 @@
               "id": "a1q2",
               "kind": "quest",
               "name": "The Caged Brute"
+            }
+          ],
+          "sub_steps": []
+        },
+        {
+          "parts": [
+            {
+              "kind": "text",
+              "text": "Take "
+            },
+            {
+              "item": "Summon Skeletons",
+              "kind": "reward_quest"
+            }
+          ],
+          "sub_steps": []
+        },
+        {
+          "parts": [
+            {
+              "kind": "text",
+              "text": "Take "
+            },
+            {
+              "item": "Minion Damage Support",
+              "kind": "reward_quest"
             }
           ],
           "sub_steps": []

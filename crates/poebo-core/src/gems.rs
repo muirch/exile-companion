@@ -31,6 +31,8 @@ pub enum GemSourceKind {
 pub struct GemSource {
     pub gem_id: String,
     pub quest_id: String,
+    /// Some quests hand out more than one reward, one per offer.
+    pub offer_id: String,
     pub act: u32,
     pub kind: GemSourceKind,
     pub npc: String,
@@ -95,11 +97,17 @@ impl GemTable {
         let mut sources = Vec::new();
         for (quest_id, quest) in raw_quests {
             let act = quest.act.parse().unwrap_or(0);
-            for offer in quest.reward_offers.into_values() {
+            // Rewards that only the Chinese (Tencent) client offers.
+            for (offer_id, offer) in quest
+                .reward_offers
+                .into_iter()
+                .filter(|(id, _)| !id.ends_with("_tencent"))
+            {
                 for (gem_id, r) in offer.quest {
                     sources.push(GemSource {
                         gem_id,
                         quest_id: quest_id.clone(),
+                        offer_id: offer_id.clone(),
                         act,
                         kind: GemSourceKind::QuestReward,
                         npc: r.npc.unwrap_or_else(|| offer.quest_npc.clone()),
@@ -110,6 +118,7 @@ impl GemTable {
                     sources.push(GemSource {
                         gem_id,
                         quest_id: quest_id.clone(),
+                        offer_id: offer_id.clone(),
                         act,
                         kind: GemSourceKind::Vendor,
                         npc: r.npc.unwrap_or_default(),
@@ -118,6 +127,8 @@ impl GemTable {
                 }
             }
         }
+        // Quest ids sort as text ("a10q1" before "a1q2"); sort by act and quest number instead.
+        sources.sort_by_key(|s| (s.act, quest_number(&s.quest_id)));
         Ok(Self { gems, sources })
     }
 
@@ -133,16 +144,29 @@ impl GemTable {
         self.gems.is_empty()
     }
 
-    /// Every place `class` can get the gem, in campaign order.
+    /// Every place `class` can get the gem, in campaign order. An empty class list means anyone,
+    /// like Siosa and Lilly Roth selling every gem.
     pub fn sources_for<'a>(
         &'a self,
         gem_id: &'a str,
         class: &'a str,
     ) -> impl Iterator<Item = &'a GemSource> + 'a {
-        self.sources
-            .iter()
-            .filter(move |s| s.gem_id == gem_id && s.classes.iter().any(|c| c == class))
+        self.sources.iter().filter(move |s| {
+            s.gem_id == gem_id && (s.classes.is_empty() || s.classes.iter().any(|c| c == class))
+        })
     }
+}
+
+/// 4 for "a3q4", 11 for "a3q11"; side quests without a number go last in their act.
+pub(crate) fn quest_number(quest_id: &str) -> u32 {
+    quest_id
+        .rsplit_once('q')
+        .and_then(|(_, n)| {
+            n.trim_end_matches(|c: char| !c.is_ascii_digit())
+                .parse()
+                .ok()
+        })
+        .unwrap_or(u32::MAX)
 }
 
 #[cfg(test)]
@@ -152,8 +176,79 @@ mod tests {
     const GEMS: &[u8] = include_bytes!("../../../data-pack/routes/exile-leveling/gems.json");
     const QUESTS: &[u8] = include_bytes!("../../../data-pack/routes/exile-leveling/quests.json");
 
+    const CLASSES: [&str; 7] = [
+        "Marauder", "Duelist", "Ranger", "Shadow", "Witch", "Templar", "Scion",
+    ];
+
     fn table() -> GemTable {
         GemTable::from_json_bytes(GEMS, QUESTS).expect("committed gem data parses")
+    }
+
+    fn first_vendor<'a>(t: &'a GemTable, gem_id: &'a str, class: &'a str) -> (u32, &'a str) {
+        t.sources_for(gem_id, class)
+            .find(|s| s.kind == GemSourceKind::Vendor)
+            .map(|s| (s.act, s.npc.as_str()))
+            .unwrap()
+    }
+
+    // PoB writes the class as className; the data has to use the same names.
+    #[test]
+    fn the_data_names_the_seven_pob_classes() {
+        let t = table();
+        let named: std::collections::BTreeSet<&str> = t
+            .sources
+            .iter()
+            .flat_map(|s| s.classes.iter().map(String::as_str))
+            .collect();
+        let mut want = CLASSES.to_vec();
+        want.sort();
+        assert_eq!(named.into_iter().collect::<Vec<_>>(), want);
+    }
+
+    #[test]
+    fn each_class_has_its_own_act_1_vendor_list() {
+        let t = table();
+        let lists: std::collections::HashSet<Vec<&str>> = CLASSES
+            .iter()
+            .map(|class| {
+                let mut ids: Vec<&str> = t
+                    .gems
+                    .keys()
+                    .filter(|id| {
+                        t.sources_for(id, class)
+                            .any(|s| s.kind == GemSourceKind::Vendor && s.act == 1)
+                    })
+                    .map(String::as_str)
+                    .collect();
+                ids.sort();
+                assert!(
+                    ids.len() > 50,
+                    "{class} buys only {} gems in act 1",
+                    ids.len()
+                );
+                ids
+            })
+            .collect();
+        assert_eq!(lists.len(), CLASSES.len());
+    }
+
+    #[test]
+    fn class_locked_gems_wait_for_siosa() {
+        let t = table();
+        let fireball = "Metadata/Items/Gems/SkillGemFireball";
+        assert_eq!(first_vendor(&t, fireball, "Witch"), (1, "Nessa"));
+        assert_eq!(first_vendor(&t, fireball, "Ranger"), (3, "Siosa"));
+        let caustic = "Metadata/Items/Gems/SkillGemPoisonArrow";
+        assert_eq!(first_vendor(&t, caustic, "Ranger"), (1, "Nessa"));
+        assert_eq!(first_vendor(&t, caustic, "Templar"), (3, "Siosa"));
+        // Frostblink is in every class's first shop.
+        for class in CLASSES {
+            assert_eq!(
+                first_vendor(&t, "Metadata/Items/Gems/SkillGemFrostblink", class),
+                (1, "Nessa"),
+                "{class}"
+            );
+        }
     }
 
     #[test]
@@ -186,6 +281,38 @@ mod tests {
             .filter(|s| s.kind == GemSourceKind::Vendor)
             .collect();
         assert!(src.iter().any(|s| s.quest_id == "a1q1" && s.npc == "Nessa"));
+    }
+
+    #[test]
+    fn vendors_without_a_class_list_sell_to_everyone() {
+        let t = table();
+        let npcs: Vec<_> = t
+            .sources_for("Metadata/Items/Gems/SkillGemClarity", "Ranger")
+            .filter(|s| s.kind == GemSourceKind::Vendor)
+            .map(|s| s.npc.as_str())
+            .collect();
+        assert_eq!(npcs, ["Nessa", "Siosa", "Lilly Roth"]);
+    }
+
+    #[test]
+    fn a_quest_with_two_offers_keeps_them_apart() {
+        let t = table();
+        let offers: std::collections::BTreeSet<_> = t
+            .sources_for("Metadata/Items/Gems/SkillGemFlameDash", "Witch")
+            .chain(t.sources_for("Metadata/Items/Gems/SupportGemLifetap", "Templar"))
+            .filter(|s| s.quest_id == "a1q2" && s.kind == GemSourceKind::QuestReward)
+            .map(|s| s.offer_id.as_str())
+            .collect();
+        assert_eq!(offers.into_iter().collect::<Vec<_>>(), ["a1q2", "a1q2b"]);
+    }
+
+    #[test]
+    fn tencent_only_rewards_are_left_out() {
+        let t = table();
+        assert!(t.sources.iter().all(|s| !s.offer_id.ends_with("_tencent")));
+        assert!(t
+            .sources_for("Metadata/Items/Gems/SupportGemArcaneSurge", "Witch")
+            .all(|s| s.quest_id != "a2q9"));
     }
 
     #[test]

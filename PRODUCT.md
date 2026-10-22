@@ -41,6 +41,7 @@ poebo reads only the game's `Client.txt` log, knows which area the player is in 
 - Campaign data (areas, quests, rewards, trials) is extracted from the game files per patch.
 - The overlay window is fitted to its content and anchored by its bottom center to a fraction of the monitor, so it survives resolution changes and the route stays put when the move bar opens above it.
 - UI language: English, matching the game client and the route text.
+- With a Path of Building build imported, the route lists its gems after the quest hand-in where to take them as the reward or buy them from a vendor. A gem is placed at the point the build needs it: preset titles ("Act 3", "lvl 28", "Bossing"), preset order and the gem's required level decide that. Gems the campaign never gives are listed apart. Settings choose whether the route shows these gem steps at all, only the quest rewards, or rewards and vendor buys (the default).
 - Planned features that share the overlay: gem and passive-tree guidance from a PoB build, an AI build assistant (chat), and Path of Exile 2 support after its 1.0 release.
 
 ## Brand Commitments

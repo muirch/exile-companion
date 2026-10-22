@@ -122,6 +122,7 @@ export const getSettings = (): Promise<Settings> =>
         routeEdge: 0,
         leagueStart: true,
         textScale: 1,
+        gemHints: 'rewardsAndVendors',
       });
 
 export const saveSettings = (settings: Settings): Promise<void> =>

@@ -1,4 +1,4 @@
-import type { ReactNode } from 'react';
+import { useEffect, useState, type ReactNode } from 'react';
 
 import {
   clearBuild,
@@ -18,7 +18,7 @@ import {
   startReplay,
   stopSource,
 } from '../ipc/commands';
-import type { Settings } from '../ipc/types';
+import type { GemHints, Settings } from '../ipc/types';
 import { useAppStore } from '../store/useAppStore';
 import { HotkeySection } from './HotkeySection';
 import { ReplayControls } from './ReplayControls';
@@ -184,6 +184,38 @@ function LogSection(): React.JSX.Element {
   );
 }
 
+const GEM_HINTS: { value: GemHints; label: string }[] = [
+  { value: 'off', label: 'Off' },
+  { value: 'rewards', label: 'Rewards' },
+  { value: 'rewardsAndVendors', label: 'Rewards and buys' },
+];
+
+function GemHintsRow(): React.JSX.Element {
+  const [hints, setHints] = useState<GemHints>('rewardsAndVendors');
+  useEffect(() => {
+    void getSettings().then((s) => {
+      if (s?.gemHints) setHints(s.gemHints);
+    });
+  }, []);
+  return (
+    <Row label="Gems in route">
+      {GEM_HINTS.map((h) => (
+        <button
+          key={h.value}
+          className="btn"
+          aria-pressed={hints === h.value}
+          onClick={() => {
+            setHints(h.value);
+            void save({ gemHints: h.value });
+          }}
+        >
+          {h.label}
+        </button>
+      ))}
+    </Row>
+  );
+}
+
 function BuildSection(): React.JSX.Element {
   const build = useAppStore((s) => s.build);
   const setBuild = useAppStore((s) => s.setBuild);
@@ -229,6 +261,7 @@ function BuildSection(): React.JSX.Element {
           </button>
         )}
       </Row>
+      <GemHintsRow />
     </Section>
   );
 }

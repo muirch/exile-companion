@@ -5,6 +5,7 @@ use std::sync::{Arc, Mutex};
 
 use poebo_core::build::BuildState;
 use poebo_core::data::DataPack;
+use poebo_core::gems::GemTable;
 use poebo_core::route::{Route, RouteTracker};
 use poebo_core::source::ReplayControl;
 use poebo_core::state::CampaignState;
@@ -45,6 +46,7 @@ impl Default for RunState {
 pub struct AppState {
     /// The campaign knowledge base (zones, quests, trials), shared read-only.
     pub data: Arc<DataPack>,
+    pub gems: Arc<GemTable>,
     /// The running source (guarded; commands mutate it).
     pub run: Mutex<RunState>,
     /// Latest campaign snapshot, so `get_state` can hydrate a late-mounting UI synchronously.
@@ -66,6 +68,7 @@ pub struct AppState {
 impl AppState {
     pub fn new(
         data: Arc<DataPack>,
+        gems: Arc<GemTable>,
         route: Arc<Route>,
         route_edge: usize,
         route_enabled: bool,
@@ -73,6 +76,7 @@ impl AppState {
         let (state_tx, _rx) = watch::channel(CampaignState::default());
         Self {
             data,
+            gems,
             run: Mutex::new(RunState::default()),
             state_tx,
             build: Mutex::new(BuildState::new()),

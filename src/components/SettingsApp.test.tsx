@@ -17,6 +17,20 @@ vi.mock('../ipc/commands', async (importOriginal) => {
 });
 
 describe('SettingsApp', () => {
+  it('saves which gem steps the route shows', async () => {
+    render(<SettingsApp />);
+    const rewards = screen.getByRole('button', { name: 'Rewards' });
+    expect(screen.getByRole('button', { name: 'Rewards and buys' })).toHaveAttribute(
+      'aria-pressed',
+      'true',
+    );
+    await userEvent.click(rewards);
+    expect(rewards).toHaveAttribute('aria-pressed', 'true');
+    expect(commands.saveSettings).toHaveBeenCalledWith(
+      expect.objectContaining({ gemHints: 'rewards' }),
+    );
+  });
+
   it('closes from its own title bar', async () => {
     render(<SettingsApp />);
     await userEvent.click(screen.getByRole('button', { name: 'Close settings' }));

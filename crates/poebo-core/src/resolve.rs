@@ -32,7 +32,12 @@ pub fn act_expected_level(act: u8) -> u32 {
 
 /// A spec's leveling target, distilled from its title into a single comparable level.
 fn spec_target_level(spec: &TreeSpec) -> Option<u32> {
-    let title = spec.title.as_deref()?.to_ascii_lowercase();
+    title_target_level(spec.title.as_deref()?)
+}
+
+/// The level a free-text PoB title ("Act 3", "lvl 28", "Endgame") points at; 100 for endgame.
+pub(crate) fn title_target_level(title: &str) -> Option<u32> {
+    let title = title.to_ascii_lowercase();
 
     // Endgame-ish specs sit above the whole campaign.
     if [
@@ -43,6 +48,10 @@ fn spec_target_level(spec: &TreeSpec) -> Option<u32> {
         "pinnacle",
         "uber",
         "aspirational",
+        "boss",
+        "delve",
+        "sanctum",
+        "heist",
     ]
     .iter()
     .any(|kw| title.contains(kw))

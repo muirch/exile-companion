@@ -26,7 +26,11 @@ export interface Settings {
   routeEdge: number;
   textScale: number;
   leagueStart: boolean;
+  gemHints: GemHints;
 }
+
+/** Which gem steps the route shows (mirrors `poebo_core::gemplan::GemHints`). */
+export type GemHints = 'off' | 'rewards' | 'rewardsAndVendors';
 
 /** Payload of `source://status`. */
 export interface SourceStatus {

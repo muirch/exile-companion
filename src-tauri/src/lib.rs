@@ -35,6 +35,7 @@ pub fn run() {
             let route = runtime::load_route(&data, saved.league_start);
             app.manage(AppState::new(
                 data,
+                runtime::load_gems(),
                 route,
                 saved.route_edge,
                 saved.route_enabled,

@@ -264,5 +264,6 @@ pub fn save_settings(app: AppHandle, settings: Settings) -> Result<(), String> {
     settings::save(&app, &settings)?;
     // The overlay and settings windows each hold their own copy of the display settings.
     let _ = app.emit("settings://changed", &settings);
+    crate::runtime::emit_route(&app);
     Ok(())
 }

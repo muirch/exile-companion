@@ -21,6 +21,7 @@ pub struct Settings {
     pub relog_enabled: bool,
     /// Read once at startup: the edges differ between the two route variants.
     pub league_start: bool,
+    pub gem_hints: poebo_core::gemplan::GemHints,
 }
 
 impl Default for Settings {
@@ -35,6 +36,7 @@ impl Default for Settings {
             hotkeys: crate::hotkeys::Hotkeys::default(),
             relog_enabled: false,
             league_start: true,
+            gem_hints: Default::default(),
         }
     }
 }
