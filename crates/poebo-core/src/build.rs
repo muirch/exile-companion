@@ -54,6 +54,8 @@ pub struct BuildSummary {
     pub main_skill: Option<String>,
     pub spec_count: u32,
     pub gem_count: u32,
+    /// The build's skill sets, for marking which act each one is for.
+    pub presets: Vec<crate::gemplan::PresetInfo>,
 }
 
 impl BuildSummary {
@@ -72,6 +74,7 @@ impl BuildSummary {
             main_skill,
             spec_count: build.specs.len() as u32,
             gem_count: build.gems().count() as u32,
+            presets: crate::gemplan::presets(build),
         }
     }
 }

@@ -18,7 +18,7 @@ import {
   stopSource,
   updateSettings,
 } from '../ipc/commands';
-import type { GemHints } from '../ipc/types';
+import type { GemHints, PresetStage } from '../ipc/types';
 import { useAppStore } from '../store/useAppStore';
 import { HotkeySection } from './HotkeySection';
 import { ReplayControls } from './ReplayControls';
@@ -265,6 +265,82 @@ function GemHintsRow(): React.JSX.Element {
   );
 }
 
+const ACTS = [1, 2, 3, 4, 5, 6, 7, 8, 9, 10];
+
+function stageValue(stage: PresetStage | undefined): string {
+  if (stage === undefined || stage === 'auto') return 'auto';
+  if (typeof stage === 'object') return `act${stage.act}`;
+  return stage;
+}
+
+function stageFrom(value: string): PresetStage {
+  if (value.startsWith('act')) return { act: Number(value.slice(3)) };
+  return value as PresetStage;
+}
+
+function autoLabel(level: number | null): string {
+  if (level === null) return 'Auto, by gem level';
+  if (level >= 100) return 'Auto, endgame';
+  return `Auto, from level ${level}`;
+}
+
+// Gems are planned from the first skill set that has them; this lets the player say which act a
+// set is for when its name doesn't, or leave a set out.
+function PresetRows(): React.JSX.Element | null {
+  const presets = useAppStore((s) => s.build?.presets);
+  const [stages, setStages] = useState<PresetStage[]>([]);
+  // A new build comes with its stages reset, so read them again.
+  useEffect(() => {
+    if (!presets) return;
+    void getSettings().then((s) => setStages(s?.presetStages ?? []));
+  }, [presets]);
+  if (!presets || presets.length === 0) return null;
+
+  const change = (i: number, stage: PresetStage): void => {
+    const next = presets.map((_, j) => (j === i ? stage : (stages[j] ?? 'auto')));
+    setStages(next);
+    void updateSettings({ presetStages: next });
+  };
+
+  return (
+    <>
+      {presets.map((p, i) => (
+        <Row key={i} label={i === 0 ? 'Presets' : ''}>
+          <span
+            className="min-w-0 flex-1 truncate font-body text-[13px] text-value"
+            title={p.title ?? ''}
+          >
+            {p.title || `Preset ${i + 1}`}
+          </span>
+          {p.gem_count === 0 ? (
+            <span className="font-body text-[12px] text-label italic">No gems</span>
+          ) : (
+            <select
+              className="btn w-40 font-body"
+              aria-label={`Stage of ${p.title || `preset ${i + 1}`}`}
+              value={stageValue(stages[i])}
+              onChange={(e) => change(i, stageFrom(e.target.value))}
+            >
+              <option value="auto">{autoLabel(p.auto_level)}</option>
+              {ACTS.map((a) => (
+                <option key={a} value={`act${a}`}>
+                  From act {a}
+                </option>
+              ))}
+              <option value="endgame">Endgame</option>
+              <option value="skip">Leave out</option>
+            </select>
+          )}
+        </Row>
+      ))}
+      <p className="ml-35 font-body text-[12px] leading-snug text-label italic">
+        A gem is planned from the first preset it shows up in. Auto reads the act or level from the
+        preset name and keeps the order. Name presets like Act 3 or lvl 28 and this is rarely needed.
+      </p>
+    </>
+  );
+}
+
 function BuildSection(): React.JSX.Element {
   const build = useAppStore((s) => s.build);
   const setBuild = useAppStore((s) => s.setBuild);
@@ -325,6 +401,7 @@ function BuildSection(): React.JSX.Element {
         </Row>
       )}
       <GemHintsRow />
+      <PresetRows />
     </Section>
   );
 }

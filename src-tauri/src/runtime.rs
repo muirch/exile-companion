@@ -66,9 +66,14 @@ pub fn current_route_view(app: &AppHandle) -> Option<RouteView> {
     let builds = lock(&app_state.build);
     if let Some(build) = builds.build() {
         if let Some(class) = build.class_name.as_deref() {
-            let plan = poebo_core::gemplan::plan(build, class, &app_state.gems);
-            let hints = settings::load(app).unwrap_or_default().gem_hints;
-            poebo_core::gemplan::annotate(&mut view, &plan, hints);
+            let saved = settings::load(app).unwrap_or_default();
+            let plan = poebo_core::gemplan::plan_with_stages(
+                build,
+                class,
+                &app_state.gems,
+                &saved.preset_stages,
+            );
+            poebo_core::gemplan::annotate(&mut view, &plan, saved.gem_hints);
         }
     }
     Some(view)
@@ -176,6 +181,11 @@ pub fn import_build(app: &AppHandle, xml: Vec<u8>) -> Result<BuildSummary, Strin
         log::warn!("build import: {e}");
         "That's not a Path of Building build.".to_string()
     })?;
+    // Stages belong to the old build's skill sets.
+    if let Ok(mut s) = settings::load(app) {
+        s.preset_stages.clear();
+        let _ = settings::save(app, &s);
+    }
     if let Some(path) = build_path(app) {
         let saved = path
             .parent()

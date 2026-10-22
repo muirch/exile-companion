@@ -38,6 +38,11 @@ const MOCK_BUILD: BuildSummary = {
   main_skill: 'Raise Zombie',
   spec_count: 3,
   gem_count: 24,
+  presets: [
+    { title: 'Leveling (Act 1)', gem_count: 6, auto_level: 1 },
+    { title: '----- Mapping -----', gem_count: 0, auto_level: 100 },
+    { title: 'Mapping', gem_count: 18, auto_level: 100 },
+  ],
 };
 
 interface MockStep {

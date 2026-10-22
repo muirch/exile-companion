@@ -125,6 +125,7 @@ export const getSettings = (): Promise<Settings> =>
         gemHints: 'rewardsAndVendors',
         compact: useAppStore.getState().ui.compact,
         fadeAfter: useAppStore.getState().ui.fadeAfter,
+        presetStages: [],
       });
 
 export const saveSettings = (settings: Settings): Promise<void> =>

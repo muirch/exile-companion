@@ -1,8 +1,9 @@
-import { render, screen } from '@testing-library/react';
+import { act, render, screen } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import { describe, expect, it, vi } from 'vitest';
 
 import * as commands from '../ipc/commands';
+import { useAppStore } from '../store/useAppStore';
 import { SettingsApp } from './SettingsApp';
 
 vi.mock('../ipc/commands', async (importOriginal) => {
@@ -17,6 +18,34 @@ vi.mock('../ipc/commands', async (importOriginal) => {
 });
 
 describe('SettingsApp', () => {
+  it('lets the player set the act of each preset of the build', async () => {
+    act(() =>
+      useAppStore.setState({
+        build: {
+          class_name: 'Ranger',
+          ascend_class_name: null,
+          level: 90,
+          active_spec_title: null,
+          main_skill: null,
+          spec_count: 1,
+          gem_count: 3,
+          presets: [
+            { title: 'Leveling', gem_count: 2, auto_level: null },
+            { title: '-- separator --', gem_count: 0, auto_level: null },
+            { title: 'Switch', gem_count: 1, auto_level: null },
+          ],
+        },
+      }),
+    );
+    render(<SettingsApp />);
+    expect(screen.getByText('No gems')).toBeInTheDocument();
+    await userEvent.selectOptions(screen.getByLabelText('Stage of Switch'), 'From act 4');
+    expect(commands.updateSettings).toHaveBeenCalledWith({
+      presetStages: ['auto', 'auto', { act: 4 }],
+    });
+    act(() => useAppStore.setState({ build: null }));
+  });
+
   it('shows why a pasted build did not load', async () => {
     vi.mocked(commands.pasteBuild).mockRejectedValueOnce("Couldn't download the build: timeout");
     render(<SettingsApp />);

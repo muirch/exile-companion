@@ -256,7 +256,7 @@ The same see-through black plate at 340px, with no header band, properties line,
 A tooltip whose header band carries only the title. Rows are body-small Value White text, no border; hover and keyboard focus fill the row with white at 6 percent and drop the outline. Toggle rows (Leveling route, Compact) show "On" in Quest Green or "Off" in Label Grey on the right. Separators split the toggles, the window actions and Quit. Esc closes it, and the first row takes focus on open.
 
 ### Settings groups
-Each group is its own tooltip at 80 percent black with a Normal Item White header band. Rows pair a small-caps grey label with controls: buttons, value text in Value White, sliders with a live percentage, and file paths in Alegreya Sans, truncated with the full path in the title.
+Each group is its own tooltip at 80 percent black with a Normal Item White header band. Rows pair a small-caps grey label with controls: buttons, value text in Value White, sliders with a live percentage, and file paths in Alegreya Sans, truncated with the full path in the title. The build's presets are one row each under a single "Presets" label: the preset name in Alegreya Sans Value White, truncated, and a 160px stage select on the right, or "No gems" in grey italic for a separator.
 
 ### Range slider
 A 3px Soot track with the black keyline and a 9px Normal Item White diamond thumb with a black border, brightening to Value White on hover.
