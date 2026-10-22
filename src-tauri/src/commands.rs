@@ -105,13 +105,18 @@ pub async fn import_build_code(app: AppHandle, code: String) -> Result<BuildSumm
             .map_err(|e| e.to_string())??,
         None => code,
     };
-    let build = poebo_pob::import_text(&code).map_err(|e| e.to_string())?;
+    let build = poebo_pob::import_text(&code).map_err(|e| {
+        log::warn!("build import: {e}");
+        "That's not a Path of Building code or a build link.".to_string()
+    })?;
     runtime::import_build(&app, build)
 }
 
 fn fetch_build_code(url: &str) -> Result<String, String> {
+    // The default roots are a bundled Mozilla list that schannel rejects; use the Windows store.
     let tls = ureq::tls::TlsConfig::builder()
         .provider(ureq::tls::TlsProvider::NativeTls)
+        .root_certs(ureq::tls::RootCerts::PlatformVerifier)
         .build();
     let agent: ureq::Agent = ureq::Agent::config_builder()
         .tls_config(tls)
@@ -291,4 +296,17 @@ pub fn save_settings(app: AppHandle, settings: Settings) -> Result<(), String> {
     let _ = app.emit("settings://changed", &settings);
     crate::runtime::emit_route(&app);
     Ok(())
+}
+
+#[cfg(test)]
+mod tests {
+    // Hits pobb.in, so it only runs where the Windows CI job asks for it.
+    #[test]
+    #[ignore]
+    fn downloads_a_build_over_tls() {
+        let url = poebo_pob::code_url("https://pobb.in/NlUa8ZnB3YGK").unwrap();
+        let code = super::fetch_build_code(&url).unwrap();
+        let build = poebo_pob::import_text(&code).unwrap();
+        assert_eq!(build.class_name.as_deref(), Some("Ranger"));
+    }
 }

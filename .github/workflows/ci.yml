@@ -97,3 +97,6 @@ jobs:
 
       - name: clippy the Tauri app
         run: cargo clippy -p poebo-app --all-targets -- -D warnings
+
+      - name: Build link download works with Windows TLS
+        run: cargo test -p poebo-app -- --ignored downloads_a_build_over_tls
