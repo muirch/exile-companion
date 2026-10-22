@@ -187,6 +187,11 @@ pub fn start_move(app: AppHandle) {
 }
 
 #[tauri::command]
+pub fn lock_overlay(app: AppHandle) {
+    crate::overlay::set_grab(&app, false);
+}
+
+#[tauri::command]
 pub fn close_menu(app: AppHandle) {
     crate::menu::close(&app);
 }

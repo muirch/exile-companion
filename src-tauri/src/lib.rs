@@ -108,6 +108,7 @@ pub fn run() {
             commands::fit_overlay,
             commands::open_settings,
             commands::start_move,
+            commands::lock_overlay,
             commands::close_menu,
             commands::quit_app,
             commands::get_route_enabled,

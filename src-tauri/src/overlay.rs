@@ -23,6 +23,9 @@ pub fn set_grab(app: &AppHandle, grabbed: bool) {
     // Dragging is only possible while unlocked, so locking is when a new position is final.
     if was && !grabbed {
         save_anchor(app);
+        // Moving took keyboard focus from the game; hand it back so its keys work again.
+        #[cfg(windows)]
+        win::focus_game_if_own();
     }
     if let Some(window) = app.get_webview_window(OVERLAY_LABEL) {
         let _ = window.set_ignore_cursor_events(!grabbed);
@@ -191,6 +194,7 @@ fn on_foreground_changed(app: &AppHandle, is_game: bool, is_own: bool) {
 
 #[cfg(windows)]
 mod win {
+    use std::sync::atomic::{AtomicIsize, Ordering};
     use std::sync::OnceLock;
 
     use tauri::{AppHandle, Manager};
@@ -198,7 +202,8 @@ mod win {
     use windows_sys::Win32::UI::Accessibility::{SetWinEventHook, HWINEVENTHOOK};
     use windows_sys::Win32::UI::WindowsAndMessaging::{
         DispatchMessageW, GetClassNameW, GetForegroundWindow, GetMessageW, GetWindowTextW,
-        SetTimer, TranslateMessage, EVENT_SYSTEM_FOREGROUND, MSG, WINEVENT_OUTOFCONTEXT,
+        SetForegroundWindow, SetTimer, TranslateMessage, EVENT_SYSTEM_FOREGROUND, MSG,
+        WINEVENT_OUTOFCONTEXT,
     };
 
     // PoE 1 and PoE 2 both use this window class; the title check covers anything else.
@@ -207,6 +212,7 @@ mod win {
 
     // The hook callback has no user data pointer.
     static APP: OnceLock<AppHandle> = OnceLock::new();
+    static LAST_GAME: AtomicIsize = AtomicIsize::new(0);
 
     pub fn watch(app: AppHandle) {
         if APP.set(app).is_err() {
@@ -252,18 +258,38 @@ mod win {
         report(GetForegroundWindow());
     }
 
+    fn is_own(app: &AppHandle, hwnd: HWND) -> bool {
+        !hwnd.is_null()
+            && app
+                .webview_windows()
+                .values()
+                .filter_map(|w| w.hwnd().ok())
+                .any(|h| h.0 == hwnd)
+    }
+
     fn report(hwnd: HWND) {
         let Some(app) = APP.get() else {
             return;
         };
         // Menu and settings count as ours too, so the overlay doesn't vanish while they're open.
-        let is_own = !hwnd.is_null()
-            && app
-                .webview_windows()
-                .values()
-                .filter_map(|w| w.hwnd().ok())
-                .any(|h| h.0 == hwnd);
-        super::on_foreground_changed(app, !is_own && is_game(hwnd), is_own);
+        let is_own = is_own(app, hwnd);
+        let is_game = !is_own && is_game(hwnd);
+        if is_game {
+            LAST_GAME.store(hwnd as isize, Ordering::SeqCst);
+        }
+        super::on_foreground_changed(app, is_game, is_own);
+    }
+
+    /// Gives focus back to the game, but only while one of our windows has it: after an Alt-Tab
+    /// away the player meant to leave.
+    pub fn focus_game_if_own() {
+        let Some(app) = APP.get() else {
+            return;
+        };
+        let game = LAST_GAME.load(Ordering::SeqCst) as HWND;
+        if !game.is_null() && is_own(app, unsafe { GetForegroundWindow() }) {
+            unsafe { SetForegroundWindow(game) };
+        }
     }
 
     fn is_game(hwnd: HWND) -> bool {

@@ -9,6 +9,7 @@ import { OverlayRoot, screenZoom } from './OverlayRoot';
 
 vi.mock('../ipc/commands', () => ({
   fitOverlay: vi.fn(() => Promise.resolve()),
+  lockOverlay: vi.fn(() => Promise.resolve()),
   routeNext: vi.fn(() => Promise.resolve(null)),
   routePrev: vi.fn(() => Promise.resolve(null)),
 }));
@@ -111,10 +112,19 @@ describe('OverlayRoot', () => {
     render(<OverlayRoot />);
     ui({ grabbed: true });
 
-    expect(screen.getByText(/Drag to move, Alt\+M to lock\./)).toBeInTheDocument();
+    expect(screen.getByText(/Drag to move\. Esc or Alt\+M locks\./)).toBeInTheDocument();
     expect(screen.getByText('Alt+Left / Alt+Right')).toBeInTheDocument();
     await userEvent.click(screen.getByRole('button', { name: 'Next' }));
     expect(commands.routeNext).toHaveBeenCalled();
+  });
+
+  it('locks from the move bar button and from Esc', async () => {
+    render(<OverlayRoot />);
+    ui({ grabbed: true });
+    await userEvent.click(screen.getByRole('button', { name: 'Lock' }));
+    expect(commands.lockOverlay).toHaveBeenCalledTimes(1);
+    await userEvent.keyboard('{Escape}');
+    expect(commands.lockOverlay).toHaveBeenCalledTimes(2);
   });
 
   // The window keeps its bottom edge, so nothing may sit below the route while grabbed.

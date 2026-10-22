@@ -179,6 +179,9 @@ export const openSettings = (): Promise<void> =>
 export const startMove = (): Promise<void> =>
   isTauri() ? invoke('start_move') : Promise.resolve();
 
+export const lockOverlay = (): Promise<void> =>
+  isTauri() ? invoke('lock_overlay') : Promise.resolve(useAppStore.getState().setGrabbed(false));
+
 export const closeMenu = (): Promise<void> =>
   isTauri() ? invoke('close_menu') : Promise.resolve();
 

@@ -1,6 +1,6 @@
 import { useEffect, useLayoutEffect, useRef, useState } from 'react';
 
-import { fitOverlay } from '../ipc/commands';
+import { fitOverlay, lockOverlay } from '../ipc/commands';
 import { isTauri } from '../ipc/env';
 import { holdLabel, shortcutLabel } from './HotkeySection';
 import { useAppStore } from '../store/useAppStore';
@@ -83,6 +83,16 @@ export function OverlayRoot(): React.JSX.Element {
   const [shownOnce, setShownOnce] = useState(false);
   if (visible && !shownOnce) setShownOnce(true);
 
+  // The overlay has keyboard focus while it is unlocked, so Esc reaches it.
+  useEffect(() => {
+    if (!grabbed) return;
+    const onKey = (e: KeyboardEvent): void => {
+      if (e.key === 'Escape') void lockOverlay();
+    };
+    window.addEventListener('keydown', onKey);
+    return () => window.removeEventListener('keydown', onKey);
+  }, [grabbed]);
+
   // The window is sized to this box and keeps its bottom center fixed, so the route stays where
   // the player put it when the text grows. Move-mode controls all go above the route for the
   // same reason: anything below it would shift the route when the overlay locks again.
@@ -107,7 +117,7 @@ export function OverlayRoot(): React.JSX.Element {
       <div
         hidden={!shownOnce}
         className={[
-          grabbed ? 'pointer-events-auto outline outline-1 outline-offset-2 outline-white/35' : 'pointer-events-none',
+          grabbed ? 'pointer-events-auto outline outline-1 outline-offset-2 outline-normal/60' : 'pointer-events-none',
           visible
             ? 'opacity-100 transition-opacity duration-150'
             : faded
@@ -124,15 +134,17 @@ export function OverlayRoot(): React.JSX.Element {
           <>
             <div
               data-tauri-drag-region
-              className="flex cursor-move items-baseline justify-between border-b border-edge px-3 pt-1.5 pb-1"
+              className="flex cursor-move items-center gap-2 border-b border-edge py-1 pr-1 pl-3"
             >
               <span data-tauri-drag-region className="text-[13px] text-normal">
                 <Brand />
               </span>
-              <span data-tauri-drag-region className="text-[11px] text-plain">
-                Drag to move, {shortcutLabel(hotkeys.moveOverlay)} to lock.
-                Hold {holdLabel(hotkeys.menuHold)} for the menu.
+              <span data-tauri-drag-region className="flex-1 text-right text-[11px] text-plain">
+                Drag to move. Esc or {shortcutLabel(hotkeys.moveOverlay)} locks.
               </span>
+              <button className="btn cursor-default" onClick={() => void lockOverlay()}>
+                Lock
+              </button>
             </div>
             {routeEnabled && (
               <div className="border-b border-edge pb-1.5">
