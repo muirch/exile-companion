@@ -31,14 +31,20 @@ pub fn import_code(code: &str) -> Result<PobBuild, PobError> {
     parse_xml(&xml)
 }
 
-/// Import a build from arbitrary pasted text: raw PoB XML (starts with `<`) is parsed directly,
-/// anything else is treated as an import code. Use this for clipboard/paste input.
-pub fn import_text(text: &str) -> Result<PobBuild, PobError> {
+/// The PoB XML behind pasted text: raw XML (starts with `<`) as is, anything else decoded as an
+/// import code.
+pub fn xml_from_text(text: &str) -> Result<Vec<u8>, PobError> {
     if text.trim_start().starts_with('<') {
-        parse_xml(text.as_bytes())
+        Ok(text.as_bytes().to_vec())
     } else {
-        import_code(text)
+        decode_import_code(text)
     }
+}
+
+/// Import a build from arbitrary pasted text, an import code or raw XML. Use this for
+/// clipboard/paste input.
+pub fn import_text(text: &str) -> Result<PobBuild, PobError> {
+    parse_xml(&xml_from_text(text)?)
 }
 
 /// Import a build from a local file. A file that starts with `<` is treated as raw PoB XML;
@@ -84,6 +90,13 @@ mod tests {
         // A base64 code -> decoded then parsed.
         let from_code = import_text(&encode(XML)).expect("code");
         assert_eq!(from_code.class_name.as_deref(), Some("Ranger"));
+    }
+
+    // The app saves this XML to load the build again on the next start.
+    #[test]
+    fn xml_from_text_gives_the_same_xml_for_a_code_and_raw_xml() {
+        assert_eq!(xml_from_text(&encode(XML)).unwrap(), XML.as_bytes());
+        assert_eq!(xml_from_text(XML).unwrap(), XML.as_bytes());
     }
 
     #[test]
