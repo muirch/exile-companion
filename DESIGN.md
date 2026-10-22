@@ -210,7 +210,7 @@ These are route semantics, never decoration.
 
 Each window is laid out around a single centered column of tooltips.
 
-The overlay plate is 404px wide at 100 percent text size and is scaled as a whole by the player's text size (80 to 150 percent, via CSS zoom). The window is fitted to the plate plus 8px of padding and keeps its bottom center fixed on the monitor, so anything that opens (the move bar, a longer step list) grows upward. Inside the body, content sits at 16px horizontal padding, 6px top, 12px bottom; steps stack with 4px gaps; separators take 7px above and below.
+The overlay plate is 404px wide at 100 percent text size and is scaled as a whole by the player's text size (80 to 150 percent, via CSS zoom). The window is fitted to the plate plus 8px of padding and keeps its bottom center fixed on the monitor, so anything that opens (the move bar and its buttons, a longer step list) grows upward. Inside the body, content sits at 16px horizontal padding, 6px top, 12px bottom; steps stack with 4px gaps; separators take 7px above and below.
 
 The quick menu is a 228px tooltip at the window's top left, 4px in. Rows are full-width, 6px by 12px, label left and state or key hint right.
 
@@ -247,7 +247,7 @@ Small, dark and neutral, like the game's own panel buttons. Square, a 1px Edge b
 The signature component. A tint is passed in; the band fills with it mixed 30 percent into near-black under the sheen gradient, its title and subtitle are set in the tint, its edge rules and wedge ends are the tint at 80 percent, and the diamonds on the wedge points are solid tint. Title is display type, centered and truncated; the subtitle sits below at 85 percent opacity.
 
 ### Tooltip body
-See-through black, centered, small caps. Order on the overlay: properties line (label grey name, value white number, 16px apart), separator, actions (or "Nothing to do here" plus the way out in value white), gem claim, separator, "Then:" line. Hints under an action are flavour type in Label Grey. When unlocked, a move bar sits above the band with "poebo" on the left and the key hint on the right, separated by an Edge rule, and Back / Next buttons appear under the body with the step shortcuts between them.
+See-through black, centered, small caps. Order on the overlay: properties line (label grey name, value white number, 16px apart), separator, actions (or "Nothing to do here" plus the way out in value white, gem steps after their quest), separator, "Then:" line. Hints under an action are flavour type in Label Grey. When unlocked, a move bar sits above the band with "poebo" on the left and the key hint on the right, and under it a row of Back / Next buttons with the step shortcuts between them, each closed by an Edge rule. Nothing opens below the band, so the route keeps its place when the overlay locks again.
 
 ### Quick menu
 A tooltip whose header band carries only the title. Rows are body-small Value White text, no border; hover and keyboard focus fill the row with white at 6 percent and drop the outline. Toggle rows show "On" in Quest Green or "Off" in Label Grey on the right. Separators split the toggles, the window actions and Quit. Esc closes it, and the first row takes focus on open.

@@ -3,7 +3,7 @@ import { useEffect, useLayoutEffect, useRef, useState } from 'react';
 import { fitOverlay } from '../ipc/commands';
 import { holdLabel, shortcutLabel } from './HotkeySection';
 import { useAppStore } from '../store/useAppStore';
-import { StatusPanel } from './StatusPanel';
+import { RouteNav, StatusPanel } from './StatusPanel';
 import { TooltipHeader } from './Tooltip';
 
 const NOTICE_MS = 5000;
@@ -46,7 +46,8 @@ export function OverlayRoot(): React.JSX.Element {
   if (visible && !shownOnce) setShownOnce(true);
 
   // The window is sized to this box and keeps its bottom center fixed, so the route stays where
-  // the player put it when the controls open above it or the text grows.
+  // the player put it when the text grows. Move-mode controls all go above the route for the
+  // same reason: anything below it would shift the route when the overlay locks again.
   const box = useRef<HTMLDivElement>(null);
   useLayoutEffect(() => {
     const el = box.current;
@@ -87,6 +88,11 @@ export function OverlayRoot(): React.JSX.Element {
                 Hold {holdLabel(hotkeys.menuHold)} for the menu.
               </span>
             </div>
+            {routeEnabled && (
+              <div className="border-b border-edge pb-1.5">
+                <RouteNav />
+              </div>
+            )}
           </>
         )}
         {routeEnabled && <StatusPanel />}

@@ -99,6 +99,16 @@ describe('OverlayRoot', () => {
     expect(commands.routeNext).toHaveBeenCalled();
   });
 
+  // The window keeps its bottom edge, so nothing may sit below the route while grabbed.
+  it('puts the move controls above the route', () => {
+    useAppStore.setState({ route: ROUTE });
+    render(<OverlayRoot />);
+    ui({ grabbed: true });
+    const next = screen.getByRole('button', { name: 'Next' });
+    const then = screen.getByText('The Coast');
+    expect(next.compareDocumentPosition(then) & Node.DOCUMENT_POSITION_FOLLOWING).toBeTruthy();
+  });
+
   it('reports its size to the window', () => {
     render(<OverlayRoot />);
     expect(commands.fitOverlay).toHaveBeenCalled();

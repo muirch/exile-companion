@@ -42,7 +42,7 @@ function NoLogHint(): React.JSX.Element | null {
   );
 }
 
-function RouteNav(): React.JSX.Element {
+export function RouteNav(): React.JSX.Element {
   const keys = useAppStore((s) => s.hotkeys);
   return (
     <div className="flex items-center justify-center gap-1.5 pt-1">
@@ -63,7 +63,6 @@ export function StatusPanel(): React.JSX.Element {
   const zone = useAppStore((s) => s.campaign.zone);
   const act = useAppStore((s) => s.campaign.act);
   const location = useAppStore((s) => s.campaign.location_kind);
-  const grabbed = useAppStore((s) => s.ui.grabbed);
   const route = useAppStore((s) => s.route);
   const actions = hasActions(route);
 
@@ -84,7 +83,6 @@ export function StatusPanel(): React.JSX.Element {
             <ThenStep />
           </>
         )}
-        {grabbed && <RouteNav />}
       </div>
     </div>
   );
