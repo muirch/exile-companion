@@ -8,7 +8,16 @@ import { HereSteps, PassThrough, ThenStep, hasActions } from './RoutePanel';
 const step = (...parts: Part[]): Step => ({ parts, sub_steps: [] });
 
 function route(here: Step[], then: Step | null = null): RouteView {
-  return { section: 'Act 1', edge: 0, edge_count: 10, area_id: '1_1_2', here, then };
+  return {
+    section: 'Act 1',
+    edge: 0,
+    edge_count: 10,
+    section_edge: 0,
+    section_edge_count: 10,
+    area_id: '1_1_2',
+    here,
+    then,
+  };
 }
 
 const initial = useAppStore.getState();

@@ -532,6 +532,9 @@ pub struct RouteView {
     pub section: String,
     pub edge: u32,
     pub edge_count: u32,
+    /// Position of `edge` among the edges of its section, and how many that section has.
+    pub section_edge: u32,
+    pub section_edge_count: u32,
     /// The area this edge expects the player to be in.
     pub area_id: String,
     /// What to do in this area. The move that brought the player here is already done, so it is
@@ -585,10 +588,18 @@ impl Route {
             }
         }
         let then = self.group(edge + 1).and_then(|(_, s)| s.into_iter().next());
+        let (si, _) = self.locate_edge(edge)?;
+        let section_edges: Vec<usize> = self.sections[si]
+            .steps
+            .iter()
+            .filter_map(|s| s.edge)
+            .collect();
         Some(RouteView {
             section: section.to_string(),
             edge: edge as u32,
             edge_count: self.edges.len() as u32,
+            section_edge: section_edges.iter().position(|&e| e == edge).unwrap_or(0) as u32,
+            section_edge_count: section_edges.len() as u32,
             area_id: self.edges.get(edge).cloned().unwrap_or_default(),
             here,
             then,
@@ -807,10 +818,39 @@ Take {portal|use}
     }
 
     #[test]
+    fn steps_are_counted_within_their_section() {
+        let src = "#section Act 1
+Find and kill {kill|Hillock}
+➞ {enter|1_1_town}
+#section Act 2
+➞ {enter|1_1_2}
+➞ {enter|1_1_2a}
+";
+        let (route, _) = parse(src, &[]);
+        let counts: Vec<_> = (0..4)
+            .map(|e| {
+                let v = route.view(e).unwrap();
+                (v.section, v.section_edge, v.section_edge_count)
+            })
+            .collect();
+        assert_eq!(
+            counts,
+            [
+                ("Act 1".to_string(), 0, 2),
+                ("Act 1".to_string(), 1, 2),
+                ("Act 2".to_string(), 0, 2),
+                ("Act 2".to_string(), 1, 2),
+            ]
+        );
+    }
+
+    #[test]
     fn view_drops_the_arrival_and_names_the_way_out() {
         let (route, _) = parse(ROUTE, &[]);
         let view = route.view(1).unwrap();
         assert_eq!(view.section, "Act 1");
+        assert_eq!(view.section_edge, 1);
+        assert_eq!(view.section_edge_count, view.edge_count);
         // "➞ Lioneye's Watch" is how the player got here; only the hand-in remains
         assert_eq!(view.here.len(), 1);
         assert!(matches!(view.here[0].parts[1], Part::Quest { .. }));

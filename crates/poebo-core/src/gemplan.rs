@@ -502,6 +502,8 @@ mod tests {
             section: "Act 1".into(),
             edge: 1,
             edge_count: 2,
+            section_edge: 1,
+            section_edge_count: 2,
             area_id: "1_1_town".into(),
             here,
             then: None,

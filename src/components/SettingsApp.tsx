@@ -120,7 +120,9 @@ function RouteSection(): React.JSX.Element {
       </Row>
       <Row label="Progress">
         <span className="text-[13px] text-value">
-          {route ? `Step ${route.edge + 1} of ${route.edge_count}, ${route.section}` : 'No route'}
+          {route
+            ? `${route.section}, step ${route.section_edge + 1} of ${route.section_edge_count}`
+            : 'No route'}
         </span>
       </Row>
       <Row label="Step">

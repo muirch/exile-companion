@@ -22,6 +22,8 @@
         }
       ],
       "section": "Act 1",
+      "section_edge": 0,
+      "section_edge_count": 24,
       "then": {
         "parts": [
           {
@@ -94,6 +96,8 @@
         }
       ],
       "section": "Act 1",
+      "section_edge": 1,
+      "section_edge_count": 24,
       "then": {
         "parts": [
           {
@@ -133,6 +137,8 @@
         }
       ],
       "section": "Act 1",
+      "section_edge": 2,
+      "section_edge_count": 24,
       "then": {
         "parts": [
           {
@@ -186,6 +192,8 @@
         }
       ],
       "section": "Act 1",
+      "section_edge": 3,
+      "section_edge_count": 24,
       "then": {
         "parts": [
           {
@@ -212,6 +220,8 @@
       "edge_count": 233,
       "here": [],
       "section": "Act 1",
+      "section_edge": 4,
+      "section_edge_count": 24,
       "then": {
         "parts": [
           {
@@ -234,6 +244,8 @@
       "edge_count": 233,
       "here": [],
       "section": "Act 1",
+      "section_edge": 5,
+      "section_edge_count": 24,
       "then": {
         "parts": [
           {
@@ -309,6 +321,8 @@
         }
       ],
       "section": "Act 1",
+      "section_edge": 6,
+      "section_edge_count": 24,
       "then": {
         "parts": [
           {
@@ -359,6 +373,8 @@
         }
       ],
       "section": "Act 1",
+      "section_edge": 7,
+      "section_edge_count": 24,
       "then": {
         "parts": [
           {
@@ -381,6 +397,8 @@
       "edge_count": 233,
       "here": [],
       "section": "Act 1",
+      "section_edge": 8,
+      "section_edge_count": 24,
       "then": {
         "parts": [
           {
@@ -447,6 +465,8 @@
         }
       ],
       "section": "Act 1",
+      "section_edge": 9,
+      "section_edge_count": 24,
       "then": {
         "parts": [
           {
@@ -481,6 +501,8 @@
       "edge_count": 233,
       "here": [],
       "section": "Act 1",
+      "section_edge": 10,
+      "section_edge_count": 24,
       "then": {
         "parts": [
           {
@@ -507,6 +529,8 @@
       "edge_count": 233,
       "here": [],
       "section": "Act 1",
+      "section_edge": 11,
+      "section_edge_count": 24,
       "then": {
         "parts": [
           {
@@ -533,6 +557,8 @@
       "edge_count": 233,
       "here": [],
       "section": "Act 1",
+      "section_edge": 12,
+      "section_edge_count": 24,
       "then": {
         "parts": [
           {
@@ -559,6 +585,8 @@
       "edge_count": 233,
       "here": [],
       "section": "Act 1",
+      "section_edge": 13,
+      "section_edge_count": 24,
       "then": {
         "parts": [
           {
@@ -636,6 +664,8 @@
         }
       ],
       "section": "Act 1",
+      "section_edge": 14,
+      "section_edge_count": 24,
       "then": {
         "parts": [
           {
@@ -682,6 +712,8 @@
         }
       ],
       "section": "Act 1",
+      "section_edge": 15,
+      "section_edge_count": 24,
       "then": {
         "parts": [
           {
@@ -819,6 +851,8 @@
         }
       ],
       "section": "Act 1",
+      "section_edge": 16,
+      "section_edge_count": 24,
       "then": {
         "parts": [
           {
@@ -881,6 +915,8 @@
         }
       ],
       "section": "Act 1",
+      "section_edge": 17,
+      "section_edge_count": 24,
       "then": {
         "parts": [
           {
@@ -903,6 +939,8 @@
       "edge_count": 233,
       "here": [],
       "section": "Act 1",
+      "section_edge": 18,
+      "section_edge_count": 24,
       "then": {
         "parts": [
           {
@@ -965,6 +1003,8 @@
         }
       ],
       "section": "Act 1",
+      "section_edge": 19,
+      "section_edge_count": 24,
       "then": {
         "parts": [
           {
@@ -991,6 +1031,8 @@
       "edge_count": 233,
       "here": [],
       "section": "Act 1",
+      "section_edge": 20,
+      "section_edge_count": 24,
       "then": {
         "parts": [
           {
@@ -1042,6 +1084,8 @@
         }
       ],
       "section": "Act 1",
+      "section_edge": 21,
+      "section_edge_count": 24,
       "then": {
         "parts": [
           {
@@ -1064,6 +1108,8 @@
       "edge_count": 233,
       "here": [],
       "section": "Act 1",
+      "section_edge": 22,
+      "section_edge_count": 24,
       "then": {
         "parts": [
           {
@@ -1138,6 +1184,8 @@
         }
       ],
       "section": "Act 1",
+      "section_edge": 23,
+      "section_edge_count": 24,
       "then": {
         "parts": [
           {
@@ -1164,6 +1212,8 @@
       "edge_count": 233,
       "here": [],
       "section": "Act 2",
+      "section_edge": 0,
+      "section_edge_count": 24,
       "then": {
         "parts": [
           {
@@ -1190,6 +1240,8 @@
       "edge_count": 233,
       "here": [],
       "section": "Act 2",
+      "section_edge": 1,
+      "section_edge_count": 24,
       "then": {
         "parts": [
           {
@@ -1260,6 +1312,8 @@
         }
       ],
       "section": "Act 2",
+      "section_edge": 2,
+      "section_edge_count": 24,
       "then": {
         "parts": [
           {
@@ -1305,6 +1359,8 @@
         }
       ],
       "section": "Act 2",
+      "section_edge": 3,
+      "section_edge_count": 24,
       "then": {
         "parts": [
           {
@@ -1346,6 +1402,8 @@
         }
       ],
       "section": "Act 2",
+      "section_edge": 4,
+      "section_edge_count": 24,
       "then": {
         "parts": [
           {
@@ -1371,6 +1429,8 @@
       "edge_count": 233,
       "here": [],
       "section": "Act 2",
+      "section_edge": 5,
+      "section_edge_count": 24,
       "then": {
         "parts": [
           {
@@ -1411,6 +1471,8 @@
         }
       ],
       "section": "Act 2",
+      "section_edge": 6,
+      "section_edge_count": 24,
       "then": {
         "parts": [
           {
@@ -1447,6 +1509,8 @@
         }
       ],
       "section": "Act 2",
+      "section_edge": 7,
+      "section_edge_count": 24,
       "then": {
         "parts": [
           {
@@ -1469,6 +1533,8 @@
       "edge_count": 233,
       "here": [],
       "section": "Act 2",
+      "section_edge": 8,
+      "section_edge_count": 24,
       "then": {
         "parts": [
           {
@@ -1522,6 +1588,8 @@
         }
       ],
       "section": "Act 2",
+      "section_edge": 9,
+      "section_edge_count": 24,
       "then": {
         "parts": [
           {
@@ -1615,6 +1683,8 @@
         }
       ],
       "section": "Act 2",
+      "section_edge": 10,
+      "section_edge_count": 24,
       "then": {
         "parts": [
           {
@@ -1651,6 +1721,8 @@
         }
       ],
       "section": "Act 2",
+      "section_edge": 11,
+      "section_edge_count": 24,
       "then": {
         "parts": [
           {
@@ -1673,6 +1745,8 @@
       "edge_count": 233,
       "here": [],
       "section": "Act 2",
+      "section_edge": 12,
+      "section_edge_count": 24,
       "then": {
         "parts": [
           {
@@ -1726,6 +1800,8 @@
         }
       ],
       "section": "Act 2",
+      "section_edge": 13,
+      "section_edge_count": 24,
       "then": {
         "parts": [
           {
@@ -1779,6 +1855,8 @@
         }
       ],
       "section": "Act 2",
+      "section_edge": 14,
+      "section_edge_count": 24,
       "then": {
         "parts": [
           {
@@ -1827,6 +1905,8 @@
         }
       ],
       "section": "Act 2",
+      "section_edge": 15,
+      "section_edge_count": 24,
       "then": {
         "parts": [
           {
@@ -1863,6 +1943,8 @@
         }
       ],
       "section": "Act 2",
+      "section_edge": 16,
+      "section_edge_count": 24,
       "then": {
         "parts": [
           {
@@ -1930,6 +2012,8 @@
         }
       ],
       "section": "Act 2",
+      "section_edge": 17,
+      "section_edge_count": 24,
       "then": {
         "parts": [
           {
@@ -1989,6 +2073,8 @@
         }
       ],
       "section": "Act 2",
+      "section_edge": 18,
+      "section_edge_count": 24,
       "then": {
         "parts": [
           {
@@ -2089,6 +2175,8 @@
         }
       ],
       "section": "Act 2",
+      "section_edge": 19,
+      "section_edge_count": 24,
       "then": {
         "parts": [
           {
@@ -2125,6 +2213,8 @@
         }
       ],
       "section": "Act 2",
+      "section_edge": 20,
+      "section_edge_count": 24,
       "then": {
         "parts": [
           {
@@ -2170,6 +2260,8 @@
         }
       ],
       "section": "Act 2",
+      "section_edge": 21,
+      "section_edge_count": 24,
       "then": {
         "parts": [
           {
@@ -2209,6 +2301,8 @@
         }
       ],
       "section": "Act 2",
+      "section_edge": 22,
+      "section_edge_count": 24,
       "then": {
         "parts": [
           {
@@ -2288,6 +2382,8 @@
         }
       ],
       "section": "Act 2",
+      "section_edge": 23,
+      "section_edge_count": 24,
       "then": {
         "parts": [
           {
@@ -2340,6 +2436,8 @@
         }
       ],
       "section": "Act 3",
+      "section_edge": 0,
+      "section_edge_count": 29,
       "then": {
         "parts": [
           {
@@ -2366,6 +2464,8 @@
       "edge_count": 233,
       "here": [],
       "section": "Act 3",
+      "section_edge": 1,
+      "section_edge_count": 29,
       "then": {
         "parts": [
           {
@@ -2419,6 +2519,8 @@
         }
       ],
       "section": "Act 3",
+      "section_edge": 2,
+      "section_edge_count": 29,
       "then": {
         "parts": [
           {
@@ -2505,6 +2607,8 @@
         }
       ],
       "section": "Act 3",
+      "section_edge": 3,
+      "section_edge_count": 29,
       "then": {
         "parts": [
           {
@@ -2562,6 +2666,8 @@
         }
       ],
       "section": "Act 3",
+      "section_edge": 4,
+      "section_edge_count": 29,
       "then": {
         "parts": [
           {
@@ -2615,6 +2721,8 @@
         }
       ],
       "section": "Act 3",
+      "section_edge": 5,
+      "section_edge_count": 29,
       "then": {
         "parts": [
           {
@@ -2680,6 +2788,8 @@
         }
       ],
       "section": "Act 3",
+      "section_edge": 6,
+      "section_edge_count": 29,
       "then": {
         "parts": [
           {
@@ -2719,6 +2829,8 @@
         }
       ],
       "section": "Act 3",
+      "section_edge": 7,
+      "section_edge_count": 29,
       "then": {
         "parts": [
           {
@@ -2784,6 +2896,8 @@
         }
       ],
       "section": "Act 3",
+      "section_edge": 8,
+      "section_edge_count": 29,
       "then": {
         "parts": [
           {
@@ -2820,6 +2934,8 @@
         }
       ],
       "section": "Act 3",
+      "section_edge": 9,
+      "section_edge_count": 29,
       "then": {
         "parts": [
           {
@@ -2842,6 +2958,8 @@
       "edge_count": 233,
       "here": [],
       "section": "Act 3",
+      "section_edge": 10,
+      "section_edge_count": 29,
       "then": {
         "parts": [
           {
@@ -2937,6 +3055,8 @@
         }
       ],
       "section": "Act 3",
+      "section_edge": 11,
+      "section_edge_count": 29,
       "then": {
         "parts": [
           {

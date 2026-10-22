@@ -7,6 +7,10 @@ import type { Step } from "./Step";
  */
 export type RouteView = { section: string, edge: number, edge_count: number, 
 /**
+ * Position of `edge` among the edges of its section, and how many that section has.
+ */
+section_edge: number, section_edge_count: number, 
+/**
  * The area this edge expects the player to be in.
  */
 area_id: string, 

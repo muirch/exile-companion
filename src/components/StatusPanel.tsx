@@ -24,7 +24,9 @@ function Properties(): React.JSX.Element | null {
   return (
     <p className="flex justify-center gap-4 text-[13px]">
       {level > 0 && <Prop label={klass ? `${klass} level` : 'Level'} value={level} />}
-      {route && <Prop label="Step" value={`${route.edge + 1} / ${route.edge_count}`} />}
+      {route && (
+        <Prop label="Step" value={`${route.section_edge + 1} / ${route.section_edge_count}`} />
+      )}
     </p>
   );
 }
