@@ -35,8 +35,10 @@ pub fn toggle_grab(app: &AppHandle) {
     set_grab(app, !grabbed);
 }
 
-// Center of the screen, bottom edge above PoE's skill bar and flasks (about the bottom 15%).
-pub const DEFAULT_ANCHOR: (f64, f64) = (0.5, 0.85);
+// In the gap between PoE's flask bar and skill bar, just above the experience bar. Higher up the
+// plate covers the play field under the character, the game's centre banners and the stash and
+// vendor windows.
+pub const DEFAULT_ANCHOR: (f64, f64) = (0.5, 0.985);
 
 fn monitor_of(window: &WebviewWindow) -> Option<Monitor> {
     window

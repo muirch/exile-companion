@@ -21,7 +21,7 @@ OWN-WORLD: The game's own tooltip grammar: see-through black body with no frame,
 
 STORY: One glance answers where am I and what do I do here; a second glance shows what comes next.
 
-FIRST VIEWPORT: The window is fitted to the tooltip and anchored by its bottom center to a fraction of the monitor, default just above the skill bar. Header band with zone name and act; a properties line (class level, step n / total); separator; this area's actions at 15px or "Nothing to do here"; separator; "Then:" with the leaving step. Holding the tilde key opens a small tooltip-styled menu at the cursor; settings live in their own window.
+FIRST VIEWPORT: The window is fitted to the tooltip and anchored by its bottom center to a fraction of the monitor, default in the gap between the flask bar and the skill bar, just above the experience bar. Header band with zone name and act; a properties line (class level, step n / total); separator; this area's actions at 15px or "Nothing to do here"; separator; "Then:" with the leaving step. Holding the tilde key opens a small tooltip-styled menu at the cursor; settings live in their own window.
 
 FORM: PoE item tooltip, candidate 1 of 7 (brief-pinned over the roll's assignment; the roll's challengers lend data discipline: tabular, aligned numerals, and size as rank, current steps brighter and larger than the preview). seed:9183aa20c9ada033
 
