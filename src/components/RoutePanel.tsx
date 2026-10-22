@@ -137,7 +137,11 @@ function StepView({ step, hints }: { step: Step; hints: boolean }): React.JSX.El
 export function HereSteps({ hints = true }: { hints?: boolean }): React.JSX.Element {
   const route = useAppStore((s) => s.route);
   if (!route) {
-    return <p className="text-[14px] text-plain">The leveling route didn't load.</p>;
+    return (
+      <p className="text-[14px] text-plain">
+        The leveling route didn't load. Restart poebo; if it stays, reinstall it.
+      </p>
+    );
   }
   return (
     <>

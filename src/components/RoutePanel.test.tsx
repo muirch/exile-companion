@@ -56,7 +56,7 @@ describe('RoutePanel', () => {
 
   it('says so when the route did not load', () => {
     render(<HereSteps />);
-    expect(screen.getByText("The leveling route didn't load.")).toBeInTheDocument();
+    expect(screen.getByText(/The leveling route didn't load\. Restart poebo/)).toBeInTheDocument();
   });
 
   it('shows the step that leaves the area after Then', () => {

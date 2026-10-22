@@ -4,7 +4,7 @@ import { beforeEach, describe, expect, it, vi } from 'vitest';
 
 import * as commands from '../ipc/commands';
 import type { HotkeySettings } from '../ipc/types';
-import { HotkeySection, holdLabel, shortcutLabel } from './HotkeySection';
+import { HotkeySection, bindErrorText, holdLabel, shortcutLabel } from './HotkeySection';
 
 vi.mock('../ipc/commands', () => ({
   getHotkeys: vi.fn(),
@@ -108,16 +108,22 @@ describe('HotkeySection', () => {
     expect(screen.getByRole('button', { name: 'Not set' })).toBeInTheDocument();
   });
 
-  it('marks a binding the backend rejected', async () => {
+  it('says another program holds a binding the backend rejected', async () => {
     vi.mocked(commands.setHotkeys).mockResolvedValue([
-      { action: 'routeNext', shortcut: 'Alt+KeyF', error: 'taken' },
+      { action: 'routeNext', shortcut: 'Alt+KeyF', error: 'HotKey already registered: Alt+F' },
     ]);
     const user = userEvent.setup();
     render(<HotkeySection />);
     await user.click(await nextStepButton());
     await user.keyboard('{Alt>}f{/Alt}');
 
-    expect(await screen.findByText('Taken or invalid')).toBeInTheDocument();
+    expect(await screen.findByText('Another program uses this')).toBeInTheDocument();
+  });
+
+  it('names any other bind failure as a key it cannot use', () => {
+    expect(bindErrorText({ action: 'relog', shortcut: 'F9', error: 'bad key' })).toBe(
+      "Can't bind this key",
+    );
   });
 
   it('toggles relog', async () => {

@@ -59,17 +59,34 @@ function fromEvent(e: KeyboardEvent): string | null {
 function Binding({
   value,
   recording,
+  dim = false,
   onRecord,
 }: {
   value: string;
   recording: boolean;
+  /** Still rebindable, but the key does nothing while its feature is off. */
+  dim?: boolean;
   onRecord: () => void;
 }): React.JSX.Element {
   return (
-    <button className="btn min-w-28 font-body" aria-pressed={recording} onClick={onRecord}>
+    <button
+      className={dim && !recording ? 'btn min-w-28 font-body opacity-50' : 'btn min-w-28 font-body'}
+      aria-pressed={recording}
+      onClick={onRecord}
+    >
       {recording ? 'Press keys…' : shortcutLabel(value)}
     </button>
   );
+}
+
+// global-hotkey says "HotKey already registered" when another program holds the shortcut.
+export function bindErrorText(error: BindError): string {
+  return /already registered/i.test(error.error) ? 'Another program uses this' : "Can't bind this key";
+}
+
+function BindNote({ error }: { error: BindError | undefined }): React.JSX.Element | null {
+  if (!error) return null;
+  return <span className="font-body text-[12px] text-corrupted">{bindErrorText(error)}</span>;
 }
 
 export function HotkeySection(): React.JSX.Element {
@@ -137,9 +154,7 @@ export function HotkeySection(): React.JSX.Element {
             recording={recording === row.key}
             onRecord={() => setRecording(recording === row.key ? null : row.key)}
           />
-          {errorFor(row.key) && (
-            <span className="font-body text-[12px] text-corrupted">Taken or invalid</span>
-          )}
+          <BindNote error={errorFor(row.key)} />
         </div>
       ))}
 
@@ -156,11 +171,10 @@ export function HotkeySection(): React.JSX.Element {
         <Binding
           value={cfg.hotkeys.relog}
           recording={recording === 'relog'}
+          dim={!cfg.relogEnabled}
           onRecord={() => setRecording(recording === 'relog' ? null : 'relog')}
         />
-        {errorFor('relog') && (
-          <span className="font-body text-[12px] text-corrupted">Taken or invalid</span>
-        )}
+        <BindNote error={errorFor('relog')} />
       </div>
       <p className="ml-35 font-body text-[12px] leading-snug text-label italic">
         Types /exit in the game chat to go back to character select, like Awakened PoE Trade's F9.
