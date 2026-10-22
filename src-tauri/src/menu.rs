@@ -87,16 +87,16 @@ pub fn watch_menu_hold(app: AppHandle) {
 
 #[cfg(windows)]
 mod win {
-    use std::sync::atomic::{AtomicBool, AtomicU64, Ordering};
-    use std::sync::OnceLock;
+    use std::sync::atomic::{AtomicU32, Ordering};
+    use std::sync::{Mutex, OnceLock};
     use std::time::Duration;
 
-    use std::sync::atomic::AtomicU32;
+    use poebo_core::hold::HoldKey;
     use tauri::AppHandle;
     use windows_sys::Win32::Foundation::{LPARAM, LRESULT, WPARAM};
     use windows_sys::Win32::System::LibraryLoader::GetModuleHandleW;
 
-    use windows_sys::Win32::UI::Input::KeyboardAndMouse::{VK_OEM_3, VK_TAB};
+    use windows_sys::Win32::UI::Input::KeyboardAndMouse::{GetAsyncKeyState, VK_OEM_3, VK_TAB};
     use windows_sys::Win32::UI::WindowsAndMessaging::{
         CallNextHookEx, DispatchMessageW, GetMessageW, SetWindowsHookExW, TranslateMessage,
         KBDLLHOOKSTRUCT, MSG, WH_KEYBOARD_LL, WM_KEYDOWN, WM_KEYUP, WM_SYSKEYDOWN, WM_SYSKEYUP,
@@ -105,7 +105,7 @@ mod win {
     const HOLD: Duration = Duration::from_millis(450);
 
     static APP: OnceLock<AppHandle> = OnceLock::new();
-    static HELD: AtomicBool = AtomicBool::new(false);
+    static HOLD_KEY: Mutex<HoldKey> = Mutex::new(HoldKey::new());
     static HOLD_VK: AtomicU32 = AtomicU32::new(VK_OEM_3 as u32);
 
     pub fn set_hold_key(name: &str) {
@@ -115,8 +115,6 @@ mod win {
         };
         HOLD_VK.store(u32::from(vk), Ordering::SeqCst);
     }
-    // Bumped on every fresh press so a stale timer from an earlier press does nothing.
-    static PRESS: AtomicU64 = AtomicU64::new(0);
 
     pub fn watch(app: AppHandle) {
         if APP.set(app).is_err() {
@@ -143,8 +141,13 @@ mod win {
             let info = unsafe { &*(lparam as *const KBDLLHOOKSTRUCT) };
             if info.vkCode == HOLD_VK.load(Ordering::SeqCst) {
                 match wparam as u32 {
-                    WM_KEYDOWN | WM_SYSKEYDOWN => pressed(),
-                    WM_KEYUP | WM_SYSKEYUP => HELD.store(false, Ordering::SeqCst),
+                    // The hook runs before the async key state is updated, so this is the state
+                    // before the event: down means key repeat.
+                    WM_KEYDOWN | WM_SYSKEYDOWN => {
+                        let was_down = unsafe { GetAsyncKeyState(info.vkCode as i32) } < 0;
+                        pressed(was_down);
+                    }
+                    WM_KEYUP | WM_SYSKEYUP => hold_key().up(),
                     _ => {}
                 }
             }
@@ -152,15 +155,17 @@ mod win {
         unsafe { CallNextHookEx(std::ptr::null_mut(), code, wparam, lparam) }
     }
 
-    // Key repeat sends more key-downs while held; only the first one starts the timer.
-    fn pressed() {
-        if HELD.swap(true, Ordering::SeqCst) {
+    fn hold_key() -> std::sync::MutexGuard<'static, HoldKey> {
+        HOLD_KEY.lock().unwrap_or_else(|e| e.into_inner())
+    }
+
+    fn pressed(was_down: bool) {
+        let Some(press) = hold_key().down(was_down) else {
             return;
-        }
-        let press = PRESS.fetch_add(1, Ordering::SeqCst) + 1;
+        };
         std::thread::spawn(move || {
             std::thread::sleep(HOLD);
-            if HELD.load(Ordering::SeqCst) && PRESS.load(Ordering::SeqCst) == press {
+            if hold_key().still_held(press) {
                 if let Some(app) = APP.get() {
                     if super::super::overlay::game_focused(app) {
                         let app2 = app.clone();

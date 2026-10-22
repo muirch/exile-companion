@@ -22,6 +22,7 @@ pub mod data;
 pub mod error;
 pub mod events;
 pub mod guidance;
+pub mod hold;
 pub mod locale;
 pub mod logfile;
 pub mod parser;
