@@ -51,6 +51,50 @@ impl GemHints {
     }
 }
 
+/// What the player says a skill set is for, overriding what its title and order suggest.
+#[derive(Debug, Clone, Copy, Default, PartialEq, Eq, serde::Serialize, serde::Deserialize)]
+#[cfg_attr(feature = "ts", derive(ts_rs::TS))]
+#[cfg_attr(feature = "ts", ts(export))]
+#[serde(rename_all = "camelCase")]
+pub enum PresetStage {
+    #[default]
+    Auto,
+    /// From the start of this act.
+    Act(u8),
+    Endgame,
+    /// Not part of the plan, like a separator or an alternative setup.
+    Skip,
+}
+
+/// A skill set as the settings list it: what the planner makes of it on its own.
+#[derive(Debug, Clone, PartialEq, Eq, serde::Serialize)]
+#[cfg_attr(feature = "ts", derive(ts_rs::TS))]
+#[cfg_attr(feature = "ts", ts(export))]
+pub struct PresetInfo {
+    pub title: Option<String>,
+    pub gem_count: u32,
+    /// The level the planner gives the set by itself; `None` until a set names a level or act.
+    pub auto_level: Option<u32>,
+}
+
+pub fn presets(build: &PobBuild) -> Vec<PresetInfo> {
+    build
+        .skill_sets
+        .iter()
+        .zip(set_levels(build, &[]))
+        .map(|(set, auto_level)| PresetInfo {
+            title: set.title.clone(),
+            gem_count: set
+                .groups
+                .iter()
+                .filter(|g| g.enabled && g.source.is_none())
+                .flat_map(|g| g.gems.iter().filter(|g| g.enabled))
+                .count() as u32,
+            auto_level,
+        })
+        .collect()
+}
+
 #[derive(Debug, Clone, Default, PartialEq, Eq)]
 pub struct GemPlan {
     /// In campaign order.
@@ -74,15 +118,22 @@ struct Wanted {
     need_level: u32,
 }
 
-/// The level a skill set stands for: its title if it names one, else no later than the sets
-/// before it. Sets are kept in document order, which leveling builds write in campaign order.
-fn set_levels(build: &PobBuild) -> Vec<Option<u32>> {
+/// The level a skill set stands for: the player's stage, else its title if it names one, else no
+/// later than the sets before it. Sets are kept in document order, which leveling builds write in
+/// campaign order. Skipped sets don't move the floor.
+fn set_levels(build: &PobBuild, stages: &[PresetStage]) -> Vec<Option<u32>> {
     let mut floor = None;
     build
         .skill_sets
         .iter()
-        .map(|set| {
-            let own = set.title.as_deref().and_then(title_target_level);
+        .enumerate()
+        .map(|(i, set)| {
+            let own = match stages.get(i).copied().unwrap_or_default() {
+                PresetStage::Auto => set.title.as_deref().and_then(title_target_level),
+                PresetStage::Act(act) => Some(act_expected_level(act.clamp(1, 10))),
+                PresetStage::Endgame => Some(100),
+                PresetStage::Skip => return floor,
+            };
             floor = own.or(floor);
             floor
         })
@@ -91,11 +142,14 @@ fn set_levels(build: &PobBuild) -> Vec<Option<u32>> {
 
 /// Enabled gems from enabled socket groups, first appearance wins. Item-granted skills are left
 /// out: nobody hands those out. Sets with no enabled gem (separators) add nothing.
-fn wanted_gems(build: &PobBuild, gems: &GemTable) -> Vec<Wanted> {
-    let levels = set_levels(build);
+fn wanted_gems(build: &PobBuild, gems: &GemTable, stages: &[PresetStage]) -> Vec<Wanted> {
+    let levels = set_levels(build, stages);
     let mut seen = HashSet::new();
     let mut out = Vec::new();
-    for (set, set_level) in build.skill_sets.iter().zip(levels) {
+    for (i, (set, set_level)) in build.skill_sets.iter().zip(levels).enumerate() {
+        if stages.get(i) == Some(&PresetStage::Skip) {
+            continue;
+        }
         for group in set
             .groups
             .iter()
@@ -135,7 +189,17 @@ fn quest_order(s: &GemSource) -> (u32, u32) {
 }
 
 pub fn plan(build: &PobBuild, class: &str, gems: &GemTable) -> GemPlan {
-    let wanted = wanted_gems(build, gems);
+    plan_with_stages(build, class, gems, &[])
+}
+
+/// `stages` are per skill set, in document order; missing ones count as auto.
+pub fn plan_with_stages(
+    build: &PobBuild,
+    class: &str,
+    gems: &GemTable,
+    stages: &[PresetStage],
+) -> GemPlan {
+    let wanted = wanted_gems(build, gems, stages);
     let mut sources: Vec<(usize, &GemSource)> = Vec::new();
     let mut not_in_campaign = Vec::new();
     for (i, w) in wanted.iter().enumerate() {
@@ -670,6 +734,79 @@ mod tests {
             [
                 ("a1q1".into(), "Start".into(), GemAction::Take),
                 ("a4q1".into(), "Late".into(), GemAction::Buy),
+            ]
+        );
+    }
+
+    fn untitled_two_sets() -> PobBuild {
+        sets(vec![
+            set("my setup", vec![gem("Start", false)]),
+            set("other one", vec![gem("Boss", false)]),
+        ])
+    }
+
+    #[test]
+    fn a_stage_set_by_hand_moves_the_gem_to_that_act() {
+        let auto = plan(&untitled_two_sets(), "Witch", &staged());
+        assert!(summary(&auto).contains(&("a1q1".into(), "Boss".into(), GemAction::Buy)));
+
+        let stages = [PresetStage::Auto, PresetStage::Act(4)];
+        let p = plan_with_stages(&untitled_two_sets(), "Witch", &staged(), &stages);
+        assert_eq!(
+            summary(&p),
+            [
+                ("a1q1".into(), "Start".into(), GemAction::Take),
+                ("a4q1".into(), "Boss".into(), GemAction::Buy),
+            ]
+        );
+    }
+
+    #[test]
+    fn a_skipped_set_leaves_the_plan() {
+        let stages = [PresetStage::Auto, PresetStage::Skip];
+        let p = plan_with_stages(&untitled_two_sets(), "Witch", &staged(), &stages);
+        assert_eq!(
+            summary(&p),
+            [("a1q1".into(), "Start".into(), GemAction::Take)]
+        );
+        assert!(p.not_in_campaign.is_empty());
+    }
+
+    #[test]
+    fn presets_report_what_the_planner_reads_from_them() {
+        let b = sets(vec![
+            set("whatever", vec![gem("Start", false)]),
+            set("--- separator ---", vec![]),
+            set("Act 3", vec![gem("Late", false), gem("Boss", false)]),
+            set("later", vec![gem("Boss", false)]),
+        ]);
+        let got: Vec<_> = presets(&b)
+            .into_iter()
+            .map(|p| (p.title.unwrap_or_default(), p.gem_count, p.auto_level))
+            .collect();
+        let act3 = act_expected_level(3);
+        assert_eq!(
+            got,
+            [
+                ("whatever".to_string(), 1, None),
+                ("--- separator ---".to_string(), 0, None),
+                ("Act 3".to_string(), 2, Some(act3)),
+                ("later".to_string(), 1, Some(act3)),
+            ]
+        );
+    }
+
+    #[test]
+    fn stages_read_the_settings_names() {
+        let s: Vec<PresetStage> =
+            serde_json::from_str(r#"["auto", {"act": 3}, "endgame", "skip"]"#).unwrap();
+        assert_eq!(
+            s,
+            [
+                PresetStage::Auto,
+                PresetStage::Act(3),
+                PresetStage::Endgame,
+                PresetStage::Skip
             ]
         );
     }

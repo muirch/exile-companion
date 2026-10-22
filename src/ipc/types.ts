@@ -2,6 +2,7 @@
 // commands/events whose Rust side lives in `src-tauri` (regenerate the generated/ dir with
 // `pnpm gen:bindings`).
 
+import type { PresetStage } from './generated/PresetStage';
 import type { SpeedMultiplier } from './generated/SpeedMultiplier';
 
 export type { CampaignState } from './generated/CampaignState';
@@ -11,6 +12,7 @@ export type { LogEvent } from './generated/LogEvent';
 export type { DeathCause } from './generated/DeathCause';
 export type { SpeedMultiplier } from './generated/SpeedMultiplier';
 export type { BuildSummary } from './generated/BuildSummary';
+export type { PresetStage } from './generated/PresetStage';
 export type { NextObjective } from './generated/NextObjective';
 export type { ObjectiveKind } from './generated/ObjectiveKind';
 export type { Part } from './generated/Part';
@@ -27,6 +29,10 @@ export interface Settings {
   textScale: number;
   leagueStart: boolean;
   gemHints: GemHints;
+  compact: boolean;
+  /** Seconds without a route change before the overlay fades out; 0 keeps it shown. */
+  fadeAfter: number;
+  presetStages: PresetStage[];
 }
 
 /** Which gem steps the route shows (mirrors `poebo_core::gemplan::GemHints`). */

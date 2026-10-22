@@ -125,16 +125,16 @@ function Hints({ hints }: { hints: Part[][] }): React.JSX.Element | null {
   );
 }
 
-function StepView({ step }: { step: Step }): React.JSX.Element {
+function StepView({ step, hints }: { step: Step; hints: boolean }): React.JSX.Element {
   return (
     <li>
       {step.parts.length > 0 && <Parts parts={step.parts} />}
-      <Hints hints={step.sub_steps} />
+      {hints && <Hints hints={step.sub_steps} />}
     </li>
   );
 }
 
-export function HereSteps(): React.JSX.Element {
+export function HereSteps({ hints = true }: { hints?: boolean }): React.JSX.Element {
   const route = useAppStore((s) => s.route);
   if (!route) {
     return <p className="text-[14px] text-label">The leveling route didn't load.</p>;
@@ -143,7 +143,7 @@ export function HereSteps(): React.JSX.Element {
     <>
       <ul className="flex flex-col gap-1 text-[15px] leading-snug text-value">
         {route.here.map((step, i) => (
-          <StepView key={i} step={step} />
+          <StepView key={i} step={step} hints={hints} />
         ))}
       </ul>
     </>

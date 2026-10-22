@@ -46,6 +46,7 @@ pub fn run() {
                 tauri::WebviewWindowBuilder::from_config(app.handle(), &window)?.build()?;
             }
             overlay::restore_anchor(app.handle(), &saved);
+            runtime::restore_build(app.handle());
 
             if let Some(log) = poebo_core::logfile::find_client_log(saved.last_log_path.as_deref())
             {

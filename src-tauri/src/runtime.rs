@@ -22,7 +22,6 @@ use poebo_core::source::{
     EventSource, LineStream, LiveTail, ReplayControl, ReplaySource, SpeedMultiplier,
 };
 use poebo_core::state::{CampaignMachine, CampaignState};
-use poebo_pob::PobBuild;
 use serde::Serialize;
 use tauri::async_runtime::JoinHandle;
 use tauri::{AppHandle, Emitter, Manager};
@@ -67,9 +66,14 @@ pub fn current_route_view(app: &AppHandle) -> Option<RouteView> {
     let builds = lock(&app_state.build);
     if let Some(build) = builds.build() {
         if let Some(class) = build.class_name.as_deref() {
-            let plan = poebo_core::gemplan::plan(build, class, &app_state.gems);
-            let hints = settings::load(app).unwrap_or_default().gem_hints;
-            poebo_core::gemplan::annotate(&mut view, &plan, hints);
+            let saved = settings::load(app).unwrap_or_default();
+            let plan = poebo_core::gemplan::plan_with_stages(
+                build,
+                class,
+                &app_state.gems,
+                &saved.preset_stages,
+            );
+            poebo_core::gemplan::annotate(&mut view, &plan, saved.gem_hints);
         }
     }
     Some(view)
@@ -149,8 +153,48 @@ fn emit_build_summary(app: &AppHandle) {
     let _ = app.emit("build://updated", &summary);
 }
 
-/// Store a freshly-imported build, then push the new build summary and recomputed guidance.
-pub fn import_build(app: &AppHandle, build: PobBuild) -> Result<BuildSummary, String> {
+fn build_path(app: &AppHandle) -> Option<std::path::PathBuf> {
+    app.path()
+        .app_config_dir()
+        .ok()
+        .map(|d| d.join("build.xml"))
+}
+
+/// Loads the build saved by the last import, so gem steps survive a restart.
+pub fn restore_build(app: &AppHandle) {
+    let Some(path) = build_path(app).filter(|p| p.exists()) else {
+        return;
+    };
+    match std::fs::read(&path)
+        .map_err(|e| e.to_string())
+        .and_then(|xml| poebo_pob::parse_xml(&xml).map_err(|e| e.to_string()))
+    {
+        Ok(build) => lock(&app.state::<AppState>().build).set(build),
+        Err(e) => log::warn!("saved build {}: {e}", path.display()),
+    }
+}
+
+/// Parse and store a freshly-imported build, save it for the next start, then push the new build
+/// summary, guidance and route.
+pub fn import_build(app: &AppHandle, xml: Vec<u8>) -> Result<BuildSummary, String> {
+    let build = poebo_pob::parse_xml(&xml).map_err(|e| {
+        log::warn!("build import: {e}");
+        "That's not a Path of Building build.".to_string()
+    })?;
+    // Stages belong to the old build's skill sets.
+    if let Ok(mut s) = settings::load(app) {
+        s.preset_stages.clear();
+        let _ = settings::save(app, &s);
+    }
+    if let Some(path) = build_path(app) {
+        let saved = path
+            .parent()
+            .map_or(Ok(()), std::fs::create_dir_all)
+            .and_then(|()| std::fs::write(&path, &xml));
+        if let Err(e) = saved {
+            log::warn!("could not save the build to {}: {e}", path.display());
+        }
+    }
     let app_state = app.state::<AppState>();
     let summary = {
         let mut bs = app_state.build.lock().map_err(|e| e.to_string())?;
@@ -165,6 +209,9 @@ pub fn import_build(app: &AppHandle, build: PobBuild) -> Result<BuildSummary, St
 
 /// Forget the loaded build and push the cleared state.
 pub fn clear_build(app: &AppHandle) {
+    if let Some(path) = build_path(app) {
+        let _ = std::fs::remove_file(path);
+    }
     let app_state = app.state::<AppState>();
     if let Ok(mut bs) = app_state.build.lock() {
         bs.clear();

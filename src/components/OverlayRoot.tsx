@@ -3,10 +3,27 @@ import { useEffect, useLayoutEffect, useRef, useState } from 'react';
 import { fitOverlay } from '../ipc/commands';
 import { holdLabel, shortcutLabel } from './HotkeySection';
 import { useAppStore } from '../store/useAppStore';
-import { RouteNav, StatusPanel } from './StatusPanel';
+import { CompactPanel, RouteNav, StatusPanel } from './StatusPanel';
 import { TooltipHeader } from './Tooltip';
 
 const NOTICE_MS = 5000;
+const FULL_WIDTH = 404;
+const COMPACT_WIDTH = 340;
+
+// True once `seconds` pass with the same `id`; any new id, or 0 seconds, shows it again.
+function useFaded(id: string, seconds: number): boolean {
+  const [state, setState] = useState({ id, faded: false });
+  if (state.id !== id) setState({ id, faded: false });
+  useEffect(() => {
+    if (seconds <= 0) return;
+    const t = setTimeout(
+      () => setState((s) => (s.id === id ? { id, faded: true } : s)),
+      seconds * 1000,
+    );
+    return () => clearTimeout(t);
+  }, [id, seconds]);
+  return seconds > 0 && state.id === id && state.faded;
+}
 
 // Shown once when poebo starts without the game in front, instead of the route.
 function StartupNotice(): React.JSX.Element {
@@ -41,7 +58,13 @@ export function OverlayRoot(): React.JSX.Element {
   const gameFocused = useAppStore((s) => s.ui.gameFocused);
   const routeEnabled = useAppStore((s) => s.routeEnabled);
   const hotkeys = useAppStore((s) => s.hotkeys);
-  const visible = (gameFocused && routeEnabled) || grabbed;
+  const compact = useAppStore((s) => s.ui.compact);
+  const fadeAfter = useAppStore((s) => s.ui.fadeAfter);
+  const edge = useAppStore((s) => s.route?.edge);
+  const zoneId = useAppStore((s) => s.campaign.zone?.id);
+  // Coming back to the game counts as a change too, so an Alt-Tab shows the route again.
+  const faded = useFaded(`${edge}|${zoneId}|${gameFocused}`, grabbed ? 0 : fadeAfter);
+  const visible = ((gameFocused && routeEnabled) || grabbed) && !faded;
   const [shownOnce, setShownOnce] = useState(false);
   if (visible && !shownOnce) setShownOnce(true);
 
@@ -70,9 +93,17 @@ export function OverlayRoot(): React.JSX.Element {
         hidden={!shownOnce}
         className={[
           grabbed ? 'pointer-events-auto outline outline-1 outline-offset-2 outline-white/35' : 'pointer-events-none',
-          visible ? 'opacity-100 transition-opacity duration-150' : 'opacity-0',
+          visible
+            ? 'opacity-100 transition-opacity duration-150'
+            : faded
+              ? 'opacity-0 transition-opacity duration-700'
+              : 'opacity-0',
         ].join(' ')}
-        style={{ backgroundColor: `rgb(0 0 0 / ${opacity})`, zoom: textScale, width: 404 }}
+        style={{
+          backgroundColor: `rgb(0 0 0 / ${opacity})`,
+          zoom: textScale,
+          width: compact ? COMPACT_WIDTH : FULL_WIDTH,
+        }}
       >
         {grabbed && (
           <>
@@ -95,7 +126,7 @@ export function OverlayRoot(): React.JSX.Element {
             )}
           </>
         )}
-        {routeEnabled && <StatusPanel />}
+        {routeEnabled && (compact ? <CompactPanel /> : <StatusPanel />)}
       </div>
     </div>
   );

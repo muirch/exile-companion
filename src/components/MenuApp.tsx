@@ -1,6 +1,13 @@
 import { useEffect, useRef } from 'react';
 
-import { closeMenu, openSettings, quitApp, setRouteEnabled, startMove } from '../ipc/commands';
+import {
+  closeMenu,
+  openSettings,
+  quitApp,
+  setRouteEnabled,
+  startMove,
+  updateSettings,
+} from '../ipc/commands';
 import { isTauri } from '../ipc/env';
 import { onMenuOpened } from '../ipc/events';
 import { useAppStore } from '../store/useAppStore';
@@ -41,6 +48,7 @@ function Row({
 
 export function MenuApp(): React.JSX.Element {
   const routeEnabled = useAppStore((s) => s.routeEnabled);
+  const compact = useAppStore((s) => s.ui.compact);
   const moveKey = useAppStore((s) => s.hotkeys.moveOverlay);
   const panel = useRef<HTMLDivElement>(null);
 
@@ -70,6 +78,11 @@ export function MenuApp(): React.JSX.Element {
         label="Leveling route"
         state={routeEnabled}
         onClick={() => void setRouteEnabled(!routeEnabled)}
+      />
+      <Row
+        label="Compact"
+        state={compact}
+        onClick={() => void updateSettings({ compact: !compact })}
       />
       <TooltipSep tint={TINT} />
       <Row label="Settings" onClick={() => void openSettings()} />

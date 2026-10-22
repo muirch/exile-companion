@@ -10,25 +10,19 @@ import {
   routeNext,
   routePrev,
   routeReset,
-  saveSettings,
   setRouteEnabled,
   snapOverlayBottomCenter,
   startLive,
   startMove,
   startReplay,
   stopSource,
+  updateSettings,
 } from '../ipc/commands';
-import type { GemHints, Settings } from '../ipc/types';
+import type { GemHints, PresetStage } from '../ipc/types';
 import { useAppStore } from '../store/useAppStore';
 import { HotkeySection } from './HotkeySection';
 import { ReplayControls } from './ReplayControls';
 import { TooltipHeader } from './Tooltip';
-
-// Read-modify-write: the backend saves the route position and anchor into the same file.
-async function save(patch: Partial<Settings>): Promise<void> {
-  const current = await getSettings();
-  await saveSettings({ ...current, ...patch });
-}
 
 // Each group is its own item tooltip: a header band over a see-through black body.
 function Section({ title, children }: { title: string; children: ReactNode }): React.JSX.Element {
@@ -57,7 +51,46 @@ function Toggle({ on, onChange }: { on: boolean; onChange: (v: boolean) => void 
   );
 }
 
+function Choice<T extends string | number | boolean>({
+  value,
+  options,
+  onChange,
+}: {
+  value: T;
+  options: { value: T; label: string; literal?: boolean }[];
+  onChange: (v: T) => void;
+}): React.JSX.Element {
+  return (
+    <>
+      {options.map((o) => (
+        <button
+          key={String(o.value)}
+          className={o.literal ? 'btn font-body' : 'btn'}
+          aria-pressed={value === o.value}
+          onClick={() => onChange(o.value)}
+        >
+          {o.label}
+        </button>
+      ))}
+    </>
+  );
+}
+
+const LAYOUTS = [
+  { value: false, label: 'Full' },
+  { value: true, label: 'Compact' },
+];
+
+const FADES = [
+  { value: 0, label: 'Off' },
+  { value: 5, label: '5 s', literal: true },
+  { value: 10, label: '10 s', literal: true },
+  { value: 30, label: '30 s', literal: true },
+];
+
 function DisplaySection(): React.JSX.Element {
+  const compact = useAppStore((s) => s.ui.compact);
+  const fadeAfter = useAppStore((s) => s.ui.fadeAfter);
   const opacity = useAppStore((s) => s.ui.opacity);
   const textScale = useAppStore((s) => s.ui.textScale);
   const setOpacity = useAppStore((s) => s.setOpacity);
@@ -75,7 +108,7 @@ function DisplaySection(): React.JSX.Element {
           onChange={(e) => {
             const v = Number(e.target.value);
             setTextScale(v);
-            void save({ textScale: v });
+            void updateSettings({ textScale: v });
           }}
           className="flex-1"
         />
@@ -92,12 +125,26 @@ function DisplaySection(): React.JSX.Element {
           onChange={(e) => {
             const v = Number(e.target.value);
             setOpacity(v);
-            void save({ opacity: v });
+            void updateSettings({ opacity: v });
           }}
           className="flex-1"
         />
         <span className="w-11 text-right text-[13px] text-value">{Math.round(opacity * 100)}%</span>
       </Row>
+      <Row label="Layout">
+        <Choice value={compact} options={LAYOUTS} onChange={(v) => void updateSettings({ compact: v })} />
+      </Row>
+      <Row label="Fade out">
+        <Choice
+          value={fadeAfter}
+          options={FADES}
+          onChange={(v) => void updateSettings({ fadeAfter: v })}
+        />
+      </Row>
+      <p className="ml-35 font-body text-[12px] leading-snug text-label italic">
+        Hides the overlay after that long without a new step. It comes back with the next area or
+        step.
+      </p>
       <Row label="Position">
         <button className="btn" onClick={() => void snapOverlayBottomCenter()}>
           Bottom center
@@ -208,13 +255,89 @@ function GemHintsRow(): React.JSX.Element {
           aria-pressed={hints === h.value}
           onClick={() => {
             setHints(h.value);
-            void save({ gemHints: h.value });
+            void updateSettings({ gemHints: h.value });
           }}
         >
           {h.label}
         </button>
       ))}
     </Row>
+  );
+}
+
+const ACTS = [1, 2, 3, 4, 5, 6, 7, 8, 9, 10];
+
+function stageValue(stage: PresetStage | undefined): string {
+  if (stage === undefined || stage === 'auto') return 'auto';
+  if (typeof stage === 'object') return `act${stage.act}`;
+  return stage;
+}
+
+function stageFrom(value: string): PresetStage {
+  if (value.startsWith('act')) return { act: Number(value.slice(3)) };
+  return value as PresetStage;
+}
+
+function autoLabel(level: number | null): string {
+  if (level === null) return 'Auto, by gem level';
+  if (level >= 100) return 'Auto, endgame';
+  return `Auto, from level ${level}`;
+}
+
+// Gems are planned from the first skill set that has them; this lets the player say which act a
+// set is for when its name doesn't, or leave a set out.
+function PresetRows(): React.JSX.Element | null {
+  const presets = useAppStore((s) => s.build?.presets);
+  const [stages, setStages] = useState<PresetStage[]>([]);
+  // A new build comes with its stages reset, so read them again.
+  useEffect(() => {
+    if (!presets) return;
+    void getSettings().then((s) => setStages(s?.presetStages ?? []));
+  }, [presets]);
+  if (!presets || presets.length === 0) return null;
+
+  const change = (i: number, stage: PresetStage): void => {
+    const next = presets.map((_, j) => (j === i ? stage : (stages[j] ?? 'auto')));
+    setStages(next);
+    void updateSettings({ presetStages: next });
+  };
+
+  return (
+    <>
+      {presets.map((p, i) => (
+        <Row key={i} label={i === 0 ? 'Presets' : ''}>
+          <span
+            className="min-w-0 flex-1 truncate font-body text-[13px] text-value"
+            title={p.title ?? ''}
+          >
+            {p.title || `Preset ${i + 1}`}
+          </span>
+          {p.gem_count === 0 ? (
+            <span className="font-body text-[12px] text-label italic">No gems</span>
+          ) : (
+            <select
+              className="btn w-40 font-body"
+              aria-label={`Stage of ${p.title || `preset ${i + 1}`}`}
+              value={stageValue(stages[i])}
+              onChange={(e) => change(i, stageFrom(e.target.value))}
+            >
+              <option value="auto">{autoLabel(p.auto_level)}</option>
+              {ACTS.map((a) => (
+                <option key={a} value={`act${a}`}>
+                  From act {a}
+                </option>
+              ))}
+              <option value="endgame">Endgame</option>
+              <option value="skip">Leave out</option>
+            </select>
+          )}
+        </Row>
+      ))}
+      <p className="ml-35 font-body text-[12px] leading-snug text-label italic">
+        A gem is planned from the first preset it shows up in. Auto reads the act or level from the
+        preset name and keeps the order. Name presets like Act 3 or lvl 28 and this is rarely needed.
+      </p>
+    </>
   );
 }
 
@@ -278,6 +401,7 @@ function BuildSection(): React.JSX.Element {
         </Row>
       )}
       <GemHintsRow />
+      <PresetRows />
     </Section>
   );
 }

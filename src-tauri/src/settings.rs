@@ -22,6 +22,12 @@ pub struct Settings {
     /// Read once at startup: the edges differ between the two route variants.
     pub league_start: bool,
     pub gem_hints: poebo_core::gemplan::GemHints,
+    /// Route only, without the header band and properties line.
+    pub compact: bool,
+    /// Seconds without a route change before the overlay fades out; 0 keeps it shown.
+    pub fade_after: u32,
+    /// Per skill set of the loaded build, in order; reset when a build is imported.
+    pub preset_stages: Vec<poebo_core::gemplan::PresetStage>,
 }
 
 impl Default for Settings {
@@ -37,6 +43,9 @@ impl Default for Settings {
             relog_enabled: false,
             league_start: true,
             gem_hints: Default::default(),
+            compact: false,
+            fade_after: 0,
+            preset_stages: Vec::new(),
         }
     }
 }

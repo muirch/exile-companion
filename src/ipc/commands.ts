@@ -123,10 +123,26 @@ export const getSettings = (): Promise<Settings> =>
         leagueStart: true,
         textScale: 1,
         gemHints: 'rewardsAndVendors',
+        compact: useAppStore.getState().ui.compact,
+        fadeAfter: useAppStore.getState().ui.fadeAfter,
+        presetStages: [],
       });
 
 export const saveSettings = (settings: Settings): Promise<void> =>
   isTauri() ? invoke('save_settings', { settings }) : Promise.resolve();
+
+// Read-modify-write: the backend saves the route position and anchor into the same file. Without
+// a backend the store stands in for the change event.
+export async function updateSettings(patch: Partial<Settings>): Promise<void> {
+  if (!isTauri()) {
+    const { ui, setCompact, setFadeAfter } = useAppStore.getState();
+    setCompact(patch.compact ?? ui.compact);
+    setFadeAfter(patch.fadeAfter ?? ui.fadeAfter);
+    return;
+  }
+  const current = await getSettings();
+  await saveSettings({ ...current, ...patch });
+}
 
 export const getRoute = (): Promise<RouteView | null> =>
   isTauri() ? invoke('get_route') : Promise.resolve(mock.routeMock());

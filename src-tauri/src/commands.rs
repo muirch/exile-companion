@@ -101,8 +101,10 @@ pub async fn import_build_file(
         .map_err(|e| e.to_string())?
         .to_string_lossy()
         .into_owned();
-    let build = poebo_pob::from_local_file(Path::new(&path)).map_err(|e| e.to_string())?;
-    runtime::import_build(&app, build).map(Some)
+    let text = std::fs::read(Path::new(&path)).map_err(|e| e.to_string())?;
+    let xml =
+        poebo_pob::xml_from_text(&String::from_utf8_lossy(&text)).map_err(|e| e.to_string())?;
+    runtime::import_build(&app, xml).map(Some)
 }
 
 /// Import a Path of Building build from pasted text: a build link, an import code or raw XML.
@@ -114,11 +116,11 @@ pub async fn import_build_code(app: AppHandle, code: String) -> Result<BuildSumm
             .map_err(|e| e.to_string())??,
         None => code,
     };
-    let build = poebo_pob::import_text(&code).map_err(|e| {
+    let xml = poebo_pob::xml_from_text(&code).map_err(|e| {
         log::warn!("build import: {e}");
         "That's not a Path of Building code or a build link.".to_string()
     })?;
-    runtime::import_build(&app, build)
+    runtime::import_build(&app, xml)
 }
 
 fn fetch_build_code(url: &str) -> Result<String, String> {

@@ -1,6 +1,6 @@
 import { act, render, screen } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
-import { beforeAll, beforeEach, describe, expect, it, vi } from 'vitest';
+import { afterEach, beforeAll, beforeEach, describe, expect, it, vi } from 'vitest';
 
 import * as commands from '../ipc/commands';
 import type { RouteView } from '../ipc/types';
@@ -109,6 +109,63 @@ describe('OverlayRoot', () => {
     const next = screen.getByRole('button', { name: 'Next' });
     const then = screen.getByText('The Coast');
     expect(next.compareDocumentPosition(then) & Node.DOCUMENT_POSITION_FOLLOWING).toBeTruthy();
+  });
+
+  it('drops the header and properties in compact mode', () => {
+    useAppStore.setState((s) => ({
+      route: ROUTE,
+      campaign: {
+        ...s.campaign,
+        level: 4,
+        act: 1,
+        zone: { id: '1_1_town', name: 'Lioneye’s Watch', act: 1 },
+      },
+    }));
+    ui({ compact: true, gameFocused: true });
+    render(<OverlayRoot />);
+    expect(screen.queryByRole('heading')).not.toBeInTheDocument();
+    expect(screen.queryByText(/level/)).not.toBeInTheDocument();
+    expect(screen.getByText('Lioneye’s Watch · Act 1')).toBeInTheDocument();
+    expect(screen.getByText('Enemy at the Gate')).toBeInTheDocument();
+    expect(screen.getByText('Then:')).toBeInTheDocument();
+  });
+
+  describe('fade out', () => {
+    beforeEach(() => vi.useFakeTimers());
+    afterEach(() => vi.useRealTimers());
+
+    it('hides the route after the set time and brings it back on the next step', () => {
+      useAppStore.setState({ route: ROUTE });
+      ui({ fadeAfter: 5, gameFocused: true });
+      render(<OverlayRoot />);
+      expect(routeBox()).toHaveClass('opacity-100');
+
+      act(() => vi.advanceTimersByTime(5000));
+      expect(routeBox()).toHaveClass('opacity-0');
+
+      act(() => useAppStore.setState({ route: { ...ROUTE, edge: ROUTE.edge + 1 } }));
+      expect(routeBox()).toHaveClass('opacity-100');
+    });
+
+    it('shows the route again after an Alt-Tab away and back', () => {
+      useAppStore.setState({ route: ROUTE });
+      ui({ fadeAfter: 5, gameFocused: true });
+      render(<OverlayRoot />);
+      act(() => vi.advanceTimersByTime(5000));
+      expect(routeBox()).toHaveClass('opacity-0');
+
+      ui({ gameFocused: false });
+      ui({ gameFocused: true });
+      expect(routeBox()).toHaveClass('opacity-100');
+    });
+
+    it('never fades while the overlay is unlocked', () => {
+      useAppStore.setState({ route: ROUTE });
+      ui({ fadeAfter: 5, gameFocused: true, grabbed: true });
+      render(<OverlayRoot />);
+      act(() => vi.advanceTimersByTime(60000));
+      expect(routeBox()).toHaveClass('opacity-100');
+    });
   });
 
   it('reports its size to the window', () => {

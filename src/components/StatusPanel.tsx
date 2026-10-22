@@ -61,6 +61,26 @@ export function RouteNav(): React.JSX.Element {
   );
 }
 
+// No header band, properties line or hints: where you are in one grey line, then the route.
+export function CompactPanel(): React.JSX.Element {
+  const zone = useAppStore((s) => s.campaign.zone);
+  const act = useAppStore((s) => s.campaign.act);
+  const route = useAppStore((s) => s.route);
+  const actions = hasActions(route);
+  const where = [zone?.name ?? 'Waiting for the game', act != null ? `Act ${act}` : null]
+    .filter(Boolean)
+    .join(' · ');
+
+  return (
+    <div className="tooltip flex flex-col gap-1 px-3 pt-1.5 pb-2">
+      <p className="truncate text-[13px] text-label">{where}</p>
+      <NoLogHint />
+      {route && !actions ? <PassThrough /> : <HereSteps hints={false} />}
+      {actions && <ThenStep />}
+    </div>
+  );
+}
+
 export function StatusPanel(): React.JSX.Element {
   const zone = useAppStore((s) => s.campaign.zone);
   const act = useAppStore((s) => s.campaign.act);

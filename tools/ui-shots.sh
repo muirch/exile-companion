@@ -40,8 +40,10 @@ overlay overlay-hints "view=locked&edge=3"
 overlay overlay-passage "view=locked&edge=4"
 overlay overlay-boss "view=locked&edge=9"
 overlay overlay-unlocked "view=unlocked&edge=7"
+overlay overlay-compact "view=locked&edge=1&compact"
+overlay overlay-compact-boss "view=locked&edge=9&compact"
 overlay notice "view=notice"
-stage menu "window=menu" 236 220
+stage menu "window=menu" 236 256
 shot menu "file://$OUT/.stage-menu.html" 560 420
 shot settings "$URL/?window=settings" 560 1200
 
@@ -49,9 +51,8 @@ cd "$OUT"
 ffmpeg -loglevel error -y \
   -i overlay-first-zone.png -i overlay-town.png -i overlay-hints.png \
   -i overlay-passage.png -i overlay-boss.png -i overlay-unlocked.png \
-  -i notice.png -i menu.png \
-  -filter_complex "[0][1][2]hstack=3[r1];[3][4][5]hstack=3[r2];\
-[6][7]hstack=2,pad=1680:420:0:0:color=#24231c[r3];\
+  -i notice.png -i menu.png -i overlay-compact.png \
+  -filter_complex "[0][1][2]hstack=3[r1];[3][4][5]hstack=3[r2];[6][7][8]hstack=3[r3];\
 [r1][r2][r3]vstack=3" overview.png
 rm -f .stage-*.html
 echo "$OUT/overview.png"

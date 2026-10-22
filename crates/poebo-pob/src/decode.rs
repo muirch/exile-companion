@@ -2,8 +2,8 @@
 //!
 //! A code is `url-safe-base64( zlib( xml ) )`. We normalize the url-safe alphabet to the standard one
 //! (a no-op for a code that already uses `+`/`/`), strip any embedded whitespace/newlines, decode
-//! with indifference to padding, then zlib-inflate. There is deliberately no URL-download path: the
-//! app only ever handles local codes/files.
+//! with indifference to padding, then zlib-inflate. Downloading a code from a build link is the
+//! app's job; this crate stays offline.
 
 use std::io::Read;
 

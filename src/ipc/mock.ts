@@ -38,6 +38,11 @@ const MOCK_BUILD: BuildSummary = {
   main_skill: 'Raise Zombie',
   spec_count: 3,
   gem_count: 24,
+  presets: [
+    { title: 'Leveling (Act 1)', gem_count: 6, auto_level: 1 },
+    { title: '----- Mapping -----', gem_count: 0, auto_level: 100 },
+    { title: 'Mapping', gem_count: 18, auto_level: 100 },
+  ],
 };
 
 interface MockStep {
@@ -192,6 +197,7 @@ export function startMock(): void {
   const view = new URLSearchParams(window.location.search).get('view');
   useAppStore.getState().setGrabbed(view !== 'locked' && view !== 'notice');
   useAppStore.getState().setGameFocused(view !== 'notice');
+  useAppStore.getState().setCompact(new URLSearchParams(window.location.search).has('compact'));
   restartMock();
   // ?edge=N freezes the mock on that route view.
   const edge = Number(new URLSearchParams(window.location.search).get('edge'));
