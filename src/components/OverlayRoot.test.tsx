@@ -197,6 +197,35 @@ describe('OverlayRoot', () => {
     });
   });
 
+  it('says when the player is off the route', () => {
+    useAppStore.setState((s) => ({
+      route: ROUTE,
+      campaign: { ...s.campaign, zone: { id: 'HideoutFelled', name: 'Felled Hideout', act: 0 } },
+    }));
+    ui({ gameFocused: true });
+    render(<OverlayRoot />);
+    expect(screen.getByText('Off route, showing your last step')).toBeInTheDocument();
+  });
+
+  it('stays quiet about the route when the zone matches the step', () => {
+    useAppStore.setState((s) => ({
+      route: ROUTE,
+      campaign: { ...s.campaign, zone: { id: '1_1_town', name: 'Lioneye’s Watch', act: 1 } },
+    }));
+    ui({ gameFocused: true });
+    render(<OverlayRoot />);
+    expect(screen.queryByText(/Off route/)).not.toBeInTheDocument();
+  });
+
+  it('teaches the step keys and the full layout on start', () => {
+    ui({ compact: true });
+    render(<OverlayRoot />);
+    expect(screen.getByRole('status')).toHaveTextContent(
+      'Alt+Left and Alt+Right step the route if it gets ahead or behind.',
+    );
+    expect(screen.getByRole('status')).toHaveTextContent('Turn on Full layout in the menu');
+  });
+
   it('reports its size to the window', () => {
     render(<OverlayRoot />);
     expect(commands.fitOverlay).toHaveBeenCalled();

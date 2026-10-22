@@ -7,7 +7,7 @@ import { useAppStore } from '../store/useAppStore';
 import { CompactPanel, RouteNav, StatusPanel } from './StatusPanel';
 import { Brand, TooltipHeader } from './Tooltip';
 
-const NOTICE_MS = 5000;
+const NOTICE_MS = 9000;
 const FULL_WIDTH = 404;
 const COMPACT_WIDTH = 340;
 
@@ -34,7 +34,8 @@ function useFaded(id: string, seconds: number): boolean {
 
 // Shown once when poebo starts without the game in front, instead of the route.
 function StartupNotice(): React.JSX.Element {
-  const holdKey = useAppStore((s) => s.hotkeys.menuHold);
+  const keys = useAppStore((s) => s.hotkeys);
+  const compact = useAppStore((s) => s.ui.compact);
   const [shown, setShown] = useState(true);
   useEffect(() => {
     const t = setTimeout(() => setShown(false), NOTICE_MS);
@@ -55,8 +56,10 @@ function StartupNotice(): React.JSX.Element {
         subtitle="Running in the background"
       />
       <p className="px-4 pt-2 pb-3 font-body text-[13px] leading-snug text-plain italic">
-        It appears over Path of Exile while the game is focused. Hold{' '}
-        {holdLabel(holdKey)} in the game for the menu.
+        It appears over Path of Exile while the game is focused. Hold {holdLabel(keys.menuHold)}{' '}
+        in the game for the menu. {shortcutLabel(keys.routePrev)} and{' '}
+        {shortcutLabel(keys.routeNext)} step the route if it gets ahead or behind.
+        {compact && ' Turn on Full layout in the menu for directions and hints.'}
       </p>
     </div>
   );

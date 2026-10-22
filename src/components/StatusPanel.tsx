@@ -61,6 +61,19 @@ export function RouteNav(): React.JSX.Element {
   );
 }
 
+// The tracker holds its place in hideouts, maps and areas off the route, so the steps shown are
+// for somewhere else.
+function useOffRoute(): boolean {
+  const zone = useAppStore((s) => s.campaign.zone);
+  const route = useAppStore((s) => s.route);
+  return !!zone && !!route && zone.id !== route.area_id;
+}
+
+function OffRouteNote(): React.JSX.Element | null {
+  if (!useOffRoute()) return null;
+  return <p className="text-[13px] text-plain">Off route, showing your last step</p>;
+}
+
 // No header band, properties line or hints: where you are in one grey line, then the route.
 export function CompactPanel(): React.JSX.Element {
   const zone = useAppStore((s) => s.campaign.zone);
@@ -78,6 +91,7 @@ export function CompactPanel(): React.JSX.Element {
   return (
     <div className="tooltip flex flex-col gap-1 px-3 pt-1.5 pb-2">
       <p className="truncate text-[13px] text-plain">{where}</p>
+      <OffRouteNote />
       <NoLogHint />
       {route && !actions ? <PassThrough /> : <HereSteps hints={false} />}
       {actions && <ThenStep />}
@@ -101,6 +115,7 @@ export function StatusPanel(): React.JSX.Element {
       <div className="px-4 pt-1.5 pb-3">
         <Properties />
         <TooltipSep tint={tint} />
+        <OffRouteNote />
         <NoLogHint />
         {route && !actions ? <PassThrough /> : <HereSteps />}
         {actions && (
