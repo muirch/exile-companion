@@ -80,7 +80,7 @@ export const useAppStore = create<AppStore>((set) => ({
     opacity: 0.8,
     gameFocused: false,
     textScale: 1,
-    compact: false,
+    compact: true,
     fadeAfter: 0,
   },
 

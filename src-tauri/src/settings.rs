@@ -43,7 +43,7 @@ impl Default for Settings {
             relog_enabled: false,
             league_start: true,
             gem_hints: Default::default(),
-            compact: false,
+            compact: true,
             fade_after: 0,
             preset_stages: Vec::new(),
         }

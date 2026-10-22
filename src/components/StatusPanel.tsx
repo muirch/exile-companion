@@ -67,7 +67,11 @@ export function CompactPanel(): React.JSX.Element {
   const act = useAppStore((s) => s.campaign.act);
   const route = useAppStore((s) => s.route);
   const actions = hasActions(route);
-  const where = [zone?.name ?? 'Waiting for the game', act != null ? `Act ${act}` : null]
+  const where = [
+    zone?.name ?? 'Waiting for the game',
+    act != null ? `Act ${act}` : null,
+    route ? `${route.section_edge + 1} / ${route.section_edge_count}` : null,
+  ]
     .filter(Boolean)
     .join(' · ');
 

@@ -24,7 +24,8 @@ const ROUTE: RouteView = {
   then: { parts: [{ kind: 'enter', id: '1_1_3', name: 'The Coast' }], sub_steps: [] },
 };
 
-const initial = useAppStore.getState();
+// Most cases look at the full layout; compact ones switch it on themselves.
+const initial = { ...useAppStore.getState(), ui: { ...useAppStore.getState().ui, compact: false } };
 const ui = (patch: Partial<typeof initial.ui>): void =>
   act(() => useAppStore.setState((s) => ({ ui: { ...s.ui, ...patch } })));
 
@@ -135,7 +136,7 @@ describe('OverlayRoot', () => {
     render(<OverlayRoot />);
     expect(screen.queryByRole('heading')).not.toBeInTheDocument();
     expect(screen.queryByText(/level/)).not.toBeInTheDocument();
-    expect(screen.getByText('Lioneye’s Watch · Act 1')).toBeInTheDocument();
+    expect(screen.getByText('Lioneye’s Watch · Act 1 · 3 / 40')).toBeInTheDocument();
     expect(screen.getByText('Enemy at the Gate')).toBeInTheDocument();
     expect(screen.getByText('Then:')).toBeInTheDocument();
   });
