@@ -210,7 +210,7 @@ These are route semantics, never decoration.
 
 Each window is laid out around a single centered column of tooltips.
 
-The overlay plate is 404px wide at 100 percent text size and is scaled as a whole by the player's text size (80 to 150 percent, via CSS zoom). The window is fitted to the plate plus 8px of padding and keeps its bottom center fixed on the monitor, so anything that opens (the move bar and its buttons, a longer step list) grows upward. Inside the body, content sits at 16px horizontal padding, 6px top, 12px bottom; steps stack with 4px gaps; separators take 7px above and below.
+The overlay plate is 404px wide at 100 percent text size and is scaled as a whole, via CSS zoom, by the player's text size (80 to 150 percent) times the monitor height over 1080, the way the game scales its own UI. The window is fitted to the plate plus 8px of padding and keeps its bottom center fixed on the monitor, so anything that opens (the move bar and its buttons, a longer step list) grows upward. Inside the body, content sits at 16px horizontal padding, 6px top, 12px bottom; steps stack with 4px gaps; separators take 7px above and below.
 
 The quick menu is a 228px tooltip at the window's top left, 4px in. Rows are full-width, 6px by 12px, label left and state or key hint right.
 

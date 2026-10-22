@@ -1,6 +1,7 @@
 import { useEffect, useLayoutEffect, useRef, useState } from 'react';
 
 import { fitOverlay } from '../ipc/commands';
+import { isTauri } from '../ipc/env';
 import { holdLabel, shortcutLabel } from './HotkeySection';
 import { useAppStore } from '../store/useAppStore';
 import { CompactPanel, RouteNav, StatusPanel } from './StatusPanel';
@@ -9,6 +10,12 @@ import { TooltipHeader } from './Tooltip';
 const NOTICE_MS = 5000;
 const FULL_WIDTH = 404;
 const COMPACT_WIDTH = 340;
+
+// PoE scales its UI with the monitor height, not with the Windows scale factor, so the plate does
+// the same: 100% text size matches the game at 1080p. screen.height is already in CSS pixels.
+export function screenZoom(height: number): number {
+  return Math.min(2, Math.max(0.75, height / 1080));
+}
 
 // True once `seconds` pass with the same `id`; any new id, or 0 seconds, shows it again.
 function useFaded(id: string, seconds: number): boolean {
@@ -101,7 +108,7 @@ export function OverlayRoot(): React.JSX.Element {
         ].join(' ')}
         style={{
           backgroundColor: `rgb(0 0 0 / ${opacity})`,
-          zoom: textScale,
+          zoom: textScale * (isTauri() ? screenZoom(window.screen.height) : 1),
           width: compact ? COMPACT_WIDTH : FULL_WIDTH,
         }}
       >

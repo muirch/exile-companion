@@ -5,7 +5,7 @@ import { afterEach, beforeAll, beforeEach, describe, expect, it, vi } from 'vite
 import * as commands from '../ipc/commands';
 import type { RouteView } from '../ipc/types';
 import { useAppStore } from '../store/useAppStore';
-import { OverlayRoot } from './OverlayRoot';
+import { OverlayRoot, screenZoom } from './OverlayRoot';
 
 vi.mock('../ipc/commands', () => ({
   fitOverlay: vi.fn(() => Promise.resolve()),
@@ -31,6 +31,16 @@ const ui = (patch: Partial<typeof initial.ui>): void =>
 // The box that carries opacity and zoom; the tooltip header inside it has a style of its own.
 const routeBox = (): HTMLElement =>
   screen.getByText('Waiting for the game').closest('[style*="zoom"]') as HTMLElement;
+
+describe('screenZoom', () => {
+  it('follows the monitor height like the game UI does', () => {
+    expect(screenZoom(1080)).toBe(1);
+    expect(screenZoom(1440)).toBeCloseTo(1.333, 3);
+    // 4K at 150% Windows scaling reports 1440 CSS pixels.
+    expect(screenZoom(2160 / 1.5)).toBeCloseTo(1.333, 3);
+    expect(screenZoom(600)).toBe(0.75);
+  });
+});
 
 describe('OverlayRoot', () => {
   beforeAll(() => {
