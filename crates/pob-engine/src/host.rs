@@ -1,6 +1,6 @@
 use std::io::{BufRead, Write};
 
-use mlua::serde::DeserializeOptions;
+use mlua::serde::{DeserializeOptions, SerializeOptions};
 use mlua::{Function, Lua, LuaSerdeExt, Table};
 use serde_json::Value;
 
@@ -46,7 +46,11 @@ impl Host {
             .bridge
             .get(method)
             .map_err(|_| EngineError::UnknownMethod(method.to_string()))?;
-        let params = self.lua.to_value(params).map_err(lua_err)?;
+        // JSON null as nil. mlua's default null is a userdata, and Lua takes any userdata as true.
+        let to_lua = SerializeOptions::new()
+            .serialize_none_to_null(false)
+            .serialize_unit_to_null(false);
+        let params = self.lua.to_value_with(params, to_lua).map_err(lua_err)?;
         let result: mlua::Value = func.call(params).map_err(lua_err)?;
         // A Lua table can't tell an empty list from an empty object. Lists are the common case here.
         let opts = DeserializeOptions::new().encode_empty_tables_as_array(true);
