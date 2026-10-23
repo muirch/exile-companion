@@ -77,6 +77,56 @@ describe('SettingsApp', () => {
     expect(await screen.findByRole('alert')).toHaveTextContent('Path of Exile 2');
   });
 
+  describe('Assistant', () => {
+    const view = {
+      server: 'C:\\EC\\exile-companion-mcp.exe',
+      agents: [
+        { id: 'claudeDesktop' as const, name: 'Claude Desktop', status: { state: 'connected' as const }, config: '' },
+        { id: 'cursor' as const, name: 'Cursor', status: { state: 'notConnected' as const }, config: '' },
+        { id: 'codex' as const, name: 'Codex', status: { state: 'notFound' as const }, config: '' },
+      ],
+    };
+
+    it('connects an agent the player has', async () => {
+      vi.mocked(commands.getAssistant).mockResolvedValueOnce(view);
+      vi.mocked(commands.connectAgent).mockResolvedValueOnce({
+        ...view,
+        agents: view.agents.map((a) => (a.id === 'cursor' ? { ...a, status: { state: 'connected' as const } } : a)),
+      });
+      render(<SettingsApp />);
+      expect(await screen.findByText('Not installed')).toBeInTheDocument();
+      expect(screen.getAllByText('Connected')).toHaveLength(1);
+      expect(screen.queryByRole('button', { name: 'Connect Claude Desktop' })).not.toBeInTheDocument();
+      expect(screen.queryByRole('button', { name: 'Connect Codex' })).not.toBeInTheDocument();
+
+      await userEvent.click(screen.getByRole('button', { name: 'Connect Cursor' }));
+      expect(commands.connectAgent).toHaveBeenCalledWith('cursor');
+      expect(await screen.findAllByText('Connected')).toHaveLength(2);
+    });
+
+    it('says why an agent could not be connected', async () => {
+      vi.mocked(commands.getAssistant).mockResolvedValueOnce(view);
+      vi.mocked(commands.connectAgent).mockRejectedValueOnce('Left mcp.json as it was, the config file isn\'t valid JSON.');
+      render(<SettingsApp />);
+      await userEvent.click(await screen.findByRole('button', { name: 'Connect Cursor' }));
+      expect(await screen.findByRole('alert')).toHaveTextContent('Left mcp.json as it was');
+    });
+
+    it('copies the config for other agents', async () => {
+      vi.mocked(commands.getAssistant).mockResolvedValueOnce(view);
+      render(<SettingsApp />);
+      await userEvent.click(await screen.findByRole('button', { name: 'Copy config' }));
+      expect(commands.copyAssistantConfig).toHaveBeenCalled();
+      expect(await screen.findByRole('button', { name: 'Copied' })).toBeInTheDocument();
+    });
+
+    it('says when the build has no assistant', async () => {
+      vi.mocked(commands.getAssistant).mockResolvedValueOnce({ server: null, agents: [] });
+      render(<SettingsApp />);
+      expect(await screen.findByText("This build of Exile Companion doesn't include the assistant.")).toBeInTheDocument();
+    });
+  });
+
   it('shows why a pasted build did not load', async () => {
     vi.mocked(commands.pasteBuild).mockRejectedValueOnce("Couldn't download the build: timeout");
     render(<SettingsApp />);

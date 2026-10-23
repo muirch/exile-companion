@@ -79,3 +79,26 @@ export interface BindError {
   shortcut: string;
   error: string;
 }
+
+/** Mirrors `exile_core::agents::Status`. */
+export type AgentStatus =
+  | { state: 'notFound' }
+  | { state: 'notConnected' }
+  | { state: 'connected' }
+  | { state: 'otherCopy'; command: string };
+
+export type AgentId = 'claudeDesktop' | 'claudeCode' | 'cursor' | 'vsCode' | 'codex';
+
+/** Mirrors `assistant::AgentView`. */
+export interface AgentView {
+  id: AgentId;
+  name: string;
+  status: AgentStatus;
+  config: string;
+}
+
+/** Mirrors `assistant::AssistantView`. */
+export interface AssistantView {
+  server: string | null;
+  agents: AgentView[];
+}

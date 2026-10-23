@@ -64,6 +64,29 @@ pub async fn pick_pob_folder(
 }
 
 #[tauri::command]
+pub fn get_assistant() -> crate::assistant::AssistantView {
+    crate::assistant::view()
+}
+
+#[tauri::command]
+pub fn connect_agent(
+    id: exile_core::agents::AgentId,
+) -> Result<crate::assistant::AssistantView, String> {
+    crate::assistant::connect(id)
+}
+
+/// Puts the generic MCP config on the clipboard, for agents the app doesn't know.
+#[tauri::command]
+pub fn copy_assistant_config(app: AppHandle) -> Result<(), String> {
+    use tauri_plugin_clipboard_manager::ClipboardExt;
+    let snippet = crate::assistant::snippet()
+        .ok_or("The assistant isn't installed with this build of Exile Companion.")?;
+    app.clipboard()
+        .write_text(snippet)
+        .map_err(|e| e.to_string())
+}
+
+#[tauri::command]
 pub fn start_live(app: AppHandle, path: String) -> Result<CampaignState, String> {
     runtime::start_live(app, path)
 }

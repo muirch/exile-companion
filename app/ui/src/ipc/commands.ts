@@ -11,6 +11,8 @@ import { isTauri } from './env';
 import * as mock from './mock';
 import { useAppStore } from '../store/useAppStore';
 import type {
+  AgentId,
+  AssistantView,
   BuildSummary,
   CampaignState,
   BindError,
@@ -49,6 +51,32 @@ export const getPob = (): Promise<PobInfo | null> =>
 /** Null when the dialog is cancelled. Rejects with a message when the folder isn't PoB. */
 export const pickPobFolder = (): Promise<PobInfo | null> =>
   isTauri() ? invoke('pick_pob_folder') : Promise.resolve(MOCK_POB);
+
+const MOCK_ASSISTANT: AssistantView = {
+  server: 'C:\\Users\\exile\\AppData\\Local\\Exile Companion\\exile-companion-mcp.exe',
+  agents: [
+    { id: 'claudeDesktop', name: 'Claude Desktop', status: { state: 'connected' }, config: '' },
+    { id: 'claudeCode', name: 'Claude Code', status: { state: 'notConnected' }, config: '' },
+    { id: 'cursor', name: 'Cursor', status: { state: 'notFound' }, config: '' },
+    { id: 'vsCode', name: 'VS Code (Copilot)', status: { state: 'notFound' }, config: '' },
+    { id: 'codex', name: 'Codex', status: { state: 'otherCopy', command: 'D:\\old\\exile-companion-mcp.exe' }, config: '' },
+  ],
+};
+
+export const getAssistant = (): Promise<AssistantView> =>
+  isTauri() ? invoke('get_assistant') : Promise.resolve(MOCK_ASSISTANT);
+
+/** Rejects with a message when the agent's config couldn't be changed. */
+export const connectAgent = (id: AgentId): Promise<AssistantView> => {
+  if (isTauri()) return invoke('connect_agent', { id });
+  const agents = MOCK_ASSISTANT.agents.map((a) =>
+    a.id === id ? { ...a, status: { state: 'connected' as const } } : a,
+  );
+  return Promise.resolve({ ...MOCK_ASSISTANT, agents });
+};
+
+export const copyAssistantConfig = (): Promise<void> =>
+  isTauri() ? invoke('copy_assistant_config') : Promise.resolve();
 
 export const startLive = (path: string): Promise<CampaignState> => {
   if (isTauri()) return invoke('start_live', { path });

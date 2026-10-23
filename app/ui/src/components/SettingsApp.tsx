@@ -3,6 +3,9 @@ import { useEffect, useState } from 'react';
 import {
   clearBuild,
   closeSettings,
+  connectAgent,
+  copyAssistantConfig,
+  getAssistant,
   getPob,
   getSettings,
   importBuildFile,
@@ -20,7 +23,7 @@ import {
   stopSource,
   updateSettings,
 } from '../ipc/commands';
-import type { GemHints, PobInfo, PresetStage } from '../ipc/types';
+import type { AgentView, AssistantView, GemHints, PobInfo, PresetStage } from '../ipc/types';
 import { Button, Choice, ConfirmButton, Note, Row, Section, Select, Slider, Toggle } from '../kit';
 import { useAppStore } from '../store/useAppStore';
 import { HotkeySection } from './HotkeySection';
@@ -444,6 +447,99 @@ function BuildSection(): React.JSX.Element {
   );
 }
 
+function agentState(agent: AgentView): { text: string; className: string } {
+  switch (agent.status.state) {
+    case 'connected':
+      return { text: 'Connected', className: 'text-quest' };
+    case 'otherCopy':
+      return { text: 'Set to another copy', className: 'text-value' };
+    case 'notConnected':
+      return { text: 'Not connected', className: 'text-value' };
+    default:
+      return { text: 'Not installed', className: 'text-label' };
+  }
+}
+
+// The assistant is an MCP server that the player's own AI agent starts. Connecting writes it
+// into the agent's config, so the player never edits JSON by hand.
+function AssistantSection(): React.JSX.Element {
+  const [view, setView] = useState<AssistantView | null>(null);
+  const [error, setError] = useState<string | null>(null);
+  const [copied, setCopied] = useState(false);
+  useEffect(() => {
+    void getAssistant().then(setView);
+  }, []);
+  useEffect(() => {
+    if (!copied) return;
+    const t = setTimeout(() => setCopied(false), 2000);
+    return () => clearTimeout(t);
+  }, [copied]);
+
+  if (view && !view.server) {
+    return (
+      <Section title="Assistant">
+        <Note flush>This build of Exile Companion doesn't include the assistant.</Note>
+      </Section>
+    );
+  }
+  return (
+    <Section title="Assistant">
+      <Note flush>
+        Ask Claude or another AI agent about your build. It calculates with your Path of Building and
+        reads the Path of Exile Wiki. Connect your agent, restart it, and ask in its chat.
+      </Note>
+      {(view?.agents ?? []).map((agent) => {
+        const state = agentState(agent);
+        return (
+          <Row key={agent.id} label={agent.name}>
+            <span className={`min-w-0 flex-1 truncate font-body text-[13px] ${state.className}`} title={agent.config}>
+              {state.text}
+            </span>
+            {(agent.status.state === 'notConnected' || agent.status.state === 'otherCopy') && (
+              <Button
+                aria-label={`Connect ${agent.name}`}
+                onClick={async () => {
+                  setError(null);
+                  try {
+                    setView(await connectAgent(agent.id));
+                  } catch (e) {
+                    setError(String(e));
+                  }
+                }}
+              >
+                Connect
+              </Button>
+            )}
+          </Row>
+        );
+      })}
+      {error && (
+        <Row label="">
+          <span role="alert" className="min-w-0 flex-1 font-body text-[12px] text-corrupted">
+            {error}
+          </span>
+        </Row>
+      )}
+      <Row label="Other agents">
+        <Button
+          onClick={async () => {
+            setError(null);
+            try {
+              await copyAssistantConfig();
+              setCopied(true);
+            } catch (e) {
+              setError(String(e));
+            }
+          }}
+        >
+          {copied ? 'Copied' : 'Copy config'}
+        </Button>
+      </Row>
+      <Note>Paste it where your agent keeps its MCP servers. Most agents read this format.</Note>
+    </Section>
+  );
+}
+
 function HotkeysGroup(): React.JSX.Element {
   return (
     <Section title="Hotkeys">
@@ -488,6 +584,7 @@ export function SettingsApp(): React.JSX.Element {
           <RouteSection />
           <LogSection />
           <BuildSection />
+          <AssistantSection />
           <HotkeysGroup />
         </main>
       </div>
