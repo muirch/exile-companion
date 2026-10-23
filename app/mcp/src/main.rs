@@ -45,7 +45,7 @@ A percent is not a recommendation by itself. Keystones and big notables have dra
 (read the node's own text, and the wiki for the keystone), they cost points on the way, and players rarely take some of them for good reasons. \
 Say the trade-off and how sure you are, and point out what you couldn't measure. \
 When the player follows a guide, or you found one for them and they loaded it, advise from the difference to the guide (compare_with_guide) \
-and pass the guide to passive_value. Don't suggest passives, keystones or items the guide doesn't take unless the player asks to explore. \
+and pass the guide to passive_value. guide_stages and guide_stage_diff walk a guide stage by stage, also for a player without a build yet. Don't suggest passives, keystones or items the guide doesn't take unless the player asks to explore. \
 Compare with the guide stage closest to the player's level and progress, and keep endgame gear out of a beginner's next steps. \
 Nothing you try changes the player's build. load_build switches to another build for this conversation only.
 
@@ -100,6 +100,28 @@ pub struct GuideParams {
     pub skill_set: Option<u32>,
     /// How many passives and gear slots to list. Default 12.
     pub limit: Option<u32>,
+}
+
+#[derive(Debug, Deserialize, schemars::JsonSchema)]
+pub struct StagesParams {
+    /// The guide's build: a PoB code, a build link, build XML, or the guide's page with a build link on it.
+    pub guide: String,
+}
+
+#[derive(Debug, Deserialize, schemars::JsonSchema)]
+pub struct Stage {
+    /// Ids from guide_stages. The guide's saved choice when left out.
+    pub tree: Option<u32>,
+    pub item_set: Option<u32>,
+    pub skill_set: Option<u32>,
+}
+
+#[derive(Debug, Deserialize, schemars::JsonSchema)]
+pub struct StageDiffParams {
+    /// The guide's build, as for guide_stages.
+    pub guide: String,
+    pub from: Stage,
+    pub to: Stage,
 }
 
 #[derive(Debug, Deserialize, schemars::JsonSchema)]
@@ -340,6 +362,46 @@ impl Companion {
         let r = tokio::task::spawn_blocking(move || session.lock().unwrap().load(&p.build))
             .await
             .unwrap_or_else(|e| Err(e.to_string()));
+        Ok(json_result(r))
+    }
+
+    #[tool(
+        description = "A guide's stages as its author saved them: each passive tree in order with its points and the ascendancy notables it adds (so the order to take them in labs), each item set's gear, each skill set's skills. Guides often have fewer item sets than trees, then an early tree comes with late gear. Works without the player's build."
+    )]
+    async fn guide_stages(
+        &self,
+        Parameters(p): Parameters<StagesParams>,
+    ) -> Result<CallToolResult, McpError> {
+        let session = self.session.clone();
+        let r = tokio::task::spawn_blocking(move || {
+            let mut s = session.lock().unwrap();
+            let reference = s.reference(&p.guide)?;
+            s.call_any("guide_stages", json!({ "reference": reference }))
+        })
+        .await
+        .unwrap_or_else(|e| Err(e.to_string()));
+        Ok(json_result(r))
+    }
+
+    #[tool(
+        description = "What changes between two stages of a guide: notables added and dropped, points, ascendancy notables, gear by slot, skills and supports, and every stat PoB shows for each stage. Stats are at the guide's one saved character level, so early stages read stronger than a real character at that point. Works without the player's build."
+    )]
+    async fn guide_stage_diff(
+        &self,
+        Parameters(p): Parameters<StageDiffParams>,
+    ) -> Result<CallToolResult, McpError> {
+        let session = self.session.clone();
+        let r = tokio::task::spawn_blocking(move || {
+            let mut s = session.lock().unwrap();
+            let reference = s.reference(&p.guide)?;
+            let stage = |st: &Stage| json!({ "tree": st.tree, "item_set": st.item_set, "skill_set": st.skill_set });
+            s.call_any(
+                "guide_stage_diff",
+                json!({ "reference": reference, "from": stage(&p.from), "to": stage(&p.to) }),
+            )
+        })
+        .await
+        .unwrap_or_else(|e| Err(e.to_string()));
         Ok(json_result(r))
     }
 

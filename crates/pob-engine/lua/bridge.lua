@@ -375,7 +375,15 @@ local function itemInfo(item)
 			mods[#mods + 1] = m.line
 		end
 	end
-	return { name = item.name, base = item.baseName, rarity = item.rarity, mods = mods }
+	return {
+		name = item.name,
+		base = item.baseName,
+		rarity = item.rarity,
+		mods = mods,
+		corrupted = item.corrupted or nil,
+		-- An Allflame crafting property. PoB keeps it but it changes no stat, see the wiki.
+		intangibility = item.intangibility,
+	}
 end
 
 -- Jewels that conquer or rewire passives need a rebuilt tree to compare. PoB does that with a
@@ -903,6 +911,188 @@ function bridge.compare_reference(params)
 		supports = supports,
 		other_skills = otherSkills,
 		config = config,
+	}
+end
+
+local function specSummary(spec)
+	local points, notables, ascendancy = 0, {}, {}
+	for id, node in pairs(spec.allocNodes) do
+		if type(id) == "number" and id < CLUSTER_NODE_OFFSET then
+			if node.ascendancyName then
+				if node.type == "Notable" then
+					ascendancy[#ascendancy + 1] = node.dn
+				end
+			elseif node.type ~= "ClassStart" and node.type ~= "AscendClassStart" then
+				points = points + 1
+				if node.type == "Notable" or node.type == "Keystone" then
+					notables[node.dn] = true
+				end
+			end
+		end
+	end
+	table.sort(ascendancy)
+	return points, notables, ascendancy
+end
+
+local function setGear(ref, set)
+	local gear = {}
+	for _, slotName in ipairs(GEAR_SLOTS) do
+		local id = set and set[slotName] and set[slotName].selItemId
+		local item = id and id > 0 and ref.itemsTab.items[id]
+		if item then
+			gear[slotName] = item.name
+		end
+	end
+	return gear
+end
+
+local function setSkills(groups)
+	local skills = {}
+	for _, g in ipairs(groups or {}) do
+		local active = activeGemOf(g)
+		if active and g.enabled ~= false then
+			local gems = {}
+			for name in pairs(gemNames(g)) do
+				if name ~= active then
+					gems[#gems + 1] = name
+				end
+			end
+			table.sort(gems)
+			skills[#skills + 1] = { skill = active, slot = g.slot, supports = gems }
+		end
+	end
+	return skills
+end
+
+local function skillSetGroups(ref, id)
+	local set = ref.skillsTab.skillSets[id]
+	if id == ref.skillsTab.activeSkillSetId then
+		return ref.skillsTab.socketGroupList
+	end
+	return set and set.socketGroupList or {}
+end
+
+-- A guide's stages as it saved them: each passive tree with its points and the ascendancy
+-- notables it adds, each item set's gear and each skill set's skills. Trees come in the guide's
+-- order, which is usually the order to play them in.
+function bridge.guide_stages(params)
+	local ref = refEntry(params.reference)
+	local trees, order, seen = {}, {}, {}
+	for i, spec in ipairs(ref.treeTab.specList) do
+		local points, _, asc = specSummary(spec)
+		local new = {}
+		for _, a in ipairs(asc) do
+			if not seen[a] then
+				seen[a] = true
+				new[#new + 1] = a
+				order[#order + 1] = a
+			end
+		end
+		trees[#trees + 1] = { id = i, title = spec.title or ("Tree " .. i), points = points, ascendancy_added = new }
+	end
+	local itemSets = {}
+	for _, id in ipairs(ref.itemsTab.itemSetOrderList) do
+		local set = ref.itemsTab.itemSets[id]
+		itemSets[#itemSets + 1] = { id = id, title = set and set.title or ("Set " .. id), gear = setGear(ref, set) }
+	end
+	local skillSets = {}
+	for _, id in ipairs(ref.skillsTab.skillSetOrderList) do
+		local set = ref.skillsTab.skillSets[id]
+		skillSets[#skillSets + 1] = { id = id, title = set and set.title or ("Set " .. id), skills = setSkills(skillSetGroups(ref, id)) }
+	end
+	return {
+		reference = params.reference or #references,
+		level = ref.characterLevel,
+		trees = trees,
+		ascendancy_order = order,
+		item_sets = itemSets,
+		skill_sets = skillSets,
+	}
+end
+
+-- What changes from one stage of a guide to another (`from` and `to` are {tree, item_set,
+-- skill_set} ids from guide_stages): passives, ascendancy, gear, skills, and the stats PoB shows
+-- for each stage. The player's build isn't involved.
+function bridge.guide_stage_diff(params)
+	local ref = refEntry(params.reference)
+	local from, to = params.from or {}, params.to or {}
+	local specs = ref.treeTab.specList
+	local fromSpec = specs[tonumber(from.tree) or ref.treeTab.activeSpec] or error("no tree " .. tostring(from.tree), 0)
+	local toSpec = specs[tonumber(to.tree) or ref.treeTab.activeSpec] or error("no tree " .. tostring(to.tree), 0)
+	local fromPoints, fromNotables, fromAsc = specSummary(fromSpec)
+	local toPoints, toNotables, toAsc = specSummary(toSpec)
+	local added, removed = {}, {}
+	for name in pairs(toNotables) do
+		if not fromNotables[name] then added[#added + 1] = name end
+	end
+	for name in pairs(fromNotables) do
+		if not toNotables[name] then removed[#removed + 1] = name end
+	end
+	table.sort(added)
+	table.sort(removed)
+	local hadAsc = {}
+	for _, a in ipairs(fromAsc) do hadAsc[a] = true end
+	local newAsc = {}
+	for _, a in ipairs(toAsc) do
+		if not hadAsc[a] then newAsc[#newAsc + 1] = a end
+	end
+
+	local fromGear = setGear(ref, ref.itemsTab.itemSets[tonumber(from.item_set) or ref.itemsTab.activeItemSetId])
+	local toGear = setGear(ref, ref.itemsTab.itemSets[tonumber(to.item_set) or ref.itemsTab.activeItemSetId])
+	local gear = {}
+	for _, slotName in ipairs(GEAR_SLOTS) do
+		if fromGear[slotName] ~= toGear[slotName] then
+			gear[#gear + 1] = { slot = slotName, from = fromGear[slotName], to = toGear[slotName] }
+		end
+	end
+
+	local fromSkills = setSkills(skillSetGroups(ref, tonumber(from.skill_set) or ref.skillsTab.activeSkillSetId))
+	local toSkills = setSkills(skillSetGroups(ref, tonumber(to.skill_set) or ref.skillsTab.activeSkillSetId))
+	local before = {}
+	for _, sk in ipairs(fromSkills) do before[sk.skill] = sk end
+	local skills = {}
+	for _, sk in ipairs(toSkills) do
+		local old = before[sk.skill]
+		if not old then
+			skills[#skills + 1] = { skill = sk.skill, change = "new", supports = sk.supports }
+		elseif table.concat(old.supports, ",") ~= table.concat(sk.supports, ",") then
+			skills[#skills + 1] = { skill = sk.skill, change = "supports", from = old.supports, to = sk.supports }
+		end
+		before[sk.skill] = nil
+	end
+	for name in pairs(before) do
+		skills[#skills + 1] = { skill = name, change = "dropped" }
+	end
+
+	-- Stats need each stage calculated. The guide's own choice is put back afterwards.
+	local saved = { tree = ref.treeTab.activeSpec, item_set = ref.itemsTab.activeItemSetId, skill_set = ref.skillsTab.activeSkillSetId }
+	local function outputAt(stage)
+		ref:SetActiveSpec(tonumber(stage.tree) or saved.tree)
+		ref:SetActiveItemSet(tonumber(stage.item_set) or saved.item_set)
+		ref:SetActiveSkillSet(tonumber(stage.skill_set) or saved.skill_set)
+		return ref.calcsTab.mainOutput
+	end
+	local ok, result = pcall(function()
+		local a = outputAt(from)
+		local b = outputAt(to)
+		return statDiffs(a, b)
+	end)
+	ref:SetActiveSpec(saved.tree)
+	ref:SetActiveItemSet(saved.item_set)
+	ref:SetActiveSkillSet(saved.skill_set)
+	rebuild()
+	if not ok then
+		error(result, 0)
+	end
+
+	return {
+		points = { from = fromPoints, to = toPoints },
+		notables_added = added,
+		notables_removed = removed,
+		ascendancy_added = newAsc,
+		gear = gear,
+		skills = skills,
+		stats = result,
 	}
 end
 
