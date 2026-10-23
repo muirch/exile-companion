@@ -54,7 +54,7 @@ Exile Companion isn't affiliated with or endorsed by Grinding Gear Games. Path o
 
 The campaign guide is the first feature, not the whole app. What I want most is an assistant next to the game that knows my build. I want to ask it why my damage dropped or what to change next, and get an answer from real Path of Building numbers instead of a guess.
 
-- A build assistant you can ask questions, answering from Path of Building's own calculations. The first version works through Claude Desktop or Claude Code, see [docs/mcp.md](docs/mcp.md). It isn't in the installer yet.
+- A build assistant you can ask questions, answering from Path of Building's own calculations. It works through an AI agent you already use, such as Claude Desktop, Claude Code, Cursor or Codex, see [docs/mcp.md](docs/mcp.md).
 - Passive tree guidance from your build while you level.
 - Path of Exile 2, after its 1.0 release.
 

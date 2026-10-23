@@ -107,6 +107,11 @@ jobs:
       - name: Build frontend
         run: pnpm build
 
+      # Tauri copies the sidecars into the target folder, so they have to be real here: the
+      # engine tests below run from the same folder.
+      - name: Build the sidecars the installer ships
+        run: node tools/sidecars.mjs
+
       - name: clippy the Tauri app
         run: cargo clippy -p exile-companion --all-targets -- -D warnings
 

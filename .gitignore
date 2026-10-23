@@ -11,6 +11,8 @@ dist/
 
 # Tauri
 app/desktop/gen/
+# Built by tools/sidecars.mjs before the app
+app/desktop/binaries/
 
 # Path of Building for the engine tests (tools/fetch-pob.sh)
 /.pob/
