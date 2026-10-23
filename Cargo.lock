@@ -876,6 +876,7 @@ dependencies = [
  "exile-core",
  "exile-data",
  "exile-pob",
+ "exile-pob-engine",
  "log",
  "serde",
  "serde_json",

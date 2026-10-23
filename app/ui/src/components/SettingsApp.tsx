@@ -3,10 +3,12 @@ import { useEffect, useState } from 'react';
 import {
   clearBuild,
   closeSettings,
+  getPob,
   getSettings,
   importBuildFile,
   pasteBuild,
   pickLogFile,
+  pickPobFolder,
   routeNext,
   routePrev,
   routeReset,
@@ -18,7 +20,7 @@ import {
   stopSource,
   updateSettings,
 } from '../ipc/commands';
-import type { GemHints, PresetStage } from '../ipc/types';
+import type { GemHints, PobInfo, PresetStage } from '../ipc/types';
 import { Button, Choice, ConfirmButton, Note, Row, Section, Select, Slider, Toggle } from '../kit';
 import { useAppStore } from '../store/useAppStore';
 import { HotkeySection } from './HotkeySection';
@@ -317,6 +319,58 @@ function PresetRows(): React.JSX.Element | null {
   );
 }
 
+// The build assistant runs the player's own Path of Building, so it calculates what PoB does.
+function PobRows(): React.JSX.Element {
+  const [pob, setPob] = useState<PobInfo | null | undefined>(undefined);
+  const [error, setError] = useState<string | null>(null);
+  useEffect(() => {
+    void getPob().then(setPob);
+  }, []);
+  return (
+    <>
+      <Row label="PoB folder">
+        {/* Cut from the left like the Client.txt path, the folder name is the part that tells. */}
+        <span
+          dir="rtl"
+          className="min-w-0 flex-1 truncate text-left font-body text-[13px] text-value"
+          title={pob?.path ?? ''}
+        >
+          <bdi>{pob === undefined ? 'Looking…' : (pob?.path ?? 'Not found')}</bdi>
+        </span>
+        {pob?.version && (
+          <span className="shrink-0 font-body text-[13px] text-label">{pob.version}</span>
+        )}
+      </Row>
+      <Row label="">
+        <Button
+          onClick={async () => {
+            setError(null);
+            try {
+              const picked = await pickPobFolder();
+              if (picked) setPob(picked);
+            } catch (e) {
+              setError(String(e));
+            }
+          }}
+        >
+          Pick PoB folder
+        </Button>
+      </Row>
+      {error && (
+        <Row label="">
+          <span role="alert" className="min-w-0 flex-1 font-body text-[12px] text-corrupted">
+            {error}
+          </span>
+        </Row>
+      )}
+      <Note>
+        The build assistant will calculate with your Path of Building. Exile Companion looks for it
+        in the usual install folders. Pick the folder if yours is somewhere else.
+      </Note>
+    </>
+  );
+}
+
 function BuildSection(): React.JSX.Element {
   const build = useAppStore((s) => s.build);
   const setBuild = useAppStore((s) => s.setBuild);
@@ -376,6 +430,7 @@ function BuildSection(): React.JSX.Element {
           </span>
         </Row>
       )}
+      <PobRows />
       <GemHintsRow />
       {build && build.not_in_campaign.length > 0 && (
         <Row label="Not in campaign">

@@ -28,6 +28,8 @@ pub struct Settings {
     pub fade_after: u32,
     /// Per skill set of the loaded build, in order. Reset when a build is imported.
     pub preset_stages: Vec<exile_core::gemplan::PresetStage>,
+    /// Path of Building's folder, found or picked. The build assistant runs it.
+    pub pob_path: Option<String>,
 }
 
 impl Default for Settings {
@@ -46,6 +48,7 @@ impl Default for Settings {
             compact: true,
             fade_after: 0,
             preset_stages: Vec::new(),
+            pob_path: None,
         }
     }
 }

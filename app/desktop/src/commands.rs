@@ -37,6 +37,32 @@ pub async fn pick_log_file(
         .map(|p| p.to_string_lossy().into_owned()))
 }
 
+/// Path of Building's folder: the saved one, or the first found in the registry and the usual places.
+#[tauri::command]
+pub fn get_pob(app: AppHandle) -> Option<crate::pob::PobInfo> {
+    crate::pob::find(&app)
+}
+
+#[tauri::command]
+pub async fn pick_pob_folder(
+    app: AppHandle,
+    window: WebviewWindow,
+) -> Result<Option<crate::pob::PobInfo>, String> {
+    let (tx, rx) = tokio::sync::oneshot::channel();
+    app.dialog()
+        .file()
+        .set_parent(&window)
+        .set_title("Path of Building folder")
+        .pick_folder(move |dir| {
+            let _ = tx.send(dir);
+        });
+    let Some(dir) = rx.await.map_err(|e| e.to_string())? else {
+        return Ok(None);
+    };
+    let dir = dir.into_path().map_err(|e| e.to_string())?;
+    crate::pob::choose(&app, &dir).map(Some)
+}
+
 #[tauri::command]
 pub fn start_live(app: AppHandle, path: String) -> Result<CampaignState, String> {
     runtime::start_live(app, path)

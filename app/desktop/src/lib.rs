@@ -5,6 +5,7 @@ mod commands;
 mod hotkeys;
 mod menu;
 mod overlay;
+mod pob;
 mod runtime;
 mod settings;
 mod state;
@@ -117,6 +118,8 @@ pub fn run() {
         })
         .invoke_handler(tauri::generate_handler![
             commands::pick_log_file,
+            commands::get_pob,
+            commands::pick_pob_folder,
             commands::start_live,
             commands::stop_source,
             commands::start_replay,

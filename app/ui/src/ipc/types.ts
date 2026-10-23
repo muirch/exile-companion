@@ -33,6 +33,13 @@ export interface Settings {
   /** Seconds without a route change before the overlay fades out; 0 keeps it shown. */
   fadeAfter: number;
   presetStages: PresetStage[];
+  pobPath: string | null;
+}
+
+/** Path of Building's folder and the version from its manifest (mirrors `pob::PobInfo`). */
+export interface PobInfo {
+  path: string;
+  version: string | null;
 }
 
 /** Which gem steps the route shows (mirrors `exile_core::gemplan::GemHints`). */
