@@ -106,12 +106,24 @@ impl Guides {
         if html.contains("<title>Just a moment...</title>") {
             return Err(GuideError::Blocked(host));
         }
+        // A guide's page on poebuilds.cc lists related guides with their PoB links too. Only the
+        // card of the guide itself counts, and a guide without a PoB link has none.
+        if let Some(id) = url.split("poebuilds.cc/poe1/build/").nth(1) {
+            let id = id.split(['?', '#', '/']).next().unwrap_or(id);
+            let own = parse_cards(&html).into_iter().find(|g| {
+                g.page
+                    .as_deref()
+                    .is_some_and(|p| p.ends_with(&format!("/poe1/build/{id}")))
+                    || g.video.as_deref().is_some_and(|v| v.contains(id))
+            });
+            return Ok(own.and_then(|g| g.pob));
+        }
         Ok(pob_link_in_page(&html))
     }
 }
 
-/// The PoB link a page names most often, the first one on a tie. A guide page links its own
-/// build several times and related guides once.
+/// The PoB link a page names most often. A guide page links its own build several times and
+/// related guides once. With a tie between different links it can't tell, so none.
 pub fn pob_link_in_page(html: &str) -> Option<String> {
     static LINK: OnceLock<Regex> = OnceLock::new();
     let link = re(
@@ -126,7 +138,12 @@ pub fn pob_link_in_page(html: &str) -> Option<String> {
         }
     }
     let best = counts.iter().map(|(_, n)| *n).max()?;
-    counts.into_iter().find(|(_, n)| *n == best).map(|(u, _)| u)
+    let mut top = counts.into_iter().filter(|(_, n)| *n == best);
+    let first = top.next().map(|(u, _)| u);
+    if top.next().is_some() {
+        return None;
+    }
+    first
 }
 
 fn slug(s: &str) -> String {
@@ -316,6 +333,11 @@ mod tests {
             Some("https://poe.ninja/poe1/pob/923cf")
         );
         assert_eq!(pob_link_in_page("no links here"), None);
+        // Two builds named once each: which one is the guide's own isn't knowable.
+        assert_eq!(
+            pob_link_in_page("https://pobb.in/First111 https://pobb.in/Second22"),
+            None
+        );
     }
 
     #[test]
