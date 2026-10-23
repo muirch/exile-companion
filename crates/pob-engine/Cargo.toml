@@ -15,10 +15,11 @@ required-features = ["host"]
 # The app only starts the engine and finds PoB, so it leaves LuaJIT out.
 [features]
 default = ["host"]
-host = ["dep:mlua"]
+host = ["dep:mlua", "dep:flate2"]
 
 [dependencies]
 mlua = { version = "=0.12.2", features = ["luajit", "vendored", "serialize"], optional = true }
+flate2 = { version = "=1.1.9", optional = true }
 serde = { workspace = true }
 serde_json = { workspace = true }
 thiserror = { workspace = true }

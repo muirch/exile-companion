@@ -36,6 +36,22 @@ local function output()
 	return build.calcsTab.mainOutput
 end
 
+-- PoB's colour codes: ^0 to ^9 and ^xRRGGBB.
+local function strip(text)
+	return (tostring(text):gsub("%^x%x%x%x%x%x%x", ""):gsub("%^%d", ""))
+end
+
+-- The rebuild from Build:OnFrame, without drawing a frame of the open tab.
+local function rebuild()
+	wipeGlobalCache()
+	build.outputRevision = build.outputRevision + 1
+	build.buildFlag = false
+	build.skillsTab:UpdateSocketGroups()
+	build.calcsTab:BuildOutput()
+	build:RefreshStatList()
+	build.configTab.calcFunc, build.configTab.calcBase = build.calcsTab:GetMiscCalculator(build)
+end
+
 -- FullDPS sums the skills marked "include in full DPS". A build that marks none has only the main
 -- skill's CombinedDPS.
 local function dps(out)
@@ -84,9 +100,108 @@ function bridge.summary()
 	}
 end
 
+-- Without a manifest PoB runs in dev mode and saves the old build to Builds/~~temp~~.xml when
+-- another one opens. We never want PoB to write builds on its own.
+main.disableDevAutoSave = true
+
+-- A build PoB can't open leaves a prompt or a popup behind instead of raising an error.
 function bridge.load_build(params)
+	main.popups = {}
+	launch.promptMsg = nil
 	loadBuildFromXML(params.xml, params.name or "build")
+	if launch.promptMsg then
+		local msg = strip(launch.promptMsg):match("Error:%s*(.-)\n") or strip(launch.promptMsg)
+		launch.promptMsg = nil
+		error("Path of Building couldn't open the build. " .. msg)
+	end
+	local popup = main.popups[1]
+	if popup or not build.targetVersion then
+		local lines = {}
+		for _, c in pairs(popup and popup.controls or {}) do
+			if type(c.label) == "string" and c.label ~= "" then
+				lines[#lines + 1] = strip(c.label)
+			end
+		end
+		main.popups = {}
+		error("Path of Building couldn't open the build. " .. table.concat(lines, " "))
+	end
 	return bridge.summary()
+end
+
+-- A share code, the base64 zlib text PoB's Import/Export tab and the build sites use.
+function bridge.load_code(params)
+	local xml = Inflate(common.base64.decode(params.code:gsub("-", "+"):gsub("_", "/")))
+	if not xml then
+		error("that isn't a Path of Building code")
+	end
+	return bridge.load_build({ xml = xml, name = params.name })
+end
+
+-- The left sidebar as PoB shows it: the stat rows in its order and format, and its warnings.
+function bridge.sidebar_stats()
+	local rows = {}
+	for _, row in ipairs(build.controls.statBox.list) do
+		if row[1] then
+			rows[#rows + 1] = { label = (strip(row[1]):gsub(":$", "")), value = row[2] and strip(row[2]) or nil }
+		end
+	end
+	local warnings = {}
+	for _, w in ipairs(build.controls.warnings.lines or {}) do
+		warnings[#warnings + 1] = strip(w)
+	end
+	return { main_skill = mainSkillName(), stats = rows, warnings = warnings }
+end
+
+local configOptions
+
+-- Configuration options that differ from PoB's defaults, and the custom modifier lines. Every
+-- number depends on these (boss, buffs, charges, made-up mods), so answers must mention them.
+local function configChanges()
+	configOptions = configOptions or LoadModule("Modules/ConfigOptions")
+	local input = build.configTab.input
+	local changed = {}
+	for _, v in ipairs(configOptions) do
+		local value = v.var and input[v.var]
+		if value ~= nil then
+			local list = type(v.list) == "table" and v.list or nil
+			local default = v.defaultState
+			if v.type == "list" and list then
+				local d = list[v.defaultIndex or 1]
+				default = d and d.val
+			elseif v.type == "check" then
+				default = v.defaultState or false
+			end
+			if value ~= default then
+				local shown = value
+				for _, option in ipairs(list or {}) do
+					if option.val == value then
+						shown = strip(option.label)
+					end
+				end
+				changed[#changed + 1] = { var = v.var, label = (strip(v.label or v.var):gsub(":$", "")), value = shown }
+			end
+		end
+	end
+	local custom = {}
+	local set = build.configTab.configSets[build.configTab.activeConfigSetId]
+	for _, block in ipairs(set and set.customModsList or {}) do
+		if block.enabled ~= false then
+			for line in (block.text or ""):gmatch("[^\r\n]+") do
+				-- PoB skips lines that start with #, players use them to switch a mod off.
+				if not line:match("^%s*#") then
+					custom[#custom + 1] = line
+				end
+			end
+		end
+	end
+	return changed, custom
+end
+
+-- The build as PoB saves it, and the share code PoB's Import/Export tab gives.
+function bridge.export_build()
+	local xml = build:SaveDB("code")
+	local code = common.base64.encode(Deflate(xml)):gsub("+", "-"):gsub("/", "_")
+	return { xml = xml, code = code }
 end
 
 function bridge.defences()
@@ -180,6 +295,7 @@ function bridge.gem_value(params)
 		error("no socket group " .. tostring(index))
 	end
 	local base = dps(output())
+	local calc = build.calcsTab:GetMiscCalculator()
 	local gems = {}
 	for _, gem in ipairs(group.gemList) do
 		local entry = {
@@ -189,17 +305,14 @@ function bridge.gem_value(params)
 			support = gem.gemData and gem.gemData.grantedEffect and gem.gemData.grantedEffect.support or false,
 			enabled = gem.enabled ~= false,
 		}
+		-- The same toggle and calculate PoB's gem tooltip does.
 		if entry.enabled then
 			gem.enabled = false
-			build.buildFlag = true
-			runCallback("OnFrame")
-			entry.dps_pct = pct(dps(output()), base)
+			entry.dps_pct = pct(dps(calc()), base)
 			gem.enabled = true
 		end
 		gems[#gems + 1] = entry
 	end
-	build.buildFlag = true
-	runCallback("OnFrame")
 	return { group = index, label = group.displayLabel or group.label, slot = group.slot, gems = gems }
 end
 
@@ -259,8 +372,11 @@ function bridge.build_info()
 	table.sort(notables, byName)
 	table.sort(ascendancy, byName)
 
+	local config, customMods = configChanges()
 	return {
 		summary = bridge.summary(),
+		config = config,
+		custom_mods = customMods,
 		items = items,
 		socket_groups = groups,
 		keystones = keystones,

@@ -21,5 +21,9 @@ Short Bow
 			<Slot name="Weapon 1" itemId="1"/>
 		</ItemSet>
 	</Items>
-	<Config/>
+	<Config>
+		<Input name="useFrenzyCharges" boolean="true"/>
+		<CustomModifierBlock title="Default" enabled="true">+10% to all Elemental Resistances
+#+100% to all Elemental Resistances</CustomModifierBlock>
+	</Config>
 </PathOfBuilding>

@@ -73,6 +73,68 @@ fn answers_questions_about_a_loaded_build() {
 }
 
 #[test]
+fn shows_the_sidebar_and_the_config_assumptions() {
+    let Some(pob) = pob_dir() else { return };
+    let mut e = engine(&pob);
+    e.call("load_build", json!({ "xml": FIXTURE }), SLOW)
+        .unwrap();
+
+    let sidebar = e.call("sidebar_stats", json!({}), SLOW).unwrap();
+    let life = sidebar["stats"]
+        .as_array()
+        .unwrap()
+        .iter()
+        .find(|r| r["label"] == "Total Life")
+        .expect("a Total Life row");
+    assert!(
+        life["value"].as_str().unwrap().parse::<f64>().is_ok(),
+        "{life}"
+    );
+
+    let info = e.call("build_info", json!({}), SLOW).unwrap();
+    assert!(
+        info["config"]
+            .as_array()
+            .unwrap()
+            .iter()
+            .any(|c| c["var"] == "useFrenzyCharges"),
+        "{}",
+        info["config"]
+    );
+    // The commented-out line is off in PoB too.
+    assert_eq!(
+        info["custom_mods"],
+        json!(["+10% to all Elemental Resistances"])
+    );
+}
+
+#[test]
+fn exports_a_code_that_loads_back() {
+    let Some(pob) = pob_dir() else { return };
+    let mut e = engine(&pob);
+    let before = e
+        .call("load_build", json!({ "xml": FIXTURE }), SLOW)
+        .unwrap();
+    let export = e.call("export_build", json!({}), SLOW).unwrap();
+    let code = export["code"].as_str().unwrap();
+    // zlib streams start with 0x78, which base64 writes as "e".
+    assert!(code.starts_with('e'), "{code}");
+    assert!(export["xml"].as_str().unwrap().contains("Caustic Arrow"));
+
+    let after = e.call("load_code", json!({ "code": code }), SLOW).unwrap();
+    assert_eq!(after["main_skill"], before["main_skill"]);
+    assert_eq!(after["defence"]["Life"], before["defence"]["Life"]);
+
+    let err = e
+        .call("load_code", json!({ "code": "not a code" }), SLOW)
+        .unwrap_err();
+    assert!(
+        err.to_string().contains("isn't a Path of Building code"),
+        "{err}"
+    );
+}
+
+#[test]
 fn reports_pob_errors_and_keeps_serving() {
     let Some(pob) = pob_dir() else { return };
     let mut e = engine(&pob);
@@ -81,6 +143,14 @@ fn reports_pob_errors_and_keeps_serving() {
         matches!(err, EngineError::Pob(ref m) if m.contains("no_such_method")),
         "{err}"
     );
+    let err = e
+        .call(
+            "load_build",
+            json!({ "xml": "<PathOfBuilding><Build" }),
+            SLOW,
+        )
+        .unwrap_err();
+    assert!(err.to_string().contains("couldn't open the build"), "{err}");
     e.call("load_build", json!({ "xml": FIXTURE }), SLOW)
         .unwrap();
 }
