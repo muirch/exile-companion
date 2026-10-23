@@ -110,7 +110,7 @@ export function OverlayRoot(): React.JSX.Element {
     return () => ro.disconnect();
   }, []);
 
-  // Hiding is instant to match the game window.
+  // Showing and hiding are instant to match the game window. Only the timed fade-out is animated.
   return (
     <div ref={box} className="inline-block p-2">
       {!shownOnce && <StartupNotice />}
@@ -119,7 +119,7 @@ export function OverlayRoot(): React.JSX.Element {
         className={[
           grabbed ? 'pointer-events-auto outline outline-1 outline-offset-2 outline-normal/60' : 'pointer-events-none',
           visible
-            ? 'opacity-100 transition-opacity duration-150'
+            ? 'opacity-100'
             : faded
               ? 'opacity-0 transition-opacity duration-700'
               : 'opacity-0',

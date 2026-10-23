@@ -184,6 +184,7 @@ describe('OverlayRoot', () => {
       ui({ gameFocused: false });
       ui({ gameFocused: true });
       expect(routeBox()).toHaveClass('opacity-100');
+      expect(routeBox()).not.toHaveClass('transition-opacity');
     });
 
     it('comes back on a tap of the menu key', () => {
