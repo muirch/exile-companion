@@ -57,6 +57,26 @@ describe('SettingsApp', () => {
     act(() => useAppStore.setState({ build: null }));
   });
 
+  it('shows the Path of Building folder it found and its version', async () => {
+    vi.mocked(commands.getPob).mockResolvedValueOnce({
+      path: 'C:\\PoB',
+      version: '2.67.2',
+    });
+    render(<SettingsApp />);
+    expect(await screen.findByText('C:\\PoB')).toBeInTheDocument();
+    expect(screen.getByText('2.67.2')).toBeInTheDocument();
+  });
+
+  it('says when there is no Path of Building and why a picked folder was refused', async () => {
+    vi.mocked(commands.pickPobFolder).mockRejectedValueOnce(
+      "That's Path of Building for Path of Exile 2. Pick the one for Path of Exile 1.",
+    );
+    render(<SettingsApp />);
+    expect(await screen.findByText('Not found')).toBeInTheDocument();
+    await userEvent.click(screen.getByRole('button', { name: 'Pick PoB folder' }));
+    expect(await screen.findByRole('alert')).toHaveTextContent('Path of Exile 2');
+  });
+
   it('shows why a pasted build did not load', async () => {
     vi.mocked(commands.pasteBuild).mockRejectedValueOnce("Couldn't download the build: timeout");
     render(<SettingsApp />);

@@ -16,6 +16,7 @@ import type {
   BindError,
   HotkeySettings,
   NextObjective,
+  PobInfo,
   RouteView,
   Settings,
   SourceStatus,
@@ -36,6 +37,18 @@ const EMPTY_STATE: CampaignState = {
 
 export const pickLogFile = (): Promise<string | null> =>
   isTauri() ? invoke('pick_log_file') : Promise.resolve('docs/sample-client.txt');
+
+const MOCK_POB: PobInfo = {
+  path: 'C:\\Users\\exile\\AppData\\Roaming\\Path of Building Community',
+  version: '2.67.2',
+};
+
+export const getPob = (): Promise<PobInfo | null> =>
+  isTauri() ? invoke('get_pob') : Promise.resolve(MOCK_POB);
+
+/** Null when the dialog is cancelled. Rejects with a message when the folder isn't PoB. */
+export const pickPobFolder = (): Promise<PobInfo | null> =>
+  isTauri() ? invoke('pick_pob_folder') : Promise.resolve(MOCK_POB);
 
 export const startLive = (path: string): Promise<CampaignState> => {
   if (isTauri()) return invoke('start_live', { path });
@@ -126,6 +139,7 @@ export const getSettings = (): Promise<Settings> =>
         compact: useAppStore.getState().ui.compact,
         fadeAfter: useAppStore.getState().ui.fadeAfter,
         presetStages: [],
+        pobPath: null,
       });
 
 export const saveSettings = (settings: Settings): Promise<void> =>
