@@ -22,8 +22,22 @@ struct Client {
 
 impl Client {
     fn start(args: &[&str]) -> Self {
-        let mut child = Command::new(env!("CARGO_BIN_EXE_exile-companion-mcp"))
-            .args(args)
+        Self::spawn(Command::new(env!("CARGO_BIN_EXE_exile-companion-mcp")).args(args))
+    }
+
+    /// With the home and app data folders moved, so the app's saved files aren't found.
+    fn start_env(args: &[&str], home: &std::path::Path) -> Self {
+        let mut cmd = Command::new(env!("CARGO_BIN_EXE_exile-companion-mcp"));
+        cmd.args(args)
+            .env("HOME", home)
+            .env("USERPROFILE", home)
+            .env("APPDATA", home)
+            .env("XDG_CONFIG_HOME", home);
+        Self::spawn(&mut cmd)
+    }
+
+    fn spawn(cmd: &mut Command) -> Self {
+        let mut child = cmd
             .stdin(Stdio::piped())
             .stdout(Stdio::piped())
             .stderr(Stdio::null())
@@ -158,4 +172,40 @@ fn answers_about_a_build_with_pob() {
     assert!(!is_error, "{text}");
     let code: Value = serde_json::from_str(&text).unwrap();
     assert!(code["code"].as_str().unwrap().starts_with('e'));
+}
+
+// A new player has no build in the app. Loading one in the chat has to work then.
+#[test]
+fn loads_a_build_when_the_app_has_none() {
+    let Some(pob) = std::env::var_os("EXILE_POB_DIR") else {
+        eprintln!("EXILE_POB_DIR is not set, skipping");
+        return;
+    };
+    let engine = PathBuf::from(env!("CARGO_BIN_EXE_exile-companion-mcp"))
+        .with_file_name(format!("exile-pob-engine{}", std::env::consts::EXE_SUFFIX));
+    if !engine.is_file() {
+        eprintln!("{} isn't built, skipping", engine.display());
+        return;
+    }
+    // HOME and APPDATA point at an empty folder, so there's no saved build to fall back on.
+    let empty = tempfile::tempdir().unwrap();
+    let mut c = Client::start_env(
+        &[
+            "--engine",
+            engine.to_str().unwrap(),
+            "--pob",
+            pob.to_str().unwrap(),
+        ],
+        empty.path(),
+    );
+    let (text, is_error) = c.tool("build_overview", json!({}));
+    assert!(is_error && text.contains("No build yet"), "{text}");
+    let (text, is_error) = c.tool("compare_with_guide", json!({ "guide": GUIDE }));
+    assert!(is_error && text.contains("No build yet"), "{text}");
+    let (text, is_error) = c.tool("load_build", json!({ "build": GUIDE }));
+    assert!(!is_error, "{text}");
+    let (text, is_error) = c.tool("build_overview", json!({}));
+    assert!(!is_error, "{text}");
+    let overview: Value = serde_json::from_str(&text).unwrap();
+    assert_eq!(overview["main_skill"], "Caustic Arrow");
 }
