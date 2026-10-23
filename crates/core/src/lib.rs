@@ -18,6 +18,7 @@
 
 pub mod agents;
 pub mod build;
+pub mod build_history;
 pub mod clock;
 pub mod data;
 pub mod error;
