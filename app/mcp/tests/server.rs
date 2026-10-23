@@ -112,6 +112,8 @@ fn lists_its_tools() {
         "compare_item",
         "compare_with_guide",
         "find_guides",
+        "guide_stages",
+        "guide_stage_diff",
         "wiki_search",
         "wiki_page",
     ] {
@@ -204,6 +206,11 @@ fn loads_a_build_when_the_app_has_none() {
     assert!(is_error && text.contains("No build yet"), "{text}");
     let (text, is_error) = c.tool("compare_with_guide", json!({ "guide": GUIDE }));
     assert!(is_error && text.contains("No build yet"), "{text}");
+    // A guide's own stages don't need the player's build.
+    let (text, is_error) = c.tool("guide_stages", json!({ "guide": GUIDE }));
+    assert!(!is_error, "{text}");
+    let stages: Value = serde_json::from_str(&text).unwrap();
+    assert_eq!(stages["trees"].as_array().unwrap().len(), 1);
     let (text, is_error) = c.tool("load_build", json!({ "build": GUIDE }));
     assert!(!is_error, "{text}");
     let (text, is_error) = c.tool("build_overview", json!({}));

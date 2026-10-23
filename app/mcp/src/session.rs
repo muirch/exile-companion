@@ -97,6 +97,12 @@ impl Session {
         Ok(index + 1)
     }
 
+    /// An engine method that doesn't read the player's build, such as a guide's own stages.
+    pub fn call_any(&mut self, method: &str, params: Value) -> Result<Value, String> {
+        let result = self.engine()?.call(method, params, CALL);
+        self.keep_alive(result)
+    }
+
     /// A PoB code, a build link, build XML, or a guide page with a build link on it.
     fn to_xml(&self, text: &str) -> Result<String, String> {
         let text = text.trim();

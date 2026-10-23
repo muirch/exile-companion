@@ -261,6 +261,30 @@ fn compares_the_build_with_a_guide() {
         .collect();
     assert_eq!(names, ["Herbalism"]);
 
+    let stages = e
+        .call("guide_stages", json!({ "reference": 1 }), SLOW)
+        .unwrap();
+    assert_eq!(stages["trees"].as_array().unwrap().len(), 1);
+    assert!(stages["trees"][0]["points"].as_u64().unwrap() > 1);
+    assert_eq!(
+        stages["item_sets"][0]["gear"]["Weapon 1"],
+        "Death Song, Short Bow"
+    );
+    assert_eq!(
+        stages["skill_sets"][0]["skills"][0]["skill"],
+        "Caustic Arrow"
+    );
+    let same = e
+        .call(
+            "guide_stage_diff",
+            json!({ "reference": 1, "from": {}, "to": {} }),
+            SLOW,
+        )
+        .unwrap();
+    assert_eq!(same["notables_added"], json!([]));
+    assert_eq!(same["gear"], json!([]));
+    assert_eq!(same["stats"], json!([]));
+
     // Comparing measured on the player's build and left it alone.
     assert_eq!(e.call("summary", json!({}), SLOW).unwrap(), before);
     let err = e
