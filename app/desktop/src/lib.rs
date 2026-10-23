@@ -1,6 +1,7 @@
 //! The Exile Companion Tauri v2 shell. It owns the overlay window, plugins, and IPC, and delegates all
 //! campaign logic to `exile-core`.
 
+mod assistant;
 mod commands;
 mod hotkeys;
 mod menu;
@@ -119,6 +120,9 @@ pub fn run() {
         .invoke_handler(tauri::generate_handler![
             commands::pick_log_file,
             commands::get_pob,
+            commands::get_assistant,
+            commands::connect_agent,
+            commands::copy_assistant_config,
             commands::pick_pob_folder,
             commands::start_live,
             commands::stop_source,

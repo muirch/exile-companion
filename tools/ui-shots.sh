@@ -45,7 +45,7 @@ overlay overlay-compact-boss "view=locked&edge=9&compact"
 overlay notice "view=notice"
 stage menu "window=menu" 236 336
 shot menu "file://$OUT/.stage-menu.html" 560 420
-shot settings "$URL/?window=settings" 560 1200
+shot settings "$URL/?window=settings" 560 1600
 
 cd "$OUT"
 ffmpeg -loglevel error -y \
