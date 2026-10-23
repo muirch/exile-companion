@@ -70,6 +70,7 @@ app/desktop             the Tauri v2 shell with windows, hotkeys, IPC and settin
 crates/core             campaign logic, no Tauri, covered by tests
 crates/pob              Path of Building import
 crates/pob-engine       Path of Building's calculations run headless, with LuaJIT built in
+crates/wiki             the Path of Exile Wiki through its API, for the build assistant
 crates/data             the campaign data and route, embedded at build time
 tools/data-extractor    builds the campaign data from the game's files
 docs                    images and a sample Client.txt
@@ -132,6 +133,8 @@ If you open the project in Claude Code, the hooks in `.claude/settings.json` run
 The leveling route in `crates/data/data/routes/exile-leveling` is written by the exile-leveling authors and kept under its MIT license (see the `LICENSE` file there).
 
 `crates/pob-engine/lua/headless.lua` is adapted from Path of Building Community's headless wrapper, under its MIT license (see `headless.LICENSE` next to it). The engine runs Path of Building itself from a folder on your machine. PoB isn't part of this repo.
+
+The build assistant reads the [Path of Exile Wiki](https://www.poewiki.net) through its API, on your machine. Wiki content is under CC BY-NC-SA 3.0 and isn't part of this repo.
 
 The overlay uses Alegreya Sans and Alegreya Sans SC by Huerta Tipográfica, under the SIL Open Font License (`app/ui/src/assets/fonts/OFL.txt`).
 
