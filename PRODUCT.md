@@ -10,20 +10,22 @@ The UI is a web page rendered inside a Tauri v2 window on Windows (WebView2). Li
 
 ## Users
 
-Path of Exile 1 players leveling a character through the ten-act campaign, usually at a league start. Two kinds, served by one route:
+The author first, a Path of Exile player who wants one companion next to the game instead of a guide, Path of Building and a chat window open on the side. The tool is meant to be shared with the community later.
+
+The campaign guide, the first feature, serves Path of Exile 1 players leveling through the ten acts, usually at a league start. Two kinds, served by one route:
 
 - regular players who run the campaign once or twice a league and don't want to open guides or alt-tab,
 - experienced players and speedrunners who know the campaign and want the shortest route with as little text as possible.
 
-The first user is the author, who also tests it live in the game. The tool is meant to be shared with the community later.
+The author also tests it live in the game.
 
 ## Product Purpose
 
-Exile Companion is a passive overlay that sits over the game and tells the player what to do in the area they are in. That means where to go next, which quest to hand in, where to place a portal, which boss to kill and where the trial is. Success means the player levels through the campaign without alt-tabbing to a guide or to Path of Building.
+Exile Companion is a companion app for Path of Exile that sits over the game. The goal is an assistant that knows the player's build and answers questions about it from real Path of Building calculations. The campaign guide is the first feature and the one that works today. It tells the player what to do in the area they are in, where to go next, which quest to hand in, which boss to kill and which gems the build wants from each quest. Success for the guide means the player levels through the campaign without alt-tabbing to a guide or to Path of Building.
 
 ## Positioning
 
-Exile Companion reads only the game's `Client.txt` log, knows which area the player is in from the log's internal area ids, and shows the matching steps of a speedrunning route (exile-leveling's, MIT). It is a native Windows app with the route engine in Rust. It is meant to grow into a bigger overlay with build guidance from Path of Building and an AI build assistant that answers from real PoB calculations.
+Exile Companion is a native Windows app with its engine in Rust and one overlay that every feature shares. The campaign guide reads only the game's `Client.txt` log, knows which area the player is in from the log's internal area ids, and shows the matching steps of a speedrunning route (exile-leveling's, MIT). The build assistant comes next and will work from the same imported Path of Building build.
 
 ## Operating Context
 

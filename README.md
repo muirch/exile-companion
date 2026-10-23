@@ -2,7 +2,7 @@
 
 # Exile Companion
 
-A leveling overlay for Path of Exile 1. It tells you what to do in the area you're in and where to go next, so you can run the campaign without a guide open on the other screen.
+A companion app for Path of Exile that sits over the game. I'm building it for myself first. The goal is an assistant that knows your build and answers questions about it. Today it guides you through the campaign.
 
 [![CI](https://github.com/muirch/exile-companion/actions/workflows/ci.yml/badge.svg)](https://github.com/muirch/exile-companion/actions/workflows/ci.yml)
 [![License: MIT](https://img.shields.io/badge/license-MIT-blue.svg)](LICENSE)
@@ -12,9 +12,9 @@ A leveling overlay for Path of Exile 1. It tells you what to do in the area you'
 
 </div>
 
-## What it does
+## What it does today
 
-Exile Companion sits over the game and looks like one of its item tooltips. The header is the area you're in, the body is what to do there, and the last line is the way out. Bosses, quests, waypoints and trials use the game's own text colours, so you can read a step in one glance between fights.
+The first thing it does is the campaign. Exile Companion sits over the game and looks like one of its item tooltips. The header is the area you're in, the body is what to do there, and the last line is the way out. Bosses, quests, waypoints and trials use the game's own text colours, so you can read a step in one glance between fights.
 
 It follows you on its own. The game writes every area it loads to its `Client.txt` log, and Exile Companion reads that log to know where you are, including the Act 6-10 towns that share names with Act 1-5. Your level tells repeat visits apart. The route is the speedrunning route from [exile-leveling](https://github.com/HeartofPhos/exile-leveling), and you can step through it by hand when you go off it.
 
@@ -36,7 +36,7 @@ All of them can be changed in the settings.
 
 | Key | What it does |
 |---|---|
-| Hold Tilde (left of 1) | Quick menu: route and layout, previous and next step, settings, move the overlay, quit |
+| Hold Tilde (left of 1) | Opens the quick menu with route and layout, previous and next step, settings, moving the overlay and quit |
 | Tap Tilde | Show the overlay again after it faded out, and the step's hints in the compact layout |
 | Alt+M | Unlock the overlay to drag it, press again to lock |
 | Alt+Left, Alt+Right | Previous or next step of the route |
@@ -50,10 +50,12 @@ The relog key is the one thing it sends to the game. When you turn it on, F9 typ
 
 Exile Companion isn't affiliated with or endorsed by Grinding Gear Games. Path of Exile is their trademark. It's a free, non-commercial fan tool.
 
-## What's next
+## Where it's going
 
-- Passive tree guidance from your Path of Building build.
-- An assistant that answers build questions from real Path of Building numbers.
+The campaign guide is the first feature, not the whole app. What I want most is an assistant next to the game that knows my build. I want to ask it why my damage dropped or what to change next, and get an answer from real Path of Building numbers instead of a guess.
+
+- A build assistant you can ask questions, answering from Path of Building's own calculations.
+- Passive tree guidance from your build while you level.
 - Path of Exile 2, after its 1.0 release.
 
 ## For developers
