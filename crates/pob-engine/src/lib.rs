@@ -3,13 +3,16 @@
 //! process and asks it questions about a build.
 
 mod client;
+#[cfg(feature = "host")]
 mod host;
 mod layout;
+pub mod locate;
 pub mod protocol;
 
 use std::path::PathBuf;
 
 pub use client::Engine;
+#[cfg(feature = "host")]
 pub use host::Host;
 pub use layout::PobDir;
 
@@ -17,6 +20,8 @@ pub use layout::PobDir;
 pub enum EngineError {
     #[error("{0} doesn't look like a Path of Building folder (no Launch.lua and lua/xml.lua)")]
     NotPob(PathBuf),
+    #[error("{0} is Path of Building for Path of Exile 2")]
+    Poe2(PathBuf),
     #[error("couldn't start the engine: {0}")]
     Spawn(std::io::Error),
     #[error("{0}")]

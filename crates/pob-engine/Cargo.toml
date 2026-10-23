@@ -10,9 +10,15 @@ description = "Runs Path of Building's calculations headless for Exile Companion
 [[bin]]
 name = "exile-pob-engine"
 path = "src/main.rs"
+required-features = ["host"]
+
+# The app only starts the engine and finds PoB, so it leaves LuaJIT out.
+[features]
+default = ["host"]
+host = ["dep:mlua"]
 
 [dependencies]
-mlua = { version = "=0.12.2", features = ["luajit", "vendored", "serialize"] }
+mlua = { version = "=0.12.2", features = ["luajit", "vendored", "serialize"], optional = true }
 serde = { workspace = true }
 serde_json = { workspace = true }
 thiserror = { workspace = true }
