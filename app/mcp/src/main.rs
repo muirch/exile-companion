@@ -57,7 +57,9 @@ Take guides from find_guides, the guide sites they link (Mobalytics, PoE Vault, 
 Don't build advice on SEO tier lists or on sites that sell currency or items.
 
 Use the wiki for mechanics, crafting, league content and anything Path of Building doesn't model. \
-Search first, then read one section at a time. Wiki content is CC BY-NC-SA 3.0: link the pages you used.";
+Search first, then read one section at a time. Wiki content is CC BY-NC-SA 3.0: link the pages you used. \
+Items list the mod lines Path of Building doesn't calculate (not_calculated) and properties it keeps but doesn't use. \
+Look those up in the wiki instead of guessing, and say the numbers leave them out.";
 
 fn text(v: impl Into<String>) -> CallToolResult {
     CallToolResult::success(vec![ContentBlock::text(v)])

@@ -154,6 +154,25 @@ fn compares_a_copied_item_with_the_equipped_one() {
     assert_eq!(weapon["replaces"], "Short Bow");
     assert!(f(&weapon["dps_pct"]) > 0.0, "{weapon}");
 
+    // What PoB can't calculate is marked, whatever it is, and other properties come through.
+    let odd = format!("{BOW}\nGrants a mechanic from a future league\n--------\nCorrupted");
+    let cmp = e
+        .call("compare_item", json!({ "text": odd }), SLOW)
+        .unwrap();
+    assert_eq!(
+        cmp["item"]["not_calculated"],
+        json!(["Grants a mechanic from a future league"])
+    );
+    assert!(
+        cmp["item"]["properties"]
+            .as_array()
+            .unwrap()
+            .iter()
+            .any(|p| p == "Corrupted"),
+        "{}",
+        cmp["item"]
+    );
+
     let err = e
         .call("compare_item", json!({ "text": "hello" }), SLOW)
         .unwrap_err();
