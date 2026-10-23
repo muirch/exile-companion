@@ -50,6 +50,17 @@ Compare your build with a guide's PoB, stage by stage, and say what to change fi
 
 Numbers are Path of Building's own, with the build's Configuration. If the build assumes a boss, buffs or custom modifiers, so do the numbers.
 
+## Trying the tools by hand
+
+```bash
+node tools/mcp-session.mjs start test --pob <Path of Building folder> --build <build.xml>
+node tools/mcp-session.mjs info test
+node tools/mcp-session.mjs call test what_if '{"changes":[{"level":90}]}'
+node tools/mcp-session.mjs stop test
+```
+
+It keeps a debug build of the server running and calls its tools the way an agent does.
+
 ## Building it
 
 ```bash
