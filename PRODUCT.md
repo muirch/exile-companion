@@ -17,6 +17,8 @@ The campaign guide, the first feature, serves Path of Exile 1 players leveling t
 - regular players who run the campaign once or twice a league and don't want to open guides or alt-tab,
 - experienced players and speedrunners who know the campaign and want the shortest route with as little text as possible.
 
+The build assistant serves newer players and players who follow a build guide without understanding Path of Building. Players who already read PoB fluently need it least. A new player shouldn't design a build. They pick a proven guide, and the assistant brings their character toward the guide's stage: what differs, what that costs, what to change or buy first. Advice is the difference to a reference build (the guide's PoB, or several guides for the same skill), ranked by what PoB says each change is worth. It doesn't suggest passives, keystones or items the reference builds don't take, unless the player asks to explore. Without a guide, it helps choose one: playstyle, budget, league start or not, then links to popular guides for that class and skill, and the player loads the guide's PoB.
+
 The author also tests it live in the game.
 
 ## Product Purpose

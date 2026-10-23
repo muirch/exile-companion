@@ -21,6 +21,10 @@ pub struct Session {
     engine: Option<Engine>,
     /// A build loaded during this conversation replaces the app's build until the server stops.
     build_xml: Option<String>,
+    /// Reference builds (guides) in the order they came, so a restarted engine gets them back.
+    references: Vec<String>,
+    /// How many of them the running engine has. Reset when the engine starts again.
+    references_loaded: usize,
 }
 
 impl Session {
@@ -29,6 +33,8 @@ impl Session {
             opts,
             engine: None,
             build_xml: None,
+            references: Vec::new(),
+            references_loaded: 0,
         }
     }
 
@@ -43,20 +49,42 @@ impl Session {
 
     /// Loads a build for the rest of the conversation: an import code, a build link or XML.
     pub fn load(&mut self, text: &str) -> Result<Value, String> {
-        let text = match exile_pob::code_url(text) {
-            Some(url) => fetch(&url)?,
-            None => text.to_string(),
-        };
-        let xml = exile_pob::xml_from_text(&text).map_err(|_| {
-            "That's not a Path of Building code, a build link or build XML.".to_string()
-        })?;
-        let xml = String::from_utf8_lossy(&xml).into_owned();
+        let xml = to_xml(text)?;
         let summary = self
             .engine()?
             .call("load_build", json!({ "xml": xml }), CALL);
         let summary = self.keep_alive(summary)?;
         self.build_xml = Some(xml);
         Ok(summary)
+    }
+
+    /// The engine's index of a reference build, loading it the first time it's asked for.
+    pub fn reference(&mut self, text: &str) -> Result<usize, String> {
+        let xml = to_xml(text)?;
+        let index = match self.references.iter().position(|r| *r == xml) {
+            Some(i) => i,
+            None => {
+                self.references.push(xml);
+                self.references.len() - 1
+            }
+        };
+        self.engine()?;
+        while self.references_loaded < self.references.len() {
+            let xml = self.references[self.references_loaded].clone();
+            let r = self.engine()?.call(
+                "load_reference",
+                json!({ "xml": xml, "label": "Guide" }),
+                CALL,
+            );
+            if let Err(e) = self.keep_alive(r) {
+                // A build PoB can't open shouldn't stay in the list and fail every later call.
+                self.references.truncate(self.references_loaded);
+                return Err(e);
+            }
+            self.references_loaded += 1;
+        }
+        // The engine counts from 1, like Lua.
+        Ok(index + 1)
     }
 
     fn try_call(&mut self, method: &str, params: Value) -> Result<Value, String> {
@@ -107,9 +135,21 @@ impl Session {
                 .call("load_build", json!({ "xml": xml }), CALL)
                 .map_err(|e| e.to_string())?;
             self.engine = Some(engine);
+            self.references_loaded = 0;
         }
         Ok(self.engine.as_mut().expect("started above"))
     }
+}
+
+fn to_xml(text: &str) -> Result<String, String> {
+    let text = match exile_pob::code_url(text) {
+        Some(url) => fetch(&url)?,
+        None => text.to_string(),
+    };
+    let xml = exile_pob::xml_from_text(&text).map_err(|_| {
+        "That's not a Path of Building code, a build link or build XML.".to_string()
+    })?;
+    Ok(String::from_utf8_lossy(&xml).into_owned())
 }
 
 fn fetch(url: &str) -> Result<String, String> {

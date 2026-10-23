@@ -8,6 +8,8 @@ use exile_pob_engine::{Engine, EngineError};
 use serde_json::{json, Value};
 
 const FIXTURE: &str = include_str!("fixtures/ranger-caustic-arrow.xml");
+// The same ranger as a guide would have it: Herbalism, a rare bow, Added Chaos Damage, Onslaught.
+const GUIDE: &str = include_str!("fixtures/ranger-caustic-arrow-guide.xml");
 const SLOW: Duration = Duration::from_secs(120);
 
 fn pob_dir() -> Option<PathBuf> {
@@ -209,6 +211,64 @@ fn tries_changes_and_puts_the_build_back() {
     assert_eq!(
         info["custom_mods"],
         json!(["+10% to all Elemental Resistances"])
+    );
+}
+
+#[test]
+fn compares_the_build_with_a_guide() {
+    let Some(pob) = pob_dir() else { return };
+    let mut e = engine(&pob);
+    let before = e
+        .call("load_build", json!({ "xml": FIXTURE }), SLOW)
+        .unwrap();
+    let info = e
+        .call(
+            "load_reference",
+            json!({ "xml": GUIDE, "label": "Test guide" }),
+            SLOW,
+        )
+        .unwrap();
+    assert_eq!(info["reference"], 1);
+    assert_eq!(info["main_skill"], "Caustic Arrow");
+    assert_eq!(info["trees"][0]["active"], true);
+
+    let c = e
+        .call("compare_reference", json!({ "reference": 1 }), SLOW)
+        .unwrap();
+    let missing = &c["passives"]["missing"][0];
+    assert_eq!(missing["node"]["name"], "Herbalism");
+    assert!(missing["points"].as_u64().unwrap() > 1, "{missing}");
+    assert_eq!(c["passives"]["extra"], json!([]));
+    assert_eq!(c["gear"][0]["slot"], "Weapon 1");
+    assert_eq!(
+        c["gear"][0]["reference_item"]["name"],
+        "Death Song, Short Bow"
+    );
+    assert!(f(&c["gear"][0]["dps_pct"]) > 0.0);
+    assert_eq!(c["supports"]["missing"][0]["gem"], "Added Chaos Damage");
+    assert!(f(&c["supports"]["missing"][0]["dps_pct"]) > 0.0);
+    assert_eq!(c["config"][0]["var"], "buffOnslaught");
+
+    // With the guide, only what the guide takes counts as reachable, however far it is.
+    let power = e
+        .call("node_power", json!({ "reference": 1, "limit": 5 }), SLOW)
+        .unwrap();
+    let names: Vec<&str> = power["reachable"]
+        .as_array()
+        .unwrap()
+        .iter()
+        .map(|r| r["node"]["name"].as_str().unwrap())
+        .collect();
+    assert_eq!(names, ["Herbalism"]);
+
+    // Comparing measured on the player's build and left it alone.
+    assert_eq!(e.call("summary", json!({}), SLOW).unwrap(), before);
+    let err = e
+        .call("compare_reference", json!({ "reference": 9 }), SLOW)
+        .unwrap_err();
+    assert!(
+        err.to_string().contains("load a reference build first"),
+        "{err}"
     );
 }
 
