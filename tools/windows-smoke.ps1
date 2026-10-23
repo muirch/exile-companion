@@ -79,9 +79,11 @@ function Start-App([string] $name, [string] $exe) {
 }
 
 Start-Process $Setup -ArgumentList '/S' -Wait
-# The exe is named after the Rust crate, so take whatever the installer put there.
+# The exe is named after the Rust crate, so take whatever the installer put there. The assistant's
+# programs sit next to it and aren't the app.
+$sidecars = 'exile-pob-engine.exe', 'exile-companion-mcp.exe'
 $exe = Get-ChildItem "$env:LOCALAPPDATA\Exile Companion", "$env:ProgramFiles\Exile Companion" -Filter *.exe -ErrorAction SilentlyContinue |
-  Where-Object { $_.Name -notmatch 'uninstall' } | Select-Object -First 1 -ExpandProperty FullName
+  Where-Object { $_.Name -notmatch 'uninstall' -and $sidecars -notcontains $_.Name } | Select-Object -First 1 -ExpandProperty FullName
 if (-not $exe) {
   Get-ChildItem "$env:LOCALAPPDATA", "$env:ProgramFiles" -Filter *.exe -Recurse -Depth 2 -ErrorAction SilentlyContinue |
     Where-Object { $_.FullName -match 'Exile Companion' } | ForEach-Object FullName | Add-Content "$Out/summary.txt"
@@ -89,6 +91,16 @@ if (-not $exe) {
 }
 $script:proc = [IO.Path]::GetFileNameWithoutExtension($exe)
 "installed: $exe" | Tee-Object -Append "$Out/summary.txt"
+
+$dir = Split-Path $exe
+foreach ($s in $sidecars) {
+  if (-not (Test-Path "$dir\$s")) { throw "$s isn't installed next to the app" }
+}
+# The MCP server has to start and answer, without a build or PoB on the runner.
+$init = '{"jsonrpc":"2.0","id":1,"method":"initialize","params":{"protocolVersion":"2025-06-18","capabilities":{},"clientInfo":{"name":"smoke","version":"0"}}}'
+$answer = $init | & "$dir\exile-companion-mcp.exe" | Select-Object -First 1
+"mcp: $answer" | Tee-Object -Append "$Out/summary.txt"
+if ($answer -notmatch '"exile-companion"') { throw 'the MCP server did not answer initialize' }
 
 Start-App 'run1-fresh' $exe
 Start-App 'run2-saved-settings' $exe

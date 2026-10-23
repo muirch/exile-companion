@@ -6,8 +6,8 @@
   "build": {
     "frontendDist": "../ui/dist",
     "devUrl": "http://localhost:1420",
-    "beforeDevCommand": { "script": "pnpm dev", "cwd": "../.." },
-    "beforeBuildCommand": { "script": "pnpm build", "cwd": "../.." }
+    "beforeDevCommand": { "script": "node tools/sidecars.mjs && pnpm dev", "cwd": "../.." },
+    "beforeBuildCommand": { "script": "pnpm build && node tools/sidecars.mjs --release", "cwd": "../.." }
   },
   "app": {
     "macOSPrivateApi": true,
@@ -74,6 +74,7 @@
   "bundle": {
     "active": true,
     "targets": ["nsis"],
+    "externalBin": ["binaries/exile-pob-engine", "binaries/exile-companion-mcp"],
     "icon": [
       "icons/32x32.png",
       "icons/128x128.png",
