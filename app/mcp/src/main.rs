@@ -31,17 +31,30 @@ pub const USER_AGENT: &str = concat!(
 const PAGE_LIMIT: usize = 12_000;
 
 const INSTRUCTIONS: &str = "Tools for one Path of Exile 1 build, the one the player imported in Exile Companion, \
-calculated by the player's own Path of Building, and for the Path of Exile Wiki.
+calculated by the player's own Path of Building, and for the Path of Exile Wiki and build guides.
+
+First check that the build you have is the one the player is talking about: game (these tools are Path of Exile 1 only), \
+main skill, class and ascendancy, league. If build_overview shows something else than the player describes, say so and ask \
+before you measure anything. Don't answer about one build with numbers from another.
 
 Numbers come from Path of Building with the build's own Configuration (boss, buffs, charges, custom modifiers). \
 Check build_details for those assumptions before you judge damage or defences, and tell the player when an answer depends on them. \
+Guides often add placeholder custom mods (+200% resistances and the like), so their numbers are higher than a real character's. \
 To weigh a change, measure it with what_if, compare_item, passive_value or gem_value instead of estimating. \
 A percent is not a recommendation by itself. Keystones and big notables have drawbacks Path of Building doesn't price in \
 (read the node's own text, and the wiki for the keystone), they cost points on the way, and players rarely take some of them for good reasons. \
 Say the trade-off and how sure you are, and point out what you couldn't measure. \
 When the player follows a guide, or you found one for them and they loaded it, advise from the difference to the guide (compare_with_guide) \
 and pass the guide to passive_value. Don't suggest passives, keystones or items the guide doesn't take unless the player asks to explore. \
+Compare with the guide stage closest to the player's level and progress, and keep endgame gear out of a beginner's next steps. \
 Nothing you try changes the player's build. load_build switches to another build for this conversation only.
+
+When a player asks what to play, don't pick for them at once. Ask how they like to play (ranged, melee, spells, minions), \
+their budget, and whether they start fresh in a league. Then use find_guides and offer two or three current-league guides \
+with a Path of Building link, each with why it fits and what it's bad at, and let them choose. \
+New players usually do better with spells or minions than with bows or melee, say so when it matters. \
+Take guides from find_guides, the guide sites they link (Mobalytics, PoE Vault, Maxroll) and pobb.in. \
+Don't build advice on SEO tier lists or on sites that sell currency or items.
 
 Use the wiki for mechanics, crafting, league content and anything Path of Building doesn't model. \
 Search first, then read one section at a time. Wiki content is CC BY-NC-SA 3.0: link the pages you used.";
@@ -116,6 +129,20 @@ pub struct LoadParams {
 }
 
 #[derive(Debug, Deserialize, schemars::JsonSchema)]
+pub struct FindGuidesParams {
+    /// Base class: Marauder, Ranger, Witch, Duelist, Templar, Shadow or Scion.
+    pub class: String,
+    /// Narrows to one ascendancy, e.g. Pathfinder.
+    pub ascendancy: Option<String>,
+    /// Words the guide's title must have, e.g. "Poison Concoction".
+    pub skill: Option<String>,
+    /// Include guides from older leagues. Off by default.
+    pub any_league: Option<bool>,
+    /// Default 10.
+    pub limit: Option<u32>,
+}
+
+#[derive(Debug, Deserialize, schemars::JsonSchema)]
 pub struct WikiSearchParams {
     /// Keywords, as you would type them into the wiki's search box.
     pub query: String,
@@ -149,6 +176,7 @@ pub struct CargoParams {
 pub struct Companion {
     session: Arc<Mutex<Session>>,
     wiki: Arc<Wiki>,
+    guides: Arc<exile_guides::Guides>,
 }
 
 impl Companion {
@@ -185,6 +213,10 @@ impl Companion {
         Self {
             session: Arc::new(Mutex::new(Session::new(opts))),
             wiki: Arc::new(Wiki::new(USER_AGENT, cache)),
+            guides: Arc::new(exile_guides::Guides::new(
+                USER_AGENT,
+                paths::cache_dir().map(|d| d.join("guides")),
+            )),
         }
     }
 
@@ -307,6 +339,31 @@ impl Companion {
         let r = tokio::task::spawn_blocking(move || session.lock().unwrap().load(&p.build))
             .await
             .unwrap_or_else(|e| Err(e.to_string()));
+        Ok(json_result(r))
+    }
+
+    #[tool(
+        description = "Build guides for a class or ascendancy from poebuilds.cc, a fan index of guides (mostly videos), most watched first, current league by default. Each has its league, views, author, video, guide page and, when it has one, a Path of Building link for load_build or compare_with_guide."
+    )]
+    async fn find_guides(
+        &self,
+        Parameters(p): Parameters<FindGuidesParams>,
+    ) -> Result<CallToolResult, McpError> {
+        let guides = self.guides.clone();
+        let r = tokio::task::spawn_blocking(move || {
+            let list = guides
+                .list(&p.class, p.ascendancy.as_deref())
+                .map_err(|e| e.to_string())?;
+            let picked = exile_guides::pick(
+                list,
+                p.skill.as_deref(),
+                p.any_league.unwrap_or(false),
+                p.limit.unwrap_or(10) as usize,
+            );
+            serde_json::to_value(picked).map_err(|e| e.to_string())
+        })
+        .await
+        .unwrap_or_else(|e| Err(e.to_string()));
         Ok(json_result(r))
     }
 

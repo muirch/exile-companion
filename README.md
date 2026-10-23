@@ -71,7 +71,9 @@ app/mcp                 the build assistant's MCP server for Claude Desktop and 
 crates/core             campaign logic, no Tauri, covered by tests
 crates/pob              Path of Building import
 crates/pob-engine       Path of Building's calculations run headless, with LuaJIT built in
+crates/fetch            HTTP with a disk cache for the assistant's outside sources
 crates/wiki             the Path of Exile Wiki through its API, for the build assistant
+crates/guides           build guides with their PoB links from poebuilds.cc
 crates/data             the campaign data and route, embedded at build time
 tools/data-extractor    builds the campaign data from the game's files
 docs                    images and a sample Client.txt

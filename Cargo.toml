@@ -1,7 +1,7 @@
 [workspace]
 resolver = "2"
-members = ["crates/core", "crates/data", "crates/pob", "crates/pob-engine", "crates/fetch", "crates/wiki", "app/desktop", "app/mcp"]
-default-members = ["crates/core", "crates/data", "crates/pob", "crates/pob-engine", "crates/fetch", "crates/wiki", "app/mcp"]
+members = ["crates/core", "crates/data", "crates/pob", "crates/pob-engine", "crates/fetch", "crates/wiki", "crates/guides", "app/desktop", "app/mcp"]
+default-members = ["crates/core", "crates/data", "crates/pob", "crates/pob-engine", "crates/fetch", "crates/wiki", "crates/guides", "app/mcp"]
 
 [workspace.package]
 edition = "2021"

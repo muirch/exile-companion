@@ -44,8 +44,8 @@ jobs:
       - name: rustfmt
         run: cargo fmt --all --check
 
-      - name: clippy (core, data, pob, engine, wiki, mcp)
-        run: cargo clippy -p exile-core -p exile-data -p exile-pob -p exile-pob-engine -p exile-wiki -p exile-companion-mcp --all-targets -- -D warnings
+      - name: clippy (core, data, pob, engine, fetch, wiki, guides, mcp)
+        run: cargo clippy -p exile-core -p exile-data -p exile-pob -p exile-pob-engine -p exile-fetch -p exile-wiki -p exile-guides -p exile-companion-mcp --all-targets -- -D warnings
 
       - uses: actions/cache@v6.1.0
         with:
@@ -55,8 +55,8 @@ jobs:
       - name: Fetch Path of Building for the engine tests
         run: tools/fetch-pob.sh .pob
 
-      - name: Test core, data, pob, engine, wiki, mcp
-        run: cargo test -p exile-core -p exile-data -p exile-pob -p exile-pob-engine -p exile-wiki -p exile-companion-mcp
+      - name: Test core, data, pob, engine, fetch, wiki, guides, mcp
+        run: cargo test -p exile-core -p exile-data -p exile-pob -p exile-pob-engine -p exile-fetch -p exile-wiki -p exile-guides -p exile-companion-mcp
         env:
           EXILE_POB_DIR: ${{ github.workspace }}/.pob
 
