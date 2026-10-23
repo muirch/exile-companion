@@ -69,6 +69,7 @@ app/ui                  the React and TypeScript UI
 app/desktop             the Tauri v2 shell with windows, hotkeys, IPC and settings
 crates/core             campaign logic, no Tauri, covered by tests
 crates/pob              Path of Building import
+crates/pob-engine       Path of Building's calculations run headless, with LuaJIT built in
 crates/data             the campaign data and route, embedded at build time
 tools/data-extractor    builds the campaign data from the game's files
 docs                    images and a sample Client.txt
@@ -94,6 +95,10 @@ pnpm dev
 # UI tests and lint
 pnpm test
 pnpm lint
+
+# the PoB engine tests run on a copy of Path of Building, about 220 MB
+tools/fetch-pob.sh .pob
+EXILE_POB_DIR=$PWD/.pob cargo test -p exile-pob-engine
 ```
 
 The desktop app is built for Windows, by the manual Release workflow or `pnpm tauri build` on Windows. On Linux, work on the UI with `pnpm dev` and on the logic with `cargo test`. There's a sample log at [docs/sample-client.txt](docs/sample-client.txt) for the replay mode.
@@ -125,6 +130,8 @@ If you open the project in Claude Code, the hooks in `.claude/settings.json` run
 ## Credits and licenses
 
 The leveling route in `crates/data/data/routes/exile-leveling` is written by the exile-leveling authors and kept under its MIT license (see the `LICENSE` file there).
+
+`crates/pob-engine/lua/headless.lua` is adapted from Path of Building Community's headless wrapper, under its MIT license (see `headless.LICENSE` next to it). The engine runs Path of Building itself from a folder on your machine. PoB isn't part of this repo.
 
 The overlay uses Alegreya Sans and Alegreya Sans SC by Huerta Tipográfica, under the SIL Open Font License (`app/ui/src/assets/fonts/OFL.txt`).
 
