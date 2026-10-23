@@ -12,6 +12,9 @@ dist/
 # Tauri
 app/desktop/gen/
 
+# Path of Building for the engine tests (tools/fetch-pob.sh)
+/.pob/
+
 # Data-extractor toolchain (only the generated crates/data/data/ is committed)
 tools/data-extractor/node_modules/
 tools/data-extractor/.cache/
