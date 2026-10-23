@@ -316,6 +316,258 @@ function bridge.gem_value(params)
 	return { group = index, label = group.displayLabel or group.label, slot = group.slot, gems = gems }
 end
 
+-- What changes between two outputs, over the stats PoB shows in the sidebar and in its
+-- "Equipping this will give you" tooltips.
+local function statDiffs(before, after)
+	local diffs, seen = {}, {}
+	for _, statData in ipairs(build.displayStats) do
+		local stat = statData.stat
+		if stat and not statData.childStat and not seen[stat] then
+			seen[stat] = true
+			local a, b = num(before[stat]), num(after[stat])
+			if a and b and math.abs(b - a) > 1e-9 * math.max(1, math.abs(a)) then
+				local better = b > a
+				if statData.lowerIsBetter then
+					better = not better
+				end
+				diffs[#diffs + 1] = {
+					stat = stat,
+					label = statData.label,
+					before = a,
+					after = b,
+					pct = a ~= 0 and (b - a) / math.abs(a) * 100 or nil,
+					better = better,
+				}
+			end
+		end
+	end
+	return diffs
+end
+
+local function measure(before, after)
+	return {
+		dps_pct = pct(dps(after), dps(before)),
+		ehp_pct = pct(after.TotalEHP, before.TotalEHP),
+		life = (num(after.Life) or 0) - (num(before.Life) or 0),
+		changes = statDiffs(before, after),
+	}
+end
+
+local function itemInfo(item)
+	local mods = {}
+	for _, list in ipairs({ item.enchantModLines, item.implicitModLines, item.explicitModLines }) do
+		for _, m in ipairs(list or {}) do
+			mods[#mods + 1] = m.line
+		end
+	end
+	return { name = item.name, base = item.baseName, rarity = item.rarity, mods = mods }
+end
+
+-- Jewels that conquer or rewire passives need a rebuilt tree to compare. PoB does that with a
+-- function local to ItemsTab, so these comparisons leave the tree as it is and say so.
+local function changesPassiveTree(item)
+	return not not (item and item.type == "Jewel" and item.jewelData
+		and (item.jewelData.conqueredBy or item.jewelRadiusIndex
+			and (item.jewelData.intuitiveLeapLike or item.jewelData.impossibleEscapeKeystone)))
+end
+
+-- An item as the game copies it with Ctrl+C, compared against every slot it fits, the way
+-- PoB's item tooltip does it. Best slot first.
+function bridge.compare_item(params)
+	local item = new("Item", params.text)
+	if not item.base then
+		error("Path of Building couldn't read that item")
+	end
+	item:NormaliseQuality()
+	item:BuildModList()
+	local itemsTab = build.itemsTab
+	local calc = build.calcsTab:GetMiscCalculator()
+	local base = output()
+	local weaponSet = itemsTab.activeItemSet.useSecondWeaponSet and 2 or 1
+	local slots = {}
+	for slotName, slot in pairs(itemsTab.slots) do
+		if itemsTab:IsItemValidForSlot(item, slotName) and not slot.inactive
+			and (not slot.weaponSet or slot.weaponSet == weaponSet) then
+			local current = itemsTab.items[slot.selItemId]
+			local entry = measure(base, calc({ repSlotName = slotName, repItem = item }))
+			entry.slot = slotName
+			entry.replaces = current and current.name or nil
+			slots[#slots + 1] = entry
+		end
+	end
+	table.sort(slots, function(a, b)
+		return a.dps_pct + a.ehp_pct > b.dps_pct + b.ehp_pct
+	end)
+	return {
+		item = itemInfo(item),
+		slots = slots,
+		tree_not_rebuilt = changesPassiveTree(item) or nil,
+	}
+end
+
+local function findNode(ref)
+	local node = build.spec.nodes[tonumber(ref)]
+	if node then
+		return node
+	end
+	local found
+	for _, n in pairs(build.spec.nodes) do
+		if n.dn == ref and (n.type == "Notable" or n.type == "Keystone" or not found) then
+			found = n
+		end
+	end
+	return found or error("no passive node " .. tostring(ref))
+end
+
+-- PoB names supports without the " Support" the game shows.
+local function gemName(name)
+	return (tostring(name):gsub(" Support$", ""))
+end
+
+local function findGroup(ref)
+	local list = build.skillsTab.socketGroupList
+	if ref == nil then
+		return list[build.mainSocketGroup]
+	end
+	if list[tonumber(ref)] then
+		return list[tonumber(ref)]
+	end
+	for _, g in ipairs(list) do
+		if g.displayLabel == ref or g.label == ref then
+			return g
+		end
+		for _, gem in ipairs(g.gemList) do
+			if gem.nameSpec == gemName(ref) then
+				return g
+			end
+		end
+	end
+	error("no socket group " .. tostring(ref))
+end
+
+-- Tries changes together and measures them against the build as it is. Nothing is kept: every
+-- change is undone before this returns, also when PoB fails on one.
+-- Each change is one of:
+--   { add_nodes = {ids or names} }   with the path to them
+--   { remove_nodes = {ids or names} }
+--   { item = "<item text>", slot = "Helmet" }
+--   { gem = "Name", group = <index, label or gem name>, enabled = bool, level = n, quality = n }
+--   { add_gem = "Name", group = ..., level = n, quality = n }
+--   { config = "var", value = v }
+--   { custom_mod = "line" }
+--   { level = n }
+function bridge.what_if(params)
+	local base = output()
+	local override, undo = {}, {}
+	local configChanged = false
+
+	local function apply(change)
+		if change.add_nodes or change.remove_nodes then
+			local key = change.add_nodes and "addNodes" or "removeNodes"
+			override[key] = override[key] or {}
+			for _, ref in ipairs(change.add_nodes or change.remove_nodes) do
+				local node = findNode(ref)
+				for _, n in ipairs(change.add_nodes and node.path or { node }) do
+					override[key][n] = true
+				end
+				override[key][node] = true
+			end
+		elseif change.item then
+			local item = new("Item", change.item)
+			if not item.base then
+				error("Path of Building couldn't read the item for " .. tostring(change.slot))
+			end
+			item:NormaliseQuality()
+			item:BuildModList()
+			override.repSlotName = change.slot or error("an item change needs a slot")
+			override.repItem = item
+		elseif change.gem then
+			local group = findGroup(change.group or change.gem)
+			for _, gem in ipairs(group.gemList) do
+				if gem.nameSpec == gemName(change.gem) then
+					local old = { enabled = gem.enabled, level = gem.level, quality = gem.quality }
+					if change.enabled ~= nil then gem.enabled = change.enabled end
+					if change.level then gem.level = change.level end
+					if change.quality then gem.quality = change.quality end
+					build.skillsTab:ProcessSocketGroup(group)
+					undo[#undo + 1] = function()
+						gem.enabled, gem.level, gem.quality = old.enabled, old.level, old.quality
+						build.skillsTab:ProcessSocketGroup(group)
+					end
+					return
+				end
+			end
+			error("no gem " .. change.gem .. " in that group")
+		elseif change.add_gem then
+			local group = findGroup(change.group)
+			local gem = { nameSpec = gemName(change.add_gem), level = change.level or 20, quality = change.quality or 0, enabled = true, enableGlobal1 = true, enableGlobal2 = true, count = 1 }
+			table.insert(group.gemList, gem)
+			build.skillsTab:ProcessSocketGroup(group)
+			undo[#undo + 1] = function()
+				for i, g in ipairs(group.gemList) do
+					if g == gem then
+						table.remove(group.gemList, i)
+						break
+					end
+				end
+				build.skillsTab:ProcessSocketGroup(group)
+			end
+			if not gem.gemData then
+				error("Path of Building doesn't know the gem " .. change.add_gem)
+			end
+		elseif change.config then
+			local input = build.configTab.input
+			local old = input[change.config]
+			input[change.config] = change.value
+			configChanged = true
+			undo[#undo + 1] = function() input[change.config] = old end
+		elseif change.custom_mod then
+			local set = build.configTab.configSets[build.configTab.activeConfigSetId]
+			local block = { title = "what if", enabled = true, text = change.custom_mod }
+			table.insert(set.customModsList, block)
+			configChanged = true
+			undo[#undo + 1] = function()
+				for i, b in ipairs(set.customModsList) do
+					if b == block then
+						table.remove(set.customModsList, i)
+						break
+					end
+				end
+			end
+		elseif change.level then
+			local old = build.characterLevel
+			build.characterLevel = change.level
+			undo[#undo + 1] = function() build.characterLevel = old end
+		else
+			error("unknown change")
+		end
+	end
+
+	local buildFlag = build.buildFlag
+	local ok, result = pcall(function()
+		for _, change in ipairs(params.changes or {}) do
+			apply(change)
+		end
+		if configChanged then
+			build.configTab:BuildModList()
+		end
+		local calc = build.calcsTab:GetMiscCalculator()
+		return measure(base, calc(override))
+	end)
+	for i = #undo, 1, -1 do
+		undo[i]()
+	end
+	if configChanged then
+		build.configTab:BuildModList()
+	end
+	-- Building the mod lists flags a rebuild. The state is back as it was, so it isn't needed.
+	build.buildFlag = buildFlag
+	if not ok then
+		error(result, 0)
+	end
+	return result
+end
+
 -- Everything a reader needs to explain the build: gear with its mod lines, gem groups, and the
 -- keystones and notables taken.
 function bridge.build_info()
