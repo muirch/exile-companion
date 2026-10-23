@@ -34,6 +34,17 @@ export interface Settings {
   fadeAfter: number;
   presetStages: PresetStage[];
   pobPath: string | null;
+  pobSync: boolean;
+  pobBuild: string | null;
+}
+
+/** Which PoB build file the app's build is kept the same as (mirrors `pob::PobSync`). */
+export interface PobSync {
+  enabled: boolean;
+  /** Null when PoB isn't found. */
+  file: string | null;
+  /** The player picked the file, it isn't Exile Companion's own. */
+  picked: boolean;
 }
 
 /** Path of Building's folder and the version from its manifest (mirrors `pob::PobInfo`). */

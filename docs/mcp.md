@@ -56,6 +56,10 @@ The history and a copy of the build before each change are in the `build-history
 
 A build loaded in the chat doesn't keep changes, only the one in Exile Companion does.
 
+## Your build in Path of Building
+
+Turn on Sync with PoB in the settings and Exile Companion keeps a build called Exile Companion in Path of Building's build list. Whatever changes last wins: the assistant keeping a change, an import in Exile Companion, or you saving the build in PoB. If you import your character into your own build in PoB, pick that file with Pick PoB build instead. PoB doesn't notice a file changing while the build is open, so reopen it from the list after the assistant changes it. Saving in PoB at that point writes the old version back over the change.
+
 Numbers are Path of Building's own, with the build's Configuration. If the build assumes a boss, buffs or custom modifiers, so do the numbers.
 
 ## Trying the tools by hand

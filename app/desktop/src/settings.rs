@@ -30,6 +30,11 @@ pub struct Settings {
     pub preset_stages: Vec<exile_core::gemplan::PresetStage>,
     /// Path of Building's folder, found or picked. The build assistant runs it.
     pub pob_path: Option<String>,
+    /// Keep the build the same as a build file in PoB's Builds folder.
+    pub pob_sync: bool,
+    /// The PoB build file the player picked to sync with. Exile Companion.xml in the Builds
+    /// folder when None.
+    pub pob_build: Option<String>,
 }
 
 impl Default for Settings {
@@ -49,6 +54,8 @@ impl Default for Settings {
             fade_after: 0,
             preset_stages: Vec::new(),
             pob_path: None,
+            pob_sync: false,
+            pob_build: None,
         }
     }
 }

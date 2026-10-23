@@ -77,6 +77,51 @@ describe('SettingsApp', () => {
     expect(await screen.findByRole('alert')).toHaveTextContent('Path of Exile 2');
   });
 
+  describe('Sync with PoB', () => {
+    const pob = { path: 'C:\\PoB', version: '2.67.2' };
+    const builds = 'C:\\Users\\me\\Documents\\Path of Building\\Builds\\';
+    const off = { enabled: false, file: `${builds}Exile Companion.xml`, picked: false };
+
+    it('names the PoB build it keeps in step once turned on', async () => {
+      vi.mocked(commands.getPob).mockResolvedValueOnce(pob);
+      vi.mocked(commands.getPobSync).mockResolvedValueOnce(off);
+      vi.mocked(commands.setPobSync).mockResolvedValueOnce({ ...off, enabled: true });
+      render(<SettingsApp />);
+      const toggle = await screen.findByRole('switch', { name: 'Sync with PoB' });
+      expect(toggle).toHaveTextContent('Off');
+      expect(screen.queryByTitle(`${builds}Exile Companion.xml`)).not.toBeInTheDocument();
+      await userEvent.click(toggle);
+      expect(commands.setPobSync).toHaveBeenCalledWith(true);
+      expect(await screen.findByTitle(`${builds}Exile Companion.xml`)).toHaveTextContent(/^Exile Companion$/);
+      expect(screen.queryByRole('button', { name: 'Use Exile Companion' })).not.toBeInTheDocument();
+    });
+
+    it('follows a picked PoB build and can go back to its own', async () => {
+      vi.mocked(commands.getPob).mockResolvedValueOnce(pob);
+      vi.mocked(commands.getPobSync).mockResolvedValueOnce(off);
+      vi.mocked(commands.pickPobBuild).mockResolvedValueOnce({
+        enabled: true,
+        file: `${builds}PConc.xml`,
+        picked: true,
+      });
+      vi.mocked(commands.unpickPobBuild).mockResolvedValueOnce({ ...off, enabled: true });
+      render(<SettingsApp />);
+      await userEvent.click(await screen.findByRole('button', { name: 'Pick PoB build' }));
+      expect(await screen.findByTitle(`${builds}PConc.xml`)).toHaveTextContent('PConc');
+      await userEvent.click(screen.getByRole('button', { name: 'Use Exile Companion' }));
+      expect(await screen.findByTitle(`${builds}Exile Companion.xml`)).toBeInTheDocument();
+    });
+
+    it('says why PoB could not be opened', async () => {
+      vi.mocked(commands.getPob).mockResolvedValueOnce(pob);
+      vi.mocked(commands.getPobSync).mockResolvedValueOnce(off);
+      vi.mocked(commands.openPob).mockRejectedValueOnce('There\'s no Path of Building.exe in C:\\PoB.');
+      render(<SettingsApp />);
+      await userEvent.click(await screen.findByRole('button', { name: 'Open PoB' }));
+      expect(await screen.findByRole('alert')).toHaveTextContent('Path of Building.exe');
+    });
+  });
+
   describe('Assistant', () => {
     const view = {
       server: 'C:\\EC\\exile-companion-mcp.exe',
