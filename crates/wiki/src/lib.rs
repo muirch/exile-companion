@@ -2,12 +2,12 @@
 //! in particular, instead of scraping pages, and the HTML pages sit behind a bot check anyway.
 //! Its content is CC BY-NC-SA 3.0, so every result carries the page URL for attribution.
 
-mod cache;
 pub mod text;
 
 use std::path::PathBuf;
-use std::sync::Mutex;
-use std::time::{Duration, Instant};
+use std::time::Duration;
+
+use exile_fetch::Fetcher;
 
 use serde::Serialize;
 use serde_json::{Map, Value};
@@ -67,31 +67,16 @@ pub struct CargoQuery {
 }
 
 pub struct Wiki {
-    agent: ureq::Agent,
+    fetch: Fetcher,
     api: String,
-    cache: Option<PathBuf>,
-    last: Mutex<Option<Instant>>,
 }
 
 impl Wiki {
     /// `cache` is a folder for raw answers. None asks the wiki every time.
     pub fn new(user_agent: &str, cache: Option<PathBuf>) -> Self {
-        // The default roots are a bundled Mozilla list that schannel rejects. Use the OS store.
-        let tls = ureq::tls::TlsConfig::builder()
-            .provider(ureq::tls::TlsProvider::NativeTls)
-            .root_certs(ureq::tls::RootCerts::PlatformVerifier)
-            .build();
-        let agent = ureq::Agent::config_builder()
-            .tls_config(tls)
-            .timeout_global(Some(Duration::from_secs(20)))
-            .user_agent(user_agent)
-            .build()
-            .into();
         Self {
-            agent,
+            fetch: Fetcher::new(user_agent, cache, CACHE_TTL, MIN_INTERVAL),
             api: API.to_string(),
-            cache,
-            last: Mutex::new(None),
         }
     }
 
@@ -146,44 +131,14 @@ impl Wiki {
     }
 
     fn get(&self, params: &[(&str, &str)]) -> Result<Value, WikiError> {
-        let mut req = self.agent.get(&self.api);
-        for (k, v) in params {
-            req = req.query(*k, *v);
-        }
         // maxlag makes the wiki refuse us first when its database replicas are behind.
-        req = req
-            .query("format", "json")
-            .query("formatversion", "2")
-            .query("maxlag", "5");
-        let key = cache::key(&self.api, params);
-        if let Some(body) = self
-            .cache
-            .as_deref()
-            .and_then(|dir| cache::read(dir, &key, CACHE_TTL))
-        {
-            return parse_json(&body);
-        }
-        self.wait_turn();
-        let body = req
-            .call()
-            .and_then(|mut r| r.body_mut().read_to_string())
+        let mut query = params.to_vec();
+        query.extend([("format", "json"), ("formatversion", "2"), ("maxlag", "5")]);
+        let body = self
+            .fetch
+            .get(&self.api, &query)
             .map_err(|e| WikiError::Http(e.to_string()))?;
-        let v = parse_json(&body)?;
-        if let Some(dir) = &self.cache {
-            cache::write(dir, &key, &body);
-        }
-        Ok(v)
-    }
-
-    fn wait_turn(&self) {
-        let mut last = self.last.lock().unwrap();
-        if let Some(t) = *last {
-            let since = t.elapsed();
-            if since < MIN_INTERVAL {
-                std::thread::sleep(MIN_INTERVAL - since);
-            }
-        }
-        *last = Some(Instant::now());
+        parse_json(&body)
     }
 }
 

@@ -931,6 +931,7 @@ dependencies = [
 name = "exile-companion-mcp"
 version = "0.1.0"
 dependencies = [
+ "exile-guides",
  "exile-pob",
  "exile-pob-engine",
  "exile-wiki",
@@ -968,6 +969,26 @@ name = "exile-data"
 version = "0.1.0"
 
 [[package]]
+name = "exile-fetch"
+version = "0.1.0"
+dependencies = [
+ "tempfile",
+ "thiserror 2.0.18",
+ "ureq",
+]
+
+[[package]]
+name = "exile-guides"
+version = "0.1.0"
+dependencies = [
+ "exile-fetch",
+ "exile-wiki",
+ "regex",
+ "serde",
+ "thiserror 2.0.18",
+]
+
+[[package]]
 name = "exile-pob"
 version = "0.1.0"
 dependencies = [
@@ -994,11 +1015,11 @@ dependencies = [
 name = "exile-wiki"
 version = "0.1.0"
 dependencies = [
+ "exile-fetch",
  "serde",
  "serde_json",
  "tempfile",
  "thiserror 2.0.18",
- "ureq",
 ]
 
 [[package]]
