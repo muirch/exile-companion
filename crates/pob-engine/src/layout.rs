@@ -26,9 +26,15 @@ impl PobDir {
             .into_iter()
             .find(|(src, lua)| src.join("Launch.lua").is_file() && lua.join("xml.lua").is_file())
             .ok_or_else(|| EngineError::NotPob(root.to_path_buf()))?;
-        let version = std::fs::read_to_string(root.join("manifest.xml"))
-            .ok()
-            .and_then(|m| manifest_version(&m));
+        let manifest = std::fs::read_to_string(root.join("manifest.xml")).ok();
+        // PoB for PoE 2 has the same layout and file names. Its manifest points at its own repo.
+        if manifest
+            .as_deref()
+            .is_some_and(|m| m.contains("PathOfBuilding-PoE2"))
+        {
+            return Err(EngineError::Poe2(root.to_path_buf()));
+        }
+        let version = manifest.as_deref().and_then(manifest_version);
         Ok(Self {
             root: root.to_path_buf(),
             src,
@@ -81,6 +87,22 @@ mod tests {
         assert_eq!(pob.src, dir.path());
         assert_eq!(pob.lua, dir.path().join("lua"));
         assert_eq!(pob.version, None);
+    }
+
+    #[test]
+    fn rejects_pob_for_poe2() {
+        let dir = tempfile::tempdir().unwrap();
+        touch(&dir.path().join("Launch.lua"));
+        touch(&dir.path().join("lua/xml.lua"));
+        std::fs::write(
+            dir.path().join("manifest.xml"),
+            "<PoBVersion><Version number=\"0.23.1\" /><Source part=\"default\" url=\"https://raw.githubusercontent.com/PathOfBuildingCommunity/PathOfBuilding-PoE2/{branch}/\" /></PoBVersion>",
+        )
+        .unwrap();
+        assert!(matches!(
+            PobDir::detect(dir.path()),
+            Err(EngineError::Poe2(_))
+        ));
     }
 
     #[test]
