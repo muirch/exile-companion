@@ -1,6 +1,6 @@
 import { act, render, screen } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
-import { describe, expect, it, vi } from 'vitest';
+import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 
 import * as commands from '../ipc/commands';
 import { useAppStore } from '../store/useAppStore';
@@ -83,12 +83,25 @@ describe('SettingsApp', () => {
     expect(commands.updateSettings).toHaveBeenCalledWith({ fadeAfter: 10 });
   });
 
-  it('asks for a second click before starting the route over', async () => {
-    render(<SettingsApp />);
-    await userEvent.click(screen.getByRole('button', { name: 'Start over' }));
-    expect(commands.routeReset).not.toHaveBeenCalled();
-    await userEvent.click(screen.getByRole('button', { name: 'Click again to start over' }));
-    expect(commands.routeReset).toHaveBeenCalledTimes(1);
+  describe('Start over', () => {
+    beforeEach(() => vi.useFakeTimers({ toFake: ['Date'] }));
+    afterEach(() => vi.useRealTimers());
+
+    it('asks for a second click before starting the route over', async () => {
+      render(<SettingsApp />);
+      await userEvent.click(screen.getByRole('button', { name: 'Start over' }));
+      expect(commands.routeReset).not.toHaveBeenCalled();
+      vi.setSystemTime(Date.now() + 600);
+      await userEvent.click(screen.getByRole('button', { name: 'Click again to start over' }));
+      expect(commands.routeReset).toHaveBeenCalledTimes(1);
+    });
+
+    it('does not take a double click as the second click', async () => {
+      render(<SettingsApp />);
+      await userEvent.dblClick(screen.getByRole('button', { name: 'Start over' }));
+      expect(commands.routeReset).not.toHaveBeenCalled();
+      expect(screen.getByRole('button', { name: 'Click again to start over' })).toBeInTheDocument();
+    });
   });
 
   it('keeps log replay behind Testing', async () => {
