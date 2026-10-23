@@ -47,7 +47,10 @@ Say the trade-off and how sure you are, and point out what you couldn't measure.
 When the player follows a guide, or you found one for them and they loaded it, advise from the difference to the guide (compare_with_guide) \
 and pass the guide to passive_value. guide_stages and guide_stage_diff walk a guide stage by stage, also for a player without a build yet. Don't suggest passives, keystones or items the guide doesn't take unless the player asks to explore. \
 Compare with the guide stage closest to the player's level and progress, and keep endgame gear out of a beginner's next steps. \
-Nothing you try changes the player's build. load_build switches to another build for this conversation only.
+Measuring changes nothing. apply_changes keeps changes in the player's build, and the app and later conversations see them: \
+use it only when the player says to keep a change, after you measured it, with the reason in a few words. \
+build_history lists what was kept and undo_change takes the last change back. \
+load_build switches to another build for this conversation only, and that build doesn't keep changes.
 
 When a player asks what to play, don't pick for them at once. Ask how they like to play (ranged, melee, spells, minions), \
 their budget, and whether they start fresh in a league. Then use find_guides and offer two or three current-league guides \
@@ -144,6 +147,14 @@ pub struct WhatIfParams {
     /// {"custom_mod": "<a mod line, e.g. +1 to Level of all Skill Gems>"},
     /// {"level": n} for the character level.
     pub changes: Vec<Value>,
+}
+
+#[derive(Debug, Deserialize, schemars::JsonSchema)]
+pub struct ApplyParams {
+    /// Changes in the same form as what_if takes.
+    pub changes: Vec<Value>,
+    /// Why, in a few words the player will recognise in the history, e.g. "guide's lvl 40 tree: Herbalism".
+    pub reason: String,
 }
 
 #[derive(Debug, Deserialize, schemars::JsonSchema)]
@@ -342,6 +353,44 @@ impl Companion {
         Parameters(p): Parameters<WhatIfParams>,
     ) -> Result<CallToolResult, McpError> {
         Ok(self.pob("what_if", json!({ "changes": p.changes })).await)
+    }
+
+    #[tool(
+        description = "Keeps changes in the player's build for good, in the same form as what_if: the build in Exile Companion changes and the change goes into the history with its reason. Only when the player asked to keep it. Returns what it did to DPS, EHP and the stats PoB shows."
+    )]
+    async fn apply_changes(
+        &self,
+        Parameters(p): Parameters<ApplyParams>,
+    ) -> Result<CallToolResult, McpError> {
+        let session = self.session.clone();
+        let r = tokio::task::spawn_blocking(move || {
+            session.lock().unwrap().apply(json!(p.changes), &p.reason)
+        })
+        .await
+        .unwrap_or_else(|e| Err(e.to_string()));
+        Ok(json_result(r))
+    }
+
+    #[tool(
+        description = "Changes kept in the player's build since it was imported, oldest first: when, why, the changes and what they did to DPS, EHP and life."
+    )]
+    async fn build_history(&self) -> Result<CallToolResult, McpError> {
+        let session = self.session.clone();
+        let r = tokio::task::spawn_blocking(move || session.lock().unwrap().history())
+            .await
+            .unwrap_or_else(|e| Err(e.to_string()));
+        Ok(json_result(r))
+    }
+
+    #[tool(
+        description = "Takes the last kept change back and puts the player's build as it was before it. Call it again to go further back."
+    )]
+    async fn undo_change(&self) -> Result<CallToolResult, McpError> {
+        let session = self.session.clone();
+        let r = tokio::task::spawn_blocking(move || session.lock().unwrap().undo())
+            .await
+            .unwrap_or_else(|e| Err(e.to_string()));
+        Ok(json_result(r))
     }
 
     #[tool(
