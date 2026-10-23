@@ -368,11 +368,27 @@ local function measure(before, after)
 	}
 end
 
+-- Mods with what PoB couldn't calculate marked, and every other property PoB kept from the item
+-- text (quality, influence, league mechanics like Intangibility). New properties come through
+-- this way without the bridge knowing them, and the model can look them up.
 local function itemInfo(item)
-	local mods = {}
+	local mods, notCalculated, isMod = {}, {}, {}
 	for _, list in ipairs({ item.enchantModLines, item.implicitModLines, item.explicitModLines }) do
 		for _, m in ipairs(list or {}) do
 			mods[#mods + 1] = m.line
+			isMod[m.line] = true
+			if m.extra then
+				notCalculated[#notCalculated + 1] = m.line
+			end
+		end
+	end
+	local properties = {}
+	for line in item:BuildRaw():gmatch("[^\r\n]+") do
+		-- Mod lines carry {tags} in front, like {crafted} or {range:0.5}.
+		local plain = line:gsub("^{[^}]*}", ""):gsub("^{[^}]*}", ""):gsub("^{[^}]*}", "")
+		if not isMod[plain] and plain ~= item.title and plain ~= item.baseName and plain ~= item.name
+			and not plain:match("^Rarity:") and not plain:match("^Implicits:") and not plain:match("^Unique ID:") then
+			properties[#properties + 1] = plain
 		end
 	end
 	return {
@@ -380,9 +396,8 @@ local function itemInfo(item)
 		base = item.baseName,
 		rarity = item.rarity,
 		mods = mods,
-		corrupted = item.corrupted or nil,
-		-- An Allflame crafting property. PoB keeps it but it changes no stat, see the wiki.
-		intangibility = item.intangibility,
+		not_calculated = notCalculated,
+		properties = properties,
 	}
 end
 
