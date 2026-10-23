@@ -1,0 +1,25 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<PathOfBuilding>
+	<Build level="10" targetVersion="3_0" className="Ranger" ascendClassName="None" mainSocketGroup="1" viewMode="CALCS"/>
+	<Skills activeSkillSet="1">
+		<SkillSet id="1">
+			<Skill enabled="true" slot="" mainActiveSkill="1">
+				<Gem nameSpec="Caustic Arrow" level="5" quality="0" enabled="true"/>
+				<Gem nameSpec="Void Manipulation" level="5" quality="0" enabled="true"/>
+			</Skill>
+		</SkillSet>
+	</Skills>
+	<Tree activeSpec="1">
+		<Spec treeVersion="3_29" classId="2" ascendClassId="0" nodes=""/>
+	</Tree>
+	<Items activeItemSet="1">
+		<Item id="1">
+Rarity: NORMAL
+Short Bow
+		</Item>
+		<ItemSet id="1">
+			<Slot name="Weapon 1" itemId="1"/>
+		</ItemSet>
+	</Items>
+	<Config/>
+</PathOfBuilding>
