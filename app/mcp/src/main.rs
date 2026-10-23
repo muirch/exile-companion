@@ -92,7 +92,7 @@ pub struct PassiveParams {
 
 #[derive(Debug, Deserialize, schemars::JsonSchema)]
 pub struct GuideParams {
-    /// The guide's build: a PoB import code, a build link (pobb.in, poe.ninja and the other sites PoB imports from) or build XML.
+    /// The guide's build: a PoB import code, a build link (pobb.in, poe.ninja and the other sites PoB imports from), build XML, or the guide's page when it has a build link on it.
     pub guide: String,
     /// Guide stage to compare with, by id from the guide's lists: its tree, item set and skill set. The guide's saved choice by default.
     pub tree: Option<u32>,
@@ -124,7 +124,7 @@ pub struct WhatIfParams {
 
 #[derive(Debug, Deserialize, schemars::JsonSchema)]
 pub struct LoadParams {
-    /// A Path of Building import code, a build link (pobb.in, poe.ninja, pastebin and the other sites PoB imports from) or build XML.
+    /// A Path of Building import code, a build link (pobb.in, poe.ninja, pastebin and the other sites PoB imports from), build XML, or a guide page (PoE Vault, poebuilds.cc and others) with a build link on it.
     pub build: String,
 }
 
@@ -210,13 +210,14 @@ impl Companion {
 impl Companion {
     pub fn new(opts: Options) -> Self {
         let cache = paths::cache_dir().map(|d| d.join("wiki"));
+        let guides = Arc::new(exile_guides::Guides::new(
+            USER_AGENT,
+            paths::cache_dir().map(|d| d.join("guides")),
+        ));
         Self {
-            session: Arc::new(Mutex::new(Session::new(opts))),
+            session: Arc::new(Mutex::new(Session::new(opts, guides.clone()))),
             wiki: Arc::new(Wiki::new(USER_AGENT, cache)),
-            guides: Arc::new(exile_guides::Guides::new(
-                USER_AGENT,
-                paths::cache_dir().map(|d| d.join("guides")),
-            )),
+            guides,
         }
     }
 

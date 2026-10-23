@@ -26,6 +26,10 @@ pub enum GuideError {
     UnknownClass(String),
     #[error("couldn't reach poebuilds.cc: {0}")]
     Http(String),
+    #[error("{0} doesn't let programs read its pages")]
+    Blocked(String),
+    #[error("couldn't read {0}: {1}")]
+    Page(String, String),
 }
 
 #[derive(Debug, Clone, PartialEq, Eq, Serialize)]
@@ -81,6 +85,48 @@ impl Guides {
             .map_err(|e| GuideError::Http(e.to_string()))?;
         Ok(parse_cards(&html))
     }
+}
+
+impl Guides {
+    /// The Path of Building link on a guide page (PoE Vault, poebuilds.cc and others that put a
+    /// pobb.in, poe.ninja or pastebin link in the page). None when the page has none.
+    pub fn pob_link(&self, url: &str) -> Result<Option<String>, GuideError> {
+        let host = url
+            .split("://")
+            .nth(1)
+            .and_then(|r| r.split('/').next())
+            .unwrap_or(url)
+            .to_string();
+        let html = match self.fetch.get(url, &[]) {
+            Ok(html) => html,
+            Err(e) if e.0.contains("403") => return Err(GuideError::Blocked(host)),
+            Err(e) => return Err(GuideError::Page(host, e.0)),
+        };
+        // Cloudflare's browser check answers with a page of its own.
+        if html.contains("<title>Just a moment...</title>") {
+            return Err(GuideError::Blocked(host));
+        }
+        Ok(pob_link_in_page(&html))
+    }
+}
+
+/// The PoB link a page names most often, the first one on a tie. A guide page links its own
+/// build several times and related guides once.
+pub fn pob_link_in_page(html: &str) -> Option<String> {
+    static LINK: OnceLock<Regex> = OnceLock::new();
+    let link = re(
+        &LINK,
+        r#"https?://(?:www\.)?(?:pobb\.in/[A-Za-z0-9_-]{6,}|poe\.ninja/poe1/pob/[A-Za-z0-9]+|pastebin\.com/[A-Za-z0-9]{6,})"#,
+    );
+    let mut counts: Vec<(String, usize)> = Vec::new();
+    for m in link.find_iter(html) {
+        match counts.iter_mut().find(|(u, _)| u == m.as_str()) {
+            Some((_, n)) => *n += 1,
+            None => counts.push((m.as_str().to_string(), 1)),
+        }
+    }
+    let best = counts.iter().map(|(_, n)| *n).max()?;
+    counts.into_iter().find(|(_, n)| *n == best).map(|(u, _)| u)
 }
 
 fn slug(s: &str) -> String {
@@ -255,6 +301,21 @@ mod tests {
         assert_eq!(pick(guides.clone(), Some("cyclone"), true, 10).len(), 0);
         let twice = [guides.clone(), guides].concat();
         assert_eq!(pick(twice, None, true, 10).len(), 2);
+    }
+
+    #[test]
+    fn finds_the_guide_s_own_pob_link_on_its_page() {
+        let page = r#"<a href="https://pobb.in/Other1234">related</a> <a href="https://pobb.in/Mine_5678">PoB</a>
+            <p>Copy https://pobb.in/Mine_5678 into PoB</p> https://pobb.in/short"#;
+        assert_eq!(
+            pob_link_in_page(page).as_deref(),
+            Some("https://pobb.in/Mine_5678")
+        );
+        assert_eq!(
+            pob_link_in_page("see https://poe.ninja/poe1/pob/923cf").as_deref(),
+            Some("https://poe.ninja/poe1/pob/923cf")
+        );
+        assert_eq!(pob_link_in_page("no links here"), None);
     }
 
     #[test]
