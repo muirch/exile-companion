@@ -1000,8 +1000,11 @@ function bridge.guide_stages(params)
 			if not seen[a] then
 				seen[a] = true
 				new[#new + 1] = a
-				order[#order + 1] = a
 			end
+		end
+		-- One group per tree that adds any. Within a tree the guide doesn't say which came first.
+		if #new > 0 then
+			order[#order + 1] = new
 		end
 		trees[#trees + 1] = { id = i, title = spec.title or ("Tree " .. i), points = points, ascendancy_added = new }
 	end

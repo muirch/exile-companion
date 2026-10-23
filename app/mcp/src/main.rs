@@ -368,7 +368,7 @@ impl Companion {
     }
 
     #[tool(
-        description = "A guide's stages as its author saved them: each passive tree in order with its points and the ascendancy notables it adds (so the order to take them in labs), each item set's gear, each skill set's skills. Guides often have fewer item sets than trees, then an early tree comes with late gear. Works without the player's build."
+        description = "A guide's stages as its author saved them: each passive tree in order with its points and the ascendancy notables it adds, and ascendancy_order as one group per tree (the lab order when the guide has a tree per lab; within a group the order is unknown), each item set's gear, each skill set's skills. Guides often have fewer item sets than trees, then an early tree comes with late gear. Works without the player's build."
     )]
     async fn guide_stages(
         &self,

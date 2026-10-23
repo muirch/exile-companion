@@ -116,7 +116,7 @@ impl Session {
                     e => e.to_string(),
                 })?;
                 let page_link = page_link
-                    .ok_or("That page has no Path of Building link. Copy the guide's PoB link or code from it instead.")?;
+                    .ok_or("I couldn't find the guide's own Path of Building link on that page. It may have none, or link several builds. Copy the guide's PoB link or code instead.")?;
                 Some(
                     exile_pob::code_url(&page_link)
                         .ok_or(format!("Couldn't use the link {page_link} from that page."))?,
