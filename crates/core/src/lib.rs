@@ -32,6 +32,7 @@ pub mod logfile;
 pub mod migrate;
 pub mod parser;
 pub mod pipeline;
+pub mod pob_sync;
 pub mod recorder;
 pub mod resolve;
 pub mod route;
