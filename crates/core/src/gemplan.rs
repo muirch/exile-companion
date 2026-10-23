@@ -95,6 +95,15 @@ pub fn presets(build: &PobBuild) -> Vec<PresetInfo> {
         .collect()
 }
 
+/// Whether stages the player set for `old`'s skill sets still fit `new`. They are kept by
+/// position, so a build with other skill sets needs them set again.
+pub fn same_presets(old: &PobBuild, new: &PobBuild) -> bool {
+    old.skill_sets
+        .iter()
+        .map(|s| &s.title)
+        .eq(new.skill_sets.iter().map(|s| &s.title))
+}
+
 #[derive(Debug, Clone, Default, PartialEq, Eq)]
 pub struct GemPlan {
     /// In campaign order.
@@ -771,6 +780,27 @@ mod tests {
             [("a1q1".into(), "Start".into(), GemAction::Take)]
         );
         assert!(p.not_in_campaign.is_empty());
+    }
+
+    #[test]
+    fn stages_carry_over_only_to_the_same_skill_sets() {
+        let with = |titles: &[&str]| PobBuild {
+            skill_sets: titles
+                .iter()
+                .map(|t| SkillSet {
+                    id: None,
+                    title: Some(t.to_string()),
+                    groups: Vec::new(),
+                })
+                .collect(),
+            ..PobBuild::default()
+        };
+        assert!(same_presets(
+            &with(&["Act 1", "Act 4"]),
+            &with(&["Act 1", "Act 4"])
+        ));
+        assert!(!same_presets(&with(&["Act 1", "Act 4"]), &with(&["Act 1"])));
+        assert!(!same_presets(&with(&["Act 1"]), &with(&["Leveling"])));
     }
 
     #[test]

@@ -186,7 +186,7 @@ pub fn watch_build(app: AppHandle) {
             sync_pob(&app, &mut sync_error);
             let now = stamp(&app);
             if now != last && now.is_some() {
-                restore_build(&app);
+                reload_build(&app);
                 emit_build_summary(&app);
                 emit_guidance(&app, &app.state::<AppState>().current_state());
                 emit_route(&app);
@@ -221,6 +221,38 @@ pub fn sync_pob(app: &AppHandle, last_error: &mut Option<String>) {
             *last_error = Some(e);
         }
     }
+}
+
+/// The build file changed outside an import. Stages set for the old build's presets go when the
+/// presets aren't the same any more, as on an import.
+fn reload_build(app: &AppHandle) {
+    let Some(path) = build_path(app) else {
+        return;
+    };
+    let build = match std::fs::read(&path)
+        .map_err(|e| e.to_string())
+        .and_then(|xml| exile_pob::parse_xml(&xml).map_err(|e| e.to_string()))
+    {
+        Ok(build) => build,
+        Err(e) => {
+            log::warn!("changed build {}: {e}", path.display());
+            return;
+        }
+    };
+    let app_state = app.state::<AppState>();
+    let mut builds = lock(&app_state.build);
+    let same = builds
+        .build()
+        .is_some_and(|old| exile_core::gemplan::same_presets(old, &build));
+    if !same {
+        if let Ok(mut s) = settings::load(app) {
+            if !s.preset_stages.is_empty() {
+                s.preset_stages.clear();
+                let _ = settings::save(app, &s);
+            }
+        }
+    }
+    builds.set(build);
 }
 
 /// Parse and store a freshly-imported build, save it for the next start, then push the new build
