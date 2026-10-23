@@ -71,7 +71,7 @@ impl BuildHistory {
     }
 
     /// Writes `after` as the build and records the change. `before` is the build the change was
-    /// made on.
+    /// made on, empty when there was none.
     pub fn record(
         &self,
         before: &[u8],
@@ -122,7 +122,11 @@ impl BuildHistory {
         }
         let entry = log.entries.pop().ok_or(HistoryError::Empty)?;
         let before = std::fs::read(self.snapshot(entry.id))?;
-        write_atomic(&self.build, &before)?;
+        if before.is_empty() {
+            remove(&self.build)?;
+        } else {
+            write_atomic(&self.build, &before)?;
+        }
         self.write(&log)?;
         remove(&self.snapshot(entry.id))?;
         Ok((entry, before))
@@ -184,7 +188,7 @@ fn hash(bytes: &[u8]) -> String {
     format!("{h:016x}")
 }
 
-fn now() -> String {
+pub(crate) fn now() -> String {
     time::OffsetDateTime::now_utc()
         .replace_nanosecond(0)
         .ok()
@@ -253,6 +257,18 @@ mod tests {
         assert_eq!(entries.len(), 1);
         assert_eq!(entries[0].reason, "after import");
         assert!(!dir.path().join("build-history/0.xml").exists());
+    }
+
+    #[test]
+    fn undoing_the_first_build_leaves_none() {
+        let dir = tempfile::tempdir().unwrap();
+        let h = BuildHistory::new(dir.path().join("build.xml"));
+        h.record(b"", b"guide", "picked a guide", json!([]), json!({}))
+            .unwrap();
+        assert_eq!(build(&dir), "guide");
+        let (_, before) = h.undo().unwrap();
+        assert!(before.is_empty());
+        assert!(!dir.path().join("build.xml").exists());
     }
 
     #[test]
