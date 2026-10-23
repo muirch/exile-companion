@@ -20,6 +20,8 @@ pub struct Options {
 
 pub struct Session {
     opts: Options,
+    /// Reads guide pages for their PoB link when the player gives a page instead of the link.
+    guides: std::sync::Arc<exile_guides::Guides>,
     engine: Option<Engine>,
     /// A build loaded during this conversation replaces the app's build until the server stops.
     build_xml: Option<String>,
@@ -33,9 +35,10 @@ pub struct Session {
 }
 
 impl Session {
-    pub fn new(opts: Options) -> Self {
+    pub fn new(opts: Options, guides: std::sync::Arc<exile_guides::Guides>) -> Self {
         Self {
             opts,
+            guides,
             engine: None,
             build_xml: None,
             references: Vec::new(),
@@ -55,7 +58,7 @@ impl Session {
 
     /// Loads a build for the rest of the conversation: an import code, a build link or XML.
     pub fn load(&mut self, text: &str) -> Result<Value, String> {
-        let xml = to_xml(text)?;
+        let xml = self.to_xml(text)?;
         let summary = self
             .engine()?
             .call("load_build", json!({ "xml": xml }), CALL);
@@ -67,7 +70,7 @@ impl Session {
 
     /// The engine's index of a reference build, loading it the first time it's asked for.
     pub fn reference(&mut self, text: &str) -> Result<usize, String> {
-        let xml = to_xml(text)?;
+        let xml = self.to_xml(text)?;
         let index = match self.references.iter().position(|r| *r == xml) {
             Some(i) => i,
             None => {
@@ -92,6 +95,37 @@ impl Session {
         }
         // The engine counts from 1, like Lua.
         Ok(index + 1)
+    }
+
+    /// A PoB code, a build link, build XML, or a guide page with a build link on it.
+    fn to_xml(&self, text: &str) -> Result<String, String> {
+        let text = text.trim();
+        let link = match exile_pob::code_url(text) {
+            Some(url) => Some(url),
+            None if text.starts_with("http://") || text.starts_with("https://") => {
+                let page_link = self.guides.pob_link(text).map_err(|e| match e {
+                    exile_guides::GuideError::Blocked(host) => format!(
+                        "{host} doesn't let programs read its pages. Open the guide in your browser and copy its Path of Building link (pobb.in or poe.ninja) or code, or look the guide up with find_guides."
+                    ),
+                    e => e.to_string(),
+                })?;
+                let page_link = page_link
+                    .ok_or("That page has no Path of Building link. Copy the guide's PoB link or code from it instead.")?;
+                Some(
+                    exile_pob::code_url(&page_link)
+                        .ok_or(format!("Couldn't use the link {page_link} from that page."))?,
+                )
+            }
+            None => None,
+        };
+        let text = match link {
+            Some(url) => fetch(&url)?,
+            None => text.to_string(),
+        };
+        let xml = exile_pob::xml_from_text(&text).map_err(|_| {
+            "That's not a Path of Building code, a build link, build XML or a guide page with a build link.".to_string()
+        })?;
+        Ok(String::from_utf8_lossy(&xml).into_owned())
     }
 
     /// Every engine method behind `call` reads the player's build.
@@ -159,17 +193,6 @@ impl Session {
         }
         Ok(self.engine.as_mut().expect("started above"))
     }
-}
-
-fn to_xml(text: &str) -> Result<String, String> {
-    let text = match exile_pob::code_url(text) {
-        Some(url) => fetch(&url)?,
-        None => text.to_string(),
-    };
-    let xml = exile_pob::xml_from_text(&text).map_err(|_| {
-        "That's not a Path of Building code, a build link or build XML.".to_string()
-    })?;
-    Ok(String::from_utf8_lossy(&xml).into_owned())
 }
 
 fn fetch(url: &str) -> Result<String, String> {
