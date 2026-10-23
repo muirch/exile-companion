@@ -2,6 +2,7 @@ import { useCallback, useEffect, useState } from 'react';
 
 import { getHotkeys, pauseHotkeys, resumeHotkeys, setHotkeys } from '../ipc/commands';
 import type { BindError, HotkeySettings, Hotkeys } from '../ipc/types';
+import { Button, Note, Row, Select, Toggle } from '../kit';
 import { useAppStore } from '../store/useAppStore';
 
 type Bindable = Exclude<keyof Hotkeys, 'menuHold'>;
@@ -69,13 +70,14 @@ function Binding({
   onRecord: () => void;
 }): React.JSX.Element {
   return (
-    <button
-      className={dim && !recording ? 'btn min-w-28 font-body opacity-50' : 'btn min-w-28 font-body'}
+    <Button
+      literal
+      className={dim && !recording ? 'min-w-28 opacity-50' : 'min-w-28'}
       aria-pressed={recording}
       onClick={onRecord}
     >
       {recording ? 'Press keys…' : shortcutLabel(value)}
-    </button>
+    </Button>
   );
 }
 
@@ -128,46 +130,28 @@ export function HotkeySection(): React.JSX.Element {
 
   return (
     <div className="flex flex-col gap-2">
-      <div className="flex min-h-7 items-center gap-3">
-        <span className="w-32 shrink-0 font-caps text-[13px] text-label">Quick menu</span>
+      <Row label="Quick menu">
         <span className="font-body text-[13px] text-plain">Hold</span>
-        <select
-          className="btn font-body"
+        <Select
           value={cfg.hotkeys.menuHold}
-          aria-label="Key to hold for the quick menu"
-          onChange={(e) =>
-            void commit({ ...cfg, hotkeys: { ...cfg.hotkeys, menuHold: e.target.value } })
-          }
-        >
-          {HOLD_KEYS.map((k) => (
-            <option key={k.value} value={k.value}>
-              {k.label}
-            </option>
-          ))}
-        </select>
-      </div>
+          options={HOLD_KEYS}
+          label="Key to hold for the quick menu"
+          onChange={(v) => void commit({ ...cfg, hotkeys: { ...cfg.hotkeys, menuHold: v } })}
+        />
+      </Row>
       {ROWS.map((row) => (
-        <div key={row.key} className="flex min-h-7 items-center gap-3">
-          <span className="w-32 shrink-0 font-caps text-[13px] text-label">{row.label}</span>
+        <Row key={row.key} label={row.label}>
           <Binding
             value={cfg.hotkeys[row.key]}
             recording={recording === row.key}
             onRecord={() => setRecording(recording === row.key ? null : row.key)}
           />
           <BindNote error={errorFor(row.key)} />
-        </div>
+        </Row>
       ))}
 
-      <div className="mt-2 flex min-h-7 items-center gap-3">
-        <span className="w-32 shrink-0 font-caps text-[13px] text-label">Relog</span>
-        <button
-          className="btn"
-          role="switch"
-          aria-checked={cfg.relogEnabled}
-          onClick={() => void commit({ ...cfg, relogEnabled: !cfg.relogEnabled })}
-        >
-          {cfg.relogEnabled ? 'On' : 'Off'}
-        </button>
+      <Row label="Relog" className="mt-2">
+        <Toggle on={cfg.relogEnabled} onChange={(v) => void commit({ ...cfg, relogEnabled: v })} />
         <Binding
           value={cfg.hotkeys.relog}
           recording={recording === 'relog'}
@@ -175,15 +159,13 @@ export function HotkeySection(): React.JSX.Element {
           onRecord={() => setRecording(recording === 'relog' ? null : 'relog')}
         />
         <BindNote error={errorFor('relog')} />
-      </div>
-      <p className="ml-35 font-body text-[12px] leading-snug text-label italic">
+      </Row>
+      <Note>
         Types /exit in the game chat to go back to character select, like Awakened PoE Trade's F9.
         It's the only thing Exile Companion sends to the game, one command per key press and only
         while the game is in front.
-      </p>
-      <p className="font-body text-[12px] text-label italic">
-        Click a key to change it. Backspace clears it, Esc cancels.
-      </p>
+      </Note>
+      <Note flush>Click a key to change it. Backspace clears it, Esc cancels.</Note>
     </div>
   );
 }

@@ -1,9 +1,13 @@
 import { replayPause, replayResume, replaySetSpeed, replayStep } from '../ipc/commands';
 import type { SpeedMultiplier } from '../ipc/types';
+import { Button, Choice } from '../kit';
 import { useAppStore } from '../store/useAppStore';
 
-const SPEEDS: readonly SpeedMultiplier[] = ['X1', 'X2', 'X5', 'X20', 'X100'];
-const speedLabel = (s: SpeedMultiplier): string => `${s.slice(1)}x`;
+const SPEEDS = (['X1', 'X2', 'X5', 'X20', 'X100'] as const).map((s: SpeedMultiplier) => ({
+  value: s,
+  label: `${s.slice(1)}x`,
+  literal: true,
+}));
 
 export function ReplayControls(): React.JSX.Element | null {
   const replay = useAppStore((s) => s.replay);
@@ -16,23 +20,14 @@ export function ReplayControls(): React.JSX.Element | null {
   return (
     <div className="flex flex-col gap-1.5">
       <div className="flex items-center gap-1.5">
-        <button className="btn" onClick={replay.paused ? replayResume : replayPause}>
+        <Button onClick={() => void (replay.paused ? replayResume() : replayPause())}>
           {replay.paused ? 'Play' : 'Pause'}
-        </button>
-        <button className="btn" onClick={replayStep} disabled={!replay.paused}>
+        </Button>
+        <Button onClick={() => void replayStep()} disabled={!replay.paused}>
           Step
-        </button>
+        </Button>
         <div className="ml-auto flex gap-1">
-          {SPEEDS.map((s) => (
-            <button
-              key={s}
-              className="btn font-body"
-              aria-pressed={replay.speed === s}
-              onClick={() => replaySetSpeed(s)}
-            >
-              {speedLabel(s)}
-            </button>
-          ))}
+          <Choice value={replay.speed} options={SPEEDS} onChange={(s) => void replaySetSpeed(s)} />
         </div>
       </div>
       <div className="flex items-center gap-2">

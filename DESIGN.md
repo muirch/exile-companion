@@ -196,7 +196,7 @@ These are route semantics, never decoration.
 - **Body** (500, 15px, 1.375): this area's actions.
 - **Body small** (500, 14px, 1.375): the "Then:" line, one step under the current actions so they win the first glance. Quick menu rows, "route didn't load".
 - **Label** (500, 13px, 1.375): the compact zone line, "Nothing to do here", settings row labels and values, the move bar's "Exile Companion".
-- **Button** (500, 12px, 1): every button and the hold-key select.
+- **Button** (500, 12px, 1): every button. Selects set their value at 13px.
 - **Flavour** (Alegreya Sans italic, 400, 13px, 1.375): route hints, the startup notice, the missing-log hint (upright).
 - **Caption** (Alegreya Sans italic, 400, 12px): settings explanations. Upright for bind errors.
 - **Key hint** (Alegreya Sans, 400, 11px): shortcut names next to buttons and menu rows, the move bar hint, replay line count.
@@ -241,7 +241,10 @@ Small marks are drawn as inline SVG in the current text colour. They are the 8-w
 ## Components
 
 ### Buttons
-Small, dark and neutral, like the game's own panel buttons. Square, a 1px Edge border, a vertical gradient from Soot to Char with the inner sheen, Normal Item White text in the button face at 5px 9px 6px padding. Hover brightens the border to Edge Bright and the text to Value White over 150ms ease-out. Active drops the face to near-black. Pressed or toggled-on (`aria-pressed`) sets the border to Normal Item White and the text to Value White. This is how speed choices, the recording hotkey button and On/Off switches show state. Disabled is 40 percent opacity. Buttons carrying literal strings (speeds, key bindings) switch to Alegreya Sans. The hold-key select uses the button styling.
+Small, dark and neutral, like the game's own panel buttons. Square, a 1px Edge border, a vertical gradient from Soot to Char with the inner sheen, Normal Item White text in the button face at 5px 9px 6px padding. Hover brightens the border to Edge Bright and the text to Value White over 150ms ease-out. Active drops the face to near-black. Pressed or toggled-on (`aria-pressed`) sets the border to Normal Item White and the text to Value White. This is how speed choices, the recording hotkey button and On/Off switches show state. Disabled is 40 percent opacity. Buttons carrying literal strings (speeds, key bindings) switch to Alegreya Sans.
+
+### Select
+A button-styled field in Alegreya Sans at 13px, the value left and an 8px Label Grey chevron right, used for the hold key and the preset stages. The list is drawn by the app, because WebView2 paints the native one white. It opens 2px below the field, or above it when there's no room, and is at least as wide as the field. The list is opaque near-black #0a0a0a with a 1px Edge Bright border, because it covers other rows. Options are 6px by 12px with 22px on the left for the marker. The highlighted option gets the menu-row fill (white at 6 percent) and Value White text. The chosen one has Value White text and a 5px Normal Item White diamond in front of it. While open, the field takes the Edge Bright border and the chevron flips. Up and Down, Home and End, Page Up and Page Down walk the list, a letter jumps to the next option starting with it, Enter or Space picks, Esc and a click outside close it without a change. Scrolling the window closes it too, since it would otherwise float away from its field.
 
 ### Tooltip header band
 The signature component. A tint is passed in. The band fills with it mixed 30 percent into near-black under the sheen gradient, its title and subtitle are set in the tint, its edge rules and wedge ends are the tint at 80 percent, and the diamonds on the wedge points are solid tint. Title is display type, centered and truncated. The subtitle sits below at 85 percent opacity.
