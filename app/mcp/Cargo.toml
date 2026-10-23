@@ -1,0 +1,22 @@
+[package]
+name = "exile-companion-mcp"
+version = "0.1.0"
+edition.workspace = true
+license.workspace = true
+publish = false
+rust-version.workspace = true
+description = "MCP server that lets Claude ask Path of Building and the wiki about the build in Exile Companion."
+
+[dependencies]
+exile-pob = { path = "../../crates/pob" }
+exile-pob-engine = { path = "../../crates/pob-engine", default-features = false }
+exile-wiki = { path = "../../crates/wiki" }
+rmcp = { version = "=3.5.1", features = ["server", "macros", "transport-io", "schemars"] }
+schemars = "1"
+serde = { workspace = true }
+serde_json = { workspace = true }
+tokio = { version = "=1.53.0", features = ["macros", "rt-multi-thread", "io-std"] }
+ureq = { version = "=3.5.0", default-features = false, features = ["native-tls", "gzip"] }
+
+[dev-dependencies]
+tempfile = "=3.27.0"
