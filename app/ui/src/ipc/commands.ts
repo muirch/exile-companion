@@ -19,6 +19,7 @@ import type {
   HotkeySettings,
   NextObjective,
   PobInfo,
+  PobSync,
   RouteView,
   Settings,
   SourceStatus,
@@ -51,6 +52,28 @@ export const getPob = (): Promise<PobInfo | null> =>
 /** Null when the dialog is cancelled. Rejects with a message when the folder isn't PoB. */
 export const pickPobFolder = (): Promise<PobInfo | null> =>
   isTauri() ? invoke('pick_pob_folder') : Promise.resolve(MOCK_POB);
+
+const MOCK_BUILDS = 'C:\\Users\\exile\\Documents\\Path of Building\\Builds\\';
+let mockSync: PobSync = { enabled: false, file: `${MOCK_BUILDS}Exile Companion.xml`, picked: false };
+
+export const getPobSync = (): Promise<PobSync> =>
+  isTauri() ? invoke('get_pob_sync') : Promise.resolve(mockSync);
+
+export const setPobSync = (enabled: boolean): Promise<PobSync> =>
+  isTauri() ? invoke('set_pob_sync', { enabled }) : Promise.resolve((mockSync = { ...mockSync, enabled }));
+
+/** Null when the dialog is cancelled. The picked build replaces the app's build. */
+export const pickPobBuild = (): Promise<PobSync | null> =>
+  isTauri()
+    ? invoke('pick_pob_build')
+    : Promise.resolve((mockSync = { enabled: true, file: `${MOCK_BUILDS}Pathfinder PConc.xml`, picked: true }));
+
+export const unpickPobBuild = (): Promise<PobSync> =>
+  isTauri()
+    ? invoke('unpick_pob_build')
+    : Promise.resolve((mockSync = { ...mockSync, file: `${MOCK_BUILDS}Exile Companion.xml`, picked: false }));
+
+export const openPob = (): Promise<void> => (isTauri() ? invoke('open_pob') : Promise.resolve());
 
 const MOCK_ASSISTANT: AssistantView = {
   server: 'C:\\Users\\exile\\AppData\\Local\\Exile Companion\\exile-companion-mcp.exe',
@@ -168,6 +191,8 @@ export const getSettings = (): Promise<Settings> =>
         fadeAfter: useAppStore.getState().ui.fadeAfter,
         presetStages: [],
         pobPath: null,
+        pobSync: false,
+        pobBuild: null,
       });
 
 export const saveSettings = (settings: Settings): Promise<void> =>

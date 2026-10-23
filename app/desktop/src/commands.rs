@@ -64,6 +64,70 @@ pub async fn pick_pob_folder(
 }
 
 #[tauri::command]
+pub fn get_pob_sync(app: AppHandle) -> crate::pob::PobSync {
+    crate::pob::sync_view(&app)
+}
+
+/// Syncs right away, so the file shows up in PoB's list before the player looks.
+#[tauri::command]
+pub fn set_pob_sync(app: AppHandle, enabled: bool) -> Result<crate::pob::PobSync, String> {
+    let mut s = settings::load(&app)?;
+    s.pob_sync = enabled;
+    settings::save(&app, &s)?;
+    runtime::sync_pob(&app, &mut None);
+    Ok(crate::pob::sync_view(&app))
+}
+
+/// The build file the player imports their character into in PoB. It replaces the app's build
+/// now, and the two stay the same from then on.
+#[tauri::command]
+pub async fn pick_pob_build(
+    app: AppHandle,
+    window: WebviewWindow,
+) -> Result<Option<crate::pob::PobSync>, String> {
+    let s = settings::load(&app)?;
+    let (tx, rx) = tokio::sync::oneshot::channel();
+    let mut dialog = app
+        .dialog()
+        .file()
+        .set_parent(&window)
+        .set_title("Build in Path of Building")
+        .add_filter("Path of Building build", &["xml"]);
+    if let Some(dir) = crate::pob::builds_dir(&app, &s) {
+        dialog = dialog.set_directory(dir);
+    }
+    dialog.pick_file(move |file| {
+        let _ = tx.send(file);
+    });
+    let Some(picked) = rx.await.map_err(|e| e.to_string())? else {
+        return Ok(None);
+    };
+    let path = picked.into_path().map_err(|e| e.to_string())?;
+    let xml = std::fs::read(&path).map_err(|e| e.to_string())?;
+    runtime::import_build(&app, xml)?;
+    let mut s = settings::load(&app)?;
+    s.pob_sync = true;
+    s.pob_build = Some(path.to_string_lossy().into_owned());
+    settings::save(&app, &s)?;
+    Ok(Some(crate::pob::sync_view(&app)))
+}
+
+/// Back to Exile Companion's own file in PoB's Builds folder.
+#[tauri::command]
+pub fn unpick_pob_build(app: AppHandle) -> Result<crate::pob::PobSync, String> {
+    let mut s = settings::load(&app)?;
+    s.pob_build = None;
+    settings::save(&app, &s)?;
+    runtime::sync_pob(&app, &mut None);
+    Ok(crate::pob::sync_view(&app))
+}
+
+#[tauri::command]
+pub fn open_pob(app: AppHandle) -> Result<(), String> {
+    crate::pob::open(&app)
+}
+
+#[tauri::command]
 pub fn get_assistant() -> crate::assistant::AssistantView {
     crate::assistant::view()
 }

@@ -180,8 +180,10 @@ pub fn watch_build(app: AppHandle) {
     };
     tauri::async_runtime::spawn(async move {
         let mut last = stamp(&app);
+        let mut sync_error = None;
         loop {
             tokio::time::sleep(Duration::from_secs(2)).await;
+            sync_pob(&app, &mut sync_error);
             let now = stamp(&app);
             if now != last && now.is_some() {
                 restore_build(&app);
@@ -192,6 +194,33 @@ pub fn watch_build(app: AppHandle) {
             last = now;
         }
     });
+}
+
+/// Keeps the build and its file in PoB's Builds folder the same when the player turned that on.
+/// A pull rewrites build.xml, and watch_build picks that up like any other change.
+pub fn sync_pob(app: &AppHandle, last_error: &mut Option<String>) {
+    let s = settings::load(app).unwrap_or_default();
+    if !s.pob_sync {
+        return;
+    }
+    let (Some(build), Some(file)) = (build_path(app), crate::pob::sync_file(app, &s)) else {
+        return;
+    };
+    match exile_core::pob_sync::sync(&build, &file) {
+        Ok(synced) => {
+            if synced != exile_core::pob_sync::Synced::Nothing {
+                log::info!("PoB sync with {}: {synced:?}", file.display());
+            }
+            *last_error = None;
+        }
+        Err(e) => {
+            let e = format!("PoB sync with {}: {e}", file.display());
+            if last_error.as_ref() != Some(&e) {
+                log::warn!("{e}");
+            }
+            *last_error = Some(e);
+        }
+    }
 }
 
 /// Parse and store a freshly-imported build, save it for the next start, then push the new build
@@ -226,6 +255,13 @@ pub fn import_build(app: &AppHandle, xml: Vec<u8>) -> Result<BuildSummary, Strin
 
 /// Forget the loaded build and push the cleared state.
 pub fn clear_build(app: &AppHandle) {
+    // Otherwise the next sync brings the build straight back from PoB.
+    if let Ok(mut s) = settings::load(app) {
+        if s.pob_sync {
+            s.pob_sync = false;
+            let _ = settings::save(app, &s);
+        }
+    }
     if let Some(path) = build_path(app) {
         let _ = std::fs::remove_file(path);
     }

@@ -44,7 +44,7 @@ All of them can be changed in the settings.
 
 ## How it treats the game
 
-Exile Companion reads `Client.txt`, a text log the game writes to disk anyway, plus the keys you bind and, when you ask, the clipboard. If you paste a build link (pobb.in, poe.ninja, pastebin and the other sites Path of Building imports from), it downloads that one build. It leaves the game process alone. It doesn't read the game's memory or hook its rendering, and it doesn't play for you.
+Exile Companion reads `Client.txt`, a text log the game writes to disk anyway, plus the keys you bind and, when you ask, the clipboard. If you paste a build link (pobb.in, poe.ninja, pastebin and the other sites Path of Building imports from), it downloads that one build. If you turn on sync with Path of Building, it reads and writes one build file in PoB's Builds folder. It leaves the game process alone. It doesn't read the game's memory or hook its rendering, and it doesn't play for you.
 
 The relog key is the one thing it sends to the game. When you turn it on, F9 types `/exit` in chat, the way Awakened PoE Trade does. It's one chat command per key press, and only while the game is in front.
 

@@ -7,6 +7,11 @@ import {
   copyAssistantConfig,
   getAssistant,
   getPob,
+  getPobSync,
+  openPob,
+  pickPobBuild,
+  setPobSync,
+  unpickPobBuild,
   getSettings,
   importBuildFile,
   pasteBuild,
@@ -23,7 +28,7 @@ import {
   stopSource,
   updateSettings,
 } from '../ipc/commands';
-import type { AgentView, AssistantView, GemHints, PobInfo, PresetStage } from '../ipc/types';
+import type { AgentView, AssistantView, GemHints, PobInfo, PobSync, PresetStage } from '../ipc/types';
 import { Button, Choice, ConfirmButton, Note, Row, Section, Select, Slider, Toggle } from '../kit';
 import { useAppStore } from '../store/useAppStore';
 import { HotkeySection } from './HotkeySection';
@@ -324,6 +329,7 @@ function PresetRows(): React.JSX.Element | null {
 
 // The build assistant runs the player's own Path of Building, so it calculates what PoB does.
 function PobRows(): React.JSX.Element {
+  const hasBuild = useAppStore((s) => s.build !== null);
   const [pob, setPob] = useState<PobInfo | null | undefined>(undefined);
   const [error, setError] = useState<string | null>(null);
   useEffect(() => {
@@ -369,6 +375,64 @@ function PobRows(): React.JSX.Element {
       <Note>
         The build assistant will calculate with your Path of Building. Exile Companion looks for it
         in the usual install folders. Pick the folder if yours is somewhere else.
+      </Note>
+      {/* Clearing the build turns sync off, so the rows load again when it goes. */}
+      {pob && <PobSyncRows key={hasBuild ? 'build' : 'none'} />}
+    </>
+  );
+}
+
+// PoB lists builds by file name, so that's what the row shows.
+function buildName(file: string): string {
+  return file.split(/[\\/]/).pop()?.replace(/\.xml$/i, '') ?? file;
+}
+
+function PobSyncRows(): React.JSX.Element {
+  const [sync, setSync] = useState<PobSync | null>(null);
+  const [error, setError] = useState<string | null>(null);
+  useEffect(() => {
+    void getPobSync().then(setSync);
+  }, []);
+  const run = async (action: () => Promise<PobSync | null | void>): Promise<void> => {
+    setError(null);
+    try {
+      const next = await action();
+      if (next) setSync(next);
+    } catch (e) {
+      setError(String(e));
+    }
+  };
+  if (!sync) return <></>;
+  return (
+    <>
+      <Row label="Sync with PoB">
+        <Toggle on={sync.enabled} label="Sync with PoB" onChange={(v) => void run(() => setPobSync(v))} />
+      </Row>
+      {sync.enabled && sync.file && (
+        <Row label="PoB build">
+          <span className="min-w-0 flex-1 truncate font-body text-[13px] text-value" title={sync.file}>
+            {buildName(sync.file)}
+          </span>
+        </Row>
+      )}
+      <Row label="">
+        <Button onClick={() => void run(pickPobBuild)}>Pick PoB build</Button>
+        {sync.enabled && sync.picked && (
+          <Button onClick={() => void run(unpickPobBuild)}>Use Exile Companion</Button>
+        )}
+        <Button onClick={() => void run(openPob)}>Open PoB</Button>
+      </Row>
+      {error && (
+        <Row label="">
+          <span role="alert" className="min-w-0 flex-1 font-body text-[12px] text-corrupted">
+            {error}
+          </span>
+        </Row>
+      )}
+      <Note>
+        Keeps your build here and in Path of Building the same, whichever you changed last. PoB
+        lists it as Exile Companion. Pick the build you import your character into instead, and it
+        replaces the build here. Reopen the build in PoB after the assistant changes it.
       </Note>
     </>
   );

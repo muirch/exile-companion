@@ -2,11 +2,12 @@
 
 use std::path::{Path, PathBuf};
 
+use exile_core::pob_sync::DEFAULT_FILE;
 use exile_pob_engine::{locate, EngineError, PobDir};
 use serde::Serialize;
-use tauri::AppHandle;
+use tauri::{AppHandle, Manager};
 
-use crate::settings;
+use crate::settings::{self, Settings};
 
 #[derive(Debug, Clone, Serialize)]
 #[serde(rename_all = "camelCase")]
@@ -55,6 +56,52 @@ pub fn choose(app: &AppHandle, dir: &Path) -> Result<PobInfo, String> {
     saved.pob_path = Some(info.path.clone());
     settings::save(app, &saved)?;
     Ok(info)
+}
+
+#[derive(Debug, Clone, Serialize)]
+#[serde(rename_all = "camelCase")]
+pub struct PobSync {
+    pub enabled: bool,
+    /// The build file in PoB the app's build is kept the same as. None when PoB isn't found.
+    pub file: Option<String>,
+    /// Whether the player picked that file, rather than Exile Companion's own one.
+    pub picked: bool,
+}
+
+pub fn builds_dir(app: &AppHandle, s: &Settings) -> Option<PathBuf> {
+    let dir = PobDir::detect(Path::new(s.pob_path.as_deref()?)).ok()?;
+    locate::builds_dir(&dir, app.path().document_dir().ok().as_deref())
+}
+
+pub fn sync_file(app: &AppHandle, s: &Settings) -> Option<PathBuf> {
+    match &s.pob_build {
+        Some(file) => Some(PathBuf::from(file)),
+        None => Some(builds_dir(app, s)?.join(DEFAULT_FILE)),
+    }
+}
+
+pub fn sync_view(app: &AppHandle) -> PobSync {
+    let s = settings::load(app).unwrap_or_default();
+    PobSync {
+        enabled: s.pob_sync,
+        file: sync_file(app, &s).map(|f| f.to_string_lossy().into_owned()),
+        picked: s.pob_build.is_some(),
+    }
+}
+
+/// Starts PoB. It can't be told to open a build file, so the player picks ours from its list.
+pub fn open(app: &AppHandle) -> Result<(), String> {
+    let s = settings::load(app).unwrap_or_default();
+    let root = s.pob_path.ok_or("Path of Building wasn't found.")?;
+    let exe = Path::new(&root).join("Path of Building.exe");
+    if !exe.is_file() {
+        return Err(format!("There's no Path of Building.exe in {root}."));
+    }
+    std::process::Command::new(&exe)
+        .current_dir(&root)
+        .spawn()
+        .map(drop)
+        .map_err(|e| format!("Couldn't start Path of Building: {e}"))
 }
 
 #[cfg(windows)]
