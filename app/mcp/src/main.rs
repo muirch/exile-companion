@@ -1,10 +1,11 @@
-//! exile-companion-mcp [--pob <dir>] [--build <file.xml>] [--engine <exile-pob-engine>]
+//! exile-companion-mcp [--pob <dir>] [--build <file.xml>] [--log <Client.txt>] [--engine <exile-pob-engine>]
 //!
 //! An MCP server on stdin and stdout. Claude Desktop or Claude Code start it, and Claude asks
 //! Path of Building (through exile-pob-engine) and the Path of Exile Wiki about the player's build.
 //! By default it uses the build and the PoB folder from Exile Companion's settings.
 
 mod paths;
+mod progress;
 mod session;
 
 use std::path::PathBuf;
@@ -33,7 +34,10 @@ const PAGE_LIMIT: usize = 12_000;
 const INSTRUCTIONS: &str = "Tools for one Path of Exile 1 build, the one the player imported in Exile Companion, \
 calculated by the player's own Path of Building, and for the Path of Exile Wiki and build guides.
 
-First check that the build you have is the one the player is talking about: game (these tools are Path of Exile 1 only), \
+Start a conversation with player_status: where the player is in the game (from the game's log), the guide they follow and the build the tools read. \
+It costs nothing, so call it again when the player asks what to do now. A level-up is the only time the log names the level, so a fresh character may show none yet.
+
+Check that the build you have is the one the player is talking about: game (these tools are Path of Exile 1 only), \
 main skill, class and ascendancy, league. If build_overview shows something else than the player describes, say so and ask \
 before you measure anything. Don't answer about one build with numbers from another.
 
@@ -44,13 +48,18 @@ To weigh a change, measure it with what_if, compare_item, passive_value or gem_v
 A percent is not a recommendation by itself. Keystones and big notables have drawbacks Path of Building doesn't price in \
 (read the node's own text, and the wiki for the keystone), they cost points on the way, and players rarely take some of them for good reasons. \
 Say the trade-off and how sure you are, and point out what you couldn't measure. \
-When the player follows a guide, or you found one for them and they loaded it, advise from the difference to the guide (compare_with_guide) \
-and pass the guide to passive_value. guide_stages and guide_stage_diff walk a guide stage by stage, also for a player without a build yet. Don't suggest passives, keystones or items the guide doesn't take unless the player asks to explore. \
+When the player picks a guide, save it with follow_guide so later conversations know it. \
+compare_with_guide, passive_value, guide_stages and guide_stage_diff use the followed guide when you pass none. \
+Advise from the difference to the guide. guide_stages and guide_stage_diff walk a guide stage by stage, also for a player without a build yet. \
+When the player moves on to another stage, update it with follow_guide. Don't suggest passives, keystones or items the guide doesn't take unless the player asks to explore. \
 Compare with the guide stage closest to the player's level and progress, and keep endgame gear out of a beginner's next steps. \
 Measuring changes nothing. apply_changes keeps changes in the player's build, and the app and later conversations see them: \
 use it only when the player says to keep a change, after you measured it, with the reason in a few words. \
 build_history lists what was kept and undo_change takes the last change back. \
-load_build switches to another build for this conversation only, and that build doesn't keep changes.
+A new player who wants to level with a guide has no build of their own yet. With their OK, use_as_my_build makes the guide their build in Exile Companion, \
+so the overlay shows its gems along the campaign route. Follow the guide too. undo_change takes that back as well. \
+load_build switches the tools to another build until back_to_my_build. That build doesn't keep changes, and it stays in use across conversations \
+until the agent restarts, so switch back when you're done with it.
 
 When a player asks what to play, don't pick for them at once. Ask how they like to play (ranged, melee, spells, minions), \
 their budget, and whether they start fresh in a league. Then use find_guides and offer two or three current-league guides \
@@ -91,15 +100,17 @@ pub struct PassiveParams {
     pub limit: Option<u32>,
     /// How many points away an unallocated notable may be. Default 3, or any distance with a guide.
     pub max_points: Option<u32>,
-    /// A guide's build (code, link or XML). Then only notables the guide takes are offered.
+    /// A guide's build (code, link or XML). Then only notables the guide takes are offered. The followed guide when left out.
     pub guide: Option<String>,
+    /// Offer any notable, not only the guide's. Only when the player asks to explore.
+    pub explore: Option<bool>,
 }
 
 #[derive(Debug, Deserialize, schemars::JsonSchema)]
 pub struct GuideParams {
-    /// The guide's build: a PoB import code, a build link (pobb.in, poe.ninja and the other sites PoB imports from), build XML, or the guide's page when it has a build link on it.
-    pub guide: String,
-    /// Guide stage to compare with, by id from the guide's lists: its tree, item set and skill set. The guide's saved choice by default.
+    /// The guide's build: a PoB import code, a build link (pobb.in, poe.ninja and the other sites PoB imports from), build XML, or the guide's page when it has a build link on it. The followed guide when left out.
+    pub guide: Option<String>,
+    /// Guide stage to compare with, by id from the guide's lists: its tree, item set and skill set. The followed stage, or the guide's saved choice, by default.
     pub tree: Option<u32>,
     pub item_set: Option<u32>,
     pub skill_set: Option<u32>,
@@ -109,8 +120,8 @@ pub struct GuideParams {
 
 #[derive(Debug, Deserialize, schemars::JsonSchema)]
 pub struct StagesParams {
-    /// The guide's build: a PoB code, a build link, build XML, or the guide's page with a build link on it.
-    pub guide: String,
+    /// The guide's build: a PoB code, a build link, build XML, or the guide's page with a build link on it. The followed guide when left out.
+    pub guide: Option<String>,
 }
 
 #[derive(Debug, Deserialize, schemars::JsonSchema)]
@@ -123,8 +134,8 @@ pub struct Stage {
 
 #[derive(Debug, Deserialize, schemars::JsonSchema)]
 pub struct StageDiffParams {
-    /// The guide's build, as for guide_stages.
-    pub guide: String,
+    /// The guide's build, as for guide_stages. The followed guide when left out.
+    pub guide: Option<String>,
     pub from: Stage,
     pub to: Stage,
 }
@@ -147,6 +158,24 @@ pub struct WhatIfParams {
     /// {"custom_mod": "<a mod line, e.g. +1 to Level of all Skill Gems>"},
     /// {"level": n} for the character level.
     pub changes: Vec<Value>,
+}
+
+#[derive(Debug, Deserialize, schemars::JsonSchema)]
+pub struct FollowParams {
+    /// The guide's build: a PoB code, a build link, build XML, or the guide's page with a build link on it. Leave it out to change only the stage of the followed guide.
+    pub guide: Option<String>,
+    /// The stage the player is at, by ids from guide_stages. The guide's saved choice when left out.
+    pub tree: Option<u32>,
+    pub item_set: Option<u32>,
+    pub skill_set: Option<u32>,
+}
+
+#[derive(Debug, Deserialize, schemars::JsonSchema)]
+pub struct ReplaceParams {
+    /// A PoB code, a build link, build XML, or a guide page with a build link on it.
+    pub build: String,
+    /// Why, in a few words the player will recognise in the history, e.g. "leveling with the guide's PoB".
+    pub reason: String,
 }
 
 #[derive(Debug, Deserialize, schemars::JsonSchema)]
@@ -257,7 +286,73 @@ impl Companion {
     }
 
     #[tool(
-        description = "The build's left sidebar in Path of Building: every stat row as PoB formats it, PoB's warnings, and the main skill. Start here."
+        description = "Start here. Where the player is in the game, read from the game's log: character, class, level, act, area, deaths and how long ago the log changed. Also the guide they follow with its stage, and which build the tools read. Fast, doesn't start Path of Building."
+    )]
+    async fn player_status(&self) -> Result<CallToolResult, McpError> {
+        let session = self.session.clone();
+        let r = tokio::task::spawn_blocking(move || Ok(session.lock().unwrap().status()))
+            .await
+            .unwrap_or_else(|e| Err(e.to_string()));
+        Ok(json_result(r))
+    }
+
+    #[tool(
+        description = "Saves the guide the player follows, and the stage they're at, so later conversations know them. Without a guide, changes only the stage of the followed one."
+    )]
+    async fn follow_guide(
+        &self,
+        Parameters(p): Parameters<FollowParams>,
+    ) -> Result<CallToolResult, McpError> {
+        let session = self.session.clone();
+        let r = tokio::task::spawn_blocking(move || {
+            let stage = exile_core::followed_guide::Stage {
+                tree: p.tree,
+                item_set: p.item_set,
+                skill_set: p.skill_set,
+            };
+            session.lock().unwrap().follow(p.guide.as_deref(), stage)
+        })
+        .await
+        .unwrap_or_else(|e| Err(e.to_string()));
+        Ok(json_result(r))
+    }
+
+    #[tool(description = "The player stops following their guide.")]
+    async fn forget_guide(&self) -> Result<CallToolResult, McpError> {
+        let session = self.session.clone();
+        let r = tokio::task::spawn_blocking(move || session.lock().unwrap().forget_guide())
+            .await
+            .unwrap_or_else(|e| Err(e.to_string()));
+        Ok(json_result(r))
+    }
+
+    #[tool(
+        description = "Makes a build, usually the guide the player levels with, their build in Exile Companion. The overlay then shows its gems along the campaign route. The old build goes into the history, undo_change brings it back. Only with the player's OK."
+    )]
+    async fn use_as_my_build(
+        &self,
+        Parameters(p): Parameters<ReplaceParams>,
+    ) -> Result<CallToolResult, McpError> {
+        let session = self.session.clone();
+        let r = tokio::task::spawn_blocking(move || {
+            session.lock().unwrap().replace_build(&p.build, &p.reason)
+        })
+        .await
+        .unwrap_or_else(|e| Err(e.to_string()));
+        Ok(json_result(r))
+    }
+
+    #[tool(description = "Stops using a build from load_build and goes back to the player's own.")]
+    async fn back_to_my_build(&self) -> Result<CallToolResult, McpError> {
+        let session = self.session.clone();
+        let r = tokio::task::spawn_blocking(move || session.lock().unwrap().back_to_mine())
+            .await
+            .unwrap_or_else(|e| Err(e.to_string()));
+        Ok(json_result(r))
+    }
+
+    #[tool(
+        description = "The build's left sidebar in Path of Building: every stat row as PoB formats it, PoB's warnings, and the main skill."
     )]
     async fn build_overview(&self) -> Result<CallToolResult, McpError> {
         Ok(self.pob("sidebar_stats", json!({})).await)
@@ -301,8 +396,11 @@ impl Companion {
             if let Some(points) = p.max_points {
                 params["max_points"] = json!(points);
             }
-            if let Some(guide) = &p.guide {
-                params["reference"] = json!(s.reference(guide)?);
+            if !p.explore.unwrap_or(false) {
+                // Without any guide every notable is fair game.
+                if let Ok((guide, _)) = s.guide_or_followed(p.guide) {
+                    params["reference"] = json!(s.reference(&guide)?);
+                }
             }
             s.call("node_power", params)
         })
@@ -321,11 +419,17 @@ impl Companion {
         let session = self.session.clone();
         let r = tokio::task::spawn_blocking(move || {
             let mut s = session.lock().unwrap();
-            let reference = s.reference(&p.guide)?;
-            if p.tree.is_some() || p.item_set.is_some() || p.skill_set.is_some() {
+            let (guide, followed) = s.guide_or_followed(p.guide)?;
+            let reference = s.reference(&guide)?;
+            let given = p.tree.is_some() || p.item_set.is_some() || p.skill_set.is_some();
+            let (tree, item_set, skill_set) = match followed {
+                Some(st) if !given => (st.tree, st.item_set, st.skill_set),
+                _ => (p.tree, p.item_set, p.skill_set),
+            };
+            if tree.is_some() || item_set.is_some() || skill_set.is_some() {
                 s.call(
                     "set_reference_stage",
-                    json!({ "reference": reference, "tree": p.tree, "item_set": p.item_set, "skill_set": p.skill_set }),
+                    json!({ "reference": reference, "tree": tree, "item_set": item_set, "skill_set": skill_set }),
                 )?;
             }
             s.call("compare_reference", json!({ "reference": reference, "limit": p.limit.unwrap_or(12) }))
@@ -403,7 +507,7 @@ impl Companion {
     }
 
     #[tool(
-        description = "Switches to another build for the rest of this conversation, from a PoB code, a build link or XML. The build in Exile Companion stays as it is."
+        description = "Switches the tools to another build, from a PoB code, a build link or XML, until back_to_my_build. The build in Exile Companion stays as it is."
     )]
     async fn load_build(
         &self,
@@ -426,7 +530,8 @@ impl Companion {
         let session = self.session.clone();
         let r = tokio::task::spawn_blocking(move || {
             let mut s = session.lock().unwrap();
-            let reference = s.reference(&p.guide)?;
+            let (guide, _) = s.guide_or_followed(p.guide)?;
+            let reference = s.reference(&guide)?;
             s.call_any("guide_stages", json!({ "reference": reference }))
         })
         .await
@@ -444,7 +549,8 @@ impl Companion {
         let session = self.session.clone();
         let r = tokio::task::spawn_blocking(move || {
             let mut s = session.lock().unwrap();
-            let reference = s.reference(&p.guide)?;
+            let (guide, _) = s.guide_or_followed(p.guide)?;
+            let reference = s.reference(&guide)?;
             let stage = |st: &Stage| json!({ "tree": st.tree, "item_set": st.item_set, "skill_set": st.skill_set });
             s.call_any(
                 "guide_stage_diff",
@@ -577,6 +683,7 @@ fn options() -> Result<Options, String> {
         engine: None,
         pob: None,
         build: None,
+        log: None,
     };
     let mut args = std::env::args().skip(1);
     while let Some(a) = args.next() {
@@ -589,6 +696,7 @@ fn options() -> Result<Options, String> {
             "--engine" => opts.engine = Some(value()?),
             "--pob" => opts.pob = Some(value()?),
             "--build" => opts.build = Some(value()?),
+            "--log" => opts.log = Some(value()?),
             _ => return Err(format!("unknown argument {a}")),
         }
     }
@@ -600,7 +708,7 @@ async fn main() -> std::process::ExitCode {
     let opts = match options() {
         Ok(o) => o,
         Err(e) => {
-            eprintln!("{e}\nusage: exile-companion-mcp [--pob <dir>] [--build <file.xml>] [--engine <path>]");
+            eprintln!("{e}\nusage: exile-companion-mcp [--pob <dir>] [--build <file.xml>] [--log <Client.txt>] [--engine <path>]");
             return std::process::ExitCode::FAILURE;
         }
     };
