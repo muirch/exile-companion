@@ -273,3 +273,15 @@ fn history_primes_the_campaign_state() {
     assert_eq!(st.area_id.as_deref(), Some("1_1_2"));
     assert_eq!(st.act, Some(1));
 }
+
+#[test]
+fn reads_where_the_player_is_from_the_log_file() {
+    let dir = tempfile::tempdir().unwrap();
+    let path = dir.path().join("Client.txt");
+    std::fs::write(&path, LOG).unwrap();
+    let state = exile_core::pipeline::state_from_log(&path, zones(), &LocalePack::EN).unwrap();
+    assert_eq!(state.level, 3);
+    assert_eq!(state.class.as_deref(), Some("Witch"));
+    assert_eq!(state.zone.unwrap().name, "The Coast");
+    assert_eq!(state.deaths, 1);
+}
