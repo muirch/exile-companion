@@ -46,7 +46,7 @@ exile-companion-mcp --pob <Path of Building folder> --build <build.xml> --engine
 
 ## What the agent can do with it
 
-Compare your build with a guide's PoB, stage by stage, and say what to change first, measured on your build. Advice sticks to what the guide takes unless you ask to explore. Read the build as PoB's sidebar shows it, with its gear, gems, tree and Configuration. Check defences and max hits. Measure what each gem and notable is worth, compare a copied item against your gear, try changes together (nodes, items, gems, config options, mod lines, level) without touching your build, export the build as a PoB code. Search and read the wiki and its item and mod tables.
+Compare your build with a guide's PoB, stage by stage, and say what to change first, measured on your build. Advice sticks to what the guide takes unless you ask to explore. Read the build as PoB's sidebar shows it, with its gear, gems, tree and Configuration. Check defences and max hits. Measure what each gem and notable is worth, compare a copied item against your gear, try changes together (nodes, items, gems, config options, mod lines, level) without touching your build, export the build as a PoB code. Find current-league guides for a class or ascendancy, most watched first, with their PoB links. Search and read the wiki and its item and mod tables.
 
 Numbers are Path of Building's own, with the build's Configuration. If the build assumes a boss, buffs or custom modifiers, so do the numbers.
 

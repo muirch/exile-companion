@@ -110,6 +110,8 @@ fn lists_its_tools() {
         "build_details",
         "what_if",
         "compare_item",
+        "compare_with_guide",
+        "find_guides",
         "wiki_search",
         "wiki_page",
     ] {

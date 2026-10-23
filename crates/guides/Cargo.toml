@@ -1,0 +1,15 @@
+[package]
+name = "exile-guides"
+version = "0.1.0"
+edition.workspace = true
+license.workspace = true
+publish = false
+rust-version.workspace = true
+description = "Finds Path of Exile build guides with their PoB links for Exile Companion's build assistant."
+
+[dependencies]
+exile-fetch = { path = "../fetch" }
+exile-wiki = { path = "../wiki" }
+regex = "=1.13.1"
+serde = { workspace = true }
+thiserror = { workspace = true }
