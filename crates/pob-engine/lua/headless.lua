@@ -92,14 +92,7 @@ function ShowCursor(doShow) end
 function IsKeyDown(keyName) end
 function Copy(text) end
 function Paste() end
-function Deflate(data)
-	-- TODO: Might need this
-	return ""
-end
-function Inflate(data)
-	-- TODO: And this
-	return ""
-end
+-- Inflate and Deflate come from the host (zlib streams, like SimpleGraphic's).
 function GetTime()
 	return 0
 end

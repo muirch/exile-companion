@@ -28,6 +28,7 @@ impl Host {
             .set_name("@prelude.lua")
             .call::<()>(lua_dir)
             .map_err(lua_err)?;
+        register_zlib(&lua).map_err(lua_err)?;
         lua.load(HEADLESS)
             .set_name("@headless.lua")
             .exec()
@@ -77,6 +78,29 @@ impl Host {
         }
         Ok(())
     }
+}
+
+/// Build codes are base64 of a zlib stream, and so are the timeless and abyss jewel tables. A
+/// stream that doesn't decode gives nil, the way PoB's own Inflate does.
+fn register_zlib(lua: &Lua) -> mlua::Result<()> {
+    use std::io::Read;
+
+    let inflate = lua.create_function(|lua, data: mlua::LuaString| {
+        let mut out = Vec::new();
+        match flate2::read::ZlibDecoder::new(&data.as_bytes()[..]).read_to_end(&mut out) {
+            Ok(_) => Ok(Some(lua.create_string(out)?)),
+            Err(_) => Ok(None),
+        }
+    })?;
+    let deflate = lua.create_function(|lua, data: mlua::LuaString| {
+        let mut out = Vec::new();
+        flate2::read::ZlibEncoder::new(&data.as_bytes()[..], flate2::Compression::default())
+            .read_to_end(&mut out)
+            .map_err(mlua::Error::external)?;
+        lua.create_string(out)
+    })?;
+    lua.globals().set("Inflate", inflate)?;
+    lua.globals().set("Deflate", deflate)
 }
 
 fn write_line(output: &mut impl Write, response: &Response) -> std::io::Result<()> {
