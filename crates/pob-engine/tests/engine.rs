@@ -234,6 +234,67 @@ fn tries_changes_and_puts_the_build_back() {
 }
 
 #[test]
+fn applies_changes_for_good_or_not_at_all() {
+    let Some(pob) = pob_dir() else { return };
+    let mut e = engine(&pob);
+    let before = e
+        .call("load_build", json!({ "xml": FIXTURE }), SLOW)
+        .unwrap();
+
+    let failed = e
+        .call(
+            "apply_changes",
+            json!({ "changes": [{ "level": 30 }, { "add_gem": "No Such Gem", "group": "Caustic Arrow" }] }),
+            SLOW,
+        )
+        .unwrap_err();
+    assert!(
+        failed.to_string().contains("doesn't know the gem"),
+        "{failed}"
+    );
+    assert_eq!(e.call("summary", json!({}), SLOW).unwrap(), before);
+
+    let applied = e
+        .call(
+            "apply_changes",
+            json!({ "changes": [
+                { "add_nodes": ["Herbalism"] },
+                { "item": BOW, "slot": "Weapon 1" },
+                { "add_gem": "Added Fire Damage Support", "group": "Caustic Arrow" },
+                { "custom_mod": "+5 to Strength" },
+                { "level": 20 },
+            ]}),
+            SLOW,
+        )
+        .unwrap();
+    assert!(f(&applied["dps_pct"]) > 0.0, "{applied}");
+    let after = e.call("summary", json!({}), SLOW).unwrap();
+    assert_eq!(after["level"], 20);
+
+    let info = e.call("build_info", json!({}), SLOW).unwrap();
+    assert!(info["notables"]
+        .as_array()
+        .unwrap()
+        .iter()
+        .any(|n| n["name"] == "Herbalism"));
+    assert!(info["items"]
+        .as_array()
+        .unwrap()
+        .iter()
+        .any(|i| i["slot"] == "Weapon 1" && i["name"] == "Death Song, Short Bow"));
+    assert_eq!(
+        info["socket_groups"][0]["gems"].as_array().unwrap().len(),
+        3
+    );
+
+    // The XML it hands back is the changed build, level and all.
+    let reloaded = e
+        .call("load_build", json!({ "xml": applied["xml"] }), SLOW)
+        .unwrap();
+    assert_eq!(reloaded, after);
+}
+
+#[test]
 fn compares_the_build_with_a_guide() {
     let Some(pob) = pob_dir() else { return };
     let mut e = engine(&pob);
