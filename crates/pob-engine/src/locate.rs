@@ -37,6 +37,35 @@ fn usual_dirs() -> Vec<PathBuf> {
     dirs
 }
 
+/// The folder PoB saves builds in. An installed PoB keeps its files in Documents, a portable one
+/// next to itself (Main.lua, ChangeUserPath). The player can move it in PoB's options.
+pub fn builds_dir(pob: &PobDir, documents: Option<&Path>) -> Option<PathBuf> {
+    let user = if pob.root.join("installed.cfg").is_file() {
+        documents?.join("Path of Building")
+    } else {
+        pob.src.clone()
+    };
+    let moved = std::fs::read_to_string(user.join("Settings.xml"))
+        .ok()
+        .and_then(|s| build_path_setting(&s));
+    Some(moved.unwrap_or_else(|| user.join("Builds")))
+}
+
+/// `<Misc buildPath="..."/>` in PoB's Settings.xml, written only when it isn't the default.
+fn build_path_setting(settings: &str) -> Option<PathBuf> {
+    let misc = &settings[settings.find("<Misc ")?..];
+    let misc = &misc[..misc.find('>')?];
+    let value = &misc[misc.find(" buildPath=\"")? + " buildPath=\"".len()..];
+    let value = &value[..value.find('"')?];
+    let value = value
+        .replace("&quot;", "\"")
+        .replace("&apos;", "'")
+        .replace("&lt;", "<")
+        .replace("&gt;", ">")
+        .replace("&amp;", "&");
+    (!value.trim().is_empty()).then(|| PathBuf::from(value))
+}
+
 /// Install folder from an uninstall registry entry: InstallLocation when the installer wrote it,
 /// otherwise the folder of the uninstaller or the icon, which sit in the install folder.
 pub fn install_dir_from_uninstall_entry(
@@ -98,6 +127,38 @@ mod tests {
         let gone = saved.path().join("moved");
         let found = find_pob(Some(&gone), &extra).unwrap();
         assert_eq!(found.root, std::path::absolute(registry.path()).unwrap());
+    }
+
+    #[test]
+    fn finds_where_pob_saves_builds() {
+        let docs = tempfile::tempdir().unwrap();
+        let installed = tempfile::tempdir().unwrap();
+        fake_pob(installed.path());
+        std::fs::write(installed.path().join("installed.cfg"), "").unwrap();
+        let pob = PobDir::detect(installed.path()).unwrap();
+        assert_eq!(
+            builds_dir(&pob, Some(docs.path())),
+            Some(docs.path().join("Path of Building/Builds"))
+        );
+        assert_eq!(builds_dir(&pob, None), None);
+
+        let portable = tempfile::tempdir().unwrap();
+        fake_pob(portable.path());
+        let pob = PobDir::detect(portable.path()).unwrap();
+        assert_eq!(
+            builds_dir(&pob, Some(docs.path())),
+            Some(pob.root.join("Builds"))
+        );
+
+        std::fs::write(
+            pob.root.join("Settings.xml"),
+            r#"<PathOfBuilding><Mode mode="LIST"/><Misc buildSortMode="NAME" buildPath="D:\PoE &amp; builds\" showTitlebarName="true"/></PathOfBuilding>"#,
+        )
+        .unwrap();
+        assert_eq!(
+            builds_dir(&pob, Some(docs.path())),
+            Some(PathBuf::from(r"D:\PoE & builds\"))
+        );
     }
 
     #[test]
