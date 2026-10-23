@@ -109,6 +109,11 @@ fn write_line(output: &mut impl Write, response: &Response) -> std::io::Result<(
     output.flush()
 }
 
+// mlua wraps Lua errors as "runtime error: <message>\nstack traceback: ...". The message is what
+// a reader needs. The bridge raises its own with level 0, so they carry no file and line.
 fn lua_err(e: mlua::Error) -> EngineError {
-    EngineError::Pob(e.to_string())
+    let text = e.to_string();
+    let text = text.split("\nstack traceback").next().unwrap_or(&text);
+    let text = text.strip_prefix("runtime error: ").unwrap_or(text);
+    EngineError::Pob(text.trim().to_string())
 }

@@ -112,7 +112,7 @@ function bridge.load_build(params)
 	if launch.promptMsg then
 		local msg = strip(launch.promptMsg):match("Error:%s*(.-)\n") or strip(launch.promptMsg)
 		launch.promptMsg = nil
-		error("Path of Building couldn't open the build. " .. msg)
+		error("Path of Building couldn't open the build. " .. msg, 0)
 	end
 	local popup = main.popups[1]
 	if popup or not build.targetVersion then
@@ -123,7 +123,7 @@ function bridge.load_build(params)
 			end
 		end
 		main.popups = {}
-		error("Path of Building couldn't open the build. " .. table.concat(lines, " "))
+		error("Path of Building couldn't open the build. " .. table.concat(lines, " "), 0)
 	end
 	return bridge.summary()
 end
@@ -132,7 +132,7 @@ end
 function bridge.load_code(params)
 	local xml = Inflate(common.base64.decode(params.code:gsub("-", "+"):gsub("_", "/")))
 	if not xml then
-		error("that isn't a Path of Building code")
+		error("that isn't a Path of Building code", 0)
 	end
 	return bridge.load_build({ xml = xml, name = params.name })
 end
@@ -292,7 +292,7 @@ function bridge.gem_value(params)
 	local index = params.group or build.mainSocketGroup
 	local group = build.skillsTab.socketGroupList[index]
 	if not group then
-		error("no socket group " .. tostring(index))
+		error("no socket group " .. tostring(index), 0)
 	end
 	local base = dps(output())
 	local calc = build.calcsTab:GetMiscCalculator()
@@ -376,7 +376,7 @@ end
 function bridge.compare_item(params)
 	local item = new("Item", params.text)
 	if not item.base then
-		error("Path of Building couldn't read that item")
+		error("Path of Building couldn't read that item", 0)
 	end
 	item:NormaliseQuality()
 	item:BuildModList()
@@ -416,7 +416,7 @@ local function findNode(ref)
 			found = n
 		end
 	end
-	return found or error("no passive node " .. tostring(ref))
+	return found or error("no passive node " .. tostring(ref), 0)
 end
 
 -- PoB names supports without the " Support" the game shows.
@@ -442,7 +442,7 @@ local function findGroup(ref)
 			end
 		end
 	end
-	error("no socket group " .. tostring(ref))
+	error("no socket group " .. tostring(ref), 0)
 end
 
 -- Tries changes together and measures them against the build as it is. Nothing is kept: every
@@ -475,11 +475,11 @@ function bridge.what_if(params)
 		elseif change.item then
 			local item = new("Item", change.item)
 			if not item.base then
-				error("Path of Building couldn't read the item for " .. tostring(change.slot))
+				error("Path of Building couldn't read the item for " .. tostring(change.slot), 0)
 			end
 			item:NormaliseQuality()
 			item:BuildModList()
-			override.repSlotName = change.slot or error("an item change needs a slot")
+			override.repSlotName = change.slot or error("an item change needs a slot", 0)
 			override.repItem = item
 		elseif change.gem then
 			local group = findGroup(change.group or change.gem)
@@ -497,7 +497,7 @@ function bridge.what_if(params)
 					return
 				end
 			end
-			error("no gem " .. change.gem .. " in that group")
+			error("no gem " .. change.gem .. " in that group", 0)
 		elseif change.add_gem then
 			local group = findGroup(change.group)
 			local gem = { nameSpec = gemName(change.add_gem), level = change.level or 20, quality = change.quality or 0, enabled = true, enableGlobal1 = true, enableGlobal2 = true, count = 1 }
@@ -513,7 +513,7 @@ function bridge.what_if(params)
 				build.skillsTab:ProcessSocketGroup(group)
 			end
 			if not gem.gemData then
-				error("Path of Building doesn't know the gem " .. change.add_gem)
+				error("Path of Building doesn't know the gem " .. change.add_gem, 0)
 			end
 		elseif change.config then
 			local input = build.configTab.input
@@ -539,7 +539,7 @@ function bridge.what_if(params)
 			build.characterLevel = change.level
 			undo[#undo + 1] = function() build.characterLevel = old end
 		else
-			error("unknown change")
+			error("unknown change", 0)
 		end
 	end
 

@@ -34,6 +34,6 @@ pub enum EngineError {
     Protocol(serde_json::Error),
     #[error("no engine method {0}")]
     UnknownMethod(String),
-    #[error("Path of Building: {0}")]
+    #[error("{0}")]
     Pob(String),
 }
