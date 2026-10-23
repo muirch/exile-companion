@@ -48,6 +48,14 @@ exile-companion-mcp --pob <Path of Building folder> --build <build.xml> --engine
 
 Compare your build with a guide's PoB, stage by stage, and say what to change first, measured on your build. Advice sticks to what the guide takes unless you ask to explore. Read the build as PoB's sidebar shows it, with its gear, gems, tree and Configuration. Check defences and max hits. Measure what each gem and notable is worth, compare a copied item against your gear, try changes together (nodes, items, gems, config options, mod lines, level) without touching your build, export the build as a PoB code. Find current-league guides for a class or ascendancy, most watched first, with their PoB links. Search and read the wiki and its item and mod tables.
 
+## Keeping changes
+
+Trying changes never touches your build. When you tell the agent to keep one ("take Herbalism", "I put that helmet on"), it changes the build in Exile Companion and writes down why. The overlay picks it up within a couple of seconds, and the next conversation starts from it. Ask the agent what it changed, or to undo the last change. Undo goes back one change at a time.
+
+The history and a copy of the build before each change are in the `build-history` folder next to `build.xml` in `%APPDATA%\com.exilecompanion.app`. It keeps the last 50 changes. Importing another build starts a new history, and the old changes can't be undone after that.
+
+A build loaded in the chat doesn't keep changes, only the one in Exile Companion does.
+
 Numbers are Path of Building's own, with the build's Configuration. If the build assumes a boss, buffs or custom modifiers, so do the numbers.
 
 ## Trying the tools by hand

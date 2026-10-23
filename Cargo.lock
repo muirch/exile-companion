@@ -931,6 +931,7 @@ dependencies = [
 name = "exile-companion-mcp"
 version = "0.1.0"
 dependencies = [
+ "exile-core",
  "exile-guides",
  "exile-pob",
  "exile-pob-engine",

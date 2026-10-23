@@ -8,6 +8,7 @@ rust-version.workspace = true
 description = "MCP server that lets Claude ask Path of Building and the wiki about the build in Exile Companion."
 
 [dependencies]
+exile-core = { path = "../../crates/core" }
 exile-pob = { path = "../../crates/pob" }
 exile-pob-engine = { path = "../../crates/pob-engine", default-features = false }
 exile-wiki = { path = "../../crates/wiki" }

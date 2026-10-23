@@ -4,6 +4,7 @@
 use std::path::PathBuf;
 use std::time::Duration;
 
+use exile_core::build_history::{BuildHistory, HistoryError};
 use exile_pob_engine::{locate, Engine};
 use serde_json::{json, Value};
 
@@ -11,6 +12,7 @@ const STARTUP: Duration = Duration::from_secs(120);
 const CALL: Duration = Duration::from_secs(90);
 const NO_BUILD: &str =
     "No build yet. Import one in Exile Companion's settings, or give me a PoB code or link.";
+const LOADED: &str = "This conversation switched to another build with load_build. Only the player's own build in Exile Companion keeps changes.";
 
 pub struct Options {
     pub engine: Option<PathBuf>,
@@ -32,6 +34,8 @@ pub struct Session {
     /// Whether the running engine has the player's build. A new player may have none yet, and
     /// load_build and guides still have to work then.
     has_build: bool,
+    /// The build file as the running engine read it, to notice an import made in the app since.
+    disk_xml: Option<String>,
 }
 
 impl Session {
@@ -44,6 +48,7 @@ impl Session {
             references: Vec::new(),
             references_loaded: 0,
             has_build: false,
+            disk_xml: None,
         }
     }
 
@@ -144,15 +149,106 @@ impl Session {
         self.keep_alive(result)
     }
 
-    /// The build this conversation loaded, else the one in the app's settings, else none.
-    fn player_xml(&self) -> Result<Option<String>, String> {
-        if let Some(xml) = &self.build_xml {
-            return Ok(Some(xml.clone()));
+    /// Makes changes to the player's build file for good and records them with the reason.
+    pub fn apply(&mut self, changes: Value, reason: &str) -> Result<Value, String> {
+        if self.build_xml.is_some() {
+            return Err(LOADED.to_string());
         }
-        match self.opts.build.clone().or_else(crate::paths::saved_build) {
-            Some(path) => std::fs::read_to_string(&path)
-                .map(Some)
-                .map_err(|e| format!("{}: {e}", path.display())),
+        let path = self.build_path().ok_or(NO_BUILD)?;
+        self.engine()?;
+        if !self.has_build {
+            return Err(NO_BUILD.to_string());
+        }
+        let disk = read(&path)?;
+        if self.disk_xml.as_deref() != Some(disk.as_str()) {
+            self.reload(&disk)?;
+            return Err("The build in Exile Companion changed since I last read it, the player may have imported another one. I loaded it now: measure the change on this build again before applying it.".to_string());
+        }
+        let r = self
+            .engine()?
+            .call("apply_changes", json!({ "changes": changes }), CALL);
+        let mut effect = self.keep_alive(r)?;
+        let xml = effect
+            .as_object_mut()
+            .and_then(|o| o.remove("xml"))
+            .and_then(|x| x.as_str().map(str::to_string))
+            .ok_or("The engine didn't return the changed build.")?;
+        let entry = BuildHistory::new(&path)
+            .record(
+                disk.as_bytes(),
+                xml.as_bytes(),
+                reason,
+                changes,
+                effect.clone(),
+            )
+            .map_err(|e| format!("Couldn't save the build: {e}"))?;
+        self.disk_xml = Some(xml);
+        effect["change"] = json!(entry.id);
+        Ok(effect)
+    }
+
+    /// The changes kept for the player's build, oldest first.
+    pub fn history(&self) -> Result<Value, String> {
+        let path = self.build_path().ok_or(NO_BUILD)?;
+        let entries = BuildHistory::new(&path)
+            .entries()
+            .map_err(|e| e.to_string())?;
+        let list: Vec<Value> = entries
+            .into_iter()
+            .map(|e| {
+                json!({
+                    "change": e.id,
+                    "time": e.time,
+                    "reason": e.reason,
+                    "changes": e.changes,
+                    "dps_pct": e.effect["dps_pct"],
+                    "ehp_pct": e.effect["ehp_pct"],
+                    "life": e.effect["life"],
+                })
+            })
+            .collect();
+        Ok(json!({ "changes": list }))
+    }
+
+    /// Puts the player's build back as it was before the last change.
+    pub fn undo(&mut self) -> Result<Value, String> {
+        if self.build_xml.is_some() {
+            return Err(LOADED.to_string());
+        }
+        let path = self.build_path().ok_or(NO_BUILD)?;
+        let (entry, before) = BuildHistory::new(&path).undo().map_err(|e| match e {
+            HistoryError::Empty => "There's no change to undo.".to_string(),
+            HistoryError::Changed => "The build was imported again since the last change, so there's nothing of mine to undo.".to_string(),
+            e => format!("Couldn't undo: {e}"),
+        })?;
+        if self.engine.is_some() {
+            self.reload(&String::from_utf8_lossy(&before))?;
+        }
+        Ok(json!({ "undone": entry.id, "reason": entry.reason, "changes": entry.changes }))
+    }
+
+    fn reload(&mut self, xml: &str) -> Result<(), String> {
+        let r = self
+            .engine()?
+            .call("load_build", json!({ "xml": xml }), CALL);
+        self.keep_alive(r)?;
+        self.disk_xml = Some(xml.to_string());
+        self.has_build = true;
+        Ok(())
+    }
+
+    fn build_path(&self) -> Option<PathBuf> {
+        self.opts.build.clone().or_else(crate::paths::saved_build)
+    }
+
+    /// The build this conversation loaded, else the one in the app's settings, else none.
+    /// The second value says whether it came from the build file.
+    fn player_xml(&self) -> Result<Option<(String, bool)>, String> {
+        if let Some(xml) = &self.build_xml {
+            return Ok(Some((xml.clone(), false)));
+        }
+        match self.build_path() {
+            Some(path) => read(&path).map(|xml| Some((xml, true))),
             None => Ok(None),
         }
     }
@@ -188,17 +284,23 @@ impl Session {
             let xml = self.player_xml()?;
             let mut engine = Engine::start(&exe, &pob.root, STARTUP).map_err(|e| e.to_string())?;
             self.has_build = false;
-            if let Some(xml) = xml {
+            self.disk_xml = None;
+            if let Some((xml, from_disk)) = xml {
                 engine
                     .call("load_build", json!({ "xml": xml }), CALL)
                     .map_err(|e| e.to_string())?;
                 self.has_build = true;
+                self.disk_xml = from_disk.then_some(xml);
             }
             self.engine = Some(engine);
             self.references_loaded = 0;
         }
         Ok(self.engine.as_mut().expect("started above"))
     }
+}
+
+fn read(path: &std::path::Path) -> Result<String, String> {
+    std::fs::read_to_string(path).map_err(|e| format!("{}: {e}", path.display()))
 }
 
 fn fetch(url: &str) -> Result<String, String> {
