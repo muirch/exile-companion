@@ -38,18 +38,24 @@ pub fn cache_dir() -> Option<PathBuf> {
     base.map(|b| b.join(IDENTIFIER))
 }
 
-/// The build the player imported in the app, as PoB XML.
-pub fn saved_build() -> Option<PathBuf> {
-    config_dir()
-        .map(|d| d.join("build.xml"))
-        .filter(|p| p.is_file())
+/// Where the app keeps the player's build, as PoB XML, whether or not there is one yet.
+pub fn build_file() -> Option<PathBuf> {
+    config_dir().map(|d| d.join("build.xml"))
+}
+
+fn settings() -> Option<serde_json::Value> {
+    let text = std::fs::read_to_string(config_dir()?.join("settings.json")).ok()?;
+    serde_json::from_str(&text).ok()
 }
 
 /// The PoB folder the app found or the player picked, from settings.json.
 pub fn saved_pob() -> Option<PathBuf> {
-    let text = std::fs::read_to_string(config_dir()?.join("settings.json")).ok()?;
-    let settings: serde_json::Value = serde_json::from_str(&text).ok()?;
-    settings.get("pobPath")?.as_str().map(PathBuf::from)
+    settings()?.get("pobPath")?.as_str().map(PathBuf::from)
+}
+
+/// The Client.txt the app follows, from settings.json.
+pub fn saved_log() -> Option<String> {
+    settings()?.get("lastLogPath")?.as_str().map(str::to_string)
 }
 
 /// The engine ships next to this binary.

@@ -36,13 +36,19 @@ Then ask things like "I follow this guide, what do I fix first?" with the guide'
 
 ## Other builds
 
-Paste a PoB code or a build link into the chat and ask the agent to load it. That build is used until the conversation ends, the one in Exile Companion stays as it is.
+Paste a PoB code or a build link into the chat and ask the agent to load it. The agent then reads that build until it switches back to yours, and the one in Exile Companion stays as it is. Claude Desktop keeps the server running across chats until you quit it, so a loaded build carries over into the next chat unless the agent switched back.
 
 The server can also be pointed at files directly:
 
 ```bash
-exile-companion-mcp --pob <Path of Building folder> --build <build.xml> --engine <exile-pob-engine>
+exile-companion-mcp --pob <Path of Building folder> --build <build.xml> --log <Client.txt> --engine <exile-pob-engine>
 ```
+
+## Leveling with a guide
+
+Ask the agent to help you pick a build. It asks how you like to play, offers a few current-league guides with a Path of Building link and lets you choose. With your OK it makes the guide your build in Exile Companion, so the overlay lists the guide's gems along the campaign route, and it remembers the guide for later chats. It reads where you are from the game's log (character, level, act and area), so "what do I take next?" needs no explaining. When you move on to the guide's next stage, it notes that too. Undo takes the guide back as your build, and you can ask it to stop following the guide.
+
+The guide and its PoB are kept in `guide.json` and `guide.xml` next to `build.xml`.
 
 ## What the agent can do with it
 

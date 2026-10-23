@@ -5,6 +5,7 @@ use std::path::PathBuf;
 use std::time::Duration;
 
 use exile_core::build_history::{BuildHistory, HistoryError};
+use exile_core::followed_guide::{GuideStore, Stage};
 use exile_pob_engine::{locate, Engine};
 use serde_json::{json, Value};
 
@@ -12,12 +13,14 @@ const STARTUP: Duration = Duration::from_secs(120);
 const CALL: Duration = Duration::from_secs(90);
 const NO_BUILD: &str =
     "No build yet. Import one in Exile Companion's settings, or give me a PoB code or link.";
-const LOADED: &str = "This conversation switched to another build with load_build. Only the player's own build in Exile Companion keeps changes.";
+const LOADED: &str = "A build loaded with load_build is in use. Only the player's own build in Exile Companion keeps changes. back_to_my_build switches back.";
+const NO_GUIDE: &str = "No guide given, and the player follows none. Ask which guide they follow, or help them pick one with find_guides.";
 
 pub struct Options {
     pub engine: Option<PathBuf>,
     pub pob: Option<PathBuf>,
     pub build: Option<PathBuf>,
+    pub log: Option<PathBuf>,
 }
 
 pub struct Session {
@@ -25,7 +28,8 @@ pub struct Session {
     /// Reads guide pages for their PoB link when the player gives a page instead of the link.
     guides: std::sync::Arc<exile_guides::Guides>,
     engine: Option<Engine>,
-    /// A build loaded during this conversation replaces the app's build until the server stops.
+    /// A build from load_build. It replaces the app's build until back_to_my_build, or until the
+    /// server stops, which in Claude Desktop is when the app quits, not when a chat ends.
     build_xml: Option<String>,
     /// Reference builds (guides) in the order they came, so a restarted engine gets them back.
     references: Vec<String>,
@@ -221,7 +225,10 @@ impl Session {
             HistoryError::Changed => "The build was imported again since the last change, so there's nothing of mine to undo.".to_string(),
             e => format!("Couldn't undo: {e}"),
         })?;
-        if self.engine.is_some() {
+        if before.is_empty() {
+            // There was no build before. A fresh engine reads the missing file as none.
+            self.engine = None;
+        } else if self.engine.is_some() {
             self.reload(&String::from_utf8_lossy(&before))?;
         }
         Ok(json!({ "undone": entry.id, "reason": entry.reason, "changes": entry.changes }))
@@ -237,8 +244,150 @@ impl Session {
         Ok(())
     }
 
+    /// Makes a build, often a guide, the player's build in Exile Companion. It goes into the
+    /// history like a kept change, so undo_change brings the old one back.
+    pub fn replace_build(&mut self, text: &str, reason: &str) -> Result<Value, String> {
+        let path = self
+            .build_file()
+            .ok_or("Exile Companion's settings folder wasn't found.")?;
+        let xml = self.to_xml(text)?;
+        let before = match std::fs::read(&path) {
+            Ok(bytes) => bytes,
+            Err(e) if e.kind() == std::io::ErrorKind::NotFound => Vec::new(),
+            Err(e) => return Err(format!("{}: {e}", path.display())),
+        };
+        self.build_xml = None;
+        let summary = self
+            .engine()?
+            .call("load_build", json!({ "xml": xml }), CALL);
+        let summary = match self.keep_alive(summary) {
+            Ok(v) => v,
+            Err(e) => {
+                // The engine may hold neither build now. The next call starts it from the file.
+                self.engine = None;
+                return Err(e);
+            }
+        };
+        let source = text.trim().starts_with("http").then(|| text.trim());
+        let entry = BuildHistory::new(&path)
+            .record(
+                &before,
+                xml.as_bytes(),
+                reason,
+                json!([{ "replaced_build": source.unwrap_or("pasted build") }]),
+                json!({}),
+            )
+            .map_err(|e| format!("Couldn't save the build: {e}"))?;
+        self.disk_xml = Some(xml);
+        self.has_build = true;
+        Ok(json!({ "change": entry.id, "build": summary }))
+    }
+
+    /// Drops a build from load_build and goes back to the player's own.
+    pub fn back_to_mine(&mut self) -> Result<Value, String> {
+        if self.build_xml.take().is_none() {
+            return Ok(json!({ "already": "The player's own build was in use." }));
+        }
+        self.engine = None;
+        self.engine()?;
+        if !self.has_build {
+            return Ok(json!({ "build": null, "note": NO_BUILD }));
+        }
+        let summary = self.call("summary", json!({}))?;
+        Ok(json!({ "build": summary }))
+    }
+
+    /// Follows a guide from now on, also in later conversations. Without `text`, moves the
+    /// followed guide to another stage.
+    pub fn follow(&mut self, text: Option<&str>, stage: Stage) -> Result<Value, String> {
+        let store = self.guide_store()?;
+        let followed = match text {
+            Some(text) => {
+                let xml = self.to_xml(text)?;
+                // PoB has to open it before it's worth keeping.
+                let reference = self.reference(&xml)?;
+                self.call_any("reference_info", json!({ "reference": reference }))?;
+                let source = text.trim().starts_with("http").then(|| text.trim());
+                store.follow(&xml, source, stage)
+            }
+            None => store
+                .set_stage(stage)
+                .and_then(|f| f.ok_or_else(|| std::io::Error::other(NO_GUIDE))),
+        }
+        .map_err(|e| e.to_string())?;
+        Ok(json!({ "following": followed }))
+    }
+
+    pub fn forget_guide(&self) -> Result<Value, String> {
+        self.guide_store()?.forget().map_err(|e| e.to_string())?;
+        Ok(json!({ "following": null }))
+    }
+
+    /// The guide text to use: the one given, else the followed guide's build. The stage is the
+    /// followed one when the guide is.
+    pub fn guide_or_followed(
+        &self,
+        guide: Option<String>,
+    ) -> Result<(String, Option<Stage>), String> {
+        if let Some(g) = guide.filter(|g| !g.trim().is_empty()) {
+            return Ok((g, None));
+        }
+        match self.guide_store()?.get().map_err(|e| e.to_string())? {
+            Some((followed, xml)) => Ok((xml, Some(followed.stage))),
+            None => Err(NO_GUIDE.to_string()),
+        }
+    }
+
+    /// What a new conversation needs first: where the player is in the game, the guide they
+    /// follow and which build the tools read. Nothing here starts Path of Building.
+    pub fn status(&self) -> Value {
+        let game = crate::progress::game_progress(self.opts.log.as_deref());
+        let guide = match self
+            .guide_store()
+            .and_then(|s| s.get().map_err(|e| e.to_string()))
+        {
+            Ok(Some((followed, xml))) => {
+                let mut v = build_outline(&xml);
+                v["source"] = json!(followed.source);
+                v["since"] = json!(followed.since);
+                v["stage"] = json!(followed.stage);
+                v
+            }
+            Ok(None) => json!(null),
+            Err(e) => json!({ "error": e }),
+        };
+        let build = match &self.build_xml {
+            Some(xml) => {
+                let mut v = build_outline(xml);
+                v["in_use"] = json!(
+                    "a build from load_build, not the player's own; back_to_my_build switches back"
+                );
+                v
+            }
+            None => match self.build_path().map(|p| read(&p)) {
+                Some(Ok(xml)) => build_outline(&xml),
+                Some(Err(e)) => json!({ "error": e }),
+                None => json!(null),
+            },
+        };
+        json!({ "game": game, "guide": guide, "build": build })
+    }
+
+    fn guide_store(&self) -> Result<GuideStore, String> {
+        let dir = self
+            .build_file()
+            .and_then(|f| f.parent().map(PathBuf::from))
+            .ok_or("Exile Companion's settings folder wasn't found.")?;
+        Ok(GuideStore::new(dir))
+    }
+
+    /// Where the player's build lives, whether or not there is one yet.
+    fn build_file(&self) -> Option<PathBuf> {
+        self.opts.build.clone().or_else(crate::paths::build_file)
+    }
+
     fn build_path(&self) -> Option<PathBuf> {
-        self.opts.build.clone().or_else(crate::paths::saved_build)
+        self.build_file().filter(|p| p.is_file())
     }
 
     /// The build this conversation loaded, else the one in the app's settings, else none.
@@ -296,6 +445,20 @@ impl Session {
             self.references_loaded = 0;
         }
         Ok(self.engine.as_mut().expect("started above"))
+    }
+}
+
+/// Class, level and the stage names of a build, read without Path of Building.
+fn build_outline(xml: &str) -> Value {
+    match exile_pob::parse_xml(xml.as_bytes()) {
+        Ok(b) => json!({
+            "class": b.class_name,
+            "ascendancy": b.ascend_class_name,
+            "level": b.level,
+            "trees": b.specs.iter().map(|s| &s.title).collect::<Vec<_>>(),
+            "skill_sets": b.skill_sets.iter().map(|s| &s.title).collect::<Vec<_>>(),
+        }),
+        Err(e) => json!({ "error": e.to_string() }),
     }
 }
 

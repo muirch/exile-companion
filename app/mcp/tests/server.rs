@@ -117,6 +117,10 @@ fn lists_its_tools() {
         "apply_changes",
         "build_history",
         "undo_change",
+        "player_status",
+        "follow_guide",
+        "use_as_my_build",
+        "back_to_my_build",
         "wiki_search",
         "wiki_page",
     ] {
@@ -292,4 +296,86 @@ fn keeps_changes_with_history_and_undo() {
         json!({ "changes": [{ "level": 30 }], "reason": "hit 30" }),
     );
     assert!(is_error && text.contains("load_build"), "{text}");
+}
+
+// A new player levels with a guide: the guide becomes their build, and a later conversation (a
+// new server) still knows the guide and where they are in the game.
+#[test]
+fn knows_where_the_player_is_and_the_guide_they_follow() {
+    let Some((pob, engine)) = pob_and_engine() else {
+        return;
+    };
+    let dir = tempfile::tempdir().unwrap();
+    let build = dir.path().join("build.xml");
+    let log = dir.path().join("Client.txt");
+    std::fs::write(
+        &log,
+        "2026/10/24 18:00:00 1 9b0 [INFO Client 1012] : Exile (Ranger) is now level 4\r\n\
+         2026/10/24 18:01:00 2 9b0 [INFO Client 1012] : You have entered The Coast.\r\n",
+    )
+    .unwrap();
+    let args = [
+        "--engine",
+        engine.to_str().unwrap(),
+        "--pob",
+        pob.to_str().unwrap(),
+        "--build",
+        build.to_str().unwrap(),
+        "--log",
+        log.to_str().unwrap(),
+    ];
+    let status = |c: &mut Client| -> Value {
+        let (text, is_error) = c.tool("player_status", json!({}));
+        assert!(!is_error, "{text}");
+        serde_json::from_str(&text).unwrap()
+    };
+
+    let mut c = Client::start_env(&args, dir.path());
+    let s = status(&mut c);
+    assert_eq!(s["game"]["level"], 4);
+    assert_eq!(s["game"]["zone"], "The Coast");
+    assert_eq!(s["guide"], Value::Null);
+    assert_eq!(s["build"], Value::Null);
+    let (text, is_error) = c.tool("guide_stages", json!({}));
+    assert!(is_error && text.contains("follows none"), "{text}");
+
+    let (text, is_error) = c.tool("follow_guide", json!({ "guide": GUIDE }));
+    assert!(!is_error, "{text}");
+    let (text, is_error) = c.tool(
+        "use_as_my_build",
+        json!({ "build": GUIDE, "reason": "leveling with the guide" }),
+    );
+    assert!(!is_error, "{text}");
+    assert_eq!(std::fs::read_to_string(&build).unwrap(), GUIDE.trim());
+    let s = status(&mut c);
+    assert_eq!(s["guide"]["class"], "Ranger");
+    assert_eq!(s["build"]["class"], "Ranger");
+    let (text, is_error) = c.tool("guide_stages", json!({}));
+    assert!(!is_error, "{text}");
+
+    // A build loaded for a look stays until the agent switches back.
+    let fixture = std::fs::read_to_string(FIXTURE).unwrap();
+    c.tool("load_build", json!({ "build": fixture }));
+    assert!(status(&mut c)["build"]["in_use"].is_string());
+    let (text, is_error) = c.tool("back_to_my_build", json!({}));
+    assert!(!is_error, "{text}");
+    assert!(status(&mut c)["build"]["in_use"].is_null());
+    drop(c);
+
+    let mut c = Client::start_env(&args, dir.path());
+    assert_eq!(status(&mut c)["guide"]["class"], "Ranger");
+    let (text, is_error) = c.tool("follow_guide", json!({ "tree": 1 }));
+    assert!(!is_error, "{text}");
+    assert_eq!(status(&mut c)["guide"]["stage"]["tree"], 1);
+    let (text, is_error) = c.tool("compare_with_guide", json!({}));
+    assert!(!is_error, "{text}");
+
+    // Taking the guide back as the build leaves the player with none, as before.
+    let (text, is_error) = c.tool("undo_change", json!({}));
+    assert!(!is_error, "{text}");
+    assert!(!build.exists());
+    assert_eq!(status(&mut c)["build"], Value::Null);
+
+    c.tool("forget_guide", json!({}));
+    assert_eq!(status(&mut c)["guide"], Value::Null);
 }
