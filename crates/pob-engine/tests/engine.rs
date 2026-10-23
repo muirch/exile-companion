@@ -134,6 +134,84 @@ fn exports_a_code_that_loads_back() {
     );
 }
 
+const BOW: &str = "Item Class: Bows\nRarity: Rare\nDeath Song\nShort Bow\n--------\nItem Level: 30\n--------\nAdds 10 to 20 Physical Damage\n20% increased Attack Speed";
+
+#[test]
+fn compares_a_copied_item_with_the_equipped_one() {
+    let Some(pob) = pob_dir() else { return };
+    let mut e = engine(&pob);
+    e.call("load_build", json!({ "xml": FIXTURE }), SLOW)
+        .unwrap();
+
+    let cmp = e
+        .call("compare_item", json!({ "text": BOW }), SLOW)
+        .unwrap();
+    assert_eq!(cmp["item"]["base"], "Short Bow");
+    let weapon = &cmp["slots"][0];
+    assert_eq!(weapon["slot"], "Weapon 1");
+    assert_eq!(weapon["replaces"], "Short Bow");
+    assert!(f(&weapon["dps_pct"]) > 0.0, "{weapon}");
+
+    let err = e
+        .call("compare_item", json!({ "text": "hello" }), SLOW)
+        .unwrap_err();
+    assert!(err.to_string().contains("couldn't read that item"), "{err}");
+}
+
+#[test]
+fn tries_changes_and_puts_the_build_back() {
+    let Some(pob) = pob_dir() else { return };
+    let mut e = engine(&pob);
+    let before = e
+        .call("load_build", json!({ "xml": FIXTURE }), SLOW)
+        .unwrap();
+
+    let more = e
+        .call(
+            "what_if",
+            json!({ "changes": [
+                { "add_gem": "Added Fire Damage Support", "group": "Caustic Arrow" },
+                { "gem": "Caustic Arrow", "level": 10 },
+                { "custom_mod": "+1 to Level of all Skill Gems" },
+                { "level": 20 },
+            ]}),
+            SLOW,
+        )
+        .unwrap();
+    assert!(f(&more["dps_pct"]) > 0.0, "{more}");
+    assert!(more["changes"]
+        .as_array()
+        .unwrap()
+        .iter()
+        .any(|c| c["stat"] == "Life"));
+
+    let off = e
+        .call(
+            "what_if",
+            json!({ "changes": [{ "gem": "Void Manipulation Support", "enabled": false }] }),
+            SLOW,
+        )
+        .unwrap();
+    assert!(f(&off["dps_pct"]) < 0.0, "{off}");
+
+    let err = e
+        .call("what_if", json!({ "changes": [{ "custom_mod": "+5 to Strength" }, { "add_gem": "No Such Gem" }] }), SLOW)
+        .unwrap_err();
+    assert!(err.to_string().contains("doesn't know the gem"), "{err}");
+
+    let after = e.call("summary", json!({}), SLOW).unwrap();
+    assert_eq!(after, before);
+    let info = e.call("build_info", json!({}), SLOW).unwrap();
+    assert_eq!(
+        info["socket_groups"][0]["gems"].as_array().unwrap().len(),
+        2
+    );
+    assert_eq!(
+        info["custom_mods"],
+        json!(["+10% to all Elemental Resistances"])
+    );
+}
+
 #[test]
 fn reports_pob_errors_and_keeps_serving() {
     let Some(pob) = pob_dir() else { return };
