@@ -9,6 +9,8 @@ use serde_json::{json, Value};
 
 const STARTUP: Duration = Duration::from_secs(120);
 const CALL: Duration = Duration::from_secs(90);
+const NO_BUILD: &str =
+    "No build yet. Import one in Exile Companion's settings, or give me a PoB code or link.";
 
 pub struct Options {
     pub engine: Option<PathBuf>,
@@ -25,6 +27,9 @@ pub struct Session {
     references: Vec<String>,
     /// How many of them the running engine has. Reset when the engine starts again.
     references_loaded: usize,
+    /// Whether the running engine has the player's build. A new player may have none yet, and
+    /// load_build and guides still have to work then.
+    has_build: bool,
 }
 
 impl Session {
@@ -35,6 +40,7 @@ impl Session {
             build_xml: None,
             references: Vec::new(),
             references_loaded: 0,
+            has_build: false,
         }
     }
 
@@ -55,6 +61,7 @@ impl Session {
             .call("load_build", json!({ "xml": xml }), CALL);
         let summary = self.keep_alive(summary)?;
         self.build_xml = Some(xml);
+        self.has_build = true;
         Ok(summary)
     }
 
@@ -87,9 +94,27 @@ impl Session {
         Ok(index + 1)
     }
 
+    /// Every engine method behind `call` reads the player's build.
     fn try_call(&mut self, method: &str, params: Value) -> Result<Value, String> {
+        self.engine()?;
+        if !self.has_build {
+            return Err(NO_BUILD.to_string());
+        }
         let result = self.engine()?.call(method, params, CALL);
         self.keep_alive(result)
+    }
+
+    /// The build this conversation loaded, else the one in the app's settings, else none.
+    fn player_xml(&self) -> Result<Option<String>, String> {
+        if let Some(xml) = &self.build_xml {
+            return Ok(Some(xml.clone()));
+        }
+        match self.opts.build.clone().or_else(crate::paths::saved_build) {
+            Some(path) => std::fs::read_to_string(&path)
+                .map(Some)
+                .map_err(|e| format!("{}: {e}", path.display())),
+            None => Ok(None),
+        }
     }
 
     fn keep_alive(
@@ -120,20 +145,15 @@ impl Session {
             let pob = locate::find_pob(saved.as_deref(), &[]).ok_or(
                 "Path of Building wasn't found. Pick its folder in Exile Companion's settings.",
             )?;
+            let xml = self.player_xml()?;
             let mut engine = Engine::start(&exe, &pob.root, STARTUP).map_err(|e| e.to_string())?;
-            let xml = match &self.build_xml {
-                Some(xml) => xml.clone(),
-                None => {
-                    let path = self.opts.build.clone().or_else(crate::paths::saved_build).ok_or(
-                        "No build yet. Import one in Exile Companion's settings, or give me a PoB code or link.",
-                    )?;
-                    std::fs::read_to_string(&path)
-                        .map_err(|e| format!("{}: {e}", path.display()))?
-                }
-            };
-            engine
-                .call("load_build", json!({ "xml": xml }), CALL)
-                .map_err(|e| e.to_string())?;
+            self.has_build = false;
+            if let Some(xml) = xml {
+                engine
+                    .call("load_build", json!({ "xml": xml }), CALL)
+                    .map_err(|e| e.to_string())?;
+                self.has_build = true;
+            }
             self.engine = Some(engine);
             self.references_loaded = 0;
         }
