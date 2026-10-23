@@ -2,6 +2,20 @@ use std::path::{Path, PathBuf};
 
 const LOG_IN_INSTALL: &str = "logs/Client.txt";
 
+/// Enough for the last few zones of a session. Client.txt itself can be hundreds of MB.
+pub const HISTORY_BYTES: u64 = 512 * 1024;
+
+/// The last `bytes` of the log. The first line may come out cut, which the parser skips.
+pub fn read_tail(path: &Path, bytes: u64) -> std::io::Result<String> {
+    use std::io::{Read, Seek, SeekFrom};
+    let mut file = std::fs::File::open(path)?;
+    let len = file.metadata()?.len();
+    file.seek(SeekFrom::Start(len.saturating_sub(bytes)))?;
+    let mut buf = Vec::new();
+    file.read_to_end(&mut buf)?;
+    Ok(String::from_utf8_lossy(&buf).into_owned())
+}
+
 /// The saved path if it still exists, otherwise the first Client.txt found in the usual install
 /// locations, including every Steam library listed in libraryfolders.vdf.
 pub fn find_client_log(saved: Option<&str>) -> Option<PathBuf> {
@@ -75,6 +89,15 @@ fn library_paths(vdf: &str) -> Vec<PathBuf> {
 #[cfg(test)]
 mod tests {
     use super::*;
+
+    #[test]
+    fn reads_only_the_end_of_the_log() {
+        let dir = tempfile::tempdir().unwrap();
+        let path = dir.path().join("Client.txt");
+        std::fs::write(&path, "first line\nsecond line\n").unwrap();
+        assert_eq!(read_tail(&path, 12).unwrap(), "second line\n");
+        assert_eq!(read_tail(&path, 1000).unwrap(), "first line\nsecond line\n");
+    }
 
     #[test]
     fn reads_library_paths_from_vdf() {

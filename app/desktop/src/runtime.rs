@@ -297,23 +297,12 @@ pub fn current_guidance(app: &AppHandle) -> exile_core::guidance::NextObjective 
     objective
 }
 
-// Enough for the last few zones of a session. Client.txt itself can be hundreds of MB.
-const HISTORY_BYTES: u64 = 512 * 1024;
-
 fn read_log_tail(path: &str) -> String {
-    use std::io::{Read, Seek, SeekFrom};
-    let Ok(mut file) = std::fs::File::open(path) else {
-        return String::new();
-    };
-    let len = file.metadata().map(|m| m.len()).unwrap_or(0);
-    let mut buf = Vec::new();
-    if file
-        .seek(SeekFrom::Start(len.saturating_sub(HISTORY_BYTES)))
-        .is_ok()
-    {
-        let _ = file.read_to_end(&mut buf);
-    }
-    String::from_utf8_lossy(&buf).into_owned()
+    exile_core::logfile::read_tail(
+        std::path::Path::new(path),
+        exile_core::logfile::HISTORY_BYTES,
+    )
+    .unwrap_or_default()
 }
 
 pub fn current_source(app: &AppHandle) -> SourceStatus {

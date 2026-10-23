@@ -49,6 +49,18 @@ where
     Ok(())
 }
 
+/// Where the player is by the end of the log: character, level, act and area.
+pub fn state_from_log(
+    path: &std::path::Path,
+    zones: std::sync::Arc<crate::data::ZoneTable>,
+    locale: &LocalePack,
+) -> std::io::Result<CampaignState> {
+    let text = crate::logfile::read_tail(path, crate::logfile::HISTORY_BYTES)?;
+    let mut machine = CampaignMachine::new(zones);
+    prime_from_history(&mut machine, &text, locale);
+    Ok(machine.into_state())
+}
+
 /// Folds already-written log text into `machine`, so the overlay starts from where the player is
 /// instead of waiting for the next zone change. The first line may be cut, which is fine:
 /// `split_line` rejects it.
