@@ -10,6 +10,8 @@ const FIXTURE: &str = concat!(
     env!("CARGO_MANIFEST_DIR"),
     "/../../crates/pob-engine/tests/fixtures/ranger-caustic-arrow.xml"
 );
+const GUIDE: &str =
+    include_str!("../../../crates/pob-engine/tests/fixtures/ranger-caustic-arrow-guide.xml");
 
 struct Client {
     child: Child,
@@ -142,6 +144,15 @@ fn answers_about_a_build_with_pob() {
     assert!(!is_error, "{text}");
     let r: Value = serde_json::from_str(&text).unwrap();
     assert!(r["life"].as_f64().unwrap() > 0.0, "{r}");
+
+    let (text, is_error) = c.tool("compare_with_guide", json!({ "guide": GUIDE }));
+    assert!(!is_error, "{text}");
+    let cmp: Value = serde_json::from_str(&text).unwrap();
+    assert_eq!(cmp["passives"]["missing"][0]["node"]["name"], "Herbalism");
+    // The same guide again is the same reference, not a second one.
+    let (text, _) = c.tool("passive_value", json!({ "guide": GUIDE, "limit": 3 }));
+    let power: Value = serde_json::from_str(&text).unwrap();
+    assert_eq!(power["reachable"][0]["node"]["name"], "Herbalism");
 
     let (text, is_error) = c.tool("export_build", json!({}));
     assert!(!is_error, "{text}");

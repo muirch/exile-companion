@@ -39,6 +39,8 @@ To weigh a change, measure it with what_if, compare_item, passive_value or gem_v
 A percent is not a recommendation by itself. Keystones and big notables have drawbacks Path of Building doesn't price in \
 (read the node's own text, and the wiki for the keystone), they cost points on the way, and players rarely take some of them for good reasons. \
 Say the trade-off and how sure you are, and point out what you couldn't measure. \
+When the player follows a guide, or you found one for them and they loaded it, advise from the difference to the guide (compare_with_guide) \
+and pass the guide to passive_value. Don't suggest passives, keystones or items the guide doesn't take unless the player asks to explore. \
 Nothing you try changes the player's build. load_build switches to another build for this conversation only.
 
 Use the wiki for mechanics, crafting, league content and anything Path of Building doesn't model. \
@@ -69,8 +71,22 @@ pub struct GroupParams {
 pub struct PassiveParams {
     /// How many nodes to list in each list. Default 10.
     pub limit: Option<u32>,
-    /// How many points away an unallocated notable may be. Default 3.
+    /// How many points away an unallocated notable may be. Default 3, or any distance with a guide.
     pub max_points: Option<u32>,
+    /// A guide's build (code, link or XML). Then only notables the guide takes are offered.
+    pub guide: Option<String>,
+}
+
+#[derive(Debug, Deserialize, schemars::JsonSchema)]
+pub struct GuideParams {
+    /// The guide's build: a PoB import code, a build link (pobb.in, poe.ninja and the other sites PoB imports from) or build XML.
+    pub guide: String,
+    /// Guide stage to compare with, by id from the guide's lists: its tree, item set and skill set. The guide's saved choice by default.
+    pub tree: Option<u32>,
+    pub item_set: Option<u32>,
+    pub skill_set: Option<u32>,
+    /// How many passives and gear slots to list. Default 12.
+    pub limit: Option<u32>,
 }
 
 #[derive(Debug, Deserialize, schemars::JsonSchema)]
@@ -204,18 +220,51 @@ impl Companion {
     }
 
     #[tool(
-        description = "What passive notables and keystones are worth: DPS and EHP lost without each one the build has, and the best unallocated ones within reach, per point spent."
+        description = "What passive notables and keystones are worth: DPS and EHP lost without each one the build has, and the best unallocated ones per point spent. Pass the player's guide so only notables the guide takes are offered."
     )]
     async fn passive_value(
         &self,
         Parameters(p): Parameters<PassiveParams>,
     ) -> Result<CallToolResult, McpError> {
-        Ok(self
-            .pob(
-                "node_power",
-                json!({ "limit": p.limit.unwrap_or(10), "max_points": p.max_points.unwrap_or(3) }),
-            )
-            .await)
+        let session = self.session.clone();
+        let r = tokio::task::spawn_blocking(move || {
+            let mut s = session.lock().unwrap();
+            let mut params = json!({ "limit": p.limit.unwrap_or(10) });
+            if let Some(points) = p.max_points {
+                params["max_points"] = json!(points);
+            }
+            if let Some(guide) = &p.guide {
+                params["reference"] = json!(s.reference(guide)?);
+            }
+            s.call("node_power", params)
+        })
+        .await
+        .unwrap_or_else(|e| Err(e.to_string()));
+        Ok(json_result(r))
+    }
+
+    #[tool(
+        description = "Compares the player's build with a guide's build, measured on the player's build: notables the guide takes and the player doesn't (with the points on the way), the player's notables the guide skips, ascendancy, gear slot by slot, supports of the main skill, other skills the guide uses, and Configuration assumptions that differ. Returns the guide's stages (trees, item sets, skill sets) too. Pick the stage closest to the player's level and progress."
+    )]
+    async fn compare_with_guide(
+        &self,
+        Parameters(p): Parameters<GuideParams>,
+    ) -> Result<CallToolResult, McpError> {
+        let session = self.session.clone();
+        let r = tokio::task::spawn_blocking(move || {
+            let mut s = session.lock().unwrap();
+            let reference = s.reference(&p.guide)?;
+            if p.tree.is_some() || p.item_set.is_some() || p.skill_set.is_some() {
+                s.call(
+                    "set_reference_stage",
+                    json!({ "reference": reference, "tree": p.tree, "item_set": p.item_set, "skill_set": p.skill_set }),
+                )?;
+            }
+            s.call("compare_reference", json!({ "reference": reference, "limit": p.limit.unwrap_or(12) }))
+        })
+        .await
+        .unwrap_or_else(|e| Err(e.to_string()));
+        Ok(json_result(r))
     }
 
     #[tool(

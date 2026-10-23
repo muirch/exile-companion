@@ -32,7 +32,7 @@ codex mcp add exile-companion -- "C:\Users\you\AppData\Local\Exile Companion\exi
 
 Web chats only connect to servers on the internet, so they can't use this one. It runs your Path of Building on your PC.
 
-Then ask things like "Why is my damage low?", "Is this helmet an upgrade?" with the item pasted from the game, or "What should I take with my next three passive points?".
+Then ask things like "I follow this guide, what do I fix first?" with the guide's PoB link, "Why is my damage low?", "Is this helmet an upgrade?" with the item pasted from the game, or "What should I take with my next three passive points?".
 
 ## Other builds
 
@@ -46,7 +46,7 @@ exile-companion-mcp --pob <Path of Building folder> --build <build.xml> --engine
 
 ## What the agent can do with it
 
-Read the build as PoB's sidebar shows it, with its gear, gems, tree and Configuration. Check defences and max hits. Measure what each gem and notable is worth, compare a copied item against your gear, try changes together (nodes, items, gems, config options, mod lines, level) without touching your build, export the build as a PoB code. Search and read the wiki and its item and mod tables.
+Compare your build with a guide's PoB, stage by stage, and say what to change first, measured on your build. Advice sticks to what the guide takes unless you ask to explore. Read the build as PoB's sidebar shows it, with its gear, gems, tree and Configuration. Check defences and max hits. Measure what each gem and notable is worth, compare a copied item against your gear, try changes together (nodes, items, gems, config options, mod lines, level) without touching your build, export the build as a PoB code. Search and read the wiki and its item and mod tables.
 
 Numbers are Path of Building's own, with the build's Configuration. If the build assumes a boss, buffs or custom modifiers, so do the numbers.
 

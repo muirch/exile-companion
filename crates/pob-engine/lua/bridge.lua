@@ -239,12 +239,26 @@ local function nodeInfo(node)
 	}
 end
 
+-- Reference builds, usually guides, loaded next to the player's build with PoB's own compare
+-- entry. Advice for new players is the difference to one of these, not whatever PoB rates high.
+local references = {}
+
+local function refEntry(index)
+	local ref = references[tonumber(index) or #references]
+	if not ref then
+		error("load a reference build first", 0)
+	end
+	return ref
+end
+
 -- Value of each notable and keystone: what the build loses without the ones it has (ascendancy
 -- included), and what the ones it can reach within `max_points` would add, per point spent. Ranked
--- by DPS and EHP percent together, so a node that trades one for the other nets out.
+-- by DPS and EHP percent together, so a node that trades one for the other nets out. With
+-- `reference`, only nodes that reference build takes count as reachable.
 function bridge.node_power(params)
 	local limit = params.limit or 10
-	local maxPoints = params.max_points or 3
+	local only = params.reference and refEntry(params.reference)
+	local maxPoints = params.max_points or (only and 1000 or 3)
 	local base = output()
 	local calc = build.calcsTab:GetMiscCalculator()
 
@@ -264,7 +278,8 @@ function bridge.node_power(params)
 				local r = measure({ removeNodes = { [node] = true } })
 				r.node = nodeInfo(node)
 				taken[#taken + 1] = r
-			elseif not node.ascendancyName and node.path and #node.path <= maxPoints then
+			elseif not node.ascendancyName and node.path and #node.path <= maxPoints
+				and (not only or only.spec.allocNodes[node.id]) then
 				local add = {}
 				for _, n in ipairs(node.path) do
 					add[n] = true
@@ -635,6 +650,271 @@ function bridge.build_info()
 		notables = notables,
 		ascendancy = ascendancy,
 	}
+end
+
+local CLUSTER_NODE_OFFSET = 65536
+local GEAR_SLOTS = {
+	"Weapon 1", "Weapon 2", "Helmet", "Body Armour", "Gloves", "Boots", "Amulet",
+	"Ring 1", "Ring 2", "Belt", "Flask 1", "Flask 2", "Flask 3", "Flask 4", "Flask 5",
+}
+
+local function setList(orderList, sets, activeId)
+	local list = {}
+	for i, id in ipairs(orderList or {}) do
+		local set = sets[id]
+		list[#list + 1] = { id = id, title = set and set.title or ("Set " .. i), active = id == activeId }
+	end
+	return list
+end
+
+local function referenceInfo(index)
+	local ref = refEntry(index)
+	local env = ref.calcsTab.mainEnv
+	local skill = env and env.player and env.player.mainSkill
+	local specs = {}
+	for i, spec in ipairs(ref.treeTab.specList) do
+		specs[#specs + 1] = { id = i, title = spec.title or ("Tree " .. i), active = i == ref.treeTab.activeSpec }
+	end
+	return {
+		reference = index,
+		label = ref.label,
+		class = ref.spec.curClassName,
+		ascendancy = ref.spec.curAscendClassName,
+		level = ref.characterLevel,
+		main_skill = skill and skill.activeEffect and skill.activeEffect.grantedEffect.name or nil,
+		trees = specs,
+		item_sets = setList(ref.itemsTab.itemSetOrderList, ref.itemsTab.itemSets, ref.itemsTab.activeItemSetId),
+		skill_sets = setList(ref.skillsTab.skillSetOrderList, ref.skillsTab.skillSets, ref.skillsTab.activeSkillSetId),
+	}
+end
+
+-- Loads a guide or any other build to compare the player's build with. Several can be loaded,
+-- each gets an index.
+function bridge.load_reference(params)
+	local ref = new("CompareEntry", params.xml, params.label or "Guide")
+	if not (ref and ref.calcsTab and ref.calcsTab.mainOutput) then
+		error("Path of Building couldn't open the reference build", 0)
+	end
+	references[#references + 1] = ref
+	-- The compare entry shares PoB's global caches with the player's build.
+	rebuild()
+	return referenceInfo(#references)
+end
+
+-- Picks the stage of a guide to compare with: its tree, item set and skill set, by id from
+-- reference_info.
+function bridge.set_reference_stage(params)
+	local ref = refEntry(params.reference)
+	if params.tree then ref:SetActiveSpec(tonumber(params.tree)) end
+	if params.item_set then ref:SetActiveItemSet(tonumber(params.item_set)) end
+	if params.skill_set then ref:SetActiveSkillSet(tonumber(params.skill_set)) end
+	rebuild()
+	return referenceInfo(params.reference or #references)
+end
+
+function bridge.reference_info(params)
+	return referenceInfo(params.reference or #references)
+end
+
+local function gemNames(group)
+	local names = {}
+	for _, gem in ipairs(group and group.gemList or {}) do
+		if gem.enabled ~= false then
+			names[gem.nameSpec] = gem
+		end
+	end
+	return names
+end
+
+local function activeGemOf(group)
+	for _, gem in ipairs(group and group.gemList or {}) do
+		local support = gem.gemData and gem.gemData.grantedEffect and gem.gemData.grantedEffect.support
+		if not support and gem.enabled ~= false then
+			return gem.nameSpec
+		end
+	end
+end
+
+local function sortByValue(list, best)
+	table.sort(list, function(a, b)
+		local sa, sb = a.dps_pct + a.ehp_pct, b.dps_pct + b.ehp_pct
+		if best then return sa > sb end
+		return sa < sb
+	end)
+end
+
+local function cut(list, limit)
+	for i = #list, limit + 1, -1 do
+		list[i] = nil
+	end
+	return list
+end
+
+-- The player's build against a reference build: what the reference has that the player doesn't,
+-- and the other way round, each measured on the player's build. Passives with the path to them,
+-- gear slot by slot, supports of the main skill, other skill groups, and Configuration
+-- assumptions that differ.
+function bridge.compare_reference(params)
+	local ref = refEntry(params.reference)
+	local limit = params.limit or 12
+	local base = output()
+	local calc = build.calcsTab:GetMiscCalculator()
+	local function value(override)
+		local r = measure(base, calc(override))
+		r.changes = nil
+		return r
+	end
+
+	local missing, extra, smallDiff = {}, {}, 0
+	for id, _ in pairs(ref.spec.allocNodes) do
+		if type(id) == "number" and id < CLUSTER_NODE_OFFSET and not build.spec.allocNodes[id] then
+			local node = build.spec.nodes[id]
+			if node and not node.ascendancyName and (node.type == "Notable" or node.type == "Keystone") then
+				local add = { [node] = true }
+				for _, n in ipairs(node.path or {}) do
+					add[n] = true
+				end
+				local r = value({ addNodes = add })
+				r.node = nodeInfo(node)
+				r.points = math.max(1, #(node.path or {}))
+				missing[#missing + 1] = r
+			elseif node and node.type == "Normal" and not node.ascendancyName then
+				smallDiff = smallDiff + 1
+			end
+		end
+	end
+	for id, node in pairs(build.spec.allocNodes) do
+		if type(id) == "number" and id < CLUSTER_NODE_OFFSET and not ref.spec.allocNodes[id]
+			and not node.ascendancyName and (node.type == "Notable" or node.type == "Keystone") then
+			local r = value({ removeNodes = { [node] = true } })
+			r.node = nodeInfo(node)
+			extra[#extra + 1] = r
+		end
+	end
+	sortByValue(missing, true)
+	sortByValue(extra, false)
+
+	local ascendancy = { missing = {}, extra = {} }
+	for id, node in pairs(ref.spec.allocNodes) do
+		if node.ascendancyName and node.type == "Notable" and not build.spec.allocNodes[id] then
+			ascendancy.missing[#ascendancy.missing + 1] = node.dn
+		end
+	end
+	for id, node in pairs(build.spec.allocNodes) do
+		if node.ascendancyName and node.type == "Notable" and not ref.spec.allocNodes[id] then
+			ascendancy.extra[#ascendancy.extra + 1] = node.dn
+		end
+	end
+
+	local gear = {}
+	for _, slotName in ipairs(GEAR_SLOTS) do
+		local rSlot = ref.itemsTab.slots[slotName]
+		local rItem = rSlot and ref.itemsTab.items[rSlot.selItemId]
+		local pSlot = build.itemsTab.slots[slotName]
+		local pItem = pSlot and build.itemsTab.items[pSlot.selItemId]
+		if rItem and rItem.raw and not (pItem and pItem.name == rItem.name) then
+			local copy = new("Item", rItem.raw)
+			copy:NormaliseQuality()
+			copy:BuildModList()
+			local r = value({ repSlotName = slotName, repItem = copy })
+			r.slot = slotName
+			r.reference_item = itemInfo(copy)
+			r.player_item = pItem and pItem.name or nil
+			gear[#gear + 1] = r
+		end
+	end
+	sortByValue(gear, true)
+
+	-- The reference group with the player's main skill in it, or the reference's own main group.
+	local pGroup = build.skillsTab.socketGroupList[build.mainSocketGroup]
+	local mainSkill = activeGemOf(pGroup)
+	local rGroup
+	for _, g in ipairs(ref.skillsTab.socketGroupList) do
+		if mainSkill and gemNames(g)[mainSkill] then
+			rGroup = g
+		end
+	end
+	rGroup = rGroup or ref.skillsTab.socketGroupList[ref.mainSocketGroup]
+	local pGems, rGems = gemNames(pGroup), gemNames(rGroup)
+	local supports = { missing = {}, extra = {} }
+	for name, gem in pairs(rGems) do
+		if not pGems[name] and name ~= activeGemOf(rGroup) then
+			local r = bridge.what_if({ changes = { { add_gem = name, group = build.mainSocketGroup, level = gem.level, quality = gem.quality } } })
+			r.changes = nil
+			r.gem = name
+			supports.missing[#supports.missing + 1] = r
+		end
+	end
+	for name, _ in pairs(pGems) do
+		if not rGems[name] and name ~= mainSkill then
+			local r = bridge.what_if({ changes = { { gem = name, group = build.mainSocketGroup, enabled = false } } })
+			r.changes = nil
+			r.gem = name
+			supports.extra[#supports.extra + 1] = r
+		end
+	end
+	sortByValue(supports.missing, true)
+	sortByValue(supports.extra, false)
+
+	-- Other skills the reference uses (auras, curses, guards, movement) that the player has nowhere.
+	local playerGems = {}
+	for _, g in ipairs(build.skillsTab.socketGroupList) do
+		for name in pairs(gemNames(g)) do
+			playerGems[name] = true
+		end
+	end
+	local otherSkills = {}
+	for _, g in ipairs(ref.skillsTab.socketGroupList) do
+		if g ~= rGroup and g.enabled ~= false then
+			local active = activeGemOf(g)
+			if active and not playerGems[active] then
+				local list = {}
+				for name in pairs(gemNames(g)) do
+					list[#list + 1] = name
+				end
+				table.sort(list)
+				otherSkills[#otherSkills + 1] = { skill = active, slot = g.slot, gems = list }
+			end
+		end
+	end
+
+	local config = {}
+	configOptions = configOptions or LoadModule("Modules/ConfigOptions")
+	local pIn, rIn = build.configTab.input, ref.configTab.input
+	for _, v in ipairs(configOptions) do
+		if v.var and pIn[v.var] ~= rIn[v.var] and (pIn[v.var] ~= nil or rIn[v.var] ~= nil) then
+			config[#config + 1] = {
+				var = v.var,
+				label = (strip(v.label or v.var):gsub(":$", "")),
+				player = pIn[v.var],
+				reference = rIn[v.var],
+			}
+		end
+	end
+
+	return {
+		reference = referenceInfo(params.reference or #references),
+		player = { level = build.characterLevel, main_skill = mainSkillName() },
+		-- Every stat PoB shows, player first, reference second.
+		stats = statDiffs(base, ref.calcsTab.mainOutput),
+		passives = { missing = cut(missing, limit), extra = cut(extra, limit), small_passives_missing = smallDiff },
+		ascendancy = ascendancy,
+		gear = cut(gear, limit),
+		supports = supports,
+		other_skills = otherSkills,
+		config = config,
+	}
+end
+
+-- Changes the player's build for good: allocates passives with the path to them. For making test
+-- builds, the MCP server doesn't offer it.
+function bridge.tree_edit(params)
+	for _, ref in ipairs(params.allocate or {}) do
+		build.spec:AllocNode(findNode(ref))
+	end
+	build.spec:BuildAllDependsAndPaths()
+	rebuild()
+	return bridge.summary()
 end
 
 return bridge
