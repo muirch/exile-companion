@@ -51,7 +51,8 @@ fn answers_questions_about_a_loaded_build() {
         .collect();
     assert_eq!(types, ["Physical", "Fire", "Cold", "Lightning", "Chaos"]);
 
-    let gems = e.call("gem_value", json!({}), SLOW).unwrap();
+    // The MCP server sends a left-out parameter as null.
+    let gems = e.call("gem_value", json!({ "group": null }), SLOW).unwrap();
     let support = &gems["gems"][1];
     assert_eq!(support["name"], "Void Manipulation");
     assert_eq!(support["support"], true);
