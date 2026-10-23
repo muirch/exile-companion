@@ -44,11 +44,21 @@ jobs:
       - name: rustfmt
         run: cargo fmt --all --check
 
-      - name: clippy (core + data + pob)
-        run: cargo clippy -p exile-core -p exile-data -p exile-pob --all-targets -- -D warnings
+      - name: clippy (core + data + pob + engine)
+        run: cargo clippy -p exile-core -p exile-data -p exile-pob -p exile-pob-engine --all-targets -- -D warnings
 
-      - name: Test core + data + pob
-        run: cargo test -p exile-core -p exile-data -p exile-pob
+      - uses: actions/cache@v6.1.0
+        with:
+          path: .pob
+          key: pob-${{ hashFiles('tools/fetch-pob.sh') }}
+
+      - name: Fetch Path of Building for the engine tests
+        run: tools/fetch-pob.sh .pob
+
+      - name: Test core + data + pob + engine
+        run: cargo test -p exile-core -p exile-data -p exile-pob -p exile-pob-engine
+        env:
+          EXILE_POB_DIR: ${{ github.workspace }}/.pob
 
       - name: ts-rs bindings are up to date
         run: |
@@ -102,3 +112,18 @@ jobs:
 
       - name: Build link download works with Windows TLS
         run: cargo test -p exile-companion -- --ignored downloads_a_build_over_tls
+
+      - uses: actions/cache@v6.1.0
+        with:
+          path: .pob
+          key: pob-${{ hashFiles('tools/fetch-pob.sh') }}
+
+      # LuaJIT is built with MSVC here, and PoB gets Windows paths.
+      - name: Fetch Path of Building for the engine tests
+        shell: bash
+        run: tools/fetch-pob.sh .pob
+
+      - name: Engine runs PoB on Windows
+        run: cargo test -p exile-pob-engine
+        env:
+          EXILE_POB_DIR: ${{ github.workspace }}\.pob
