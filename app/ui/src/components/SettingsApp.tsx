@@ -1,4 +1,4 @@
-import { useEffect, useRef, useState, type ReactNode } from 'react';
+import { useEffect, useState } from 'react';
 
 import {
   clearBuild,
@@ -19,102 +19,11 @@ import {
   updateSettings,
 } from '../ipc/commands';
 import type { GemHints, PresetStage } from '../ipc/types';
+import { Button, Choice, ConfirmButton, Note, Row, Section, Select, Slider, Toggle } from '../kit';
 import { useAppStore } from '../store/useAppStore';
 import { HotkeySection } from './HotkeySection';
 import { ReplayControls } from './ReplayControls';
-import { Brand, TooltipHeader } from './Tooltip';
-
-// Each group is its own item tooltip: a header band over a see-through black body.
-function Section({ title, children }: { title: string; children: ReactNode }): React.JSX.Element {
-  return (
-    <section className="tooltip bg-black/80">
-      <TooltipHeader tint="var(--color-currency)" title={title} />
-      <div className="flex flex-col gap-2 px-5 pt-3 pb-4 text-left">{children}</div>
-    </section>
-  );
-}
-
-function Row({ label, children }: { label: string; children: ReactNode }): React.JSX.Element {
-  return (
-    <div className="flex min-h-7 items-center gap-3">
-      <span className="w-32 shrink-0 font-caps text-[13px] text-label">{label}</span>
-      <div className="flex min-w-0 flex-1 flex-wrap items-center gap-1.5">{children}</div>
-    </div>
-  );
-}
-
-// Drops progress, the build or the game log: the first click arms it, the second does it.
-// A second click right after the first is a double click or a bouncing mouse button, not a
-// confirmation.
-const CONFIRM_AFTER_MS = 500;
-
-function ConfirmButton({
-  label,
-  confirm,
-  onConfirm,
-}: {
-  label: string;
-  confirm: string;
-  onConfirm: () => void;
-}): React.JSX.Element {
-  const [armed, setArmed] = useState(false);
-  const armedAt = useRef(0);
-  useEffect(() => {
-    if (!armed) return;
-    const t = setTimeout(() => setArmed(false), 3000);
-    return () => clearTimeout(t);
-  }, [armed]);
-  return (
-    <button
-      className="btn"
-      aria-pressed={armed}
-      onClick={() => {
-        if (!armed) {
-          armedAt.current = Date.now();
-          setArmed(true);
-        } else if (Date.now() - armedAt.current >= CONFIRM_AFTER_MS) {
-          setArmed(false);
-          onConfirm();
-        }
-      }}
-    >
-      {armed ? confirm : label}
-    </button>
-  );
-}
-
-function Toggle({ on, onChange }: { on: boolean; onChange: (v: boolean) => void }): React.JSX.Element {
-  return (
-    <button className="btn" role="switch" aria-checked={on} onClick={() => onChange(!on)}>
-      {on ? 'On' : 'Off'}
-    </button>
-  );
-}
-
-function Choice<T extends string | number | boolean>({
-  value,
-  options,
-  onChange,
-}: {
-  value: T;
-  options: { value: T; label: string; literal?: boolean }[];
-  onChange: (v: T) => void;
-}): React.JSX.Element {
-  return (
-    <>
-      {options.map((o) => (
-        <button
-          key={String(o.value)}
-          className={o.literal ? 'btn font-body' : 'btn'}
-          aria-pressed={value === o.value}
-          onClick={() => onChange(o.value)}
-        >
-          {o.label}
-        </button>
-      ))}
-    </>
-  );
-}
+import { Brand } from './Tooltip';
 
 const LAYOUTS = [
   { value: false, label: 'Full' },
@@ -138,38 +47,30 @@ function DisplaySection(): React.JSX.Element {
   return (
     <Section title="Overlay">
       <Row label="Text size">
-        <input
-          type="range"
+        <Slider
+          value={textScale}
           min={0.8}
           max={1.5}
           step={0.05}
-          value={textScale}
-          aria-label="Text size"
-          onChange={(e) => {
-            const v = Number(e.target.value);
+          label="Text size"
+          onChange={(v) => {
             setTextScale(v);
             void updateSettings({ textScale: v });
           }}
-          className="flex-1"
         />
-        <span className="w-11 text-right text-[13px] text-value">{Math.round(textScale * 100)}%</span>
       </Row>
       <Row label="Background">
-        <input
-          type="range"
+        <Slider
+          value={opacity}
           min={0.7}
           max={1}
           step={0.05}
-          value={opacity}
-          aria-label="Background opacity"
-          onChange={(e) => {
-            const v = Number(e.target.value);
+          label="Background opacity"
+          onChange={(v) => {
             setOpacity(v);
             void updateSettings({ opacity: v });
           }}
-          className="flex-1"
         />
-        <span className="w-11 text-right text-[13px] text-value">{Math.round(opacity * 100)}%</span>
       </Row>
       <Row label="Layout">
         <Choice value={compact} options={LAYOUTS} onChange={(v) => void updateSettings({ compact: v })} />
@@ -181,17 +82,17 @@ function DisplaySection(): React.JSX.Element {
           onChange={(v) => void updateSettings({ fadeAfter: v })}
         />
       </Row>
-      <p className="ml-35 font-body text-[12px] leading-snug text-label italic">
+      <Note>
         Hides the overlay after that long without a new step. It comes back with the next area or
         step, or when you tap the menu key.
-      </p>
+      </Note>
       <Row label="Position">
-        <button className="btn" onClick={() => void snapOverlayBottomCenter()}>
+        <Button onClick={() => void snapOverlayBottomCenter()}>
           Bottom center
-        </button>
-        <button className="btn" onClick={() => void startMove()}>
+        </Button>
+        <Button onClick={() => void startMove()}>
           Move overlay
-        </button>
+        </Button>
       </Row>
     </Section>
   );
@@ -213,21 +114,21 @@ function RouteSection(): React.JSX.Element {
         </span>
       </Row>
       <Row label="Step">
-        <button className="btn" onClick={() => void routePrev()}>
+        <Button onClick={() => void routePrev()}>
           Back
-        </button>
-        <button className="btn" onClick={() => void routeNext()}>
+        </Button>
+        <Button onClick={() => void routeNext()}>
           Next
-        </button>
+        </Button>
         <ConfirmButton
           label="Start over"
           confirm="Click again to start over"
           onConfirm={() => void routeReset()}
         />
       </Row>
-      <p className="ml-35 font-body text-[12px] leading-snug text-label italic">
+      <Note>
         The route is exile-leveling's (MIT), the speedrun route by HeartofPhos and contributors.
-      </p>
+      </Note>
     </Section>
   );
 }
@@ -250,33 +151,31 @@ function LogSection(): React.JSX.Element {
         </span>
       </Row>
       <Row label="">
-        <button
-          className="btn"
+        <Button
           onClick={async () => {
             const picked = await pickLogFile();
             if (picked) await startLive(picked);
           }}
         >
           Pick Client.txt
-        </button>
+        </Button>
       </Row>
       <Row label="Testing">
         {mode !== 'replay' && (
-          <button className="btn" aria-expanded={showTesting} onClick={() => setTesting(!testing)}>
+          <Button aria-expanded={showTesting} onClick={() => setTesting(!testing)}>
             {showTesting ? 'Hide' : 'Show'}
-          </button>
+          </Button>
         )}
         {showTesting && (
           <>
-            <button
-              className="btn"
+            <Button
               onClick={async () => {
                 const picked = await pickLogFile();
                 if (picked) await startReplay(picked, 'X5');
               }}
             >
               Replay a log
-            </button>
+            </Button>
             {mode !== 'idle' && (
               <ConfirmButton
                 label="Stop"
@@ -288,10 +187,10 @@ function LogSection(): React.JSX.Element {
         )}
       </Row>
       {showTesting && (
-        <p className="ml-35 font-body text-[12px] leading-snug text-label italic">
+        <Note>
           Plays a saved log back to check the route without the game. Stop leaves Exile Companion without a
           log until you pick one again.
-        </p>
+        </Note>
       )}
       {mode === 'replay' && (
         <Row label="Replay">
@@ -319,19 +218,14 @@ function GemHintsRow(): React.JSX.Element {
   }, []);
   return (
     <Row label="Gems in route">
-      {GEM_HINTS.map((h) => (
-        <button
-          key={h.value}
-          className="btn"
-          aria-pressed={hints === h.value}
-          onClick={() => {
-            setHints(h.value);
-            void updateSettings({ gemHints: h.value });
-          }}
-        >
-          {h.label}
-        </button>
-      ))}
+      <Choice
+        value={hints}
+        options={GEM_HINTS}
+        onChange={(v) => {
+          setHints(v);
+          void updateSettings({ gemHints: v });
+        }}
+      />
     </Row>
   );
 }
@@ -353,6 +247,15 @@ function stageFrom(value: string): PresetStage {
 export function presetName(title: string | null, i: number): string {
   const name = (title ?? '').replace(/^[\s\-=_*~#]+|[\s\-=_*~#]+$/g, '');
   return name || `Preset ${i + 1}`;
+}
+
+function stageOptions(autoLevel: number | null): { value: string; label: string }[] {
+  return [
+    { value: 'auto', label: autoLabel(autoLevel) },
+    ...ACTS.map((a) => ({ value: `act${a}`, label: `From act ${a}` })),
+    { value: 'endgame', label: 'Endgame' },
+    { value: 'skip', label: 'Leave out' },
+  ];
 }
 
 function autoLabel(level: number | null): string {
@@ -396,28 +299,20 @@ function PresetRows(): React.JSX.Element | null {
           {p.gem_count === 0 ? (
             <span className="font-body text-[12px] text-label italic">No gems</span>
           ) : (
-            <select
-              className="btn w-40 font-body"
-              aria-label={`Stage of ${p.title || `preset ${i + 1}`}`}
+            <Select
+              className="w-40"
+              label={`Stage of ${p.title || `preset ${i + 1}`}`}
               value={stageValue(stages[i])}
-              onChange={(e) => change(i, stageFrom(e.target.value))}
-            >
-              <option value="auto">{autoLabel(p.auto_level)}</option>
-              {ACTS.map((a) => (
-                <option key={a} value={`act${a}`}>
-                  From act {a}
-                </option>
-              ))}
-              <option value="endgame">Endgame</option>
-              <option value="skip">Leave out</option>
-            </select>
+              options={stageOptions(p.auto_level)}
+              onChange={(v) => change(i, stageFrom(v))}
+            />
           )}
         </Row>
       ))}
-      <p className="ml-35 font-body text-[12px] leading-snug text-label italic">
+      <Note>
         A gem is planned from the first preset it shows up in. Auto reads the act or level from the
         preset name and keeps the order. Name presets like Act 3 or lvl 28 and this is rarely needed.
-      </p>
+      </Note>
     </>
   );
 }
@@ -442,17 +337,15 @@ function BuildSection(): React.JSX.Element {
         <span className="min-w-0 flex-1 truncate text-[13px] text-value">{summary}</span>
       </Row>
       <Row label="">
-        <button
-          className="btn"
+        <Button
           onClick={async () => {
             const s = await importBuildFile();
             if (s) setBuild(s);
           }}
         >
           Import file
-        </button>
-        <button
-          className="btn"
+        </Button>
+        <Button
           disabled={busy}
           onClick={async () => {
             setBusy(true);
@@ -467,7 +360,7 @@ function BuildSection(): React.JSX.Element {
           }}
         >
           {busy ? 'Loading…' : 'Paste code or link'}
-        </button>
+        </Button>
         {build && (
           <ConfirmButton
             label="Clear"
@@ -517,15 +410,15 @@ function TitleBar(): React.JSX.Element {
       <span data-tauri-drag-region className="font-caps text-[13px] text-label">
         Settings
       </span>
-      <button
-        className="btn ml-auto grid size-6 cursor-default place-items-center p-0"
+      <Button
+        className="ml-auto grid size-6 cursor-default place-items-center p-0"
         aria-label="Close settings"
         onClick={() => void closeSettings()}
       >
         <svg viewBox="0 0 12 12" className="size-3" aria-hidden="true">
           <path d="M2.5 2.5l7 7M9.5 2.5l-7 7" fill="none" stroke="currentColor" strokeWidth="1.4" />
         </svg>
-      </button>
+      </Button>
     </header>
   );
 }

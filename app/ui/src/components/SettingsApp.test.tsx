@@ -49,7 +49,8 @@ describe('SettingsApp', () => {
     render(<SettingsApp />);
     expect(screen.getByText('No gems')).toBeInTheDocument();
     expect(screen.getByText('Vaal Haste, Empower Support')).toBeInTheDocument();
-    await userEvent.selectOptions(screen.getByLabelText('Stage of Switch'), 'From act 4');
+    await userEvent.click(screen.getByRole('combobox', { name: 'Stage of Switch' }));
+    await userEvent.click(screen.getByRole('option', { name: 'From act 4' }));
     expect(commands.updateSettings).toHaveBeenCalledWith({
       presetStages: ['auto', 'auto', { act: 4 }],
     });

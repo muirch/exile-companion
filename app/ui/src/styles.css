@@ -212,6 +212,69 @@ body {
     border-color: var(--color-normal);
     color: var(--color-value);
   }
+
+  .select {
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    font-size: 13px;
+  }
+  .select[aria-expanded='true'] {
+    border-color: var(--color-edge-bright);
+    color: var(--color-value);
+  }
+  .select-chevron {
+    width: 8px;
+    height: 5px;
+    flex-shrink: 0;
+    color: var(--color-label);
+  }
+  .select[aria-expanded='true'] .select-chevron {
+    transform: scaleY(-1);
+  }
+
+  /* Opaque, unlike a tooltip body: it opens over other rows and has to cover them. */
+  .select-list {
+    position: fixed;
+    z-index: 20;
+    overflow-y: auto;
+    padding: 2px 0;
+    background: #0a0a0a;
+    border: 1px solid var(--color-edge-bright);
+    font-family: var(--font-body);
+    font-size: 13px;
+    line-height: 1;
+    color: var(--color-normal);
+  }
+  .select-list::-webkit-scrollbar {
+    width: 6px;
+  }
+  .select-list::-webkit-scrollbar-thumb {
+    background: var(--color-edge);
+  }
+  .select-list > [role='option'] {
+    position: relative;
+    padding: 6px 12px 7px 22px;
+    white-space: nowrap;
+  }
+  .select-list > [role='option'][data-active] {
+    background: rgb(255 255 255 / 0.06);
+    color: var(--color-value);
+  }
+  .select-list > [role='option'][aria-selected='true'] {
+    color: var(--color-value);
+  }
+  .select-list > [role='option'][aria-selected='true']::before {
+    content: '';
+    position: absolute;
+    left: 9px;
+    top: 50%;
+    width: 5px;
+    height: 5px;
+    margin-top: -2.5px;
+    background: var(--color-normal);
+    transform: rotate(45deg);
+  }
 }
 
 input[type='range'] {
