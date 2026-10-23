@@ -10,10 +10,12 @@ description = "Campaign logic for Exile Companion, without Tauri."
 [dependencies]
 exile-pob = { path = "../pob" }
 serde = { workspace = true }
-serde_json = { workspace = true }
+# preserve_order keeps the key order of agent config files the app edits.
+serde_json = { workspace = true, features = ["preserve_order"] }
 thiserror = { workspace = true }
 time = { workspace = true }
 regex = "=1.13.1"
+toml_edit = "=0.25.13"
 tokio = { workspace = true, features = ["fs", "io-util", "sync", "time", "macros"] }
 tokio-util = "=0.7.18"
 futures = "=0.3.32"
