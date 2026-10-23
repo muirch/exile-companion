@@ -78,6 +78,7 @@ pub fn run() {
             }
             overlay::restore_anchor(app.handle(), &saved);
             runtime::restore_build(app.handle());
+            runtime::watch_build(app.handle().clone());
 
             if let Some(log) = exile_core::logfile::find_client_log(saved.last_log_path.as_deref())
             {

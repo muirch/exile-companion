@@ -172,6 +172,28 @@ pub fn restore_build(app: &AppHandle) {
     }
 }
 
+/// The assistant changes build.xml from its own process. Picks those changes up while the app runs.
+pub fn watch_build(app: AppHandle) {
+    let stamp = |app: &AppHandle| {
+        let meta = std::fs::metadata(build_path(app)?).ok()?;
+        Some((meta.modified().ok()?, meta.len()))
+    };
+    tauri::async_runtime::spawn(async move {
+        let mut last = stamp(&app);
+        loop {
+            tokio::time::sleep(Duration::from_secs(2)).await;
+            let now = stamp(&app);
+            if now != last && now.is_some() {
+                restore_build(&app);
+                emit_build_summary(&app);
+                emit_guidance(&app, &app.state::<AppState>().current_state());
+                emit_route(&app);
+            }
+            last = now;
+        }
+    });
+}
+
 /// Parse and store a freshly-imported build, save it for the next start, then push the new build
 /// summary, guidance and route.
 pub fn import_build(app: &AppHandle, xml: Vec<u8>) -> Result<BuildSummary, String> {
