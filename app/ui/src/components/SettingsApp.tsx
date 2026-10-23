@@ -1,4 +1,4 @@
-import { useEffect, useState, type ReactNode } from 'react';
+import { useEffect, useRef, useState, type ReactNode } from 'react';
 
 import {
   clearBuild,
@@ -44,6 +44,10 @@ function Row({ label, children }: { label: string; children: ReactNode }): React
 }
 
 // Drops progress, the build or the game log: the first click arms it, the second does it.
+// A second click right after the first is a double click or a bouncing mouse button, not a
+// confirmation.
+const CONFIRM_AFTER_MS = 500;
+
 function ConfirmButton({
   label,
   confirm,
@@ -54,6 +58,7 @@ function ConfirmButton({
   onConfirm: () => void;
 }): React.JSX.Element {
   const [armed, setArmed] = useState(false);
+  const armedAt = useRef(0);
   useEffect(() => {
     if (!armed) return;
     const t = setTimeout(() => setArmed(false), 3000);
@@ -64,11 +69,12 @@ function ConfirmButton({
       className="btn"
       aria-pressed={armed}
       onClick={() => {
-        if (armed) {
+        if (!armed) {
+          armedAt.current = Date.now();
+          setArmed(true);
+        } else if (Date.now() - armedAt.current >= CONFIRM_AFTER_MS) {
           setArmed(false);
           onConfirm();
-        } else {
-          setArmed(true);
         }
       }}
     >
