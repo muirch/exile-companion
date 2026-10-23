@@ -606,6 +606,103 @@ function bridge.what_if(params)
 	return result
 end
 
+-- The changes what_if takes, made for good. Returns what they did and the build's new XML. When
+-- one fails, the build is put back as it was.
+function bridge.apply_changes(params)
+	local before = build:SaveDB("code")
+	local base = output()
+	local configChanged = false
+
+	local function apply(change)
+		if change.add_nodes then
+			for _, ref in ipairs(change.add_nodes) do
+				local node = findNode(ref)
+				if not node.alloc then
+					if not node.path then
+						error("the tree can't reach " .. node.dn, 0)
+					end
+					build.spec:AllocNode(node)
+				end
+			end
+		elseif change.remove_nodes then
+			-- Nodes only connected through this one go with it, like in PoB.
+			for _, ref in ipairs(change.remove_nodes) do
+				local node = findNode(ref)
+				if node.alloc then
+					build.spec:DeallocNode(node)
+				end
+			end
+		elseif change.item then
+			local items = build.itemsTab
+			local slot = items.slots[change.slot or error("an item change needs a slot", 0)]
+			if not slot then
+				error("no item slot " .. change.slot, 0)
+			end
+			local item = new("Item", change.item)
+			if not item.base then
+				error("Path of Building couldn't read the item for " .. change.slot, 0)
+			end
+			item:NormaliseQuality()
+			if not items:IsItemValidForSlot(item, change.slot) then
+				error("that item doesn't fit " .. change.slot, 0)
+			end
+			items:AddItem(item, true)
+			slot:SetSelItemId(item.id)
+			items:PopulateSlots()
+		elseif change.gem then
+			local group = findGroup(change.group or change.gem)
+			for _, gem in ipairs(group.gemList) do
+				if gem.nameSpec == gemName(change.gem) then
+					if change.enabled ~= nil then gem.enabled = change.enabled end
+					if change.level then gem.level = change.level end
+					if change.quality then gem.quality = change.quality end
+					build.skillsTab:ProcessSocketGroup(group)
+					return
+				end
+			end
+			error("no gem " .. change.gem .. " in that group", 0)
+		elseif change.add_gem then
+			local group = findGroup(change.group)
+			local gem = { nameSpec = gemName(change.add_gem), level = change.level or 20, quality = change.quality or 0, enabled = true, enableGlobal1 = true, enableGlobal2 = true, count = 1 }
+			table.insert(group.gemList, gem)
+			build.skillsTab:ProcessSocketGroup(group)
+			if not gem.gemData then
+				error("Path of Building doesn't know the gem " .. change.add_gem, 0)
+			end
+		elseif change.config then
+			build.configTab.input[change.config] = change.value
+			configChanged = true
+		elseif change.custom_mod then
+			local set = build.configTab.configSets[build.configTab.activeConfigSetId]
+			table.insert(set.customModsList, { title = "Exile Companion", enabled = true, text = change.custom_mod })
+			configChanged = true
+		elseif change.level then
+			build.characterLevel = change.level
+			-- Otherwise PoB sets the level back from the points spent on the next frame.
+			build.characterLevelAutoMode = false
+		else
+			error("unknown change", 0)
+		end
+	end
+
+	local ok, err = pcall(function()
+		for _, change in ipairs(params.changes or {}) do
+			apply(change)
+		end
+		if configChanged then
+			build.configTab:BuildModList()
+		end
+		rebuild()
+	end)
+	if not ok then
+		loadBuildFromXML(before, build.buildName)
+		error(err, 0)
+	end
+	local result = measure(base, output())
+	result.xml = build:SaveDB("code")
+	return result
+end
+
 -- Everything a reader needs to explain the build: gear with its mod lines, gem groups, and the
 -- keystones and notables taken.
 function bridge.build_info()
@@ -1112,17 +1209,6 @@ function bridge.guide_stage_diff(params)
 		skills = skills,
 		stats = result,
 	}
-end
-
--- Changes the player's build for good: allocates passives with the path to them. For making test
--- builds, the MCP server doesn't offer it.
-function bridge.tree_edit(params)
-	for _, ref in ipairs(params.allocate or {}) do
-		build.spec:AllocNode(findNode(ref))
-	end
-	build.spec:BuildAllDependsAndPaths()
-	rebuild()
-	return bridge.summary()
 end
 
 return bridge
