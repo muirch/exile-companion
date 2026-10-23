@@ -1,8 +1,8 @@
 ---
 version: 1
-slug: "src-components-overlayroot-tsx"
-primary_target: "src/components/OverlayRoot.tsx"
-related_targets: ["src/components/StatusPanel.tsx","src/components/RoutePanel.tsx","src/components/SettingsApp.tsx","src/components/ReplayControls.tsx","src/styles.css"]
+slug: "app-ui-src-components-overlayroot-tsx"
+primary_target: "app/ui/src/components/OverlayRoot.tsx"
+related_targets: ["app/ui/src/components/StatusPanel.tsx","app/ui/src/components/RoutePanel.tsx","app/ui/src/components/SettingsApp.tsx","app/ui/src/components/ReplayControls.tsx","app/ui/src/styles.css"]
 ---
 
 # Overlay

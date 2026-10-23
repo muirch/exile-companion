@@ -136,7 +136,7 @@ export function OverlayRoot(): React.JSX.Element {
               data-tauri-drag-region
               className="flex cursor-move items-center gap-2 border-b border-edge py-1 pr-1 pl-3"
             >
-              <span data-tauri-drag-region className="text-[13px] text-normal">
+              <span data-tauri-drag-region className="font-caps text-[13px] text-normal">
                 <Brand />
               </span>
               <span data-tauri-drag-region className="flex-1 text-right text-[11px] text-plain">

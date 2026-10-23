@@ -4,10 +4,10 @@
   "version": "0.1.0",
   "identifier": "com.exilecompanion.app",
   "build": {
-    "frontendDist": "../dist",
+    "frontendDist": "../ui/dist",
     "devUrl": "http://localhost:1420",
-    "beforeDevCommand": "pnpm dev",
-    "beforeBuildCommand": "pnpm build"
+    "beforeDevCommand": { "script": "pnpm dev", "cwd": "../.." },
+    "beforeBuildCommand": { "script": "pnpm build", "cwd": "../.." }
   },
   "app": {
     "macOSPrivateApi": true,

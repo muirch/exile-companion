@@ -1,4 +1,4 @@
-// Vendors exile-leveling's hand-written leveling route into data-pack/routes/exile-leveling/,
+// Vendors exile-leveling's hand-written leveling route into crates/data/data/routes/exile-leveling/,
 // together with its gem list and quest rewards: the game files don't carry what vendors sell
 // after each quest. Run with `npm run routes`. Bump COMMIT to pick up a newer route, then review
 // the diff.
@@ -12,7 +12,7 @@ const COMMIT = 'b7b2dd0ed62ae25cf55c74085fa64a1f4d7cf4ba';
 const ACTS = 10;
 
 const here = dirname(fileURLToPath(import.meta.url));
-const outDir = resolve(here, '..', '..', '..', 'data-pack', 'routes', 'exile-leveling');
+const outDir = resolve(here, '..', '..', '..', 'crates', 'data', 'data', 'routes', 'exile-leveling');
 
 async function fetchText(path: string): Promise<string> {
   const url = `https://raw.githubusercontent.com/${REPO}/${COMMIT}/${path}`;

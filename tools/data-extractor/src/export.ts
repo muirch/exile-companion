@@ -1,7 +1,7 @@
 // Orchestrates a full data-pack regeneration:
 //   1. run pathofexile-dat (fetch the tables in config.json from GGG's patch CDN -> tables/English/)
 //   2. reshape rows -> Exile Companion's flat schemas (see ./transform/*.ts)
-//   3. write ../../data-pack/{areas,quests,trials}.json + manifest.json (with sha256), each
+//   3. write ../../crates/data/data/{areas,quests,trials}.json + manifest.json (with sha256), each
 //      validated against anchors so a bad extraction never overwrites a good pack
 //
 // Run with `npm run regen`. Pass `--no-fetch` to skip the download and reuse the cached tables
@@ -35,7 +35,7 @@ const TRIALS_SCHEMA = 1;
 const here = dirname(fileURLToPath(import.meta.url)); // tools/data-extractor/src
 const extractorDir = resolve(here, '..'); // tools/data-extractor
 const repoRoot = resolve(extractorDir, '..', '..'); // repo root
-const dataPackDir = resolve(repoRoot, 'data-pack');
+const dataPackDir = resolve(repoRoot, 'crates', 'data', 'data');
 const tablesDir = resolve(extractorDir, 'tables/English');
 const cliPath = resolve(extractorDir, 'node_modules/pathofexile-dat/dist/cli/run.js');
 

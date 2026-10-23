@@ -1,19 +1,19 @@
 {
-  "name": "Exile Companion",
+  "name": "exile-companion",
   "private": true,
   "version": "0.1.0",
   "type": "module",
   "description": "The Exile Companion overlay UI.",
   "packageManager": "pnpm@11.5.3",
   "scripts": {
-    "dev": "vite",
-    "build": "tsc --noEmit && vite build",
-    "preview": "vite preview",
-    "typecheck": "tsc --noEmit",
+    "dev": "vite app/ui",
+    "build": "tsc --noEmit -p app/ui && vite build app/ui",
+    "preview": "vite preview app/ui",
+    "typecheck": "tsc --noEmit -p app/ui",
     "tauri": "tauri",
-    "gen:bindings": "cd crates/exile-core && TS_RS_EXPORT_DIR=\"$PWD/../../src/ipc/generated\" cargo test --features ts",
-    "test": "vitest run",
-    "lint": "oxlint src vite.config.ts vitest.config.ts"
+    "gen:bindings": "cd crates/core && TS_RS_EXPORT_DIR=\"$PWD/../../app/ui/src/ipc/generated\" cargo test --features ts",
+    "test": "vitest run --root app/ui",
+    "lint": "oxlint app/ui"
   },
   "dependencies": {
     "@tanstack/react-query": "5.101.2",

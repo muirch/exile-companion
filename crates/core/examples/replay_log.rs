@@ -34,7 +34,7 @@ fn main() {
     let mut args = std::env::args().skip(1);
     let log_path = args.next().unwrap_or_else(|| {
         format!(
-            "{}/../../examples/sample-client.txt",
+            "{}/../../docs/sample-client.txt",
             env!("CARGO_MANIFEST_DIR")
         )
     });

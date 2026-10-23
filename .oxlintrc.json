@@ -13,5 +13,5 @@
     "unicorn/no-thenable": "off",
     "vitest/require-mock-type-parameters": "off"
   },
-  "ignorePatterns": ["src/ipc/generated"]
+  "ignorePatterns": ["app/ui/src/ipc/generated"]
 }

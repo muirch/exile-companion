@@ -15,7 +15,7 @@ use std::collections::HashMap;
 
 use crate::error::DataError;
 
-/// Top-level shape of `data-pack/areas.json`.
+/// Top-level shape of `crates/data/data/areas.json`.
 #[derive(Debug, Clone, serde::Deserialize)]
 pub struct AreaTable {
     pub schema_version: u32,
@@ -126,9 +126,9 @@ impl ZoneTable {
     }
 }
 
-// --- Quests + gem rewards (data-pack/quests.json) ---------------------------------------------
+// --- Quests + gem rewards (crates/data/data/quests.json) ---------------------------------------------
 
-/// Top-level shape of `data-pack/quests.json`.
+/// Top-level shape of `crates/data/data/quests.json`.
 #[derive(Debug, Clone, serde::Deserialize)]
 struct QuestFile {
     schema_version: u32,
@@ -252,9 +252,9 @@ impl QuestTable {
     }
 }
 
-// --- Lab trials (data-pack/trials.json) -------------------------------------------------------
+// --- Lab trials (crates/data/data/trials.json) -------------------------------------------------------
 
-/// Top-level shape of `data-pack/trials.json`.
+/// Top-level shape of `crates/data/data/trials.json`.
 #[derive(Debug, Clone, serde::Deserialize)]
 struct TrialFile {
     schema_version: u32,

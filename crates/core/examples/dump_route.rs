@@ -1,5 +1,5 @@
 //! Writes the first N route views as JSON, for the browser mock:
-//! `cargo run -p exile-core --example dump_route -- 60 > src/ipc/mock-route.json`
+//! `cargo run -p exile-core --example dump_route -- 60 > app/ui/src/ipc/mock-route.json`
 //! The views carry the gem plan for a small Witch build, matching the mock's imported build.
 
 use std::collections::HashSet;

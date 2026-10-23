@@ -96,7 +96,7 @@ Start-App 'run2-saved-settings' $exe
 # The standalone install path find_client_log looks at, with the sample campaign log in it.
 $logs = 'C:\Program Files (x86)\Grinding Gear Games\Path of Exile\logs'
 New-Item -ItemType Directory -Force $logs | Out-Null
-Copy-Item examples/sample-client.txt (Join-Path $logs 'Client.txt')
+Copy-Item docs/sample-client.txt (Join-Path $logs 'Client.txt')
 Start-App 'run3-with-client-txt' $exe
 
 Get-WinEvent -FilterHashtable @{ LogName = 'Application'; StartTime = $started } -ErrorAction SilentlyContinue |

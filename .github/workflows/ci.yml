@@ -52,10 +52,10 @@ jobs:
 
       - name: ts-rs bindings are up to date
         run: |
-          TS_RS_EXPORT_DIR="$PWD/src/ipc/generated" cargo test -p exile-core --features ts
-          if ! git diff --quiet -- src/ipc/generated; then
+          TS_RS_EXPORT_DIR="$PWD/app/ui/src/ipc/generated" cargo test -p exile-core --features ts
+          if ! git diff --quiet -- app/ui/src/ipc/generated; then
             echo "::error::TypeScript IPC bindings are stale. Run 'pnpm gen:bindings' and commit."
-            git diff -- src/ipc/generated
+            git diff -- app/ui/src/ipc/generated
             exit 1
           fi
 

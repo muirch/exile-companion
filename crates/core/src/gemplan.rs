@@ -853,8 +853,8 @@ mod tests {
 
     fn real_table() -> GemTable {
         GemTable::from_json_bytes(
-            include_bytes!("../../../data-pack/routes/exile-leveling/gems.json"),
-            include_bytes!("../../../data-pack/routes/exile-leveling/quests.json"),
+            include_bytes!("../../data/data/routes/exile-leveling/gems.json"),
+            include_bytes!("../../data/data/routes/exile-leveling/quests.json"),
         )
         .unwrap()
     }

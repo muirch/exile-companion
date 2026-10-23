@@ -3,7 +3,7 @@
 
 use std::path::PathBuf;
 
-/// Errors from loading or validating the campaign data pack (`data-pack/areas.json`).
+/// Errors from loading or validating the campaign data pack (`crates/data/data/areas.json`).
 #[derive(Debug, thiserror::Error)]
 pub enum DataError {
     /// The JSON did not deserialize into the expected data-pack shape.

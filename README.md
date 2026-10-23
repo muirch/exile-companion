@@ -65,12 +65,13 @@ The campaign guide is the first feature, not the whole app. What I want most is 
 The live log and a replayed log both become one stream of lines. A single pipeline reads it, parses each line, folds it into the campaign state and updates the overlay. Replay behaves exactly like a live session, and the whole engine is tested without a GUI.
 
 ```
-crates/exile-core       campaign logic, no Tauri, covered by tests
-crates/exile-data       the campaign data pack, embedded at build time
-src-tauri               the Tauri v2 shell with windows, hotkeys, IPC and settings
-src                     the React + TypeScript UI
-data-pack               generated campaign data and the leveling route
-tools/data-extractor    builds the data pack from the game's files
+app/ui                  the React and TypeScript UI
+app/desktop             the Tauri v2 shell with windows, hotkeys, IPC and settings
+crates/core             campaign logic, no Tauri, covered by tests
+crates/pob              Path of Building import
+crates/data             the campaign data and route, embedded at build time
+tools/data-extractor    builds the campaign data from the game's files
+docs                    images and a sample Client.txt
 ```
 
 The backend is Rust, Tokio and Tauri v2. The UI is React, TypeScript, Vite, Tailwind CSS and Zustand.
@@ -95,7 +96,7 @@ pnpm test
 pnpm lint
 ```
 
-The desktop app is built for Windows, by the manual Release workflow or `pnpm tauri build` on Windows. On Linux, work on the UI with `pnpm dev` and on the logic with `cargo test`. There's a sample log at [examples/sample-client.txt](examples/sample-client.txt) for the replay mode.
+The desktop app is built for Windows, by the manual Release workflow or `pnpm tauri build` on Windows. On Linux, work on the UI with `pnpm dev` and on the logic with `cargo test`. There's a sample log at [docs/sample-client.txt](docs/sample-client.txt) for the replay mode.
 
 ### Regenerating the campaign data
 
@@ -123,9 +124,9 @@ If you open the project in Claude Code, the hooks in `.claude/settings.json` run
 
 ## Credits and licenses
 
-The leveling route in `data-pack/routes/exile-leveling` is written by the exile-leveling authors and kept under its MIT license (see the `LICENSE` file there).
+The leveling route in `crates/data/data/routes/exile-leveling` is written by the exile-leveling authors and kept under its MIT license (see the `LICENSE` file there).
 
-The overlay uses Alegreya Sans and Alegreya Sans SC by Huerta Tipográfica, under the SIL Open Font License (`src/assets/fonts/OFL.txt`).
+The overlay uses Alegreya Sans and Alegreya Sans SC by Huerta Tipográfica, under the SIL Open Font License (`app/ui/src/assets/fonts/OFL.txt`).
 
 The design skill in `.claude/skills/impeccable` is [impeccable](https://github.com/pbakaus/impeccable) by Paul Bakaus, under the Apache License 2.0.
 

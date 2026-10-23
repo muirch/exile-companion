@@ -1,4 +1,4 @@
-//! Validates that the *committed* data pack (`data-pack/{areas,quests,trials}.json`, embedded via
+//! Validates that the *committed* data pack (`crates/data/data/{areas,quests,trials}.json`, embedded via
 //! `exile-data`) parses at the schema versions this build expects and contains known campaign
 //! anchors. This is the guard that catches data-pack schema drift after a `tools/data-extractor`
 //! regen.
@@ -21,7 +21,9 @@ fn committed_pack() -> DataPack {
 fn committed_pack_parses_and_has_act1_anchors() {
     let table =
         ZoneTable::from_json_bytes(exile_data::AREAS_JSON, exile_data::AREAS_SCHEMA_VERSION)
-            .expect("committed data-pack/areas.json must parse at the expected schema version");
+            .expect(
+                "committed crates/data/data/areas.json must parse at the expected schema version",
+            );
 
     assert!(!table.is_empty(), "data pack has no areas");
 

@@ -1,6 +1,6 @@
 //! Gems and where the campaign hands them out: as a quest reward or from a vendor after a quest.
 //!
-//! Both come from exile-leveling's data (`data-pack/routes/exile-leveling/{gems,quests}.json`),
+//! Both come from exile-leveling's data (`crates/data/data/routes/exile-leveling/{gems,quests}.json`),
 //! because the game files don't say what each vendor sells after a quest.
 
 use std::collections::{BTreeMap, HashMap};
@@ -173,8 +173,8 @@ pub(crate) fn quest_number(quest_id: &str) -> u32 {
 mod tests {
     use super::*;
 
-    const GEMS: &[u8] = include_bytes!("../../../data-pack/routes/exile-leveling/gems.json");
-    const QUESTS: &[u8] = include_bytes!("../../../data-pack/routes/exile-leveling/quests.json");
+    const GEMS: &[u8] = include_bytes!("../../data/data/routes/exile-leveling/gems.json");
+    const QUESTS: &[u8] = include_bytes!("../../data/data/routes/exile-leveling/quests.json");
 
     const CLASSES: [&str; 7] = [
         "Marauder", "Duelist", "Ranger", "Shadow", "Witch", "Templar", "Scion",

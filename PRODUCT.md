@@ -55,8 +55,8 @@ Exile Companion is a native Windows app with its engine in Rust and one overlay 
 
 ## Evidence on Hand
 
-- Real route data: `data-pack/routes/exile-leveling/act-*.txt` (233 areas with league-start steps).
-- Browser mock with real route views: `src/ipc/mock-route.json`, used by `pnpm dev`.
+- Real route data: `crates/data/data/routes/exile-leveling/act-*.txt` (233 areas with league-start steps).
+- Browser mock with real route views: `app/ui/src/ipc/mock-route.json`, used by `pnpm dev`.
 - No users, reviews, or usage numbers yet. Don't invent any.
 
 ## Product Principles

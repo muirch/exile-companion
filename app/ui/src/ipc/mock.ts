@@ -1,7 +1,7 @@
 /**
  * In-browser campaign simulator used only in `pnpm dev` (no Tauri backend).
  *
- * It plays a scripted run that mirrors examples/sample-client.txt into the store on a timer, so the
+ * It plays a scripted run that mirrors docs/sample-client.txt into the store on a timer, so the
  * overlay animates through a realistic-looking campaign and can be styled without Windows or a VM.
  * It also drives a fake imported build and a per-step "next objective" (the real ones come from the
  * Rust GuidanceEngine under Tauri). The replay controls (pause / resume / step / speed) drive this

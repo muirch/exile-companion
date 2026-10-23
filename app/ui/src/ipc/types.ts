@@ -1,5 +1,5 @@
 // Central IPC type surface: the ts-rs-generated Rust types plus a few hand-written shapes for
-// commands/events whose Rust side lives in `src-tauri` (regenerate the generated/ dir with
+// commands/events whose Rust side lives in `app/desktop` (regenerate the generated/ dir with
 // `pnpm gen:bindings`).
 
 import type { PresetStage } from './generated/PresetStage';

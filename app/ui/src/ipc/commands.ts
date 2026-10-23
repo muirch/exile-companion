@@ -35,7 +35,7 @@ const EMPTY_STATE: CampaignState = {
 };
 
 export const pickLogFile = (): Promise<string | null> =>
-  isTauri() ? invoke('pick_log_file') : Promise.resolve('examples/sample-client.txt');
+  isTauri() ? invoke('pick_log_file') : Promise.resolve('docs/sample-client.txt');
 
 export const startLive = (path: string): Promise<CampaignState> => {
   if (isTauri()) return invoke('start_live', { path });
