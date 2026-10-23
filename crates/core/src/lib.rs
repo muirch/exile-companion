@@ -16,6 +16,7 @@
 
 #![forbid(unsafe_code)]
 
+pub mod agents;
 pub mod build;
 pub mod clock;
 pub mod data;
