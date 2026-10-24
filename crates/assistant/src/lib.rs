@@ -3,6 +3,7 @@
 //! the server the player's own agent would start.
 
 mod anthropic;
+mod card;
 mod config;
 mod http;
 mod mcp;
@@ -11,6 +12,7 @@ mod stream;
 mod turn;
 
 pub use anthropic::Anthropic;
+pub use card::{from_what_next, Kind, NextCard, Step};
 pub use config::{Config, Effort, Model, Provider, Usage};
 pub use mcp::Server;
 pub use openai::OpenAi;
