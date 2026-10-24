@@ -3,7 +3,7 @@ import { describe, expect, it } from 'vitest';
 import type { TurnOver } from '../ipc/types';
 import { applyEvent, ask, costLabel, finish, isWorking, splitAnswer, toolLabel } from './chatLog';
 
-const done: TurnOver = { stop: 'done', message: null, usage: null, dollars: 0.04 };
+const done: TurnOver = { stop: 'done', message: null, usage: null, dollars: 0.04, model: 'Sonnet 5.5' };
 
 describe('chat log', () => {
   it('shows the running tool until the answer starts', () => {

@@ -16,6 +16,7 @@ import type {
   BuildSummary,
   CampaignState,
   BindError,
+  ChatProvider,
   ChatView,
   HotkeySettings,
   NextObjective,
@@ -102,21 +103,28 @@ export const connectAgent = (id: AgentId): Promise<AssistantView> => {
 export const copyAssistantConfig = (): Promise<void> =>
   isTauri() ? invoke('copy_assistant_config') : Promise.resolve();
 
-let mockChat: ChatView = { hasKey: mock.chatHasKeyMock(), available: true, busy: false };
+const MOCK_HAS_KEY = mock.chatHasKeyMock();
+let mockChat: ChatView = {
+  keys: { anthropic: MOCK_HAS_KEY, openRouter: false, custom: false },
+  available: true,
+  busy: false,
+  missing: MOCK_HAS_KEY ? null : 'Add your Anthropic API key in the settings.',
+  model: 'Sonnet 5.5',
+};
 
 export const getChat = (): Promise<ChatView> =>
   isTauri() ? invoke('get_chat') : Promise.resolve(mockChat);
 
 /** Rejects with a message when the system's credential store refused the key. */
-export const setApiKey = (key: string): Promise<ChatView> => {
-  if (isTauri()) return invoke('set_api_key', { key });
-  mockChat = { ...mockChat, hasKey: true };
+export const setApiKey = (provider: ChatProvider, key: string): Promise<ChatView> => {
+  if (isTauri()) return invoke('set_api_key', { provider, key });
+  mockChat = { ...mockChat, keys: { ...mockChat.keys, [provider]: true }, missing: null };
   return Promise.resolve(mockChat);
 };
 
-export const forgetApiKey = (): Promise<ChatView> => {
-  if (isTauri()) return invoke('forget_api_key');
-  mockChat = { ...mockChat, hasKey: false };
+export const forgetApiKey = (provider: ChatProvider): Promise<ChatView> => {
+  if (isTauri()) return invoke('forget_api_key', { provider });
+  mockChat = { ...mockChat, keys: { ...mockChat.keys, [provider]: false } };
   return Promise.resolve(mockChat);
 };
 
@@ -226,7 +234,14 @@ export const getSettings = (): Promise<Settings> =>
         pobPath: null,
         pobSync: false,
         pobBuild: null,
-        chat: { model: 'claude-sonnet-5-5', effort: 'medium' },
+        chat: {
+          provider: 'anthropic',
+          model: 'claude-sonnet-5-5',
+          effort: 'medium',
+          routerModel: '',
+          customUrl: '',
+          customModel: '',
+        },
       });
 
 export const saveSettings = (settings: Settings): Promise<void> =>

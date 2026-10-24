@@ -2,7 +2,7 @@ import { useCallback, useEffect, useLayoutEffect, useRef, useState } from 'react
 
 import { chatNew, chatSend, chatStop, closeChat, getChat, openSettings } from '../ipc/commands';
 import { isTauri } from '../ipc/env';
-import { onChatEvent, onChatOpened, onChatOver } from '../ipc/events';
+import { onChatEvent, onChatOpened, onChatOver, onSettingsChanged } from '../ipc/events';
 import { chatSeedMock } from '../ipc/mock';
 import type { ChatView } from '../ipc/types';
 import { Button, TextArea } from '../kit';
@@ -65,7 +65,7 @@ function ExchangeView({ exchange }: { exchange: Exchange }): React.JSX.Element {
   const { lead, details } = splitAnswer(exchange.answer);
   const over = exchange.over;
   const problem = over && overText(over);
-  const cost = over && costLabel(over.dollars);
+  const meta = over && [over.model, costLabel(over.dollars)].filter(Boolean).join(' · ');
   return (
     <article className="flex flex-col gap-2">
       <p className="line-clamp-3 font-body text-[13px] whitespace-pre-line text-label" title={exchange.question}>
@@ -78,7 +78,7 @@ function ExchangeView({ exchange }: { exchange: Exchange }): React.JSX.Element {
         )}
       </div>
       {!over && (!exchange.answer || exchange.tool || exchange.note) && <Working exchange={exchange} />}
-      {(details.length > 0 || problem || cost) && (
+      {(details.length > 0 || problem || meta) && (
         <div className="flex min-h-6 items-center gap-3">
           {details.length > 0 && (
             <Button aria-expanded={open} onClick={() => setOpen(!open)}>
@@ -90,7 +90,9 @@ function ExchangeView({ exchange }: { exchange: Exchange }): React.JSX.Element {
               {problem}
             </span>
           )}
-          {cost && !problem && <span className="ml-auto font-body text-[11px] text-label">{cost}</span>}
+          {meta && !problem && (
+            <span className="ml-auto truncate font-body text-[11px] text-label">{meta}</span>
+          )}
         </div>
       )}
     </article>
@@ -106,16 +108,14 @@ function Empty({ view, onAsk }: { view: ChatView | null; onAsk: (q: string) => v
       </p>
     );
   }
-  if (!view.hasKey) {
+  if (view.missing) {
     return (
       <div className="flex flex-col items-start gap-3">
-        <p className="font-caps text-[15px] leading-snug text-value">
-          Add your Anthropic API key to ask about your build.
-        </p>
+        <p className="font-caps text-[15px] leading-snug text-value">{view.missing}</p>
         <Button onClick={() => void openSettings()}>Open settings</Button>
         <p className="font-body text-[12px] leading-snug text-label italic">
-          The key comes from console.anthropic.com. Anthropic bills you for each answer, usually a few
-          cents.
+          The assistant runs on your own key from Anthropic or OpenRouter, or on a model on your own
+          server. The provider bills you for each answer, usually a few cents.
         </p>
       </div>
     );
@@ -146,6 +146,7 @@ export function ChatApp(): React.JSX.Element {
   const scroller = useRef<HTMLDivElement>(null);
   const stuck = useRef(true);
   const working = isWorking(log);
+  const ready = !!view?.available && !view.missing;
 
   const refresh = useCallback(() => {
     void getChat().then(setView);
@@ -157,7 +158,7 @@ export function ChatApp(): React.JSX.Element {
     const offs = [
       onChatEvent((e) => setLog((l) => applyEvent(l, e))),
       onChatOver((o) => setLog((l) => finish(l, o))),
-      ...(isTauri() ? [onChatOpened(refresh)] : []),
+      ...(isTauri() ? [onChatOpened(refresh), onSettingsChanged(refresh)] : []),
     ];
     const onKey = (e: KeyboardEvent): void => {
       if (e.key === 'Escape') void closeChat();
@@ -177,16 +178,16 @@ export function ChatApp(): React.JSX.Element {
 
   const send = (question: string): void => {
     const q = question.trim();
-    if (!q || working || !view?.hasKey) return;
+    if (!q || working || !ready) return;
     stuck.current = true;
     setLog((l) => ask(l, q));
     setDraft('');
     chatSend(q).catch((e: unknown) =>
-      setLog((l) => finish(l, { stop: 'error', message: String(e), usage: null, dollars: null })),
+      setLog((l) =>
+        finish(l, { stop: 'error', message: String(e), usage: null, dollars: null, model: null }),
+      ),
     );
   };
-
-  const ready = !!view?.available && !!view.hasKey;
 
   return (
     <div className="flex h-full flex-col">
@@ -200,8 +201,13 @@ export function ChatApp(): React.JSX.Element {
         <span data-tauri-drag-region className="font-caps text-[13px] text-label">
           Assistant
         </span>
+        {ready && (
+          <span data-tauri-drag-region className="min-w-0 truncate font-body text-[11px] text-label">
+            {view?.model}
+          </span>
+        )}
         <Button
-          className="ml-auto cursor-default"
+          className="ml-auto shrink-0 cursor-default"
           disabled={log.length === 0}
           onClick={() => {
             void chatNew();

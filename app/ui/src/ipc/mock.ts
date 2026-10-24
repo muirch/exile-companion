@@ -334,8 +334,15 @@ export function chatMock(question: string): Promise<void> {
       overChat({
         stop: 'done',
         message: null,
-        usage: { inputTokens: 900, outputTokens: 420, cacheReadTokens: 31000, cacheWriteTokens: 1200 },
+        usage: {
+          inputTokens: 900,
+          outputTokens: 420,
+          cacheReadTokens: 31000,
+          cacheWriteTokens: 1200,
+          cost: 0.0191,
+        },
         dollars: 0.0191,
+        model: 'Sonnet 5.5',
       }),
   ]);
   chatTimers = steps.map(([at, f]) => setTimeout(f, at));
@@ -346,7 +353,7 @@ export function chatStopMock(): void {
   const running = chatTimers.length > 0;
   chatTimers.forEach(clearTimeout);
   chatTimers = [];
-  if (running) overChat({ stop: 'stopped', message: null, usage: null, dollars: null });
+  if (running) overChat({ stop: 'stopped', message: null, usage: null, dollars: null, model: null });
 }
 
 const chatQuery = (): string | null =>
@@ -371,7 +378,7 @@ export function chatSeedMock(): Exchange[] {
       answer: MOCK_ANSWER,
       tool: null,
       note: null,
-      over: { stop: 'done', message: null, usage: null, dollars: 0.0191 },
+      over: { stop: 'done', message: null, usage: null, dollars: 0.0191, model: 'Sonnet 5.5' },
     },
     {
       question: PASTED_ITEM,
