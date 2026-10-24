@@ -156,13 +156,20 @@ pub async fn get_chat(app: AppHandle) -> crate::chat::ChatView {
 }
 
 #[tauri::command]
-pub async fn set_api_key(app: AppHandle, key: String) -> Result<crate::chat::ChatView, String> {
-    crate::chat::set_key(&app, key).await
+pub async fn set_api_key(
+    app: AppHandle,
+    provider: exile_assistant::Provider,
+    key: String,
+) -> Result<crate::chat::ChatView, String> {
+    crate::chat::set_key(&app, provider, key).await
 }
 
 #[tauri::command]
-pub async fn forget_api_key(app: AppHandle) -> Result<crate::chat::ChatView, String> {
-    crate::chat::forget_key(&app).await
+pub async fn forget_api_key(
+    app: AppHandle,
+    provider: exile_assistant::Provider,
+) -> Result<crate::chat::ChatView, String> {
+    crate::chat::forget_key(&app, provider).await
 }
 
 /// Starts an answer. Its text arrives as chat://event, the end as chat://over.

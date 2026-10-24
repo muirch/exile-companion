@@ -35,6 +35,7 @@ import type {
   AgentView,
   AssistantView,
   ChatConfig,
+  ChatProvider,
   ChatView,
   GemHints,
   Mule,
@@ -571,8 +572,6 @@ function agentState(agent: AgentView): { text: string; className: string } {
   }
 }
 
-// The assistant is an MCP server that the player's own AI agent starts. Connecting writes it
-// into the agent's config, so the player never edits JSON by hand.
 const MODELS: { value: ChatConfig['model']; label: string }[] = [
   { value: 'claude-sonnet-5-5', label: 'Sonnet 5.5' },
   { value: 'claude-opus-5-5', label: 'Opus 5.5' },
@@ -587,9 +586,6 @@ const EFFORTS: { value: ChatConfig['effort']; label: string }[] = [
 export function ChatSettings(): React.JSX.Element | null {
   const [view, setView] = useState<ChatView | null>(null);
   const [config, setConfig] = useState<ChatConfig | null>(null);
-  const [draft, setDraft] = useState('');
-  const [replacing, setReplacing] = useState(false);
-  const [error, setError] = useState<string | null>(null);
   useEffect(() => {
     void getChat().then(setView);
     void getSettings().then((s) => setConfig(s?.chat ?? null));
@@ -601,32 +597,160 @@ export function ChatSettings(): React.JSX.Element | null {
     setConfig(next);
     void updateSettings({ chat: next });
   };
+  const provider = config.provider;
+  const effort = (
+    <Row label="Effort">
+      <Choice value={config.effort} options={EFFORTS} onChange={(e) => change({ effort: e })} />
+    </Row>
+  );
+
+  return (
+    <>
+      <Note flush>
+        Ask the assistant from the game with your own key. Hold the menu key and pick Ask the
+        assistant, or press its hotkey.
+      </Note>
+      <Row label="Provider">
+        <Choice value={provider} options={PROVIDERS} onChange={(p) => change({ provider: p })} />
+      </Row>
+      {provider === 'anthropic' && (
+        <>
+          <KeyRow key={provider} provider={provider} saved={view.keys.anthropic} placeholder="sk-ant-..." onView={setView} />
+          <Note>
+            Make one at console.anthropic.com. It stays in your system's credential store and goes
+            only to Anthropic, who bill you for each answer, usually a few cents.
+          </Note>
+          <Row label="Model">
+            <Choice value={config.model} options={MODELS} onChange={(model) => change({ model })} />
+          </Row>
+          {effort}
+          <Note>
+            Opus 5.5 costs twice as much as Sonnet 5.5 and does better on hard questions. Higher effort
+            thinks longer before it answers.
+          </Note>
+        </>
+      )}
+      {provider === 'openRouter' && (
+        <>
+          <KeyRow key={provider} provider={provider} saved={view.keys.openRouter} placeholder="sk-or-..." onView={setView} />
+          <Row label="Model">
+            <ConfigField
+              value={config.routerModel}
+              placeholder="vendor/model"
+              label="OpenRouter model"
+              onCommit={(routerModel) => change({ routerModel })}
+            />
+          </Row>
+          <Note>
+            Any model on openrouter.ai/models that supports tools, by the id under its name. OpenRouter
+            says what each answer cost. The key stays in your system's credential store.
+          </Note>
+          {effort}
+          <Note>Effort only reaches models that reason.</Note>
+        </>
+      )}
+      {provider === 'custom' && (
+        <>
+          <Row label="Address">
+            <ConfigField
+              value={config.customUrl}
+              placeholder="http://localhost:11434/v1"
+              label="Server address"
+              onCommit={(customUrl) => change({ customUrl })}
+            />
+          </Row>
+          <Row label="Model">
+            <ConfigField
+              value={config.customModel}
+              placeholder="the model's name on the server"
+              label="Model on the server"
+              onCommit={(customModel) => change({ customModel })}
+            />
+          </Row>
+          <KeyRow key={provider} provider={provider} saved={view.keys.custom} placeholder="Not needed for most local servers" onView={setView} />
+          <Note>
+            Any server with OpenAI's chat completions, such as LM Studio, Ollama, DeepSeek or Kimi. The
+            model has to support tools, and small local models often get them wrong.
+          </Note>
+        </>
+      )}
+      <Note>Switching the provider starts a new conversation.</Note>
+      <div className="h-2" />
+    </>
+  );
+}
+
+const PROVIDERS: { value: ChatProvider; label: string }[] = [
+  { value: 'anthropic', label: 'Anthropic' },
+  { value: 'openRouter', label: 'OpenRouter' },
+  { value: 'custom', label: 'Other server' },
+];
+
+/** Saves on Enter or when the field loses focus, not on every key. */
+function ConfigField({
+  value,
+  placeholder,
+  label,
+  onCommit,
+}: {
+  value: string;
+  placeholder: string;
+  label: string;
+  onCommit: (v: string) => void;
+}): React.JSX.Element {
+  const [text, setText] = useState(value);
+  const commit = (): void => {
+    if (text.trim() !== value) onCommit(text.trim());
+  };
+  return (
+    <TextField
+      value={text}
+      placeholder={placeholder}
+      aria-label={label}
+      className="flex-1"
+      onChange={(e) => setText(e.target.value)}
+      onBlur={commit}
+      onKeyDown={(e) => {
+        if (e.key === 'Enter') commit();
+      }}
+    />
+  );
+}
+
+function KeyRow({
+  provider,
+  saved,
+  placeholder,
+  onView,
+}: {
+  provider: ChatProvider;
+  saved: boolean;
+  placeholder: string;
+  onView: (v: ChatView) => void;
+}): React.JSX.Element {
+  const [draft, setDraft] = useState('');
+  const [replacing, setReplacing] = useState(false);
+  const [error, setError] = useState<string | null>(null);
   const save = async (): Promise<void> => {
     setError(null);
     try {
-      setView(await setApiKey(draft));
+      onView(await setApiKey(provider, draft));
       setDraft('');
       setReplacing(false);
     } catch (e) {
       setError(String(e));
     }
   };
-  const editing = !view.hasKey || replacing;
-
   return (
     <>
-      <Note flush>
-        Ask the assistant from the game with your own Anthropic API key. Hold the menu key and pick
-        Ask the assistant, or press its hotkey.
-      </Note>
       <Row label="API key">
-        {editing ? (
+        {!saved || replacing ? (
           <>
             <TextField
               type="password"
               value={draft}
-              placeholder="sk-ant-..."
-              aria-label="Anthropic API key"
+              placeholder={placeholder}
+              aria-label="API key"
               className="flex-1"
               onChange={(e) => setDraft(e.target.value)}
               onKeyDown={(e) => {
@@ -648,7 +772,7 @@ export function ChatSettings(): React.JSX.Element | null {
               onConfirm={async () => {
                 setError(null);
                 try {
-                  setView(await forgetApiKey());
+                  onView(await forgetApiKey(provider));
                 } catch (e) {
                   setError(String(e));
                 }
@@ -664,25 +788,12 @@ export function ChatSettings(): React.JSX.Element | null {
           </span>
         </Row>
       )}
-      <Note>
-        Make one at console.anthropic.com. It stays in your system's credential store and goes only to
-        Anthropic, who bill you for each answer, usually a few cents.
-      </Note>
-      <Row label="Model">
-        <Choice value={config.model} options={MODELS} onChange={(model) => change({ model })} />
-      </Row>
-      <Row label="Effort">
-        <Choice value={config.effort} options={EFFORTS} onChange={(effort) => change({ effort })} />
-      </Row>
-      <Note>
-        Opus 5.5 costs twice as much as Sonnet 5.5 and does better on hard questions. Higher effort
-        thinks longer before it answers.
-      </Note>
-      <div className="h-2" />
     </>
   );
 }
 
+// The assistant is also an MCP server that the player's own AI agent starts. Connecting writes it
+// into the agent's config, so the player never edits JSON by hand.
 function AssistantSection(): React.JSX.Element {
   const [view, setView] = useState<AssistantView | null>(null);
   const [error, setError] = useState<string | null>(null);

@@ -2,7 +2,9 @@
 
 use std::sync::{Arc, Mutex, OnceLock};
 
-use exile_assistant::{Anthropic, ChatError, Conversation, Server, Setup, Stop, Usage};
+use exile_assistant::{
+    Anthropic, ChatError, Config, Conversation, Llm, OpenAi, Provider, Server, Setup, Stop, Usage,
+};
 use serde::Serialize;
 use tauri::async_runtime::JoinHandle;
 use tauri::{AppHandle, Emitter, Manager, PhysicalPosition};
@@ -23,13 +25,25 @@ pub struct ChatState {
     task: Mutex<Option<JoinHandle<()>>>,
 }
 
+/// Which providers have a key stored.
+#[derive(Debug, Clone, Serialize)]
+#[serde(rename_all = "camelCase")]
+pub struct Keys {
+    pub anthropic: bool,
+    pub open_router: bool,
+    pub custom: bool,
+}
+
 #[derive(Debug, Clone, Serialize)]
 #[serde(rename_all = "camelCase")]
 pub struct ChatView {
-    pub has_key: bool,
+    pub keys: Keys,
     /// False in a build without exile-companion-mcp next to the app.
     pub available: bool,
     pub busy: bool,
+    /// What the player still has to set before the picked provider can answer.
+    pub missing: Option<String>,
+    pub model: String,
 }
 
 #[derive(Debug, Clone, Serialize)]
@@ -40,6 +54,20 @@ struct TurnOver {
     message: Option<String>,
     usage: Option<Usage>,
     dollars: Option<f64>,
+    /// The model that answered, to tell answers apart while trying several.
+    model: Option<String>,
+}
+
+impl TurnOver {
+    fn bare(stop: &'static str, message: Option<String>) -> Self {
+        Self {
+            stop,
+            message,
+            usage: None,
+            dollars: None,
+            model: None,
+        }
+    }
 }
 
 fn stop_name(stop: Stop) -> &'static str {
@@ -54,10 +82,19 @@ fn stop_name(stop: Stop) -> &'static str {
 mod key {
     use std::sync::OnceLock;
 
-    const SERVICE: &str = "Exile Companion";
-    const USER: &str = "anthropic-api-key";
+    use exile_assistant::Provider;
 
-    fn entry() -> Result<keyring_core::Entry, String> {
+    const SERVICE: &str = "Exile Companion";
+
+    fn user(provider: Provider) -> &'static str {
+        match provider {
+            Provider::Anthropic => "anthropic-api-key",
+            Provider::OpenRouter => "openrouter-api-key",
+            Provider::Custom => "custom-api-key",
+        }
+    }
+
+    fn entry(provider: Provider) -> Result<keyring_core::Entry, String> {
         static STORE: OnceLock<Result<(), String>> = OnceLock::new();
         STORE
             .get_or_init(|| {
@@ -73,28 +110,28 @@ mod key {
                     .map_err(|e| e.to_string())
             })
             .clone()?;
-        keyring_core::Entry::new(SERVICE, USER).map_err(|e| e.to_string())
+        keyring_core::Entry::new(SERVICE, user(provider)).map_err(|e| e.to_string())
     }
 
-    pub fn read() -> Option<String> {
-        match entry().and_then(|e| e.get_password().map_err(|e| e.to_string())) {
+    pub fn read(provider: Provider) -> Option<String> {
+        match entry(provider).and_then(|e| e.get_password().map_err(|e| e.to_string())) {
             Ok(k) if !k.is_empty() => Some(k),
             Ok(_) => None,
             Err(e) => {
-                log::info!("no API key: {e}");
+                log::info!("no {} key: {e}", provider.name());
                 None
             }
         }
     }
 
-    pub fn write(key: &str) -> Result<(), String> {
-        entry()?
+    pub fn write(provider: Provider, key: &str) -> Result<(), String> {
+        entry(provider)?
             .set_password(key)
             .map_err(|e| format!("Couldn't save the key in the system's credential store ({e})."))
     }
 
-    pub fn forget() -> Result<(), String> {
-        match entry()?.delete_credential() {
+    pub fn forget(provider: Provider) -> Result<(), String> {
+        match entry(provider)?.delete_credential() {
             Ok(()) | Err(keyring_core::Error::NoEntry) => Ok(()),
             Err(e) => Err(e.to_string()),
         }
@@ -108,27 +145,77 @@ async fn blocking<T: Send + 'static>(f: impl FnOnce() -> T + Send + 'static) -> 
         .expect("keyring task panicked")
 }
 
+/// A custom server, often a local one, may not need a key.
+fn missing(config: &Config, has_key: bool) -> Option<String> {
+    if let Some(m) = config.missing() {
+        return Some(m.into());
+    }
+    match config.provider {
+        Provider::Custom => None,
+        p if !has_key => Some(format!("Add your {} API key in the settings.", p.name())),
+        _ => None,
+    }
+}
+
 pub async fn view(app: &AppHandle) -> ChatView {
-    let has_key = blocking(|| key::read().is_some()).await;
+    let keys = blocking(|| Keys {
+        anthropic: key::read(Provider::Anthropic).is_some(),
+        open_router: key::read(Provider::OpenRouter).is_some(),
+        custom: key::read(Provider::Custom).is_some(),
+    })
+    .await;
+    let config = settings::load(app).unwrap_or_default().chat;
+    let has_key = match config.provider {
+        Provider::Anthropic => keys.anthropic,
+        Provider::OpenRouter => keys.open_router,
+        Provider::Custom => keys.custom,
+    };
     ChatView {
-        has_key,
+        missing: missing(&config, has_key),
+        model: config.model_label(),
+        keys,
         available: crate::assistant::server_path().is_some(),
         busy: busy(app),
     }
 }
 
-pub async fn set_key(app: &AppHandle, value: String) -> Result<ChatView, String> {
+pub async fn set_key(
+    app: &AppHandle,
+    provider: Provider,
+    value: String,
+) -> Result<ChatView, String> {
     let value = value.trim().to_string();
     if value.is_empty() {
         return Err("Paste the key first.".into());
     }
-    blocking(move || key::write(&value)).await?;
+    blocking(move || key::write(provider, &value)).await?;
     Ok(view(app).await)
 }
 
-pub async fn forget_key(app: &AppHandle) -> Result<ChatView, String> {
-    blocking(key::forget).await?;
+pub async fn forget_key(app: &AppHandle, provider: Provider) -> Result<ChatView, String> {
+    blocking(move || key::forget(provider)).await?;
     Ok(view(app).await)
+}
+
+fn model(config: &Config, api_key: Option<String>) -> Box<dyn Llm + Send> {
+    let key = api_key.unwrap_or_default();
+    match config.provider {
+        Provider::Anthropic => {
+            Box::new(Anthropic::new(key, config.model, config.effort, USER_AGENT))
+        }
+        Provider::OpenRouter => Box::new(OpenAi::openrouter(
+            key,
+            config.router_model.clone(),
+            config.effort,
+            USER_AGENT,
+        )),
+        Provider::Custom => Box::new(OpenAi::custom(
+            &config.custom_url,
+            Some(key),
+            config.custom_model.clone(),
+            USER_AGENT,
+        )),
+    }
 }
 
 fn busy(app: &AppHandle) -> bool {
@@ -157,61 +244,49 @@ fn finish(app: &AppHandle, over: TurnOver) {
 }
 
 async fn turn(app: AppHandle, question: String) {
-    let Some(api_key) = blocking(key::read).await else {
-        finish(
-            &app,
-            TurnOver {
-                stop: "error",
-                message: Some("Add your Anthropic API key in the settings first.".into()),
-                usage: None,
-                dollars: None,
-            },
-        );
-        return;
-    };
+    let config = settings::load(&app).unwrap_or_default().chat;
+    let provider = config.provider;
+    let api_key = blocking(move || key::read(provider)).await;
+    if let Some(m) = missing(&config, api_key.is_some()) {
+        return finish(&app, TurnOver::bare("error", Some(m)));
+    }
     let failed = |e: ChatError| {
         log::warn!("chat: {e}");
-        TurnOver {
-            stop: "error",
-            message: Some(e.player_message()),
-            usage: None,
-            dollars: None,
-        }
+        TurnOver::bare("error", Some(e.player_message(provider)))
     };
     let server = match server(&app).await {
         Ok(s) => s,
         Err(e) => return finish(&app, failed(e)),
     };
-    let config = settings::load(&app).unwrap_or_default().chat;
     let system = exile_assistant::system_prompt(&server.instructions);
     let setup = Setup {
-        config,
         system: &system,
         tools: &server.tools,
     };
-    let llm = Anthropic::new(api_key, USER_AGENT);
+    let llm = model(&config, api_key);
+    let label = config.model_label();
     let state = app.state::<ChatState>();
     let mut conversation = state.conversation.lock().await;
     let events = app.clone();
     let result = conversation
-        .ask(&setup, &llm, server.as_ref(), &question, move |e| {
+        .ask(&setup, llm.as_ref(), server.as_ref(), &question, move |e| {
             let _ = events.emit_to(CHAT_LABEL, "chat://event", e);
         })
         .await;
     let over = match result {
         Ok(end) => {
-            let dollars = end.usage.dollars(config.model);
             log::info!(
-                "chat turn {:?} on {}: {:?}, about ${dollars:.3}",
+                "chat turn {:?} on {} {label}: {:?}",
                 end.stop,
-                config.model.id(),
+                provider.name(),
                 end.usage
             );
             TurnOver {
                 stop: stop_name(end.stop),
                 message: end.refusal,
                 usage: Some(end.usage),
-                dollars: Some(dollars),
+                dollars: end.usage.cost,
+                model: Some(label),
             }
         }
         Err(e) => failed(e),
@@ -244,15 +319,7 @@ pub fn stop(app: &AppHandle) {
         .filter(|t| !t.inner().is_finished());
     if let Some(t) = running {
         t.abort();
-        finish(
-            app,
-            TurnOver {
-                stop: "stopped",
-                message: None,
-                usage: None,
-                dollars: None,
-            },
-        );
+        finish(app, TurnOver::bare("stopped", None));
     }
 }
 

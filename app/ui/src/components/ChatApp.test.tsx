@@ -6,7 +6,14 @@ import * as commands from '../ipc/commands';
 import type { ChatEvent, ChatView, TurnOver } from '../ipc/types';
 import { ChatApp } from './ChatApp';
 
-let view: ChatView = { hasKey: true, available: true, busy: false };
+const READY: ChatView = {
+  keys: { anthropic: true, openRouter: false, custom: false },
+  available: true,
+  busy: false,
+  missing: null,
+  model: 'Sonnet 5.5',
+};
+let view: ChatView = READY;
 let emit: (e: ChatEvent) => void = () => {};
 let over: (o: TurnOver) => void = () => {};
 
@@ -31,10 +38,10 @@ vi.mock('../ipc/events', () => ({
   onChatOpened: () => Promise.resolve(() => {}),
 }));
 
-const DONE: TurnOver = { stop: 'done', message: null, usage: null, dollars: 0.021 };
+const DONE: TurnOver = { stop: 'done', message: null, usage: null, dollars: 0.021, model: 'vendor/model' };
 
 beforeEach(() => {
-  view = { hasKey: true, available: true, busy: false };
+  view = READY;
   vi.clearAllMocks();
 });
 
@@ -56,7 +63,7 @@ describe('ChatApp', () => {
     expect(screen.queryByText('It adds 12% life.')).toBeNull();
     expect(screen.getByRole('button', { name: 'Stop' })).toBeInTheDocument();
     act(() => over(DONE));
-    expect(screen.getByText('2¢')).toBeInTheDocument();
+    expect(screen.getByText('vendor/model · 2¢')).toBeInTheDocument();
     await userEvent.click(screen.getByRole('button', { name: 'Details' }));
     expect(screen.getByText('It adds 12% life.')).toBeInTheDocument();
   });
@@ -74,7 +81,7 @@ describe('ChatApp', () => {
     await askQuestion('q');
     await userEvent.click(screen.getByRole('button', { name: 'Stop' }));
     expect(commands.chatStop).toHaveBeenCalled();
-    act(() => over({ stop: 'stopped', message: null, usage: null, dollars: null }));
+    act(() => over({ stop: 'stopped', message: null, usage: null, dollars: null, model: null }));
     expect(screen.getByText('Stopped.')).toBeInTheDocument();
     expect(screen.getByRole('button', { name: 'Ask' })).toBeInTheDocument();
   });
@@ -88,14 +95,16 @@ describe('ChatApp', () => {
         message: 'Anthropic refused the API key. Check it in the settings.',
         usage: null,
         dollars: null,
+        model: null,
       }),
     );
     expect(screen.getByRole('alert')).toHaveTextContent('refused the API key');
   });
 
-  it('asks for a key before anything else', async () => {
-    view = { hasKey: false, available: true, busy: false };
+  it('says what to set up before anything else', async () => {
+    view = { ...READY, missing: 'Add your OpenRouter API key in the settings.' };
     render(<ChatApp />);
+    expect(await screen.findByText('Add your OpenRouter API key in the settings.')).toBeInTheDocument();
     await userEvent.click(await screen.findByRole('button', { name: 'Open settings' }));
     expect(commands.openSettings).toHaveBeenCalled();
     expect(screen.getByRole('textbox', { name: 'Question for the assistant' })).toBeDisabled();
