@@ -5,7 +5,10 @@ import {
   closeSettings,
   connectAgent,
   copyAssistantConfig,
+  forgetApiKey,
   getAssistant,
+  getChat,
+  setApiKey,
   getPob,
   getPobSync,
   openPob,
@@ -28,8 +31,29 @@ import {
   stopSource,
   updateSettings,
 } from '../ipc/commands';
-import type { AgentView, AssistantView, GemHints, Mule, PobInfo, PobSync, PresetStage } from '../ipc/types';
-import { Button, Choice, ConfirmButton, Note, Row, Section, Select, Slider, Toggle } from '../kit';
+import type {
+  AgentView,
+  AssistantView,
+  ChatConfig,
+  ChatView,
+  GemHints,
+  Mule,
+  PobInfo,
+  PobSync,
+  PresetStage,
+} from '../ipc/types';
+import {
+  Button,
+  Choice,
+  ConfirmButton,
+  Note,
+  Row,
+  Section,
+  Select,
+  Slider,
+  TextField,
+  Toggle,
+} from '../kit';
 import { useAppStore } from '../store/useAppStore';
 import { HotkeySection } from './HotkeySection';
 import { ReplayControls } from './ReplayControls';
@@ -549,6 +573,116 @@ function agentState(agent: AgentView): { text: string; className: string } {
 
 // The assistant is an MCP server that the player's own AI agent starts. Connecting writes it
 // into the agent's config, so the player never edits JSON by hand.
+const MODELS: { value: ChatConfig['model']; label: string }[] = [
+  { value: 'claude-sonnet-5-5', label: 'Sonnet 5.5' },
+  { value: 'claude-opus-5-5', label: 'Opus 5.5' },
+];
+
+const EFFORTS: { value: ChatConfig['effort']; label: string }[] = [
+  { value: 'low', label: 'Low' },
+  { value: 'medium', label: 'Medium' },
+  { value: 'high', label: 'High' },
+];
+
+export function ChatSettings(): React.JSX.Element | null {
+  const [view, setView] = useState<ChatView | null>(null);
+  const [config, setConfig] = useState<ChatConfig | null>(null);
+  const [draft, setDraft] = useState('');
+  const [replacing, setReplacing] = useState(false);
+  const [error, setError] = useState<string | null>(null);
+  useEffect(() => {
+    void getChat().then(setView);
+    void getSettings().then((s) => setConfig(s?.chat ?? null));
+  }, []);
+  if (!view?.available || !config) return null;
+
+  const change = (patch: Partial<ChatConfig>): void => {
+    const next = { ...config, ...patch };
+    setConfig(next);
+    void updateSettings({ chat: next });
+  };
+  const save = async (): Promise<void> => {
+    setError(null);
+    try {
+      setView(await setApiKey(draft));
+      setDraft('');
+      setReplacing(false);
+    } catch (e) {
+      setError(String(e));
+    }
+  };
+  const editing = !view.hasKey || replacing;
+
+  return (
+    <>
+      <Note flush>
+        Ask the assistant from the game with your own Anthropic API key. Hold the menu key and pick
+        Ask the assistant, or press its hotkey.
+      </Note>
+      <Row label="API key">
+        {editing ? (
+          <>
+            <TextField
+              type="password"
+              value={draft}
+              placeholder="sk-ant-..."
+              aria-label="Anthropic API key"
+              className="flex-1"
+              onChange={(e) => setDraft(e.target.value)}
+              onKeyDown={(e) => {
+                if (e.key === 'Enter' && draft.trim()) void save();
+              }}
+            />
+            <Button disabled={!draft.trim()} onClick={() => void save()}>
+              Save
+            </Button>
+            {replacing && <Button onClick={() => setReplacing(false)}>Cancel</Button>}
+          </>
+        ) : (
+          <>
+            <span className="font-body text-[13px] text-quest">Saved</span>
+            <Button onClick={() => setReplacing(true)}>Replace</Button>
+            <ConfirmButton
+              label="Forget"
+              confirm="Click again to forget"
+              onConfirm={async () => {
+                setError(null);
+                try {
+                  setView(await forgetApiKey());
+                } catch (e) {
+                  setError(String(e));
+                }
+              }}
+            />
+          </>
+        )}
+      </Row>
+      {error && (
+        <Row label="">
+          <span role="alert" className="min-w-0 flex-1 font-body text-[12px] text-corrupted">
+            {error}
+          </span>
+        </Row>
+      )}
+      <Note>
+        Make one at console.anthropic.com. It stays in your system's credential store and goes only to
+        Anthropic, who bill you for each answer, usually a few cents.
+      </Note>
+      <Row label="Model">
+        <Choice value={config.model} options={MODELS} onChange={(model) => change({ model })} />
+      </Row>
+      <Row label="Effort">
+        <Choice value={config.effort} options={EFFORTS} onChange={(effort) => change({ effort })} />
+      </Row>
+      <Note>
+        Opus 5.5 costs twice as much as Sonnet 5.5 and does better on hard questions. Higher effort
+        thinks longer before it answers.
+      </Note>
+      <div className="h-2" />
+    </>
+  );
+}
+
 function AssistantSection(): React.JSX.Element {
   const [view, setView] = useState<AssistantView | null>(null);
   const [error, setError] = useState<string | null>(null);
@@ -571,9 +705,10 @@ function AssistantSection(): React.JSX.Element {
   }
   return (
     <Section title="Assistant">
+      <ChatSettings />
       <Note flush>
-        Ask Claude or another AI agent about your build. It calculates with your Path of Building and
-        reads the Path of Exile Wiki. Connect your agent, restart it, and ask in its chat.
+        Or ask Claude or another AI agent you already use. The assistant calculates with your Path of
+        Building and reads the Path of Exile Wiki. Connect your agent, restart it, and ask in its chat.
       </Note>
       {(view?.agents ?? []).map((agent) => {
         const state = agentState(agent);
