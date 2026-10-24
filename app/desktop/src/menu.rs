@@ -1,6 +1,6 @@
 use std::sync::atomic::Ordering;
 
-use tauri::{AppHandle, Emitter, Manager, PhysicalPosition};
+use tauri::{AppHandle, Emitter, Manager};
 
 use crate::overlay;
 use crate::settings;
@@ -10,6 +10,7 @@ pub const MENU_LABEL: &str = "menu";
 pub const SETTINGS_LABEL: &str = "settings";
 
 /// Opens the quick menu with its top-left corner at the cursor, kept on the cursor's monitor.
+#[cfg(windows)]
 pub fn open_at_cursor(app: &AppHandle) {
     let Some(menu) = app.get_webview_window(MENU_LABEL) else {
         return;
@@ -23,7 +24,7 @@ pub fn open_at_cursor(app: &AppHandle) {
             x = x.min(mp.x + ms.width as i32 - size.width as i32);
             y = y.min(mp.y + ms.height as i32 - size.height as i32);
         }
-        let _ = menu.set_position(PhysicalPosition::new(x, y));
+        let _ = menu.set_position(tauri::PhysicalPosition::new(x, y));
     }
     let _ = app.emit("menu://opened", ());
     let _ = menu.show();
