@@ -239,6 +239,28 @@ async fn server(app: &AppHandle) -> Result<Arc<Server>, ChatError> {
     Ok(started)
 }
 
+/// What to change next, straight from the tools: no model, no key, nothing billed.
+pub async fn next_card(app: &AppHandle) -> exile_assistant::NextCard {
+    use exile_assistant::Tools;
+    let failed = |message: String| exile_assistant::NextCard {
+        missing: Some(message),
+        ..Default::default()
+    };
+    let server = match server(app).await {
+        Ok(s) => s,
+        Err(e) => return failed(e.player_message(Provider::Anthropic)),
+    };
+    let out = server.call("what_next", serde_json::json!({})).await;
+    if out.is_error {
+        log::warn!("what_next: {}", out.text);
+        return failed(out.text);
+    }
+    match serde_json::from_str(&out.text) {
+        Ok(v) => exile_assistant::from_what_next(&v),
+        Err(e) => failed(format!("The tools answered something unreadable ({e}).")),
+    }
+}
+
 fn finish(app: &AppHandle, over: TurnOver) {
     let _ = app.emit_to(CHAT_LABEL, "chat://over", over);
 }

@@ -1,4 +1,4 @@
-import { act, render, screen } from '@testing-library/react';
+import { act, render, screen, within } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import { beforeEach, describe, expect, it, vi } from 'vitest';
 
@@ -24,6 +24,17 @@ vi.mock('../ipc/commands', () => ({
   chatNew: vi.fn(() => Promise.resolve()),
   closeChat: vi.fn(() => Promise.resolve()),
   openSettings: vi.fn(() => Promise.resolve()),
+  getNextCard: vi.fn(() =>
+    Promise.resolve({
+      missing: null,
+      stage: 'Lvl 01-30',
+      laterStage: 'Lvl 31-40',
+      steps: [
+        { kind: 'gem', name: 'Added Chaos Damage', slot: null, points: null, dpsPct: 12.6, ehpPct: 0 },
+        { kind: 'passive', name: 'Herbalism', slot: null, points: 8, dpsPct: 2.8, ehpPct: 26.7 },
+      ],
+    }),
+  ),
 }));
 
 vi.mock('../ipc/events', () => ({
@@ -110,10 +121,22 @@ describe('ChatApp', () => {
     expect(screen.getByRole('textbox', { name: 'Question for the assistant' })).toBeDisabled();
   });
 
+  it('shows what to change next before any question, also without a key', async () => {
+    view = { ...READY, missing: 'Add your Anthropic API key in the settings.' };
+    render(<ChatApp />);
+    const card = await screen.findByRole('region', { name: "What's next" });
+    expect(await within(card).findByText('Herbalism')).toBeInTheDocument();
+    expect(within(card).getByText('8 points · +27% EHP · +2.8% DPS')).toBeInTheDocument();
+    expect(within(card).getByText(/reached the guide's next stage, Lvl 31-40/)).toBeInTheDocument();
+    await userEvent.click(within(card).getByRole('button', { name: 'Refresh' }));
+    expect(commands.getNextCard).toHaveBeenCalledTimes(2);
+    expect(commands.chatSend).not.toHaveBeenCalled();
+  });
+
   it('asks a suggested question in one click', async () => {
     render(<ChatApp />);
-    await userEvent.click(await screen.findByRole('button', { name: 'What should I do next?' }));
-    expect(commands.chatSend).toHaveBeenCalledWith('What should I do next?');
+    await userEvent.click(await screen.findByRole('button', { name: 'Explain these changes' }));
+    expect(commands.chatSend).toHaveBeenCalledWith('Explain these changes');
   });
 
   it('starts over with New chat and closes with Esc', async () => {

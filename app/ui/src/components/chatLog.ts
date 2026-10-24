@@ -1,4 +1,4 @@
-import type { ChatEvent, TurnOver } from '../ipc/types';
+import type { ChatEvent, NextStep, TurnOver } from '../ipc/types';
 
 export interface Exchange {
   question: string;
@@ -142,4 +142,17 @@ export function overText(over: TurnOver): string | null {
     case 'error':
       return over.message ?? 'Something went wrong. Ask again.';
   }
+}
+
+const pct = (v: number): string => `+${Math.abs(v) >= 10 ? Math.round(v) : Number(v.toFixed(1))}%`;
+
+/** "8 points · +27% EHP · +2.8% DPS": what a step costs and gives, gains under 0.5% left out. */
+export function stepDetail(step: NextStep): string {
+  const parts = [
+    step.slot,
+    step.points ? `${step.points} ${step.points === 1 ? 'point' : 'points'}` : null,
+    step.ehpPct >= 0.5 ? `${pct(step.ehpPct)} EHP` : null,
+    step.dpsPct >= 0.5 ? `${pct(step.dpsPct)} DPS` : null,
+  ];
+  return parts.filter(Boolean).join(' · ');
 }

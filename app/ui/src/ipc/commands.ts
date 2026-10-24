@@ -19,6 +19,7 @@ import type {
   ChatProvider,
   ChatView,
   HotkeySettings,
+  NextCard,
   NextObjective,
   PobInfo,
   PobSync,
@@ -127,6 +128,10 @@ export const forgetApiKey = (provider: ChatProvider): Promise<ChatView> => {
   mockChat = { ...mockChat, keys: { ...mockChat.keys, [provider]: false } };
   return Promise.resolve(mockChat);
 };
+
+/** Runs the tools without a model, so it works without a key and costs nothing. */
+export const getNextCard = (): Promise<NextCard> =>
+  isTauri() ? invoke('get_next_card') : Promise.resolve(mock.nextCardMock());
 
 /** The answer comes as chat://event and ends with chat://over. Rejects while one is running. */
 export const chatSend = (question: string): Promise<void> =>

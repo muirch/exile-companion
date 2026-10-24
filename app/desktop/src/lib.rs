@@ -151,6 +151,7 @@ pub fn run() {
             commands::connect_agent,
             commands::copy_assistant_config,
             commands::get_chat,
+            commands::get_next_card,
             commands::set_api_key,
             commands::forget_api_key,
             commands::chat_send,

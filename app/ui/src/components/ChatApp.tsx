@@ -18,11 +18,13 @@ import {
   type Block,
   type Exchange,
 } from './chatLog';
+import { NextCard } from './NextCard';
 import { Brand } from './Tooltip';
 
+// "What next" is the card above them, so these go past it.
 const SUGGESTIONS = [
-  'What should I do next?',
-  'Which passive should I take next?',
+  'Explain these changes',
+  'Is my damage fine for this act?',
   'Are my defences fine for this act?',
 ];
 
@@ -99,7 +101,15 @@ function ExchangeView({ exchange }: { exchange: Exchange }): React.JSX.Element {
   );
 }
 
-function Empty({ view, onAsk }: { view: ChatView | null; onAsk: (q: string) => void }): React.JSX.Element {
+function Empty({
+  view,
+  reload,
+  onAsk,
+}: {
+  view: ChatView | null;
+  reload: number;
+  onAsk: (q: string) => void;
+}): React.JSX.Element {
   if (!view) return <div />;
   if (!view.available) {
     return (
@@ -108,6 +118,16 @@ function Empty({ view, onAsk }: { view: ChatView | null; onAsk: (q: string) => v
       </p>
     );
   }
+  return (
+    <div className="flex flex-col">
+      <NextCard key={reload} />
+      <div className="tooltip-sep my-4" style={{ '--tint': 'var(--color-currency)' } as React.CSSProperties} />
+      <AskPrompt view={view} onAsk={onAsk} />
+    </div>
+  );
+}
+
+function AskPrompt({ view, onAsk }: { view: ChatView; onAsk: (q: string) => void }): React.JSX.Element {
   if (view.missing) {
     return (
       <div className="flex flex-col items-start gap-3">
@@ -148,6 +168,8 @@ export function ChatApp(): React.JSX.Element {
   const working = isWorking(log);
   const ready = !!view?.available && !view.missing;
 
+  const [reload, setReload] = useState(0);
+
   const refresh = useCallback(() => {
     void getChat().then(setView);
     input.current?.focus();
@@ -155,10 +177,15 @@ export function ChatApp(): React.JSX.Element {
 
   useEffect(() => {
     refresh();
+    const opened = (): void => {
+      refresh();
+      // The build or the character may have moved on since the window was last open.
+      setReload((n) => n + 1);
+    };
     const offs = [
       onChatEvent((e) => setLog((l) => applyEvent(l, e))),
       onChatOver((o) => setLog((l) => finish(l, o))),
-      ...(isTauri() ? [onChatOpened(refresh), onSettingsChanged(refresh)] : []),
+      ...(isTauri() ? [onChatOpened(opened), onSettingsChanged(refresh)] : []),
     ];
     const onKey = (e: KeyboardEvent): void => {
       if (e.key === 'Escape') void closeChat();
@@ -237,7 +264,7 @@ export function ChatApp(): React.JSX.Element {
       >
         <main className="flex flex-col px-4 py-4" aria-live="polite">
           {log.length === 0 ? (
-            <Empty view={view} onAsk={send} />
+            <Empty view={view} reload={reload} onAsk={send} />
           ) : (
             log.map((e, i) => (
               <div key={i}>

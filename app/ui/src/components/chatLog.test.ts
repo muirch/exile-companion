@@ -1,7 +1,16 @@
 import { describe, expect, it } from 'vitest';
 
 import type { TurnOver } from '../ipc/types';
-import { applyEvent, ask, costLabel, finish, isWorking, splitAnswer, toolLabel } from './chatLog';
+import {
+  applyEvent,
+  ask,
+  costLabel,
+  finish,
+  isWorking,
+  splitAnswer,
+  stepDetail,
+  toolLabel,
+} from './chatLog';
 
 const done: TurnOver = { stop: 'done', message: null, usage: null, dollars: 0.04, model: 'Sonnet 5.5' };
 
@@ -52,6 +61,15 @@ describe('chat log', () => {
       { kind: 'list', items: ['2 points away', 'the guide takes it at 40'] },
       { kind: 'text', text: 'Later\nArcane Will.' },
     ]);
+  });
+
+  it('says what a step costs and gives', () => {
+    const step = { kind: 'passive' as const, name: 'Herbalism', slot: null, points: 8, dpsPct: 2.83, ehpPct: 26.7 };
+    expect(stepDetail(step)).toBe('8 points · +27% EHP · +2.8% DPS');
+    expect(stepDetail({ ...step, kind: 'gear', slot: 'Weapon 1', points: null, ehpPct: 0.2 })).toBe(
+      'Weapon 1 · +2.8% DPS',
+    );
+    expect(stepDetail({ ...step, points: 1, dpsPct: 0, ehpPct: 0 })).toBe('1 point');
   });
 
   it('prices answers in cents', () => {
