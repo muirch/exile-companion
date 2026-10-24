@@ -79,6 +79,20 @@ pub(crate) fn title_target_level(title: &str) -> Option<u32> {
 
 /// Find the first integer that follows any of `keywords` in `text`, e.g. keyword "level" in
 /// "level 68 (endgame)" -> 68. Skips spaces and a possible ':' between the keyword and the number.
+/// Which of a guide's stages, given by title in order, fits a character of `level`: the one
+/// whose title names the highest level not above it. None when no title names a level.
+pub fn stage_for_level<'a>(titles: impl IntoIterator<Item = &'a str>, level: u32) -> Option<usize> {
+    let mut best: Option<(usize, u32)> = None;
+    for (i, title) in titles.into_iter().enumerate() {
+        if let Some(l) = title_target_level(title) {
+            if l <= level && best.is_none_or(|(_, b)| l > b) {
+                best = Some((i, l));
+            }
+        }
+    }
+    best.map(|(i, _)| i)
+}
+
 fn find_after_keyword(text: &str, keywords: &[&str]) -> Option<u32> {
     for kw in keywords {
         let mut from = 0;
@@ -232,6 +246,33 @@ impl GemResolver {
         // Deterministic order for a stable UI.
         picks.sort_by(|a, b| a.gem_name.cmp(&b.gem_name));
         picks
+    }
+}
+
+#[cfg(test)]
+mod stage_tests {
+    use super::stage_for_level;
+
+    // Tree titles of a real guide, colour codes and all.
+    const TREES: [&str; 8] = [
+        "^1CHECK POB NOTES FOR INFORMATION",
+        "Lvl 01-30 {1}",
+        "Lvl 31-40 {2} RF Start",
+        "Lvl 41-60  {3}",
+        "Lvl 61-80 {4}",
+        "Lvl 81-90 {5}",
+        "Lvl 90 ^2Going Block Based ^7{6}",
+        "Lvl 95+ Small Cluster For ^6Malevolence^7 {8}",
+    ];
+
+    #[test]
+    fn picks_the_stage_a_level_has_reached() {
+        assert_eq!(stage_for_level(TREES, 5), Some(1));
+        assert_eq!(stage_for_level(TREES, 30), Some(1));
+        assert_eq!(stage_for_level(TREES, 35), Some(2));
+        assert_eq!(stage_for_level(TREES, 90), Some(6));
+        assert_eq!(stage_for_level(["Act 1", "Act 3", "Maps"], 25), Some(1));
+        assert_eq!(stage_for_level(["Early", "Late"], 40), None);
     }
 }
 
