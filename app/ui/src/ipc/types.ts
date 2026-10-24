@@ -12,6 +12,8 @@ export type { LogEvent } from './generated/LogEvent';
 export type { DeathCause } from './generated/DeathCause';
 export type { SpeedMultiplier } from './generated/SpeedMultiplier';
 export type { BuildSummary } from './generated/BuildSummary';
+export type { Mule } from './generated/Mule';
+export type { MuleGem } from './generated/MuleGem';
 export type { PresetStage } from './generated/PresetStage';
 export type { NextObjective } from './generated/NextObjective';
 export type { ObjectiveKind } from './generated/ObjectiveKind';

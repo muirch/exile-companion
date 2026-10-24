@@ -314,9 +314,9 @@ pub fn current_build_summary(app: &AppHandle) -> Option<BuildSummary> {
     let mut summary = BuildSummary::from_build(build);
     if let Some(class) = build.class_name.as_deref() {
         let stages = settings::load(app).unwrap_or_default().preset_stages;
-        summary.not_in_campaign =
-            exile_core::gemplan::plan_with_stages(build, class, &app_state.gems, &stages)
-                .not_in_campaign;
+        let plan = exile_core::gemplan::plan_with_stages(build, class, &app_state.gems, &stages);
+        summary.not_in_campaign = plan.not_in_campaign;
+        summary.mules = plan.mules;
     }
     Some(summary)
 }

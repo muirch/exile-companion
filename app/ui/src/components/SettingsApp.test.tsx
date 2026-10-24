@@ -38,6 +38,13 @@ describe('SettingsApp', () => {
           spec_count: 1,
           gem_count: 3,
           not_in_campaign: ['Vaal Haste', 'Empower Support'],
+          mules: [
+            {
+              class: 'Shadow',
+              take: { name: 'Cobra Lash', npc: 'Tarkleigh', own_act: 3 },
+              buy: [{ name: 'Momentum', npc: 'Nessa', own_act: 3 }],
+            },
+          ],
           presets: [
             { title: 'Leveling', gem_count: 2, auto_level: null },
             { title: '-- separator --', gem_count: 0, auto_level: null },
@@ -49,6 +56,7 @@ describe('SettingsApp', () => {
     render(<SettingsApp />);
     expect(screen.getByText('No gems')).toBeInTheDocument();
     expect(screen.getByText('Vaal Haste, Empower Support')).toBeInTheDocument();
+    expect(screen.getByText('Shadow: take Cobra Lash, buy Momentum from Nessa')).toBeInTheDocument();
     await userEvent.click(screen.getByRole('combobox', { name: 'Stage of Switch' }));
     await userEvent.click(screen.getByRole('option', { name: 'From act 4' }));
     expect(commands.updateSettings).toHaveBeenCalledWith({
