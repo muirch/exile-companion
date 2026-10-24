@@ -95,6 +95,9 @@ pub enum Stop {
     Cut,
     Refused,
     TooManySteps,
+    /// The model stopped without a word or a tool call. Small local models do this when they
+    /// spend the answer on thinking.
+    Empty,
 }
 
 #[derive(Debug, Clone, PartialEq, Serialize)]
@@ -224,6 +227,7 @@ impl Conversation {
                     continue;
                 }
                 Finish::ToolUse if !reply.calls.is_empty() => {}
+                Finish::ToolUse | Finish::End if !wrote_text => return Ok(end(Stop::Empty)),
                 Finish::ToolUse | Finish::End => {
                     messages.push(reply.message);
                     self.keep(messages, dialect);
@@ -569,6 +573,28 @@ mod tests {
         let end = conv.ask(&s, &llm, &tools, "q", |_| {}).await.unwrap();
         assert_eq!(end.stop, Stop::Cut);
         assert!(tools.0.lock().unwrap().is_empty());
+        assert!(conv.is_empty());
+    }
+
+    #[tokio::test]
+    async fn an_empty_answer_is_not_kept() {
+        let llm = Script::new(
+            Dialect::OpenAi,
+            vec![vec![
+                json!({"choices":[{"delta":{"reasoning":"Thinking only."}}]}),
+                json!({"choices":[{"delta":{},"finish_reason":"stop"}]}),
+                json!({"done": true}),
+            ]],
+        );
+        let tools = echo();
+        let defs = defs();
+        let s = Setup {
+            system: "sys",
+            tools: &defs,
+        };
+        let mut conv = Conversation::default();
+        let end = conv.ask(&s, &llm, &tools, "q", |_| {}).await.unwrap();
+        assert_eq!(end.stop, Stop::Empty);
         assert!(conv.is_empty());
     }
 

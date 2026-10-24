@@ -7,6 +7,7 @@ mod card;
 mod config;
 mod http;
 mod mcp;
+mod ollama;
 mod openai;
 mod stream;
 mod turn;
@@ -15,9 +16,11 @@ pub use anthropic::Anthropic;
 pub use card::{from_what_next, Kind, NextCard, Step};
 pub use config::{Config, Effort, Model, Provider, Usage};
 pub use mcp::Server;
+pub use ollama::Ollama;
 pub use openai::OpenAi;
 pub use turn::{
-    ChatEvent, Conversation, Dialect, Llm, Setup, Stop, ToolDef, ToolOutput, Tools, TurnEnd,
+    Assembler, ChatEvent, Conversation, Dialect, Llm, Setup, Stop, ToolDef, ToolOutput, Tools,
+    TurnEnd,
 };
 
 /// Goes after the server's own instructions. Those say how to use the tools, this says how the
