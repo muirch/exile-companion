@@ -144,6 +144,11 @@ impl GemTable {
         self.gems.is_empty()
     }
 
+    /// Every place any class can get the gem, in campaign order.
+    pub fn sources_of<'a>(&'a self, gem_id: &'a str) -> impl Iterator<Item = &'a GemSource> + 'a {
+        self.sources.iter().filter(move |s| s.gem_id == gem_id)
+    }
+
     /// Every place `class` can get the gem, in campaign order. An empty class list means anyone,
     /// like Siosa and Lilly Roth selling every gem.
     pub fn sources_for<'a>(

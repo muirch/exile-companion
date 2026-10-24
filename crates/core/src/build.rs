@@ -58,6 +58,8 @@ pub struct BuildSummary {
     pub presets: Vec<crate::gemplan::PresetInfo>,
     /// Gems the campaign won't give this class. Filled by the app, which has the gem data.
     pub not_in_campaign: Vec<String>,
+    /// Characters to make before the real one, for gems it would get too late. Filled by the app.
+    pub mules: Vec<crate::gemplan::Mule>,
 }
 
 impl BuildSummary {
@@ -78,6 +80,7 @@ impl BuildSummary {
             gem_count: build.gems().count() as u32,
             presets: crate::gemplan::presets(build),
             not_in_campaign: Vec::new(),
+            mules: Vec::new(),
         }
     }
 }
