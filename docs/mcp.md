@@ -48,6 +48,8 @@ exile-companion-mcp --pob <Path of Building folder> --build <build.xml> --log <C
 
 Ask the agent to help you pick a build. It asks how you like to play, offers a few current-league guides with a Path of Building link and lets you choose. With your OK it makes the guide your build in Exile Companion, so the overlay lists the guide's gems along the campaign route, and it remembers the guide for later chats. It reads where you are from the game's log (character, level, act and area), so "what do I take next?" needs no explaining. When you move on to the guide's next stage, it notes that too. Undo takes the guide back as your build, and you can ask it to stop following the guide.
 
+If your class gets one of the guide's early gems only later and another class gets it right after Hillock, the agent suggests a mule before you start: make a character of that class in the same league, kill Hillock, take the gem and leave it in the stash. The overlay shows the same on the campaign's first step.
+
 The guide and its PoB are kept in `guide.json` and `guide.xml` next to `build.xml`.
 
 ## What the agent can do with it
