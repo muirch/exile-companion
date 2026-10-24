@@ -350,6 +350,7 @@ fn knows_where_the_player_is_and_the_guide_they_follow() {
     let s = status(&mut c);
     assert_eq!(s["guide"]["class"], "Ranger");
     assert_eq!(s["build"]["class"], "Ranger");
+    assert!(s["build"]["mules"].is_array(), "{s}");
     let (text, is_error) = c.tool("guide_stages", json!({}));
     assert!(!is_error, "{text}");
 
