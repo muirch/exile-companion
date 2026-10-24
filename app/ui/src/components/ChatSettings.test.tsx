@@ -97,7 +97,7 @@ describe('ChatSettings', () => {
     expect(commands.setApiKey).toHaveBeenCalledWith('openRouter', 'sk-or-1');
   });
 
-  it('asks a custom server for its address and model, and no effort', async () => {
+  it('asks a custom server for its address and model', async () => {
     config = { ...CONFIG, provider: 'custom' };
     render(<ChatSettings />);
     await userEvent.type(await screen.findByLabelText('Server address'), 'http://localhost:1234/v1{Enter}');
@@ -105,7 +105,6 @@ describe('ChatSettings', () => {
       chat: { ...config, customUrl: 'http://localhost:1234/v1' },
     });
     expect(screen.getByLabelText('Model on the server')).toBeInTheDocument();
-    expect(screen.queryByRole('button', { name: 'Low' })).toBeNull();
   });
 
   it('stays out of a build without the assistant', async () => {

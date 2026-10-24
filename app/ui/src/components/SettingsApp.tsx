@@ -669,9 +669,13 @@ export function ChatSettings(): React.JSX.Element | null {
             />
           </Row>
           <KeyRow key={provider} provider={provider} saved={view.keys.custom} placeholder="Not needed for most local servers" onView={setView} />
+          {effort}
           <Note>
             Any server with OpenAI's chat completions, such as LM Studio, Ollama, DeepSeek or Kimi. The
-            model has to support tools, and small local models often get them wrong.
+            model has to support tools, and small local models often get them wrong. With Ollama the
+            model loads when the chat opens and frees the video memory for the game a minute after it
+            closes, and effort reaches it too. Low skips most thinking, which a small model can spend
+            the whole answer on.
           </Note>
         </>
       )}
