@@ -5,7 +5,10 @@ import {
   closeSettings,
   connectAgent,
   copyAssistantConfig,
+  forgetApiKey,
   getAssistant,
+  getChat,
+  setApiKey,
   getPob,
   getPobSync,
   openPob,
@@ -28,8 +31,30 @@ import {
   stopSource,
   updateSettings,
 } from '../ipc/commands';
-import type { AgentView, AssistantView, GemHints, Mule, PobInfo, PobSync, PresetStage } from '../ipc/types';
-import { Button, Choice, ConfirmButton, Note, Row, Section, Select, Slider, Toggle } from '../kit';
+import type {
+  AgentView,
+  AssistantView,
+  ChatConfig,
+  ChatProvider,
+  ChatView,
+  GemHints,
+  Mule,
+  PobInfo,
+  PobSync,
+  PresetStage,
+} from '../ipc/types';
+import {
+  Button,
+  Choice,
+  ConfirmButton,
+  Note,
+  Row,
+  Section,
+  Select,
+  Slider,
+  TextField,
+  Toggle,
+} from '../kit';
 import { useAppStore } from '../store/useAppStore';
 import { HotkeySection } from './HotkeySection';
 import { ReplayControls } from './ReplayControls';
@@ -547,7 +572,232 @@ function agentState(agent: AgentView): { text: string; className: string } {
   }
 }
 
-// The assistant is an MCP server that the player's own AI agent starts. Connecting writes it
+const MODELS: { value: ChatConfig['model']; label: string }[] = [
+  { value: 'claude-haiku-5-5', label: 'Haiku 5.5' },
+  { value: 'claude-sonnet-5-5', label: 'Sonnet 5.5' },
+  { value: 'claude-opus-5-5', label: 'Opus 5.5' },
+];
+
+const EFFORTS: { value: ChatConfig['effort']; label: string }[] = [
+  { value: 'low', label: 'Low' },
+  { value: 'medium', label: 'Medium' },
+  { value: 'high', label: 'High' },
+];
+
+export function ChatSettings(): React.JSX.Element | null {
+  const [view, setView] = useState<ChatView | null>(null);
+  const [config, setConfig] = useState<ChatConfig | null>(null);
+  useEffect(() => {
+    void getChat().then(setView);
+    void getSettings().then((s) => setConfig(s?.chat ?? null));
+  }, []);
+  if (!view?.available || !config) return null;
+
+  const change = (patch: Partial<ChatConfig>): void => {
+    const next = { ...config, ...patch };
+    setConfig(next);
+    void updateSettings({ chat: next });
+  };
+  const provider = config.provider;
+  const effort = (
+    <Row label="Effort">
+      <Choice value={config.effort} options={EFFORTS} onChange={(e) => change({ effort: e })} />
+    </Row>
+  );
+
+  return (
+    <>
+      <Note flush>
+        Ask the assistant from the game with your own key. Hold the menu key and pick Ask the
+        assistant, or press its hotkey.
+      </Note>
+      <Row label="Provider">
+        <Choice value={provider} options={PROVIDERS} onChange={(p) => change({ provider: p })} />
+      </Row>
+      {provider === 'anthropic' && (
+        <>
+          <KeyRow key={provider} provider={provider} saved={view.keys.anthropic} placeholder="sk-ant-..." onView={setView} />
+          <Note>
+            Make one at console.anthropic.com. It stays in your system's credential store and goes
+            only to Anthropic, who bill you for each answer, usually a few cents.
+          </Note>
+          <Row label="Model">
+            <Choice value={config.model} options={MODELS} onChange={(model) => change({ model })} />
+          </Row>
+          {effort}
+          <Note>
+            Haiku 5.5 costs a twentieth of Sonnet 5.5 and is weaker on hard questions. Opus 5.5 costs
+            twice as much as Sonnet and does best on them. Higher effort thinks longer and costs more.
+          </Note>
+        </>
+      )}
+      {provider === 'openRouter' && (
+        <>
+          <KeyRow key={provider} provider={provider} saved={view.keys.openRouter} placeholder="sk-or-..." onView={setView} />
+          <Row label="Model">
+            <ConfigField
+              value={config.routerModel}
+              placeholder="vendor/model"
+              label="OpenRouter model"
+              onCommit={(routerModel) => change({ routerModel })}
+            />
+          </Row>
+          <Note>
+            Any model on openrouter.ai/models that supports tools, by the id under its name. OpenRouter
+            says what each answer cost. The key stays in your system's credential store.
+          </Note>
+          {effort}
+          <Note>Effort only reaches models that reason.</Note>
+        </>
+      )}
+      {provider === 'custom' && (
+        <>
+          <Row label="Address">
+            <ConfigField
+              value={config.customUrl}
+              placeholder="http://localhost:11434/v1"
+              label="Server address"
+              onCommit={(customUrl) => change({ customUrl })}
+            />
+          </Row>
+          <Row label="Model">
+            <ConfigField
+              value={config.customModel}
+              placeholder="the model's name on the server"
+              label="Model on the server"
+              onCommit={(customModel) => change({ customModel })}
+            />
+          </Row>
+          <KeyRow key={provider} provider={provider} saved={view.keys.custom} placeholder="Not needed for most local servers" onView={setView} />
+          {effort}
+          <Note>
+            Any server with OpenAI's chat completions, such as LM Studio, Ollama, DeepSeek or Kimi. The
+            model has to support tools, and small local models often get them wrong. With Ollama the
+            model loads when the chat opens and frees the video memory for the game a minute after it
+            closes, and effort reaches it too. Low skips most thinking, which a small model can spend
+            the whole answer on.
+          </Note>
+        </>
+      )}
+      <Note>Switching the provider starts a new conversation.</Note>
+      <div className="h-2" />
+    </>
+  );
+}
+
+const PROVIDERS: { value: ChatProvider; label: string }[] = [
+  { value: 'anthropic', label: 'Anthropic' },
+  { value: 'openRouter', label: 'OpenRouter' },
+  { value: 'custom', label: 'Other server' },
+];
+
+/** Saves on Enter or when the field loses focus, not on every key. */
+function ConfigField({
+  value,
+  placeholder,
+  label,
+  onCommit,
+}: {
+  value: string;
+  placeholder: string;
+  label: string;
+  onCommit: (v: string) => void;
+}): React.JSX.Element {
+  const [text, setText] = useState(value);
+  const commit = (): void => {
+    if (text.trim() !== value) onCommit(text.trim());
+  };
+  return (
+    <TextField
+      value={text}
+      placeholder={placeholder}
+      aria-label={label}
+      className="flex-1"
+      onChange={(e) => setText(e.target.value)}
+      onBlur={commit}
+      onKeyDown={(e) => {
+        if (e.key === 'Enter') commit();
+      }}
+    />
+  );
+}
+
+function KeyRow({
+  provider,
+  saved,
+  placeholder,
+  onView,
+}: {
+  provider: ChatProvider;
+  saved: boolean;
+  placeholder: string;
+  onView: (v: ChatView) => void;
+}): React.JSX.Element {
+  const [draft, setDraft] = useState('');
+  const [replacing, setReplacing] = useState(false);
+  const [error, setError] = useState<string | null>(null);
+  const save = async (): Promise<void> => {
+    setError(null);
+    try {
+      onView(await setApiKey(provider, draft));
+      setDraft('');
+      setReplacing(false);
+    } catch (e) {
+      setError(String(e));
+    }
+  };
+  return (
+    <>
+      <Row label="API key">
+        {!saved || replacing ? (
+          <>
+            <TextField
+              type="password"
+              value={draft}
+              placeholder={placeholder}
+              aria-label="API key"
+              className="flex-1"
+              onChange={(e) => setDraft(e.target.value)}
+              onKeyDown={(e) => {
+                if (e.key === 'Enter' && draft.trim()) void save();
+              }}
+            />
+            <Button disabled={!draft.trim()} onClick={() => void save()}>
+              Save
+            </Button>
+            {replacing && <Button onClick={() => setReplacing(false)}>Cancel</Button>}
+          </>
+        ) : (
+          <>
+            <span className="font-body text-[13px] text-quest">Saved</span>
+            <Button onClick={() => setReplacing(true)}>Replace</Button>
+            <ConfirmButton
+              label="Forget"
+              confirm="Click again to forget"
+              onConfirm={async () => {
+                setError(null);
+                try {
+                  onView(await forgetApiKey(provider));
+                } catch (e) {
+                  setError(String(e));
+                }
+              }}
+            />
+          </>
+        )}
+      </Row>
+      {error && (
+        <Row label="">
+          <span role="alert" className="min-w-0 flex-1 font-body text-[12px] text-corrupted">
+            {error}
+          </span>
+        </Row>
+      )}
+    </>
+  );
+}
+
+// The assistant is also an MCP server that the player's own AI agent starts. Connecting writes it
 // into the agent's config, so the player never edits JSON by hand.
 function AssistantSection(): React.JSX.Element {
   const [view, setView] = useState<AssistantView | null>(null);
@@ -571,9 +821,10 @@ function AssistantSection(): React.JSX.Element {
   }
   return (
     <Section title="Assistant">
+      <ChatSettings />
       <Note flush>
-        Ask Claude or another AI agent about your build. It calculates with your Path of Building and
-        reads the Path of Exile Wiki. Connect your agent, restart it, and ask in its chat.
+        Or ask Claude or another AI agent you already use. The assistant calculates with your Path of
+        Building and reads the Path of Exile Wiki. Connect your agent, restart it, and ask in its chat.
       </Note>
       {(view?.agents ?? []).map((agent) => {
         const state = agentState(agent);

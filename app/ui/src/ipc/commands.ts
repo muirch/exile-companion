@@ -16,7 +16,10 @@ import type {
   BuildSummary,
   CampaignState,
   BindError,
+  ChatProvider,
+  ChatView,
   HotkeySettings,
+  NextCard,
   NextObjective,
   PobInfo,
   PobSync,
@@ -100,6 +103,49 @@ export const connectAgent = (id: AgentId): Promise<AssistantView> => {
 
 export const copyAssistantConfig = (): Promise<void> =>
   isTauri() ? invoke('copy_assistant_config') : Promise.resolve();
+
+const MOCK_HAS_KEY = mock.chatHasKeyMock();
+let mockChat: ChatView = {
+  keys: { anthropic: MOCK_HAS_KEY, openRouter: false, custom: false },
+  available: true,
+  busy: false,
+  missing: MOCK_HAS_KEY ? null : 'Add your Anthropic API key in the settings.',
+  model: 'Sonnet 5.5',
+};
+
+export const getChat = (): Promise<ChatView> =>
+  isTauri() ? invoke('get_chat') : Promise.resolve(mockChat);
+
+/** Rejects with a message when the system's credential store refused the key. */
+export const setApiKey = (provider: ChatProvider, key: string): Promise<ChatView> => {
+  if (isTauri()) return invoke('set_api_key', { provider, key });
+  mockChat = { ...mockChat, keys: { ...mockChat.keys, [provider]: true }, missing: null };
+  return Promise.resolve(mockChat);
+};
+
+export const forgetApiKey = (provider: ChatProvider): Promise<ChatView> => {
+  if (isTauri()) return invoke('forget_api_key', { provider });
+  mockChat = { ...mockChat, keys: { ...mockChat.keys, [provider]: false } };
+  return Promise.resolve(mockChat);
+};
+
+/** Runs the tools without a model, so it works without a key and costs nothing. */
+export const getNextCard = (): Promise<NextCard> =>
+  isTauri() ? invoke('get_next_card') : Promise.resolve(mock.nextCardMock());
+
+/** The answer comes as chat://event and ends with chat://over. Rejects while one is running. */
+export const chatSend = (question: string): Promise<void> =>
+  isTauri() ? invoke('chat_send', { question }) : mock.chatMock(question);
+
+export const chatStop = (): Promise<void> =>
+  isTauri() ? invoke('chat_stop') : Promise.resolve(mock.chatStopMock());
+
+export const chatNew = (): Promise<void> =>
+  isTauri() ? invoke('chat_new') : Promise.resolve(mock.chatStopMock());
+
+export const openChat = (): Promise<void> => (isTauri() ? invoke('open_chat') : Promise.resolve());
+
+export const closeChat = (): Promise<void> => (isTauri() ? invoke('close_chat') : Promise.resolve());
 
 export const startLive = (path: string): Promise<CampaignState> => {
   if (isTauri()) return invoke('start_live', { path });
@@ -193,6 +239,14 @@ export const getSettings = (): Promise<Settings> =>
         pobPath: null,
         pobSync: false,
         pobBuild: null,
+        chat: {
+          provider: 'anthropic',
+          model: 'claude-sonnet-5-5',
+          effort: 'low',
+          routerModel: '',
+          customUrl: '',
+          customModel: '',
+        },
       });
 
 export const saveSettings = (settings: Settings): Promise<void> =>
@@ -272,6 +326,7 @@ const DEFAULT_HOTKEYS: HotkeySettings = {
     routePrev: 'Alt+ArrowLeft',
     routeNext: 'Alt+ArrowRight',
     relog: 'F9',
+    openChat: 'Alt+KeyA',
   },
   relogEnabled: false,
 };

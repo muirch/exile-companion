@@ -20,6 +20,7 @@ const CFG: HotkeySettings = {
     routePrev: 'Alt+ArrowLeft',
     routeNext: 'Alt+ArrowRight',
     relog: 'F9',
+    openChat: 'Alt+KeyA',
   },
   relogEnabled: false,
 };

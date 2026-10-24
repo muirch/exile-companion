@@ -2,6 +2,8 @@
 
 The build assistant is an MCP server. Your AI agent (Claude Desktop, Claude Code, Cursor, Codex and others) starts it on your PC, then asks your own Path of Building about the build you imported in Exile Companion, plus the [Path of Exile Wiki](https://www.poewiki.net) for mechanics and crafting. It runs on your agent's plan, Exile Companion needs no API key.
 
+This is the way to ask from an agent you already use. To ask from the game itself, in a chat over it, see [chat.md](chat.md).
+
 ## What it needs
 
 Exile Companion with a build imported (settings, Path of Building, Paste code or link) and a PoB folder it found or you picked. The installer puts the assistant's two programs, `exile-companion-mcp` and `exile-pob-engine`, next to the app.
@@ -46,7 +48,7 @@ exile-companion-mcp --pob <Path of Building folder> --build <build.xml> --log <C
 
 ## Leveling with a guide
 
-Ask the agent to help you pick a build. It asks how you like to play, offers a few current-league guides with a Path of Building link and lets you choose. With your OK it makes the guide your build in Exile Companion, so the overlay lists the guide's gems along the campaign route, and it remembers the guide for later chats. It reads where you are from the game's log (character, level, act and area), so "what do I take next?" needs no explaining. When you move on to the guide's next stage, it notes that too. Undo takes the guide back as your build, and you can ask it to stop following the guide.
+Ask the agent to help you pick a build. It asks how you like to play, offers a few current-league guides with a Path of Building link and lets you choose. With your OK it makes the guide your build in Exile Companion, so the overlay lists the guide's gems along the campaign route, and it remembers the guide for later chats. It reads where you are from the game's log (character, level, act and area), so "what do I take next?" needs no explaining and takes one call: where you are, what your build still lacks against your guide's stage, the next passives the guide takes, and whether your level has reached the guide's next stage. When you move on to that stage, it notes that too. Undo takes the guide back as your build, and you can ask it to stop following the guide.
 
 If your class gets one of the guide's early gems only later and another class gets it right after Hillock, the agent suggests a mule before you start: make a character of that class in the same league, kill Hillock, take the gem and leave it in the stash. The overlay shows the same on the campaign's first step.
 

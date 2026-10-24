@@ -151,6 +151,59 @@ pub fn copy_assistant_config(app: AppHandle) -> Result<(), String> {
 }
 
 #[tauri::command]
+pub async fn get_chat(app: AppHandle) -> crate::chat::ChatView {
+    crate::chat::view(&app).await
+}
+
+#[tauri::command]
+pub async fn set_api_key(
+    app: AppHandle,
+    provider: exile_assistant::Provider,
+    key: String,
+) -> Result<crate::chat::ChatView, String> {
+    crate::chat::set_key(&app, provider, key).await
+}
+
+#[tauri::command]
+pub async fn forget_api_key(
+    app: AppHandle,
+    provider: exile_assistant::Provider,
+) -> Result<crate::chat::ChatView, String> {
+    crate::chat::forget_key(&app, provider).await
+}
+
+#[tauri::command]
+pub async fn get_next_card(app: AppHandle) -> exile_assistant::NextCard {
+    crate::chat::next_card(&app).await
+}
+
+/// Starts an answer. Its text arrives as chat://event, the end as chat://over.
+#[tauri::command]
+pub fn chat_send(app: AppHandle, question: String) -> Result<(), String> {
+    crate::chat::send(&app, question)
+}
+
+#[tauri::command]
+pub fn chat_stop(app: AppHandle) {
+    crate::chat::stop(&app);
+}
+
+#[tauri::command]
+pub async fn chat_new(app: AppHandle) {
+    crate::chat::new_chat(&app).await;
+}
+
+#[tauri::command]
+pub fn open_chat(app: AppHandle) {
+    crate::chat::open(&app);
+}
+
+#[tauri::command]
+pub fn close_chat(app: AppHandle) {
+    crate::chat::close(&app);
+}
+
+#[tauri::command]
 pub fn start_live(app: AppHandle, path: String) -> Result<CampaignState, String> {
     runtime::start_live(app, path)
 }

@@ -1,4 +1,13 @@
-import { useEffect, useRef, useState, type ButtonHTMLAttributes, type ReactNode } from 'react';
+import {
+  useEffect,
+  useLayoutEffect,
+  useRef,
+  useState,
+  type ButtonHTMLAttributes,
+  type InputHTMLAttributes,
+  type ReactNode,
+  type TextareaHTMLAttributes,
+} from 'react';
 
 import { TooltipHeader } from '../components/Tooltip';
 
@@ -95,6 +104,49 @@ export function Choice<T extends string | number | boolean>({
         </Button>
       ))}
     </>
+  );
+}
+
+/** One line of text in Alegreya Sans, for keys, links and other literal input. */
+export function TextField({
+  className = '',
+  ...props
+}: InputHTMLAttributes<HTMLInputElement>): React.JSX.Element {
+  return <input spellCheck={false} className={`field ${className}`} {...props} />;
+}
+
+/** Grows with its text up to `maxRows`, then scrolls. */
+export function TextArea({
+  className = '',
+  maxRows = 6,
+  value,
+  ref,
+  ...props
+}: TextareaHTMLAttributes<HTMLTextAreaElement> & {
+  maxRows?: number;
+  ref?: React.Ref<HTMLTextAreaElement>;
+}): React.JSX.Element {
+  const own = useRef<HTMLTextAreaElement | null>(null);
+  // WebKitGTK has no field-sizing, so the height follows the text by hand, after every render.
+  useLayoutEffect(() => {
+    const el = own.current;
+    if (!el) return;
+    el.style.height = 'auto';
+    const line = parseFloat(getComputedStyle(el).lineHeight) || 19;
+    el.style.height = `${Math.min(el.scrollHeight + 2, line * maxRows + 14)}px`;
+  });
+  return (
+    <textarea
+      ref={(el) => {
+        own.current = el;
+        if (typeof ref === 'function') ref(el);
+        else if (ref) ref.current = el;
+      }}
+      rows={1}
+      value={value}
+      className={`field field-area ${className}`}
+      {...props}
+    />
   );
 }
 

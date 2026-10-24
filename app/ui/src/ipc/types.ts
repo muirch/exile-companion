@@ -38,6 +38,80 @@ export interface Settings {
   pobPath: string | null;
   pobSync: boolean;
   pobBuild: string | null;
+  chat: ChatConfig;
+}
+
+export type ChatProvider = 'anthropic' | 'openRouter' | 'custom';
+export type ChatModel = 'claude-haiku-5-5' | 'claude-sonnet-5-5' | 'claude-opus-5-5';
+export type ChatEffort = 'low' | 'medium' | 'high';
+
+/** Mirrors `exile_assistant::Config`. */
+export interface ChatConfig {
+  provider: ChatProvider;
+  /** The Claude model, for Anthropic. */
+  model: ChatModel;
+  effort: ChatEffort;
+  routerModel: string;
+  customUrl: string;
+  customModel: string;
+}
+
+/** Mirrors `chat::ChatView`. */
+export interface ChatView {
+  /** Which providers have a key stored. */
+  keys: Record<ChatProvider, boolean>;
+  /** False in a build without the assistant's tools. */
+  available: boolean;
+  busy: boolean;
+  /** What the player still has to set before the picked provider can answer. */
+  missing: string | null;
+  /** The picked model, as the player named it. */
+  model: string;
+}
+
+/** Mirrors `exile_assistant::NextCard`: what to change next, worked out without a model. */
+export interface NextCard {
+  /** Why there are no steps, in the player's words. */
+  missing: string | null;
+  stage: string | null;
+  laterStage: string | null;
+  steps: NextStep[];
+}
+
+export interface NextStep {
+  kind: 'gem' | 'passive' | 'gear' | 'ascendancy';
+  name: string;
+  slot: string | null;
+  points: number | null;
+  dpsPct: number;
+  ehpPct: number;
+}
+
+/** Payload of `chat://event`, mirrors `exile_assistant::ChatEvent`. */
+export type ChatEvent =
+  | { kind: 'text'; text: string }
+  | { kind: 'paragraph' }
+  | { kind: 'note'; text: string }
+  | { kind: 'tool'; name: string };
+
+export type ChatStop = 'done' | 'cut' | 'refused' | 'tooManySteps' | 'empty' | 'stopped' | 'error';
+
+/** Payload of `chat://over`, mirrors `chat::TurnOver`. */
+export interface TurnOver {
+  stop: ChatStop;
+  /** The error for the player, or the refusal's category. */
+  message: string | null;
+  usage: {
+    inputTokens: number;
+    outputTokens: number;
+    cacheReadTokens: number;
+    cacheWriteTokens: number;
+    cost: number | null;
+  } | null;
+  /** Null when the provider didn't say what the answer cost. */
+  dollars: number | null;
+  /** The model that answered. */
+  model: string | null;
 }
 
 /** Which PoB build file the app's build is kept the same as (mirrors `pob::PobSync`). */
@@ -80,6 +154,7 @@ export interface Hotkeys {
   routePrev: string;
   routeNext: string;
   relog: string;
+  openChat: string;
 }
 
 export interface HotkeySettings {

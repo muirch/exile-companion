@@ -43,9 +43,13 @@ overlay overlay-unlocked "view=unlocked&edge=7"
 overlay overlay-compact "view=locked&edge=1&compact"
 overlay overlay-compact-boss "view=locked&edge=9&compact"
 overlay notice "view=notice"
-stage menu "window=menu" 236 336
+stage menu "window=menu" 236 366
 shot menu "file://$OUT/.stage-menu.html" 560 420
-shot settings "$URL/?window=settings" 560 1600
+for c in nokey empty answered; do
+  stage "chat-$c" "window=chat&chat=$c" 420 560
+  shot "chat-$c" "file://$OUT/.stage-chat-$c.html" 560 600
+done
+shot settings "$URL/?window=settings" 560 2300
 
 cd "$OUT"
 ffmpeg -loglevel error -y \
@@ -54,5 +58,8 @@ ffmpeg -loglevel error -y \
   -i notice.png -i menu.png -i overlay-compact.png \
   -filter_complex "[0][1][2]hstack=3[r1];[3][4][5]hstack=3[r2];[6][7][8]hstack=3[r3];\
 [r1][r2][r3]vstack=3" overview.png
+ffmpeg -loglevel error -y -i chat-nokey.png -i chat-empty.png -i chat-answered.png \
+  -filter_complex "[0][1][2]hstack=3" chat.png
 rm -f .stage-*.html
 echo "$OUT/overview.png"
+echo "$OUT/chat.png"

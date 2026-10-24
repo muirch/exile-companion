@@ -11,11 +11,15 @@
 import type {
   BuildSummary,
   CampaignState,
+  ChatEvent,
+  NextCard,
+  TurnOver,
   LocationKind,
   NextObjective,
   RouteView,
   SpeedMultiplier,
 } from './types';
+import type { Exchange } from '../components/chatLog';
 import { useAppStore } from '../store/useAppStore';
 // Real views from the bundled route (`cargo run -p exile-core --example dump_route`).
 import MOCK_ROUTE from './mock-route.json';
@@ -293,4 +297,111 @@ export function moveRouteMock(delta: number): RouteView | null {
     });
   }
   return entry?.view ?? null;
+}
+
+// The chat without a backend: one canned answer, streamed the way the real one arrives.
+type ChatListener = { event?: (e: ChatEvent) => void; over?: (o: TurnOver) => void };
+const chatListeners = new Set<ChatListener>();
+let chatTimers: ReturnType<typeof setTimeout>[] = [];
+
+export function onChatMock(listener: ChatListener): () => void {
+  chatListeners.add(listener);
+  return () => chatListeners.delete(listener);
+}
+
+const emitChat = (e: ChatEvent): void => chatListeners.forEach((l) => l.event?.(e));
+const overChat = (o: TurnOver): void => chatListeners.forEach((l) => l.over?.(o));
+
+export const MOCK_ANSWER =
+  'Take Herbalism next, 2 points from Thick Skin.\n\n' +
+  'It is the biggest life gain on your way to the guide\'s level 40 tree.\n' +
+  '- +12% maximum life, about 180 life at your level\n' +
+  '- the guide takes it at 38, so you are on time\n\n' +
+  'After that, Arcane Will for mana regeneration.';
+
+export function chatMock(question: string): Promise<void> {
+  chatStopMock();
+  void question;
+  const steps: [number, () => void][] = [
+    [100, () => emitChat({ kind: 'tool', name: 'player_status' })],
+    [400, () => emitChat({ kind: 'note', text: 'Comparing your tree with the guide at level 40.' })],
+    [700, () => emitChat({ kind: 'tool', name: 'passive_value' })],
+  ];
+  const words = MOCK_ANSWER.split(/(?<= )/);
+  words.forEach((w, i) => steps.push([1100 + i * 15, () => emitChat({ kind: 'text', text: w })]));
+  steps.push([
+    1150 + words.length * 15,
+    () =>
+      overChat({
+        stop: 'done',
+        message: null,
+        usage: {
+          inputTokens: 900,
+          outputTokens: 420,
+          cacheReadTokens: 31000,
+          cacheWriteTokens: 1200,
+          cost: 0.0191,
+        },
+        dollars: 0.0191,
+        model: 'Sonnet 5.5',
+      }),
+  ]);
+  chatTimers = steps.map(([at, f]) => setTimeout(f, at));
+  return Promise.resolve();
+}
+
+export function chatStopMock(): void {
+  const running = chatTimers.length > 0;
+  chatTimers.forEach(clearTimeout);
+  chatTimers = [];
+  if (running) overChat({ stop: 'stopped', message: null, usage: null, dollars: null, model: null });
+}
+
+const chatQuery = (): string | null =>
+  typeof window === 'undefined' ? null : new URLSearchParams(window.location.search).get('chat');
+
+export const chatHasKeyMock = (): boolean => chatQuery() !== 'nokey';
+
+const PASTED_ITEM = `Item Class: Body Armours
+Rarity: Rare
+Grim Shelter
+Leather Belt
+--------
++38 to maximum Life
++24% to Fire Resistance`;
+
+/** What the chat window shows on load in the browser, picked with ?chat=. */
+export function chatSeedMock(): Exchange[] {
+  if (chatQuery() !== 'answered') return [];
+  return [
+    {
+      question: 'Which passive should I take next?',
+      answer: MOCK_ANSWER,
+      tool: null,
+      note: null,
+      over: { stop: 'done', message: null, usage: null, dollars: 0.0191, model: 'Sonnet 5.5' },
+    },
+    {
+      question: PASTED_ITEM,
+      answer: '',
+      tool: 'compare_item',
+      note: 'Your chest has 21% less life than this one would give.',
+      over: null,
+    },
+  ];
+}
+
+export function nextCardMock(): NextCard {
+  return {
+    missing: null,
+    stage: 'Lvl 01-30 {1}',
+    laterStage: 'Lvl 31-40 {2} RF Start',
+    steps: [
+      { kind: 'gem', name: 'Added Chaos Damage', slot: null, points: null, dpsPct: 12.6, ehpPct: 0 },
+      { kind: 'passive', name: 'Herbalism', slot: null, points: 8, dpsPct: 2.8, ehpPct: 26.7 },
+      { kind: 'passive', name: 'Heavy Draw', slot: null, points: 2, dpsPct: 10, ehpPct: 0 },
+      { kind: 'gear', name: 'Death Song, Short Bow', slot: 'Weapon 1', points: null, dpsPct: 6.1, ehpPct: 0 },
+      { kind: 'ascendancy', name: "Nature's Reprisal", slot: null, points: null, dpsPct: 0, ehpPct: 0 },
+    ],
+  };
 }

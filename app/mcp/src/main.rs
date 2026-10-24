@@ -4,6 +4,7 @@
 //! Path of Building (through exile-pob-engine) and the Path of Exile Wiki about the player's build.
 //! By default it uses the build and the PoB folder from Exile Companion's settings.
 
+mod compact;
 mod paths;
 mod progress;
 mod session;
@@ -35,9 +36,10 @@ const INSTRUCTIONS: &str = "Tools for one Path of Exile 1 build, the one the pla
 calculated by the player's own Path of Building, and for the Path of Exile Wiki and build guides.
 
 Start a conversation with player_status: where the player is in the game (from the game's log), the guide they follow and the build the tools read. \
-It costs nothing, so call it again when the player asks what to do now. A level-up is the only time the log names the level, so a fresh character may show none yet. \
+It costs nothing, so call it again when anything may have changed. A level-up is the only time the log names the level, so a fresh character may show none yet. \
 Its mules are characters of another class to make first: the player's class gets those gems too late or never, and that class gets them for Enemy at the Gate, \
-right after Hillock. Bring them up before the player starts the real character, say it takes a couple of minutes, and that the mule must be in the same league to use the stash.
+right after Hillock. Bring them up before the player starts the real character, say it takes a couple of minutes, and that the mule must be in the same league to use the stash. \
+When the player asks what to do now or what to take next, call what_next. It adds the difference to their guide's stage and the best next passives to player_status in one call.
 
 Check that the build you have is the one the player is talking about: game (these tools are Path of Exile 1 only), \
 main skill, class and ascendancy, league. If build_overview shows something else than the player describes, say so and ask \
@@ -85,7 +87,14 @@ fn failure(v: impl Into<String>) -> CallToolResult {
 
 fn json_result(r: Result<Value, String>) -> CallToolResult {
     match r {
-        Ok(v) => text(v.to_string()),
+        Ok(v) => text(compact::compact(v, true).to_string()),
+        Err(e) => failure(e),
+    }
+}
+
+fn wiki_result(r: Result<Value, String>) -> CallToolResult {
+    match r {
+        Ok(v) => text(compact::compact(v, false).to_string()),
         Err(e) => failure(e),
     }
 }
@@ -268,7 +277,7 @@ impl Companion {
             .map_err(|e| e.to_string())
             .and_then(|r| r.map_err(|e| e.to_string()))
             .and_then(|v| serde_json::to_value(v).map_err(|e| e.to_string()));
-        json_result(r)
+        wiki_result(r)
     }
 }
 
@@ -293,6 +302,17 @@ impl Companion {
     async fn player_status(&self) -> Result<CallToolResult, McpError> {
         let session = self.session.clone();
         let r = tokio::task::spawn_blocking(move || Ok(session.lock().unwrap().status()))
+            .await
+            .unwrap_or_else(|e| Err(e.to_string()));
+        Ok(json_result(r))
+    }
+
+    #[tool(
+        description = "The answer to \"what do I do now?\" in one call: player_status, then what the build still lacks against the followed guide's stage (passives with the points on the way, gear, gems, ascendancy), the best next passives the guide takes, and a later stage of the guide when the player's level has reached it. Use it instead of calling player_status, compare_with_guide and passive_value one after another. Starts Path of Building."
+    )]
+    async fn what_next(&self) -> Result<CallToolResult, McpError> {
+        let session = self.session.clone();
+        let r = tokio::task::spawn_blocking(move || session.lock().unwrap().what_next())
             .await
             .unwrap_or_else(|e| Err(e.to_string()));
         Ok(json_result(r))

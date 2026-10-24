@@ -33,6 +33,14 @@ pub fn set_grab(app: &AppHandle, grabbed: bool) {
     let _ = app.emit("overlay://grab-changed", grabbed);
 }
 
+/// Gives the keyboard back to the game when one of our windows took it. On Linux the window
+/// manager does that when our window hides.
+pub fn focus_game(app: &AppHandle) {
+    #[cfg(windows)]
+    win::focus_game_if_own();
+    let _ = app;
+}
+
 pub fn toggle_grab(app: &AppHandle) {
     let grabbed = app.state::<AppState>().grabbed.load(Ordering::SeqCst);
     set_grab(app, !grabbed);

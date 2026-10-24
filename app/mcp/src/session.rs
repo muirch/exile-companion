@@ -342,12 +342,14 @@ impl Session {
     /// follow and which build the tools read. Nothing here starts Path of Building.
     pub fn status(&self) -> Value {
         let game = crate::progress::game_progress(self.opts.log.as_deref());
+        let mut guide_outline = None;
         let guide = match self
             .guide_store()
             .and_then(|s| s.get().map_err(|e| e.to_string()))
         {
             Ok(Some((followed, xml))) => {
                 let mut v = build_outline(&xml);
+                guide_outline = Some(v.clone());
                 v["source"] = json!(followed.source);
                 v["since"] = json!(followed.since);
                 v["stage"] = json!(followed.stage);
@@ -365,12 +367,76 @@ impl Session {
                 v
             }
             None => match self.build_path().map(|p| read(&p)) {
-                Some(Ok(xml)) => build_outline(&xml),
+                // After use_as_my_build the two are the same. Saying so saves the second copy.
+                Some(Ok(xml)) => match build_outline(&xml) {
+                    v if Some(&v) == guide_outline.as_ref() => {
+                        json!({ "same_outline_as_guide": true })
+                    }
+                    v => v,
+                },
                 Some(Err(e)) => json!({ "error": e }),
                 None => json!(null),
             },
         };
         json!({ "game": game, "guide": guide, "build": build })
+    }
+
+    /// One answer to "what now": where the player is, how their build differs from the followed
+    /// guide's stage, the best next passives on the guide's path, and a later stage of the guide
+    /// when the player's level has reached it.
+    pub fn what_next(&mut self) -> Result<Value, String> {
+        let status = self.status();
+        let mut out = json!({ "status": status });
+        let (guide, stage) = match self.guide_or_followed(None) {
+            Ok(g) => g,
+            Err(e) => {
+                out["guide"] = json!(e);
+                return Ok(out);
+            }
+        };
+        if self.player_xml()?.is_none() {
+            out["build"] = json!("The player has no build yet. guide_stage_diff and guide_stages work without one, and use_as_my_build can make the guide theirs.");
+            return Ok(out);
+        }
+        let reference = self.reference(&guide)?;
+        if let Some(st) =
+            stage.filter(|s| s.tree.is_some() || s.item_set.is_some() || s.skill_set.is_some())
+        {
+            self.call(
+                "set_reference_stage",
+                json!({ "reference": reference, "tree": st.tree, "item_set": st.item_set, "skill_set": st.skill_set }),
+            )?;
+        }
+        let diff = self.call(
+            "compare_reference",
+            json!({ "reference": reference, "limit": 8 }),
+        )?;
+        let passives = self.call("node_power", json!({ "limit": 5, "reference": reference }))?;
+        // compare_reference lists the guide's stages with their ids, the outline only by name.
+        if let Some(g) = out["status"]["guide"].as_object_mut() {
+            g.remove("trees");
+            g.remove("skill_sets");
+        }
+        let level = out["status"]["game"]["level"]
+            .as_u64()
+            .or(diff["player"]["level"].as_u64());
+        if let (Some(level), Some(trees)) = (
+            level,
+            diff.pointer("/reference/trees").and_then(Value::as_array),
+        ) {
+            let titles = trees.iter().map(|t| t["title"].as_str().unwrap_or(""));
+            let fits = exile_core::resolve::stage_for_level(titles, level as u32);
+            let active = trees.iter().position(|t| t["active"] == true);
+            if let Some(i) = fits.filter(|&i| active.is_none_or(|a| i > a)) {
+                out["later_stage"] = json!({
+                    "tree": trees[i],
+                    "note": "The player's level has reached this tree of the guide. Offer to move on with follow_guide, then compare again.",
+                });
+            }
+        }
+        out["guide_diff"] = diff;
+        out["next_passives"] = passives["reachable"].clone();
+        Ok(out)
     }
 
     fn guide_store(&self) -> Result<GuideStore, String> {
