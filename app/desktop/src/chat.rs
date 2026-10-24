@@ -1,6 +1,8 @@
 //! The assistant's chat window. The conversation and the tool loop live in exile_assistant.
 
+use std::sync::atomic::{AtomicU64, Ordering};
 use std::sync::{Arc, Mutex, OnceLock};
+use std::time::Duration;
 
 use exile_assistant::{
     Anthropic, ChatError, Config, Conversation, Llm, OpenAi, Provider, Server, Setup, Stop, Usage,
@@ -23,6 +25,8 @@ pub struct ChatState {
     conversation: tokio::sync::Mutex<Conversation>,
     server: tokio::sync::Mutex<Option<Arc<Server>>>,
     task: Mutex<Option<JoinHandle<()>>>,
+    /// Counts openings of the window, so a pending unload knows the chat came back.
+    opened: AtomicU64,
 }
 
 /// Which providers have a key stored.
@@ -49,7 +53,7 @@ pub struct ChatView {
 #[derive(Debug, Clone, Serialize)]
 #[serde(rename_all = "camelCase")]
 struct TurnOver {
-    /// "done", "cut", "refused", "tooManySteps", "stopped" or "error".
+    /// "done", "cut", "refused", "tooManySteps", "empty", "stopped" or "error".
     stop: &'static str,
     message: Option<String>,
     usage: Option<Usage>,
@@ -76,6 +80,7 @@ fn stop_name(stop: Stop) -> &'static str {
         Stop::Cut => "cut",
         Stop::Refused => "refused",
         Stop::TooManySteps => "tooManySteps",
+        Stop::Empty => "empty",
     }
 }
 
@@ -197,7 +202,8 @@ pub async fn forget_key(app: &AppHandle, provider: Provider) -> Result<ChatView,
     Ok(view(app).await)
 }
 
-fn model(config: &Config, api_key: Option<String>) -> Box<dyn Llm + Send> {
+/// `ollama` says the custom server is Ollama, the one that takes an effort.
+fn model(config: &Config, api_key: Option<String>, ollama: bool) -> Box<dyn Llm + Send> {
     let key = api_key.unwrap_or_default();
     match config.provider {
         Provider::Anthropic => {
@@ -213,6 +219,7 @@ fn model(config: &Config, api_key: Option<String>) -> Box<dyn Llm + Send> {
             &config.custom_url,
             Some(key),
             config.custom_model.clone(),
+            ollama.then_some(config.effort),
             USER_AGENT,
         )),
     }
@@ -285,7 +292,14 @@ async fn turn(app: AppHandle, question: String) {
         system: &system,
         tools: &server.tools,
     };
-    let llm = model(&config, api_key);
+    let ollama = match local_ollama(&app) {
+        Some((url, name)) => {
+            blocking(move || exile_assistant::Ollama::detect(&url, &name, USER_AGENT).is_some())
+                .await
+        }
+        None => false,
+    };
+    let llm = model(&config, api_key, ollama);
     let label = config.model_label();
     let state = app.state::<ChatState>();
     let mut conversation = state.conversation.lock().await;
@@ -406,6 +420,68 @@ pub fn open(app: &AppHandle) {
     let _ = app.emit_to(CHAT_LABEL, "chat://opened", ());
     #[cfg(target_os = "linux")]
     crate::menu::focus_window(crate::menu::CHAT_TITLE);
+    app.state::<ChatState>()
+        .opened
+        .fetch_add(1, Ordering::SeqCst);
+    warm_local_model(app);
+}
+
+// The model loads while the player types the question. Half an hour covers a window left open.
+const KEEP_WHILE_OPEN: Duration = Duration::from_secs(30 * 60);
+const UNLOAD_AFTER: Duration = Duration::from_secs(60);
+
+/// Ollama's address and model when the chat runs on Ollama. Other servers manage memory alone.
+fn local_ollama(app: &AppHandle) -> Option<(String, String)> {
+    let c = settings::load(app).ok()?.chat;
+    (c.provider == Provider::Custom && c.missing().is_none())
+        .then_some((c.custom_url, c.custom_model))
+}
+
+fn warm_local_model(app: &AppHandle) {
+    let Some((url, model)) = local_ollama(app) else {
+        return;
+    };
+    tauri::async_runtime::spawn_blocking(move || {
+        let Some(ollama) = exile_assistant::Ollama::detect(&url, &model, USER_AGENT) else {
+            return;
+        };
+        let started = std::time::Instant::now();
+        match ollama.load(KEEP_WHILE_OPEN) {
+            Ok(()) => log::info!("loaded {model} in {:.1}s", started.elapsed().as_secs_f64()),
+            Err(e) => log::info!("couldn't load {model}: {e}"),
+        }
+    });
+}
+
+/// A minute after the chat closes the game gets the video memory back, unless the chat opened
+/// again or an answer is still coming.
+fn unload_local_model_later(app: &AppHandle) {
+    if local_ollama(app).is_none() {
+        return;
+    }
+    let opened = app.state::<ChatState>().opened.load(Ordering::SeqCst);
+    let app = app.clone();
+    tauri::async_runtime::spawn(async move {
+        tokio::time::sleep(UNLOAD_AFTER).await;
+        while busy(&app) {
+            tokio::time::sleep(Duration::from_secs(5)).await;
+        }
+        if app.state::<ChatState>().opened.load(Ordering::SeqCst) != opened {
+            return;
+        }
+        let Some((url, model)) = local_ollama(&app) else {
+            return;
+        };
+        let _ = tauri::async_runtime::spawn_blocking(move || {
+            if let Some(ollama) = exile_assistant::Ollama::detect(&url, &model, USER_AGENT) {
+                match ollama.unload() {
+                    Ok(()) => log::info!("unloaded {model}"),
+                    Err(e) => log::info!("couldn't unload {model}: {e}"),
+                }
+            }
+        })
+        .await;
+    });
 }
 
 /// Hides the window and gives the keyboard back to the game. An answer still streaming goes on.
@@ -419,6 +495,7 @@ pub fn close(app: &AppHandle) {
     // Before hiding, while the chat still has focus. The game only gets it back from our window.
     crate::overlay::focus_game(app);
     let _ = w.hide();
+    unload_local_model_later(app);
 }
 
 pub fn toggle(app: &AppHandle) {

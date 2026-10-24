@@ -137,6 +137,8 @@ export function overText(over: TurnOver): string | null {
       return 'The model declined this question.';
     case 'tooManySteps':
       return 'Stopped after too many tool calls. Ask a narrower question.';
+    case 'empty':
+      return 'The model gave no answer. Ask again, or pick a stronger model.';
     case 'stopped':
       return 'Stopped.';
     case 'error':

@@ -94,7 +94,7 @@ export type ChatEvent =
   | { kind: 'note'; text: string }
   | { kind: 'tool'; name: string };
 
-export type ChatStop = 'done' | 'cut' | 'refused' | 'tooManySteps' | 'stopped' | 'error';
+export type ChatStop = 'done' | 'cut' | 'refused' | 'tooManySteps' | 'empty' | 'stopped' | 'error';
 
 /** Payload of `chat://over`, mirrors `chat::TurnOver`. */
 export interface TurnOver {
