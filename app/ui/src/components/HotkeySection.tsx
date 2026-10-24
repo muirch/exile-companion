@@ -11,6 +11,7 @@ const ROWS: { key: Bindable; label: string }[] = [
   { key: 'moveOverlay', label: 'Move overlay' },
   { key: 'routePrev', label: 'Previous step' },
   { key: 'routeNext', label: 'Next step' },
+  { key: 'openChat', label: 'Assistant' },
 ];
 
 const HOLD_KEYS: { value: string; label: string }[] = [

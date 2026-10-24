@@ -21,6 +21,14 @@ describe('MenuApp', () => {
     expect(commands.routeNext).toHaveBeenCalled();
   });
 
+  it('opens the assistant with its key next to it', async () => {
+    render(<MenuApp />);
+    const row = screen.getByRole('menuitem', { name: /Ask the assistant/ });
+    expect(row).toHaveTextContent('Alt+A');
+    await userEvent.click(row);
+    expect(commands.openChat).toHaveBeenCalled();
+  });
+
   it('asks for a second click before quitting', async () => {
     render(<MenuApp />);
     await userEvent.click(screen.getByRole('menuitem', { name: 'Quit Exile Companion' }));

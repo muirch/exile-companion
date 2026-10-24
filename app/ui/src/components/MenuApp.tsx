@@ -2,6 +2,7 @@ import { useEffect, useRef, useState } from 'react';
 
 import {
   closeMenu,
+  openChat,
   openSettings,
   quitApp,
   routeNext,
@@ -136,6 +137,7 @@ export function MenuApp(): React.JSX.Element {
       />
       <Row label="Next step" hint={shortcutLabel(keys.routeNext)} onClick={() => void routeNext()} />
       <TooltipSep tint={TINT} />
+      <Row label="Ask the assistant" hint={shortcutLabel(keys.openChat)} onClick={() => void openChat()} />
       <Row label="Settings" onClick={() => void openSettings()} />
       <Row
         label="Move overlay"

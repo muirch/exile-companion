@@ -2,9 +2,14 @@
 
 import { listen, type UnlistenFn } from '@tauri-apps/api/event';
 
+import { isTauri } from './env';
+import { onChatMock } from './mock';
+
 import type {
   BuildSummary,
   CampaignState,
+  ChatEvent,
+  TurnOver,
   NextObjective,
   ReplayProgress,
   HotkeySettings,
@@ -61,3 +66,17 @@ export const onMenuOpened = (cb: () => void): Promise<UnlistenFn> =>
 
 export const onHotkeysChanged = (cb: (value: HotkeySettings) => void): Promise<UnlistenFn> =>
   listen<HotkeySettings>('hotkeys://changed', (e) => cb(e.payload));
+
+// In the browser the mock answers instead of the backend.
+export const onChatEvent = (cb: (event: ChatEvent) => void): Promise<UnlistenFn> =>
+  isTauri()
+    ? listen<ChatEvent>('chat://event', (e) => cb(e.payload))
+    : Promise.resolve(onChatMock({ event: cb }));
+
+export const onChatOver = (cb: (over: TurnOver) => void): Promise<UnlistenFn> =>
+  isTauri()
+    ? listen<TurnOver>('chat://over', (e) => cb(e.payload))
+    : Promise.resolve(onChatMock({ over: cb }));
+
+export const onChatOpened = (cb: () => void): Promise<UnlistenFn> =>
+  listen('chat://opened', () => cb());
