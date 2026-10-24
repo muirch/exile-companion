@@ -46,6 +46,7 @@ export const isWorking = (log: Exchange[]): boolean => {
 
 const TOOL_LABELS: Record<string, string> = {
   player_status: 'Reading where you are',
+  what_next: 'Checking what comes next',
   build_overview: 'Reading your build',
   build_details: 'Reading your build',
   defences: 'Checking defences',
