@@ -104,10 +104,41 @@ pub fn same_presets(old: &PobBuild, new: &PobBuild) -> bool {
         .eq(new.skill_sets.iter().map(|s| &s.title))
 }
 
+/// A throwaway character of another class that kills Hillock, gets gems the player's class gets
+/// only later or never, and leaves them in the stash for the real character.
+#[derive(Debug, Clone, PartialEq, Eq, serde::Serialize)]
+#[cfg_attr(feature = "ts", derive(ts_rs::TS))]
+#[cfg_attr(feature = "ts", ts(export))]
+pub struct Mule {
+    pub class: String,
+    /// The reward for Enemy at the Gate. A character gets one.
+    pub take: Option<MuleGem>,
+    /// Sold by Nessa once the quest is done.
+    pub buy: Vec<MuleGem>,
+}
+
+#[derive(Debug, Clone, PartialEq, Eq, serde::Serialize)]
+#[cfg_attr(feature = "ts", derive(ts_rs::TS))]
+#[cfg_attr(feature = "ts", ts(export))]
+pub struct MuleGem {
+    pub name: String,
+    pub npc: String,
+    /// The act the player's own class gets the gem in, none if the campaign never gives it.
+    pub own_act: Option<u32>,
+}
+
+impl Mule {
+    fn carries(&self, name: &str) -> bool {
+        self.take.iter().chain(&self.buy).any(|g| g.name == name)
+    }
+}
+
 #[derive(Debug, Clone, Default, PartialEq, Eq)]
 pub struct GemPlan {
     /// In campaign order.
     pub steps: Vec<GemStep>,
+    /// Characters to make before the real one, for gems it would get too late.
+    pub mules: Vec<Mule>,
     /// Names of the build's gems the campaign won't give this class: no quest or vendor has them,
     /// or every reward that has them went to another gem.
     pub not_in_campaign: Vec<String>,
@@ -306,16 +337,93 @@ pub fn plan_with_stages(
             .unwrap_or((u32::MAX, u32::MAX));
         (order, st.action == GemAction::Buy)
     });
+    let mules = mules_for(&wanted, &steps, class, gems);
+    not_in_campaign.retain(|name| !mules.iter().any(|m| m.carries(name)));
     GemPlan {
         steps,
+        mules,
         not_in_campaign,
     }
 }
 
+/// The only quest worth a mule: Hillock takes a couple of minutes, the next quests much longer.
+const MULE_QUEST: &str = "a1q1";
+
+/// Gems the player's class gets after the act the build needs them in, or never, that another
+/// class gets for Enemy at the Gate. Mules are shared where they can be: one character takes one
+/// reward and buys whatever Nessa sells its class.
+fn mules_for(wanted: &[Wanted], steps: &[GemStep], class: &str, gems: &GemTable) -> Vec<Mule> {
+    let mut order: Vec<usize> = (0..wanted.len()).collect();
+    order.sort_by_key(|&i| (wanted[i].need_level, i));
+    let mut mules: Vec<Mule> = Vec::new();
+    for i in order {
+        let w = &wanted[i];
+        let own_act = steps.iter().find(|s| s.gem_id == w.id).map(|s| s.act);
+        if own_act.is_some_and(|act| act <= act_for_level(w.need_level)) {
+            continue;
+        }
+        let options: Vec<&GemSource> = gems
+            .sources_of(&w.id)
+            .filter(|s| s.quest_id == MULE_QUEST && !s.classes.iter().any(|c| c == class))
+            .collect();
+        let gem = |s: &GemSource| MuleGem {
+            name: w.name.clone(),
+            npc: s.npc.clone(),
+            own_act,
+        };
+        let offers = |kind: GemSourceKind, class: &str| {
+            options
+                .iter()
+                .find(|s| s.kind == kind && s.classes.iter().any(|c| c == class))
+                .copied()
+        };
+        if let Some((m, s)) = mules
+            .iter_mut()
+            .find_map(|m| offers(GemSourceKind::Vendor, &m.class).map(|s| (m, s)))
+        {
+            m.buy.push(gem(s));
+            continue;
+        }
+        if let Some((m, s)) = mules.iter_mut().find_map(|m| {
+            m.take
+                .is_none()
+                .then(|| offers(GemSourceKind::QuestReward, &m.class))
+                .flatten()
+                .map(|s| (m, s))
+        }) {
+            m.take = Some(gem(s));
+            continue;
+        }
+        // A reward costs nothing. Nessa wants scrolls a fresh character barely has.
+        let new = options
+            .iter()
+            .find(|s| s.kind == GemSourceKind::QuestReward)
+            .or_else(|| options.first());
+        if let Some(s) = new {
+            let Some(mule_class) = s.classes.first() else {
+                continue;
+            };
+            let (take, buy) = match s.kind {
+                GemSourceKind::QuestReward => (Some(gem(s)), Vec::new()),
+                GemSourceKind::Vendor => (None, vec![gem(s)]),
+            };
+            mules.push(Mule {
+                class: mule_class.clone(),
+                take,
+                buy,
+            });
+        }
+    }
+    mules
+}
+
 /// Puts the plan's gems right after the step that hands in their quest. Vendors sit in the same
-/// town, so the buys go there too.
+/// town, so the buys go there too. Mules go before the campaign's first step.
 pub fn annotate(view: &mut RouteView, plan: &GemPlan, hints: GemHints) {
     let mut out = Vec::with_capacity(view.here.len());
+    if view.edge == 0 && hints != GemHints::Off {
+        out.extend(plan.mules.iter().map(mule_step));
+    }
     for step in view.here.drain(..) {
         let quests: Vec<String> = step
             .parts
@@ -335,6 +443,50 @@ pub fn annotate(view: &mut RouteView, plan: &GemPlan, hints: GemHints) {
         }
     }
     view.here = out;
+}
+
+/// "Mule first: a Shadow kills Hillock, takes Cobra Lash, buys Momentum from Nessa and stashes
+/// them"
+fn mule_step(m: &Mule) -> Step {
+    let mut parts = vec![Part::Text {
+        text: format!("Mule first: a {} kills Hillock", m.class),
+    }];
+    if let Some(g) = &m.take {
+        parts.push(Part::Text {
+            text: ", takes ".into(),
+        });
+        parts.push(Part::RewardQuest {
+            item: g.name.clone(),
+        });
+    }
+    for (i, g) in m.buy.iter().enumerate() {
+        parts.push(Part::Text {
+            text: if i == 0 { ", buys " } else { ", " }.into(),
+        });
+        parts.push(Part::RewardVendor {
+            item: g.name.clone(),
+            cost: None,
+        });
+    }
+    if let Some(npc) = m.buy.first().map(|g| &g.npc) {
+        parts.push(Part::Text {
+            text: format!(" from {npc}"),
+        });
+    }
+    let count = m.take.iter().count() + m.buy.len();
+    parts.push(Part::Text {
+        text: if count == 1 {
+            " and stashes it"
+        } else {
+            " and stashes them"
+        }
+        .into(),
+    });
+    Step {
+        parts,
+        sub_steps: Vec::new(),
+        edge: None,
+    }
 }
 
 fn gem_step(g: &GemStep) -> Step {
@@ -599,14 +751,131 @@ mod tests {
     }
 
     #[test]
-    fn another_class_gets_nothing_from_witch_rewards() {
+    fn a_witch_reward_comes_to_another_class_by_mule() {
         let p = plan(
             &build(vec![group(vec![gem("A", false)])]),
             "Marauder",
             &table(),
         );
         assert!(p.steps.is_empty());
-        assert_eq!(p.not_in_campaign, ["A"]);
+        assert!(p.not_in_campaign.is_empty());
+        assert_eq!(p.mules[0].class, "Witch");
+        assert_eq!(p.mules[0].take.as_ref().unwrap().name, "A");
+    }
+
+    const MULE_GEMS: &str = r#"{
+      "C": {"id": "C", "name": "Cobra Lash", "required_level": 1, "is_support": false},
+      "M": {"id": "M", "name": "Momentum", "required_level": 1, "is_support": true},
+      "N": {"id": "N", "name": "Nightblade", "required_level": 1, "is_support": true},
+      "X": {"id": "X", "name": "Late Skill", "required_level": 1, "is_support": false}
+    }"#;
+    const MULE_QUESTS: &str = r#"{
+      "a1q1": {"id": "a1q1", "name": "Enemy at the Gate", "act": "1", "reward_offers": {"a1q1": {
+        "quest_npc": "Tarkleigh",
+        "quest": {"C": {"classes": ["Shadow"]}, "N": {"classes": ["Shadow"]}},
+        "vendor": {"C": {"classes": ["Ranger", "Shadow"], "npc": "Nessa"}, "M": {"classes": ["Ranger", "Shadow"], "npc": "Nessa"}}
+      }}},
+      "a3q12": {"id": "a3q12", "name": "A Fixture of Fate", "act": "3", "reward_offers": {"a3q12": {
+        "quest_npc": "Siosa",
+        "vendor": {"C": {"classes": [], "npc": "Siosa"}, "M": {"classes": [], "npc": "Siosa"}, "X": {"classes": [], "npc": "Siosa"}}
+      }}}
+    }"#;
+
+    fn mule_plan(class: &str, set_title: &str, gems: &[&str]) -> GemPlan {
+        let t = GemTable::from_json_bytes(MULE_GEMS.as_bytes(), MULE_QUESTS.as_bytes()).unwrap();
+        let named = |id: &str| Gem {
+            name_spec: t.gem(id).map(|g| g.name.clone()),
+            ..gem(id, id == "M" || id == "N")
+        };
+        let b = sets(vec![set(
+            set_title,
+            gems.iter().map(|g| named(g)).collect(),
+        )]);
+        plan(&b, class, &t)
+    }
+
+    #[test]
+    fn a_mule_brings_what_the_class_gets_too_late() {
+        // A Witch gets Cobra Lash and Momentum from Siosa in act 3, the build uses them at 12.
+        let p = mule_plan("Witch", "level 12", &["C", "M", "X"]);
+        assert_eq!(
+            p.mules,
+            [Mule {
+                class: "Shadow".into(),
+                take: Some(MuleGem {
+                    name: "Cobra Lash".into(),
+                    npc: "Tarkleigh".into(),
+                    own_act: Some(3),
+                }),
+                buy: vec![MuleGem {
+                    name: "Momentum".into(),
+                    npc: "Nessa".into(),
+                    own_act: Some(3),
+                }],
+            }]
+        );
+        // No class gets Late Skill for Hillock, so it's bought in act 3 as before.
+        assert!(summary(&p).contains(&("a3q12".into(), "X".into(), GemAction::Buy)));
+    }
+
+    #[test]
+    fn a_second_reward_needs_a_second_mule() {
+        let p = mule_plan("Witch", "level 12", &["C", "N"]);
+        let takes: Vec<_> = p
+            .mules
+            .iter()
+            .map(|m| (m.class.as_str(), m.take.as_ref().map(|g| g.name.as_str())))
+            .collect();
+        assert_eq!(
+            takes,
+            [
+                ("Shadow", Some("Cobra Lash")),
+                ("Shadow", Some("Nightblade"))
+            ]
+        );
+        // A Witch never gets Nightblade in the campaign, but the mule brings it.
+        assert!(p.not_in_campaign.is_empty());
+        assert_eq!(p.mules[1].take.as_ref().unwrap().own_act, None);
+    }
+
+    #[test]
+    fn no_mule_when_the_class_gets_the_gem_in_time() {
+        assert!(mule_plan("Ranger", "level 12", &["C", "M"])
+            .mules
+            .is_empty());
+        // Needed in act 5, act 3 is soon enough.
+        assert!(mule_plan("Witch", "level 40", &["C", "M"]).mules.is_empty());
+    }
+
+    #[test]
+    fn mules_come_before_the_first_step() {
+        let p = mule_plan("Witch", "level 12", &["C", "M"]);
+        let first = Step {
+            parts: vec![Part::Text {
+                text: "Kill Hillock".into(),
+            }],
+            sub_steps: Vec::new(),
+            edge: None,
+        };
+        let mut view = view_with(vec![first.clone()]);
+        view.edge = 0;
+        annotate(&mut view, &p, GemHints::RewardsAndVendors);
+        let lines: Vec<String> = view.here.iter().map(text_of).collect();
+        assert_eq!(
+            lines,
+            [
+                "Mule first: a Shadow kills Hillock, takes Cobra Lash, buys Momentum from Nessa and stashes them",
+                "Kill Hillock",
+            ]
+        );
+        // Only on the first step, and not with gem steps off.
+        let mut later = view_with(vec![first.clone()]);
+        annotate(&mut later, &p, GemHints::RewardsAndVendors);
+        assert_eq!(later.here.len(), 1);
+        let mut off = view_with(vec![first]);
+        off.edge = 0;
+        annotate(&mut off, &p, GemHints::Off);
+        assert_eq!(off.here.len(), 1);
     }
 
     fn view_with(here: Vec<Step>) -> RouteView {
