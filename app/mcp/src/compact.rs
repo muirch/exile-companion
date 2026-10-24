@@ -91,12 +91,22 @@ mod tests {
     #[test]
     fn drops_pob_colour_codes() {
         let v = compact(
-            json!(["^4Level 1-30 {1}", "Lvl 90 ^2Going Block Based ^7{6}", "^xFFAA00Red^7 text", "Lvl 41-60  {3}"]),
+            json!([
+                "^4Level 1-30 {1}",
+                "Lvl 90 ^2Going Block Based ^7{6}",
+                "^xFFAA00Red^7 text",
+                "Lvl 41-60  {3}"
+            ]),
             true,
         );
         assert_eq!(
             v,
-            json!(["Level 1-30 {1}", "Lvl 90 Going Block Based {6}", "Red text", "Lvl 41-60 {3}"])
+            json!([
+                "Level 1-30 {1}",
+                "Lvl 90 Going Block Based {6}",
+                "Red text",
+                "Lvl 41-60 {3}"
+            ])
         );
     }
 
