@@ -2,6 +2,8 @@
 
 The build assistant is an MCP server. Your AI agent (Claude Desktop, Claude Code, Cursor, Codex and others) starts it on your PC, then asks your own Path of Building about the build you imported in Exile Companion, plus the [Path of Exile Wiki](https://www.poewiki.net) for mechanics and crafting. It runs on your agent's plan, Exile Companion needs no API key.
 
+This is the way to ask from an agent you already use. To ask from the game itself, in a chat over it, see [chat.md](chat.md).
+
 ## What it needs
 
 Exile Companion with a build imported (settings, Path of Building, Paste code or link) and a PoB folder it found or you picked. The installer puts the assistant's two programs, `exile-companion-mcp` and `exile-pob-engine`, next to the app.

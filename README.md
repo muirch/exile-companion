@@ -2,7 +2,7 @@
 
 # Exile Companion
 
-A companion app for Path of Exile that sits over the game. I'm building it for myself first. The goal is an assistant that knows your build and answers questions about it. Today it guides you through the campaign.
+A companion app for Path of Exile that sits over the game. I'm building it for myself first. The goal is an assistant that knows your build and answers questions about it. Today it guides you through the campaign, and the first version of the assistant answers in a chat over the game.
 
 [![CI](https://github.com/muirch/exile-companion/actions/workflows/ci.yml/badge.svg)](https://github.com/muirch/exile-companion/actions/workflows/ci.yml)
 [![License: MIT](https://img.shields.io/badge/license-MIT-blue.svg)](LICENSE)
@@ -22,9 +22,11 @@ Import your Path of Building build, from a file, a PoB code or a pobb.in or poe.
 
 The overlay shows only while the game is in front, and clicks go through it to the game. It starts as a few compact lines between the flask bar and the skill bar. The full layout adds the area header and the route's hints.
 
+Press Alt+A and ask about your build. The assistant measures with your own Path of Building, knows where you are in the campaign and reads the Path of Exile Wiki. Before you ask anything, the chat lists what to change next to get closer to the guide you follow, and that list needs no AI model and costs nothing. Answers come from Anthropic, OpenRouter or a model server you name, with your own key, at about $0.001 to $0.03 a question depending on the model. See [docs/chat.md](docs/chat.md).
+
 ## Install
 
-Exile Companion runs on Windows. Download the setup file from the [dev release](https://github.com/muirch/exile-companion/releases/tag/dev) and run it. A newer build installs over the old one. Builds aren't signed yet, so Windows SmartScreen may ask you to confirm.
+Exile Companion runs on Windows, and on Linux from source (the overlay needs X11 or XWayland, which is how the game runs under Proton). On Windows, download the setup file from the [dev release](https://github.com/muirch/exile-companion/releases/tag/dev) and run it. A newer build installs over the old one. Builds aren't signed yet, so Windows SmartScreen may ask you to confirm.
 
 The app used to be called poebo. If you have poebo installed, uninstall it. Exile Companion picks up its settings and saved build on the first start.
 
@@ -36,15 +38,16 @@ All of them can be changed in the settings.
 
 | Key | What it does |
 |---|---|
-| Hold Tilde (left of 1) | Opens the quick menu with route and layout, previous and next step, settings, moving the overlay and quit |
+| Hold Tilde (left of 1) | Opens the quick menu with route and layout, previous and next step, the assistant, settings, moving the overlay and quit |
 | Tap Tilde | Show the overlay again after it faded out, and the step's hints in the compact layout |
+| Alt+A | Open or close the assistant's chat |
 | Alt+M | Unlock the overlay to drag it, press again to lock |
 | Alt+Left, Alt+Right | Previous or next step of the route |
 | F9 | Relog to character select, off until you turn it on |
 
 ## How it treats the game
 
-Exile Companion reads `Client.txt`, a text log the game writes to disk anyway, plus the keys you bind and, when you ask, the clipboard. If you paste a build link (pobb.in, poe.ninja, pastebin and the other sites Path of Building imports from), it downloads that one build. If you turn on sync with Path of Building, it reads and writes one build file in PoB's Builds folder. It leaves the game process alone. It doesn't read the game's memory or hook its rendering, and it doesn't play for you.
+Exile Companion reads `Client.txt`, a text log the game writes to disk anyway, plus the keys you bind and, when you ask, the clipboard. If you paste a build link (pobb.in, poe.ninja, pastebin and the other sites Path of Building imports from), it downloads that one build. If you turn on sync with Path of Building, it reads and writes one build file in PoB's Builds folder. When you ask the assistant, your question and what its tools read about your build and your progress go to the AI provider you picked, and nothing goes while you don't ask. It leaves the game process alone. It doesn't read the game's memory or hook its rendering, and it doesn't play for you.
 
 The relog key is the one thing it sends to the game. When you turn it on, F9 types `/exit` in chat, the way Awakened PoE Trade does. It's one chat command per key press, and only while the game is in front.
 
@@ -54,7 +57,7 @@ Exile Companion isn't affiliated with or endorsed by Grinding Gear Games. Path o
 
 The campaign guide is the first feature, not the whole app. What I want most is an assistant next to the game that knows my build. I want to ask it why my damage dropped or what to change next, and get an answer from real Path of Building numbers instead of a guess.
 
-- A build assistant you can ask questions, answering from Path of Building's own calculations. You ask it in a chat over the game (Alt+A) with your own key from Anthropic or OpenRouter or with a model on your own server, or through an AI agent you already use, such as Claude Desktop, Claude Code, Cursor or Codex, see [docs/mcp.md](docs/mcp.md). It's new and still being tested in the game.
+- A build assistant that answers from Path of Building's own calculations. The chat over the game is new and still being tested with different models. You can also ask through an AI agent you already use, such as Claude Desktop, Claude Code, Cursor or Codex, see [docs/mcp.md](docs/mcp.md).
 - Passive tree guidance from your build while you level.
 - Path of Exile 2, after its 1.0 release.
 
