@@ -33,8 +33,26 @@ fn carry_over_old_install(app: &tauri::AppHandle) {
     }
 }
 
+/// The overlay has to stay above the game and place itself on the screen, and GNOME allows both
+/// only to X11 windows. The game runs as one under Proton anyway.
+#[cfg(target_os = "linux")]
+fn linux_env() {
+    if std::env::var_os("GDK_BACKEND").is_none() {
+        std::env::set_var("GDK_BACKEND", "x11");
+    }
+    // WebKitGTK's DMA-BUF renderer leaves the window blank on NVIDIA's driver.
+    if std::path::Path::new("/proc/driver/nvidia").exists()
+        && std::env::var_os("WEBKIT_DISABLE_DMABUF_RENDERER").is_none()
+    {
+        std::env::set_var("WEBKIT_DISABLE_DMABUF_RENDERER", "1");
+    }
+}
+
 /// Build and run the application.
 pub fn run() {
+    // Before GTK starts and reads them.
+    #[cfg(target_os = "linux")]
+    linux_env();
     log_panics();
     tauri::Builder::default()
         .plugin(
@@ -92,8 +110,7 @@ pub fn run() {
             }
 
             overlay::create_tray(app.handle())?;
-            let grabbed = !cfg!(windows);
-            overlay::set_grab(app.handle(), grabbed);
+            overlay::set_grab(app.handle(), false);
             overlay::watch_game_focus(app.handle().clone());
             menu::watch_menu_hold(app.handle().clone());
 

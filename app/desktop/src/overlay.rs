@@ -164,15 +164,18 @@ pub fn create_tray(app: &AppHandle) -> tauri::Result<()> {
 
 /// Hides the overlay while neither the game nor the overlay itself is the foreground window.
 /// The window stays shown and the UI goes transparent: showing a hidden window would steal focus
-/// from the game. Only implemented on Windows. Elsewhere the overlay is always visible.
+/// from the game. On Linux this needs the app to run as an X11 window. Elsewhere the overlay is
+/// always visible.
 pub fn watch_game_focus(app: AppHandle) {
     #[cfg(windows)]
     win::watch(app);
-    #[cfg(not(windows))]
+    #[cfg(target_os = "linux")]
+    x11::watch(app);
+    #[cfg(not(any(windows, target_os = "linux")))]
     let _ = app;
 }
 
-#[cfg(windows)]
+#[cfg(any(windows, target_os = "linux"))]
 fn on_foreground_changed(app: &AppHandle, is_game: bool, is_own: bool) {
     let state = app.state::<AppState>();
     // Alt-tabbing away while unlocked locks again, so the overlay never eats desktop clicks.
@@ -205,10 +208,6 @@ mod win {
         SetForegroundWindow, SetTimer, TranslateMessage, EVENT_SYSTEM_FOREGROUND, MSG,
         WINEVENT_OUTOFCONTEXT,
     };
-
-    // PoE 1 and PoE 2 both use this window class. The title check covers anything else.
-    const GAME_CLASS: &str = "POEWindowClass";
-    const GAME_TITLES: [&str; 2] = ["Path of Exile", "Path of Exile 2"];
 
     // The hook callback has no user data pointer.
     static APP: OnceLock<AppHandle> = OnceLock::new();
@@ -298,12 +297,105 @@ mod win {
         }
         let mut buf = [0u16; 256];
         let len = unsafe { GetClassNameW(hwnd, buf.as_mut_ptr(), buf.len() as i32) };
-        if String::from_utf16_lossy(&buf[..len.max(0) as usize]) == GAME_CLASS {
-            return true;
-        }
-        // Exact match: a browser tab titled "Path of Exile Wiki" must not count.
+        let class = String::from_utf16_lossy(&buf[..len.max(0) as usize]);
         let len = unsafe { GetWindowTextW(hwnd, buf.as_mut_ptr(), buf.len() as i32) };
         let title = String::from_utf16_lossy(&buf[..len.max(0) as usize]);
-        GAME_TITLES.contains(&title.as_str())
+        exile_core::game_window::is_game_window(&class, &title)
+    }
+}
+
+/// The active window from the X server. GNOME sets it for X11 windows, and the game runs as one
+/// under Proton. While a native Wayland window has focus it reads as none.
+#[cfg(target_os = "linux")]
+mod x11 {
+    use tauri::AppHandle;
+    use x11rb::connection::Connection;
+    use x11rb::protocol::xproto::{
+        Atom, AtomEnum, ChangeWindowAttributesAux, ConnectionExt, EventMask, Window,
+    };
+    use x11rb::protocol::Event;
+    use x11rb::rust_connection::RustConnection;
+
+    type Error = Box<dyn std::error::Error>;
+
+    struct Atoms {
+        active: Atom,
+        pid: Atom,
+        name: Atom,
+        utf8: Atom,
+    }
+
+    pub fn watch(app: AppHandle) {
+        std::thread::spawn(move || {
+            if let Err(e) = run(&app) {
+                log::info!("game focus isn't tracked: {e}");
+            }
+        });
+    }
+
+    fn run(app: &AppHandle) -> Result<(), Error> {
+        let (conn, screen) = x11rb::connect(None)?;
+        let root = conn.setup().roots[screen].root;
+        let atom = |name: &[u8]| -> Result<Atom, Error> {
+            Ok(conn.intern_atom(false, name)?.reply()?.atom)
+        };
+        let atoms = Atoms {
+            active: atom(b"_NET_ACTIVE_WINDOW")?,
+            pid: atom(b"_NET_WM_PID")?,
+            name: atom(b"_NET_WM_NAME")?,
+            utf8: atom(b"UTF8_STRING")?,
+        };
+        conn.change_window_attributes(
+            root,
+            &ChangeWindowAttributesAux::new().event_mask(EventMask::PROPERTY_CHANGE),
+        )?;
+        conn.flush()?;
+        report(app, &conn, root, &atoms);
+        loop {
+            if let Event::PropertyNotify(e) = conn.wait_for_event()? {
+                if e.atom == atoms.active {
+                    report(app, &conn, root, &atoms);
+                }
+            }
+        }
+    }
+
+    fn report(app: &AppHandle, conn: &RustConnection, root: Window, atoms: &Atoms) {
+        // A window can close between the change and our question about it. Then it's not the game.
+        let (is_game, is_own) = active(conn, root, atoms).unwrap_or((false, false));
+        super::on_foreground_changed(app, is_game, is_own);
+    }
+
+    fn active(conn: &RustConnection, root: Window, atoms: &Atoms) -> Result<(bool, bool), Error> {
+        let property = |window: Window, atom: Atom, kind: Atom| -> Result<Vec<u8>, Error> {
+            Ok(conn
+                .get_property(false, window, atom, kind, 0, 256)?
+                .reply()?
+                .value)
+        };
+        let first = |bytes: Vec<u8>| {
+            bytes
+                .get(..4)
+                .map(|b| u32::from_ne_bytes([b[0], b[1], b[2], b[3]]))
+        };
+        let Some(window) =
+            first(property(root, atoms.active, AtomEnum::WINDOW.into())?).filter(|w| *w != 0)
+        else {
+            return Ok((false, false));
+        };
+        let pid = first(property(window, atoms.pid, AtomEnum::CARDINAL.into())?);
+        // Menu and settings count as ours too, so the overlay doesn't vanish while they're open.
+        if pid == Some(std::process::id()) {
+            return Ok((false, true));
+        }
+        let class = property(window, AtomEnum::WM_CLASS.into(), AtomEnum::STRING.into())?;
+        let title = property(window, atoms.name, atoms.utf8)?;
+        let title = String::from_utf8_lossy(&title);
+        // WM_CLASS is the instance name and the class name, each ending in a NUL.
+        let is_game = String::from_utf8_lossy(&class)
+            .split('\0')
+            .chain(std::iter::once(""))
+            .any(|c| exile_core::game_window::is_game_window(c, &title));
+        Ok((is_game, false))
     }
 }
