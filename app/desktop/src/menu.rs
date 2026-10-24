@@ -125,6 +125,8 @@ mod hold {
                     if crate::overlay::game_focused(app) {
                         let app2 = app.clone();
                         let _ = app.run_on_main_thread(move || super::open_at_cursor(&app2));
+                        #[cfg(target_os = "linux")]
+                        super::x11::focus_menu();
                     }
                 }
             }
@@ -140,12 +142,17 @@ mod hold {
 /// them while an X11 window has focus, which the game under Proton is.
 #[cfg(target_os = "linux")]
 mod x11 {
-    use std::sync::atomic::{AtomicBool, Ordering};
+    use std::sync::atomic::{AtomicBool, AtomicU32, Ordering};
+    use std::time::Duration;
 
     use tauri::AppHandle;
     use x11rb::connection::Connection;
     use x11rb::protocol::xinput::{self, ConnectionExt as _};
+    use x11rb::protocol::xproto::{
+        Atom, AtomEnum, ClientMessageEvent, ConnectionExt as _, EventMask, Window,
+    };
     use x11rb::protocol::Event;
+    use x11rb::rust_connection::RustConnection;
 
     // Physical keys, as on Windows: the key left of 1 is the menu key in any layout. These are
     // the evdev codes plus 8 that Xwayland uses.
@@ -153,6 +160,9 @@ mod x11 {
     const TAB_KEY: u32 = 23;
 
     static TAB: AtomicBool = AtomicBool::new(false);
+    /// X server time of the last menu key event, the proof GNOME wants that the player asked.
+    static KEY_TIME: AtomicU32 = AtomicU32::new(0);
+    const MENU_TITLE: &[u8] = b"Exile Companion menu";
 
     pub fn set_hold_key(name: &str) {
         TAB.store(name == "Tab", Ordering::SeqCst);
@@ -185,9 +195,9 @@ mod x11 {
         conn.flush()?;
         let mut down = false;
         loop {
-            let (key, press) = match conn.wait_for_event()? {
-                Event::XinputRawKeyPress(e) => (e.detail, true),
-                Event::XinputRawKeyRelease(e) => (e.detail, false),
+            let (key, press, time) = match conn.wait_for_event()? {
+                Event::XinputRawKeyPress(e) => (e.detail, true, e.time),
+                Event::XinputRawKeyRelease(e) => (e.detail, false, e.time),
                 _ => continue,
             };
             let watched = if TAB.load(Ordering::SeqCst) {
@@ -198,6 +208,7 @@ mod x11 {
             if key != watched {
                 continue;
             }
+            KEY_TIME.store(time, Ordering::SeqCst);
             if press {
                 super::hold::pressed(down);
             } else {
@@ -205,6 +216,81 @@ mod x11 {
             }
             down = press;
         }
+    }
+
+    /// GNOME keeps focus from a window that shows up without the player touching it, so the first
+    /// click on the menu would only focus it. Asking for focus with the key's time, the way
+    /// pagers and xdotool do, counts as the player's own action.
+    pub fn focus_menu() {
+        let time = KEY_TIME.load(Ordering::SeqCst);
+        std::thread::spawn(move || {
+            if let Err(e) = activate(MENU_TITLE, time) {
+                log::info!("couldn't focus the menu: {e}");
+            }
+        });
+    }
+
+    fn activate(title: &[u8], time: u32) -> Result<(), Box<dyn std::error::Error>> {
+        let (conn, screen) = x11rb::connect(None)?;
+        let root = conn.setup().roots[screen].root;
+        let atom = |name: &[u8]| -> Result<Atom, Box<dyn std::error::Error>> {
+            Ok(conn.intern_atom(false, name)?.reply()?.atom)
+        };
+        let (active, clients, pid, name, utf8) = (
+            atom(b"_NET_ACTIVE_WINDOW")?,
+            atom(b"_NET_CLIENT_LIST")?,
+            atom(b"_NET_WM_PID")?,
+            atom(b"_NET_WM_NAME")?,
+            atom(b"UTF8_STRING")?,
+        );
+        // The window manager lists the menu once it has mapped it, a moment after show().
+        for _ in 0..25 {
+            if let Some(window) = find(&conn, root, clients, pid, name, utf8, title)? {
+                let event = ClientMessageEvent::new(32, window, active, [2, time, 0, 0, 0]);
+                conn.send_event(
+                    false,
+                    root,
+                    EventMask::SUBSTRUCTURE_REDIRECT | EventMask::SUBSTRUCTURE_NOTIFY,
+                    event,
+                )?;
+                conn.flush()?;
+                return Ok(());
+            }
+            std::thread::sleep(Duration::from_millis(20));
+        }
+        Err("the menu window didn't show up".into())
+    }
+
+    fn find(
+        conn: &RustConnection,
+        root: Window,
+        clients: Atom,
+        pid: Atom,
+        name: Atom,
+        utf8: Atom,
+        title: &[u8],
+    ) -> Result<Option<Window>, Box<dyn std::error::Error>> {
+        let list = conn
+            .get_property(false, root, clients, AtomEnum::WINDOW, 0, 1024)?
+            .reply()?;
+        let Some(windows) = list.value32() else {
+            return Ok(None);
+        };
+        for window in windows {
+            let owner = conn
+                .get_property(false, window, pid, AtomEnum::CARDINAL, 0, 1)?
+                .reply()?;
+            if owner.value32().and_then(|mut v| v.next()) != Some(std::process::id()) {
+                continue;
+            }
+            let n = conn
+                .get_property(false, window, name, utf8, 0, 64)?
+                .reply()?;
+            if n.value == title {
+                return Ok(Some(window));
+            }
+        }
+        Ok(None)
     }
 }
 
