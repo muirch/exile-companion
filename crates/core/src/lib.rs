@@ -24,6 +24,7 @@ pub mod data;
 pub mod error;
 pub mod events;
 pub mod followed_guide;
+pub mod game_window;
 pub mod gemplan;
 pub mod gems;
 pub mod guidance;
