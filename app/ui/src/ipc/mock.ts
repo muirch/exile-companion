@@ -39,6 +39,13 @@ const MOCK_BUILD: BuildSummary = {
   spec_count: 3,
   gem_count: 24,
   not_in_campaign: ['Vaal Haste', 'Empower Support'],
+  mules: [
+    {
+      class: 'Shadow',
+      take: { name: 'Cobra Lash', npc: 'Tarkleigh', own_act: 3 },
+      buy: [{ name: 'Momentum', npc: 'Nessa', own_act: 3 }],
+    },
+  ],
   presets: [
     { title: 'Leveling (Act 1)', gem_count: 6, auto_level: 1 },
     { title: '----- Mapping -----', gem_count: 0, auto_level: 100 },

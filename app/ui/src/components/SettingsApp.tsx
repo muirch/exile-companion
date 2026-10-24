@@ -28,7 +28,7 @@ import {
   stopSource,
   updateSettings,
 } from '../ipc/commands';
-import type { AgentView, AssistantView, GemHints, PobInfo, PobSync, PresetStage } from '../ipc/types';
+import type { AgentView, AssistantView, GemHints, Mule, PobInfo, PobSync, PresetStage } from '../ipc/types';
 import { Button, Choice, ConfirmButton, Note, Row, Section, Select, Slider, Toggle } from '../kit';
 import { useAppStore } from '../store/useAppStore';
 import { HotkeySection } from './HotkeySection';
@@ -438,6 +438,15 @@ function PobSyncRows(): React.JSX.Element {
   );
 }
 
+function muleText(m: Mule): string {
+  const parts = [];
+  if (m.take) parts.push(`take ${m.take.name}`);
+  if (m.buy.length > 0) {
+    parts.push(`buy ${m.buy.map((g) => g.name).join(', ')} from ${m.buy[0].npc}`);
+  }
+  return `${m.class}: ${parts.join(', ')}`;
+}
+
 function BuildSection(): React.JSX.Element {
   const build = useAppStore((s) => s.build);
   const setBuild = useAppStore((s) => s.setBuild);
@@ -505,6 +514,20 @@ function BuildSection(): React.JSX.Element {
             {build.not_in_campaign.join(', ')}
           </span>
         </Row>
+      )}
+      {build && build.mules.length > 0 && (
+        <>
+          {build.mules.map((m, i) => (
+            <Row key={i} label={i === 0 ? 'Mule first' : ''}>
+              <span className="min-w-0 flex-1 font-body text-[13px] text-value">{muleText(m)}</span>
+            </Row>
+          ))}
+          <Note>
+            Your class gets these gems only later, or never. Before you start, make a character of that
+            class in the same league, kill Hillock, and leave the gems in the stash. It takes a couple
+            of minutes.
+          </Note>
+        </>
       )}
       <PresetRows />
     </Section>
