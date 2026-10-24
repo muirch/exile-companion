@@ -15,6 +15,9 @@ const API_VERSION: &str = "2026-10-21";
 /// Progress notes between tool calls come back readable (thinking display "updates"), and a
 /// policy decline is retried on the model Anthropic picks for its category.
 const BETAS: &str = "thinking-display-updates-2026-08-18,server-side-fallback-2026-07-01";
+// A player asks every ten or twenty minutes, so the 5-minute cache would be written again for
+// almost every question. An hour costs twice the input price once instead.
+const CACHE: &str = "1h";
 // Room for thinking plus the answer. Streaming keeps a large value from timing out.
 const MAX_TOKENS: u32 = 64_000;
 
@@ -51,18 +54,22 @@ pub fn body(model: Model, effort: Effort, setup: &Setup<'_>, messages: &[Value])
             })
         })
         .collect();
-    json!({
+    let mut b = json!({
         "model": model.id(),
         "max_tokens": MAX_TOKENS,
         "stream": true,
-        "system": [{ "type": "text", "text": setup.system, "cache_control": { "type": "ephemeral" } }],
+        "system": [{ "type": "text", "text": setup.system, "cache_control": { "type": "ephemeral", "ttl": CACHE } }],
         "tools": tools,
         "messages": messages,
-        "thinking": { "type": "adaptive", "display": "updates" },
+        "thinking": { "type": "adaptive" },
         "output_config": { "effort": effort.as_str() },
-        "cache_control": { "type": "ephemeral" },
-        "fallbacks": "default",
-    })
+        "cache_control": { "type": "ephemeral", "ttl": CACHE },
+    });
+    if model.has_updates_and_fallback() {
+        b["thinking"]["display"] = json!("updates");
+        b["fallbacks"] = json!("default");
+    }
+    b
 }
 
 impl Llm for Anthropic {
@@ -75,16 +82,14 @@ impl Llm for Anthropic {
     }
 
     fn send(&self, body: Value) -> mpsc::Receiver<Result<Value, ChatError>> {
-        http::post_stream(
-            self.agent.clone(),
-            API_URL.into(),
-            vec![
-                ("x-api-key", self.key.clone()),
-                ("anthropic-version", API_VERSION.into()),
-                ("anthropic-beta", BETAS.into()),
-            ],
-            body,
-        )
+        let mut headers = vec![
+            ("x-api-key", self.key.clone()),
+            ("anthropic-version", API_VERSION.into()),
+        ];
+        if self.model.has_updates_and_fallback() {
+            headers.push(("anthropic-beta", BETAS.into()));
+        }
+        http::post_stream(self.agent.clone(), API_URL.into(), headers, body)
     }
 
     fn assembler(&self) -> Box<dyn crate::turn::Assembler> {
@@ -482,6 +487,12 @@ data: {"type":"message_stop"}
         assert_eq!(b["output_config"]["effort"], "high");
         assert_eq!(b["tools"][0]["eager_input_streaming"], true);
         assert_eq!(b["tools"][0]["input_schema"], json!({"type": "object"}));
+        assert_eq!(b["cache_control"]["ttl"], "1h");
+        assert_eq!(b["thinking"]["display"], "updates");
+        assert_eq!(b["fallbacks"], "default");
+        let haiku = body(Model::Haiku, Effort::Low, &setup, &[]);
+        assert!(haiku.get("fallbacks").is_none());
+        assert!(haiku["thinking"].get("display").is_none());
         for banned in ["temperature", "top_p", "top_k", "tool_choice"] {
             assert!(b.get(banned).is_none(), "{banned}");
         }
