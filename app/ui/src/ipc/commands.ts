@@ -242,7 +242,7 @@ export const getSettings = (): Promise<Settings> =>
         chat: {
           provider: 'anthropic',
           model: 'claude-sonnet-5-5',
-          effort: 'medium',
+          effort: 'low',
           routerModel: '',
           customUrl: '',
           customModel: '',
