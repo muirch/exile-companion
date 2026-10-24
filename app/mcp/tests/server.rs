@@ -118,6 +118,7 @@ fn lists_its_tools() {
         "build_history",
         "undo_change",
         "player_status",
+        "what_next",
         "follow_guide",
         "use_as_my_build",
         "back_to_my_build",
@@ -339,8 +340,13 @@ fn knows_where_the_player_is_and_the_guide_they_follow() {
     let (text, is_error) = c.tool("guide_stages", json!({}));
     assert!(is_error && text.contains("follows none"), "{text}");
 
+    let (text, is_error) = c.tool("what_next", json!({}));
+    assert!(!is_error && text.contains("follows none"), "{text}");
+
     let (text, is_error) = c.tool("follow_guide", json!({ "guide": GUIDE }));
     assert!(!is_error, "{text}");
+    let (text, is_error) = c.tool("what_next", json!({}));
+    assert!(!is_error && text.contains("no build yet"), "{text}");
     let (text, is_error) = c.tool(
         "use_as_my_build",
         json!({ "build": GUIDE, "reason": "leveling with the guide" }),
@@ -349,8 +355,21 @@ fn knows_where_the_player_is_and_the_guide_they_follow() {
     assert_eq!(std::fs::read_to_string(&build).unwrap(), GUIDE.trim());
     let s = status(&mut c);
     assert_eq!(s["guide"]["class"], "Ranger");
-    assert_eq!(s["build"]["class"], "Ranger");
-    assert!(s["build"]["mules"].is_array(), "{s}");
+    assert!(s["guide"]["mules"].is_array(), "{s}");
+    // The build is the guide now, so it isn't listed twice.
+    assert_eq!(s["build"]["same_outline_as_guide"], true, "{s}");
+
+    let (text, is_error) = c.tool("what_next", json!({}));
+    assert!(!is_error, "{text}");
+    let next: Value = serde_json::from_str(&text).unwrap();
+    assert_eq!(next["status"]["game"]["level"], 4);
+    assert_eq!(
+        next["guide_diff"]["passives"]["missing"],
+        json!([]),
+        "{next}"
+    );
+    assert!(next["next_passives"].is_array(), "{next}");
+    assert!(next["status"]["guide"]["trees"].is_null(), "{next}");
     let (text, is_error) = c.tool("guide_stages", json!({}));
     assert!(!is_error, "{text}");
 
