@@ -302,12 +302,19 @@ function bridge.node_power(params)
 	return { taken = taken, reachable = reachable }
 end
 
+local findGroup
+
 -- DPS lost when each gem of a socket group is turned off, the main group by default.
 function bridge.gem_value(params)
-	local index = params.group or build.mainSocketGroup
-	local group = build.skillsTab.socketGroupList[index]
+	local group = findGroup(params.group)
 	if not group then
-		error("no socket group " .. tostring(index), 0)
+		error("no socket group " .. tostring(params.group), 0)
+	end
+	local index
+	for i, g in ipairs(build.skillsTab.socketGroupList) do
+		if g == group then
+			index = i
+		end
 	end
 	local base = dps(output())
 	local calc = build.calcsTab:GetMiscCalculator()
@@ -462,7 +469,13 @@ local function gemName(name)
 	return (tostring(name):gsub(" Support$", ""))
 end
 
-local function findGroup(ref)
+-- Labels reach the model without colour codes and doubled spaces, so they come back that way.
+local function plainLabel(text)
+	local s = strip(text or ""):gsub("%s+", " ")
+	return (s:gsub("^ ", ""):gsub(" $", ""))
+end
+
+function findGroup(ref)
 	local list = build.skillsTab.socketGroupList
 	if ref == nil then
 		return list[build.mainSocketGroup]
@@ -470,8 +483,10 @@ local function findGroup(ref)
 	if list[tonumber(ref)] then
 		return list[tonumber(ref)]
 	end
+	local plain = plainLabel(ref)
 	for _, g in ipairs(list) do
-		if g.displayLabel == ref or g.label == ref then
+		if g.displayLabel == ref or g.label == ref
+			or (plain ~= "" and (plainLabel(g.displayLabel) == plain or plainLabel(g.label) == plain)) then
 			return g
 		end
 		for _, gem in ipairs(g.gemList) do

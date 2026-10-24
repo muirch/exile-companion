@@ -29,6 +29,27 @@ fn f(v: &Value) -> f64 {
 }
 
 #[test]
+fn finds_a_group_by_its_label_without_colour_codes() {
+    let Some(pob) = pob_dir() else { return };
+    let mut e = engine(&pob);
+    let labelled = FIXTURE.replacen(
+        "<Skill enabled=\"true\" slot=\"\" mainActiveSkill=\"1\">",
+        "<Skill enabled=\"true\" slot=\"\" mainActiveSkill=\"1\" label=\"^6Main  link\">",
+        1,
+    );
+    e.call("load_build", json!({ "xml": labelled }), SLOW)
+        .unwrap();
+    let gems = e
+        .call("gem_value", json!({ "group": "Main link" }), SLOW)
+        .unwrap();
+    assert_eq!(gems["group"], 1);
+    let by_gem = e
+        .call("gem_value", json!({ "group": "Caustic Arrow" }), SLOW)
+        .unwrap();
+    assert_eq!(by_gem["group"], 1);
+}
+
+#[test]
 fn answers_questions_about_a_loaded_build() {
     let Some(pob) = pob_dir() else { return };
     let mut e = engine(&pob);
