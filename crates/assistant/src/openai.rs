@@ -34,14 +34,21 @@ impl OpenAi {
         }
     }
 
-    /// A local server often needs no key.
-    pub fn custom(base_url: &str, key: Option<String>, model: String, user_agent: &str) -> Self {
+    /// A local server often needs no key. `effort` goes out as reasoning_effort, which Ollama
+    /// takes and other servers may reject, so only pass it to a server known to take it.
+    pub fn custom(
+        base_url: &str,
+        key: Option<String>,
+        model: String,
+        effort: Option<Effort>,
+        user_agent: &str,
+    ) -> Self {
         Self {
             agent: http::agent(user_agent),
             url: completions_url(base_url),
             key: key.filter(|k| !k.trim().is_empty()),
             model: model.trim().to_string(),
-            effort: None,
+            effort,
             openrouter: false,
         }
     }
@@ -84,6 +91,9 @@ pub fn body(
     } else {
         // OpenAI's servers only send usage when asked. OpenRouter always does.
         b["stream_options"] = json!({ "include_usage": true });
+        if let Some(e) = effort {
+            b["reasoning_effort"] = json!(e.as_str());
+        }
     }
     b
 }
@@ -433,7 +443,10 @@ mod tests {
         assert_eq!(b["reasoning"]["effort"], "low");
         let local = body("qwen", None, false, &setup, &msgs);
         assert!(local.get("reasoning").is_none());
+        assert!(local.get("reasoning_effort").is_none());
         assert_eq!(local["stream_options"]["include_usage"], true);
+        let ollama = body("qwen", Some(Effort::Low), false, &setup, &msgs);
+        assert_eq!(ollama["reasoning_effort"], "low");
     }
 
     #[test]
