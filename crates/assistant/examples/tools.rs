@@ -11,7 +11,9 @@ async fn main() {
         .next()
         .map(|a| serde_json::from_str(&a).expect("tool args as JSON"))
         .unwrap_or_else(|| serde_json::json!({}));
-    let server = exile_assistant::Server::start(exe.as_ref(), &[]).await.unwrap();
+    let server = exile_assistant::Server::start(exe.as_ref(), &[])
+        .await
+        .unwrap();
     println!(
         "{} tools, {} chars of instructions",
         server.tools.len(),

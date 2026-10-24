@@ -4,14 +4,69 @@ use serde::Serialize;
 use serde_json::{json, Value};
 use tokio::sync::mpsc;
 
-use crate::config::{Config, Usage};
-use crate::request;
-use crate::stream::{Delta, Message};
+use crate::config::Usage;
+use crate::stream::Delta;
 use crate::ChatError;
 
-/// One streamed Messages API call. The receiver yields the JSON of each event.
+/// A tool from the MCP server, before a provider puts it into its own form.
+#[derive(Debug, Clone, PartialEq)]
+pub struct ToolDef {
+    pub name: String,
+    pub description: String,
+    pub schema: Value,
+}
+
+/// The shape of the messages a provider takes. A conversation stays in one of them.
+#[derive(Debug, Clone, Copy, PartialEq, Eq)]
+pub enum Dialect {
+    Anthropic,
+    OpenAi,
+}
+
+#[derive(Debug, Clone, PartialEq)]
+pub enum Finish {
+    End,
+    ToolUse,
+    /// The answer hit the output limit.
+    Cut,
+    /// With the refusal's category, such as "cyber", when the provider gave one.
+    Refused(Option<String>),
+    /// Anthropic's pause_turn: send the conversation again as it is.
+    Pause,
+}
+
+#[derive(Debug, Clone, PartialEq)]
+pub struct Call {
+    pub id: String,
+    pub name: String,
+    /// The streamed arguments when they didn't parse as a JSON object.
+    pub input: Result<Value, String>,
+}
+
+/// One finished model message.
+#[derive(Debug, Clone, PartialEq)]
+pub struct Reply {
+    /// The message as it goes back into the conversation.
+    pub message: Value,
+    pub calls: Vec<Call>,
+    pub finish: Finish,
+    pub usage: Usage,
+}
+
+/// Builds a reply from the provider's stream events.
+pub trait Assembler: Send {
+    fn apply(&mut self, event: &Value) -> Result<Option<Delta>, ChatError>;
+    /// Fails with Truncated when the stream ended before the message did.
+    fn finish(self: Box<Self>) -> Result<Reply, ChatError>;
+}
+
+/// One model behind one provider.
 pub trait Llm: Sync {
+    fn dialect(&self) -> Dialect;
+    fn body(&self, setup: &Setup<'_>, messages: &[Value]) -> Value;
+    /// Streams one request. The receiver yields the JSON of each event.
     fn send(&self, body: Value) -> mpsc::Receiver<Result<Value, ChatError>>;
+    fn assembler(&self) -> Box<dyn Assembler>;
 }
 
 #[derive(Debug, Clone, PartialEq)]
@@ -37,7 +92,6 @@ pub enum ChatEvent {
 #[serde(rename_all = "camelCase")]
 pub enum Stop {
     Done,
-    /// The answer hit max_tokens.
     Cut,
     Refused,
     TooManySteps,
@@ -48,14 +102,12 @@ pub enum Stop {
 pub struct TurnEnd {
     pub stop: Stop,
     pub usage: Usage,
-    /// The refusal's category, such as "cyber", when the API gave one.
     pub refusal: Option<String>,
 }
 
 pub struct Setup<'a> {
-    pub config: Config,
     pub system: &'a str,
-    pub tools: &'a [Value],
+    pub tools: &'a [ToolDef],
 }
 
 // A typical question takes one to four tool rounds. This only stops a model that loops.
@@ -63,9 +115,41 @@ const MAX_REQUESTS: usize = 20;
 // Wiki pages are cut at 12k characters by the server already. This is for anything else.
 const MAX_TOOL_TEXT: usize = 40_000;
 
+impl Dialect {
+    fn tool_results(self, results: Vec<(String, ToolOutput)>) -> Vec<Value> {
+        match self {
+            // All results of one assistant message go back in one user message.
+            Dialect::Anthropic => vec![json!({
+                "role": "user",
+                "content": results
+                    .into_iter()
+                    .map(|(id, out)| json!({
+                        "type": "tool_result",
+                        "tool_use_id": id,
+                        "content": cut(out.text),
+                        "is_error": out.is_error,
+                    }))
+                    .collect::<Vec<_>>(),
+            })],
+            Dialect::OpenAi => results
+                .into_iter()
+                .map(|(id, out)| {
+                    let text = cut(out.text);
+                    json!({
+                        "role": "tool",
+                        "tool_call_id": id,
+                        "content": if out.is_error { format!("Error: {text}") } else { text },
+                    })
+                })
+                .collect(),
+        }
+    }
+}
+
 #[derive(Debug, Default, Clone)]
 pub struct Conversation {
     messages: Vec<Value>,
+    dialect: Option<Dialect>,
 }
 
 impl Conversation {
@@ -79,8 +163,9 @@ impl Conversation {
 
     /// Asks one question and runs the tools until the model answers. The conversation keeps the
     /// turn only when it ended with an answer, so an error, a refusal or a dropped future leave
-    /// it as it was and the next question goes on from the last answer.
-    pub async fn ask<L: Llm, T: Tools>(
+    /// it as it was and the next question goes on from the last answer. A provider with another
+    /// message format starts the conversation over.
+    pub async fn ask<L: Llm + ?Sized, T: Tools>(
         &mut self,
         setup: &Setup<'_>,
         llm: &L,
@@ -88,16 +173,20 @@ impl Conversation {
         question: &str,
         mut on: impl FnMut(ChatEvent) + Send,
     ) -> Result<TurnEnd, ChatError> {
-        let mut messages = self.messages.clone();
+        let dialect = llm.dialect();
+        let mut messages = if self.dialect == Some(dialect) {
+            self.messages.clone()
+        } else {
+            Vec::new()
+        };
         messages.push(json!({ "role": "user", "content": question }));
         let mut usage = Usage::default();
         let mut wrote_text = false;
         for _ in 0..MAX_REQUESTS {
-            let body = request::body(setup.config, setup.system, setup.tools, &messages);
-            let mut rx = llm.send(body);
-            let mut msg = Message::default();
+            let mut rx = llm.send(llm.body(setup, &messages));
+            let mut assembler = llm.assembler();
             while let Some(event) = rx.recv().await {
-                match msg.apply(&event?)? {
+                match assembler.apply(&event?)? {
                     Some(Delta::Text(text)) => {
                         wrote_text = true;
                         on(ChatEvent::Text { text });
@@ -108,45 +197,36 @@ impl Conversation {
                     None => {}
                 }
             }
-            if !msg.stopped {
-                return Err(ChatError::Truncated);
-            }
-            usage.add(msg.usage);
-            let content = msg.for_history();
-            let calls: Vec<&Value> = content.iter().filter(|b| b["type"] == "tool_use").collect();
+            let reply = assembler.finish()?;
+            usage.add(reply.usage);
             let end = |stop| TurnEnd {
                 stop,
                 usage,
                 refusal: None,
             };
-            match msg.stop_reason.as_deref() {
-                Some("refusal") => {
-                    let category = msg
-                        .stop_details
-                        .as_ref()
-                        .and_then(|d| d["category"].as_str())
-                        .map(str::to_string);
+            match reply.finish {
+                Finish::Refused(category) => {
                     return Ok(TurnEnd {
                         refusal: category,
                         ..end(Stop::Refused)
                     });
                 }
-                Some("max_tokens") => {
+                Finish::Cut => {
                     // A cut tool call is never run, and a turn ending on one can't be kept.
-                    if calls.is_empty() {
-                        messages.push(json!({ "role": "assistant", "content": content }));
-                        self.messages = messages;
+                    if reply.calls.is_empty() {
+                        messages.push(reply.message);
+                        self.keep(messages, dialect);
                     }
                     return Ok(end(Stop::Cut));
                 }
-                Some("pause_turn") => {
-                    messages.push(json!({ "role": "assistant", "content": content }));
+                Finish::Pause => {
+                    messages.push(reply.message);
                     continue;
                 }
-                Some("tool_use") if !calls.is_empty() => {}
-                _ => {
-                    messages.push(json!({ "role": "assistant", "content": content }));
-                    self.messages = messages;
+                Finish::ToolUse if !reply.calls.is_empty() => {}
+                Finish::ToolUse | Finish::End => {
+                    messages.push(reply.message);
+                    self.keep(messages, dialect);
                     return Ok(end(Stop::Done));
                 }
             }
@@ -154,37 +234,30 @@ impl Conversation {
                 on(ChatEvent::Paragraph);
                 wrote_text = false;
             }
-            let mut results = Vec::with_capacity(calls.len());
-            for (i, call) in content.iter().enumerate() {
-                if call["type"] != "tool_use" {
-                    continue;
-                }
-                let id = call["id"].clone();
-                let output = match msg.bad_inputs.get(&i) {
-                    Some(raw) => ToolOutput {
+            let mut results = Vec::with_capacity(reply.calls.len());
+            for call in &reply.calls {
+                let output = match &call.input {
+                    Err(raw) => ToolOutput {
                         text: json!({ "INVALID_JSON": raw }).to_string(),
                         is_error: true,
                     },
-                    None => {
-                        let name = call["name"].as_str().unwrap_or("");
-                        tools.call(name, call["input"].clone()).await
-                    }
+                    Ok(input) => tools.call(&call.name, input.clone()).await,
                 };
-                results.push(json!({
-                    "type": "tool_result",
-                    "tool_use_id": id,
-                    "content": cut(output.text),
-                    "is_error": output.is_error,
-                }));
+                results.push((call.id.clone(), output));
             }
-            messages.push(json!({ "role": "assistant", "content": content }));
-            messages.push(json!({ "role": "user", "content": results }));
+            messages.push(reply.message);
+            messages.extend(dialect.tool_results(results));
         }
         Ok(TurnEnd {
             stop: Stop::TooManySteps,
             usage,
             refusal: None,
         })
+    }
+
+    fn keep(&mut self, messages: Vec<Value>, dialect: Dialect) {
+        self.messages = messages;
+        self.dialect = Some(dialect);
     }
 }
 
@@ -205,16 +278,20 @@ mod tests {
     use std::sync::Mutex;
 
     use super::*;
+    use crate::config::{Effort, Model};
+    use crate::{anthropic, openai};
 
     /// Replays canned answers, one per request, and keeps the bodies it was sent.
     struct Script {
+        dialect: Dialect,
         answers: Mutex<Vec<Vec<Value>>>,
         bodies: Mutex<Vec<Value>>,
     }
 
     impl Script {
-        fn new(answers: Vec<Vec<Value>>) -> Self {
+        fn new(dialect: Dialect, answers: Vec<Vec<Value>>) -> Self {
             Self {
+                dialect,
                 answers: Mutex::new(answers.into_iter().rev().collect()),
                 bodies: Mutex::new(Vec::new()),
             }
@@ -222,6 +299,19 @@ mod tests {
     }
 
     impl Llm for Script {
+        fn dialect(&self) -> Dialect {
+            self.dialect
+        }
+
+        fn body(&self, setup: &Setup<'_>, messages: &[Value]) -> Value {
+            match self.dialect {
+                Dialect::Anthropic => {
+                    anthropic::body(Model::Sonnet, Effort::Medium, setup, messages)
+                }
+                Dialect::OpenAi => openai::body("m", None, false, setup, messages),
+            }
+        }
+
         fn send(&self, body: Value) -> mpsc::Receiver<Result<Value, ChatError>> {
             self.bodies.lock().unwrap().push(body);
             let events = self.answers.lock().unwrap().pop().expect("no more answers");
@@ -230,6 +320,13 @@ mod tests {
                 tx.try_send(Ok(e)).unwrap();
             }
             rx
+        }
+
+        fn assembler(&self) -> Box<dyn Assembler> {
+            match self.dialect {
+                Dialect::Anthropic => Box::new(anthropic::Assembler::new(Model::Sonnet)),
+                Dialect::OpenAi => Box::new(openai::Assembler::default()),
+            }
         }
     }
 
@@ -243,6 +340,10 @@ mod tests {
                 is_error: false,
             }
         }
+    }
+
+    fn echo() -> Echo {
+        Echo(Mutex::new(Vec::new()))
     }
 
     fn text_answer(text: &str, stop: &str) -> Vec<Value> {
@@ -267,23 +368,26 @@ mod tests {
         ]
     }
 
-    fn setup() -> (Config, Vec<Value>) {
-        (
-            Config::default(),
-            vec![request::tool("player_status", "", json!({"type":"object"}))],
-        )
+    fn defs() -> Vec<ToolDef> {
+        vec![ToolDef {
+            name: "player_status".into(),
+            description: String::new(),
+            schema: json!({"type": "object"}),
+        }]
     }
 
     #[tokio::test]
     async fn runs_tools_until_the_answer() {
-        let llm = Script::new(vec![
-            tool_answer("player_status", "{}"),
-            text_answer("Take Herbalism next.", "end_turn"),
-        ]);
-        let tools = Echo(Mutex::new(Vec::new()));
-        let (config, defs) = setup();
+        let llm = Script::new(
+            Dialect::Anthropic,
+            vec![
+                tool_answer("player_status", "{}"),
+                text_answer("Take Herbalism next.", "end_turn"),
+            ],
+        );
+        let tools = echo();
+        let defs = defs();
         let s = Setup {
-            config,
             system: "sys",
             tools: &defs,
         };
@@ -295,6 +399,7 @@ mod tests {
             .unwrap();
         assert_eq!(end.stop, Stop::Done);
         assert_eq!(end.usage.output_tokens, 12);
+        assert!(end.usage.cost.is_some());
         assert_eq!(
             seen,
             vec![
@@ -328,15 +433,76 @@ mod tests {
     }
 
     #[tokio::test]
-    async fn broken_tool_input_goes_back_as_an_error() {
-        let llm = Script::new(vec![
-            tool_answer("what_if", "{\"changes\": [\"a"),
-            text_answer("Sorry.", "end_turn"),
-        ]);
-        let tools = Echo(Mutex::new(Vec::new()));
-        let (config, defs) = setup();
+    async fn openai_tool_results_are_messages_of_their_own() {
+        let call = vec![
+            json!({"choices":[{"delta":{"role":"assistant","tool_calls":[{"index":0,"id":"c1","type":"function","function":{"name":"player_status","arguments":""}}]}}]}),
+            json!({"choices":[{"delta":{"tool_calls":[{"index":0,"function":{"arguments":"{}"}}]},"finish_reason":"tool_calls"}]}),
+            json!({"done": true}),
+        ];
+        let answer = vec![
+            json!({"choices":[{"delta":{"content":"Herbalism."}}]}),
+            json!({"choices":[{"delta":{},"finish_reason":"stop"}],"usage":{"prompt_tokens":100,"completion_tokens":5,"cost":0.0004}}),
+            json!({"done": true}),
+        ];
+        let llm = Script::new(Dialect::OpenAi, vec![call, answer]);
+        let tools = echo();
+        let defs = defs();
         let s = Setup {
-            config,
+            system: "sys",
+            tools: &defs,
+        };
+        let mut conv = Conversation::default();
+        let end = conv.ask(&s, &llm, &tools, "q", |_| {}).await.unwrap();
+        assert_eq!(end.stop, Stop::Done);
+        assert_eq!(end.usage.cost, Some(0.0004));
+        let roles: Vec<&str> = conv
+            .messages()
+            .iter()
+            .map(|m| m["role"].as_str().unwrap())
+            .collect();
+        assert_eq!(roles, ["user", "assistant", "tool", "assistant"]);
+        assert_eq!(conv.messages()[2]["tool_call_id"], "c1");
+        let bodies = llm.bodies.lock().unwrap();
+        assert_eq!(bodies[0]["messages"][0]["role"], "system");
+    }
+
+    #[tokio::test]
+    async fn another_dialect_starts_over() {
+        let tools = echo();
+        let defs = defs();
+        let s = Setup {
+            system: "sys",
+            tools: &defs,
+        };
+        let mut conv = Conversation::default();
+        let claude = Script::new(Dialect::Anthropic, vec![text_answer("Hi.", "end_turn")]);
+        conv.ask(&s, &claude, &tools, "hello", |_| {})
+            .await
+            .unwrap();
+        let other = Script::new(
+            Dialect::OpenAi,
+            vec![vec![
+                json!({"choices":[{"delta":{"content":"Hi."},"finish_reason":"stop"}]}),
+                json!({"done": true}),
+            ]],
+        );
+        conv.ask(&s, &other, &tools, "again", |_| {}).await.unwrap();
+        assert_eq!(conv.messages().len(), 2);
+        assert_eq!(conv.messages()[0]["content"], "again");
+    }
+
+    #[tokio::test]
+    async fn broken_tool_input_goes_back_as_an_error() {
+        let llm = Script::new(
+            Dialect::Anthropic,
+            vec![
+                tool_answer("what_if", "{\"changes\": [\"a"),
+                text_answer("Sorry.", "end_turn"),
+            ],
+        );
+        let tools = echo();
+        let defs = defs();
+        let s = Setup {
             system: "sys",
             tools: &defs,
         };
@@ -352,11 +518,13 @@ mod tests {
     async fn a_refusal_leaves_the_conversation_as_it_was() {
         let mut refused = text_answer("", "refusal");
         refused[4] = json!({"type":"message_delta","delta":{"stop_reason":"refusal","stop_details":{"type":"refusal","category":"cyber"}},"usage":{"output_tokens":0}});
-        let llm = Script::new(vec![text_answer("Hi.", "end_turn"), refused]);
-        let tools = Echo(Mutex::new(Vec::new()));
-        let (config, defs) = setup();
+        let llm = Script::new(
+            Dialect::Anthropic,
+            vec![text_answer("Hi.", "end_turn"), refused],
+        );
+        let tools = echo();
+        let defs = defs();
         let s = Setup {
-            config,
             system: "sys",
             tools: &defs,
         };
@@ -373,11 +541,10 @@ mod tests {
     async fn a_stream_that_breaks_off_is_an_error() {
         let mut broken = text_answer("Half", "end_turn");
         broken.truncate(3);
-        let llm = Script::new(vec![broken]);
-        let tools = Echo(Mutex::new(Vec::new()));
-        let (config, defs) = setup();
+        let llm = Script::new(Dialect::Anthropic, vec![broken]);
+        let tools = echo();
+        let defs = defs();
         let s = Setup {
-            config,
             system: "sys",
             tools: &defs,
         };
@@ -391,11 +558,10 @@ mod tests {
     async fn a_cut_tool_call_is_not_run_or_kept() {
         let mut cut_call = tool_answer("what_if", "{\"changes\": [");
         cut_call[4] = json!({"type":"message_delta","delta":{"stop_reason":"max_tokens"},"usage":{"output_tokens":9}});
-        let llm = Script::new(vec![cut_call]);
-        let tools = Echo(Mutex::new(Vec::new()));
-        let (config, defs) = setup();
+        let llm = Script::new(Dialect::Anthropic, vec![cut_call]);
+        let tools = echo();
+        let defs = defs();
         let s = Setup {
-            config,
             system: "sys",
             tools: &defs,
         };
@@ -408,8 +574,7 @@ mod tests {
 
     #[test]
     fn long_tool_output_is_cut_on_a_char_boundary() {
-        let long = "й".repeat(MAX_TOOL_TEXT);
-        let out = cut(long);
+        let out = cut("й".repeat(MAX_TOOL_TEXT));
         assert!(out.ends_with("too long]"));
         assert!(out.len() < MAX_TOOL_TEXT + 64);
     }
