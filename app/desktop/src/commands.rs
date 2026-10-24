@@ -172,6 +172,11 @@ pub async fn forget_api_key(
     crate::chat::forget_key(&app, provider).await
 }
 
+#[tauri::command]
+pub async fn get_next_card(app: AppHandle) -> exile_assistant::NextCard {
+    crate::chat::next_card(&app).await
+}
+
 /// Starts an answer. Its text arrives as chat://event, the end as chat://over.
 #[tauri::command]
 pub fn chat_send(app: AppHandle, question: String) -> Result<(), String> {

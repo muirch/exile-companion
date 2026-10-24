@@ -69,6 +69,24 @@ export interface ChatView {
   model: string;
 }
 
+/** Mirrors `exile_assistant::NextCard`: what to change next, worked out without a model. */
+export interface NextCard {
+  /** Why there are no steps, in the player's words. */
+  missing: string | null;
+  stage: string | null;
+  laterStage: string | null;
+  steps: NextStep[];
+}
+
+export interface NextStep {
+  kind: 'gem' | 'passive' | 'gear' | 'ascendancy';
+  name: string;
+  slot: string | null;
+  points: number | null;
+  dpsPct: number;
+  ehpPct: number;
+}
+
 /** Payload of `chat://event`, mirrors `exile_assistant::ChatEvent`. */
 export type ChatEvent =
   | { kind: 'text'; text: string }

@@ -12,6 +12,7 @@ import type {
   BuildSummary,
   CampaignState,
   ChatEvent,
+  NextCard,
   TurnOver,
   LocationKind,
   NextObjective,
@@ -388,4 +389,19 @@ export function chatSeedMock(): Exchange[] {
       over: null,
     },
   ];
+}
+
+export function nextCardMock(): NextCard {
+  return {
+    missing: null,
+    stage: 'Lvl 01-30 {1}',
+    laterStage: 'Lvl 31-40 {2} RF Start',
+    steps: [
+      { kind: 'gem', name: 'Added Chaos Damage', slot: null, points: null, dpsPct: 12.6, ehpPct: 0 },
+      { kind: 'passive', name: 'Herbalism', slot: null, points: 8, dpsPct: 2.8, ehpPct: 26.7 },
+      { kind: 'passive', name: 'Heavy Draw', slot: null, points: 2, dpsPct: 10, ehpPct: 0 },
+      { kind: 'gear', name: 'Death Song, Short Bow', slot: 'Weapon 1', points: null, dpsPct: 6.1, ehpPct: 0 },
+      { kind: 'ascendancy', name: "Nature's Reprisal", slot: null, points: null, dpsPct: 0, ehpPct: 0 },
+    ],
+  };
 }
