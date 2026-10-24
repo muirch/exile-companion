@@ -573,6 +573,7 @@ function agentState(agent: AgentView): { text: string; className: string } {
 }
 
 const MODELS: { value: ChatConfig['model']; label: string }[] = [
+  { value: 'claude-haiku-5-5', label: 'Haiku 5.5' },
   { value: 'claude-sonnet-5-5', label: 'Sonnet 5.5' },
   { value: 'claude-opus-5-5', label: 'Opus 5.5' },
 ];
@@ -625,8 +626,8 @@ export function ChatSettings(): React.JSX.Element | null {
           </Row>
           {effort}
           <Note>
-            Opus 5.5 costs twice as much as Sonnet 5.5 and does better on hard questions. Higher effort
-            thinks longer before it answers.
+            Haiku 5.5 costs a twentieth of Sonnet 5.5 and is weaker on hard questions. Opus 5.5 costs
+            twice as much as Sonnet and does best on them. Higher effort thinks longer and costs more.
           </Note>
         </>
       )}

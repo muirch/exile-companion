@@ -42,7 +42,7 @@ export interface Settings {
 }
 
 export type ChatProvider = 'anthropic' | 'openRouter' | 'custom';
-export type ChatModel = 'claude-sonnet-5-5' | 'claude-opus-5-5';
+export type ChatModel = 'claude-haiku-5-5' | 'claude-sonnet-5-5' | 'claude-opus-5-5';
 export type ChatEffort = 'low' | 'medium' | 'high';
 
 /** Mirrors `exile_assistant::Config`. */
