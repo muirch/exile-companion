@@ -19,6 +19,7 @@ pub struct Hotkeys {
     pub route_prev: String,
     pub route_next: String,
     pub relog: String,
+    pub open_chat: String,
 }
 
 impl Default for Hotkeys {
@@ -29,6 +30,7 @@ impl Default for Hotkeys {
             route_prev: "Alt+ArrowLeft".into(),
             route_next: "Alt+ArrowRight".into(),
             relog: "F9".into(),
+            open_chat: "Alt+KeyA".into(),
         }
     }
 }
@@ -52,6 +54,7 @@ enum Action {
     RoutePrev,
     RouteNext,
     Relog,
+    OpenChat,
 }
 
 #[derive(Debug, Clone, Serialize)]
@@ -79,6 +82,7 @@ pub fn register_all(app: &AppHandle) -> Vec<BindError> {
         ),
         ("routePrev", keys.route_prev.as_str(), Action::RoutePrev),
         ("routeNext", keys.route_next.as_str(), Action::RouteNext),
+        ("openChat", keys.open_chat.as_str(), Action::OpenChat),
     ];
     // An unused binding stays free for the game.
     if saved.relog_enabled {
@@ -126,6 +130,7 @@ fn run(app: &AppHandle, action: Action) {
         // Only ever into the game: typing a chat command into another window would be wrong.
         Action::Relog if in_game => chat_command(app, "/exit"),
         Action::Relog => {}
+        Action::OpenChat => crate::chat::toggle(app),
     }
 }
 
