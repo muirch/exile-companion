@@ -5,7 +5,8 @@
   "windows": [
     "overlay",
     "menu",
-    "settings"
+    "settings",
+    "chat"
   ],
   "permissions": [
     "core:default",

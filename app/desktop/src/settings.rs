@@ -35,6 +35,10 @@ pub struct Settings {
     /// The PoB build file the player picked to sync with. Exile Companion.xml in the Builds
     /// folder when None.
     pub pob_build: Option<String>,
+    /// Model and effort for the assistant's chat. The API key is in the system's credential store.
+    pub chat: exile_assistant::Config,
+    /// The chat window's top-left corner as fractions of its monitor, once the player moved it.
+    pub chat_anchor: Option<(f64, f64)>,
 }
 
 impl Default for Settings {
@@ -56,6 +60,8 @@ impl Default for Settings {
             pob_path: None,
             pob_sync: false,
             pob_build: None,
+            chat: Default::default(),
+            chat_anchor: None,
         }
     }
 }

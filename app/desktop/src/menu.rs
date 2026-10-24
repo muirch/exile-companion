@@ -8,6 +8,8 @@ use crate::state::AppState;
 
 pub const MENU_LABEL: &str = "menu";
 pub const SETTINGS_LABEL: &str = "settings";
+#[cfg(target_os = "linux")]
+pub const CHAT_TITLE: &[u8] = b"Exile Companion assistant";
 
 /// Opens the quick menu with its top-left corner at the cursor, kept on the cursor's monitor.
 #[cfg(any(windows, target_os = "linux"))]
@@ -77,6 +79,12 @@ pub fn set_hold_key(name: &str) {
     x11::set_hold_key(name);
     #[cfg(not(any(windows, target_os = "linux")))]
     let _ = name;
+}
+
+/// Asks the window manager to focus one of our windows, with the time of the player's last key.
+#[cfg(target_os = "linux")]
+pub fn focus_window(title: &'static [u8]) {
+    x11::focus(title);
 }
 
 /// Holding the menu key opens the menu. The hook only watches: every key event is passed on to
@@ -160,7 +168,7 @@ mod x11 {
     const TAB_KEY: u32 = 23;
 
     static TAB: AtomicBool = AtomicBool::new(false);
-    /// X server time of the last menu key event, the proof GNOME wants that the player asked.
+    /// X server time of the last key event, the proof GNOME wants that the player asked.
     static KEY_TIME: AtomicU32 = AtomicU32::new(0);
     const MENU_TITLE: &[u8] = b"Exile Companion menu";
 
@@ -200,6 +208,8 @@ mod x11 {
                 Event::XinputRawKeyRelease(e) => (e.detail, false, e.time),
                 _ => continue,
             };
+            // Any key counts as the player's action, also the chat's shortcut.
+            KEY_TIME.store(time, Ordering::SeqCst);
             let watched = if TAB.load(Ordering::SeqCst) {
                 TAB_KEY
             } else {
@@ -208,7 +218,6 @@ mod x11 {
             if key != watched {
                 continue;
             }
-            KEY_TIME.store(time, Ordering::SeqCst);
             if press {
                 super::hold::pressed(down);
             } else {
@@ -222,10 +231,14 @@ mod x11 {
     /// click on the menu would only focus it. Asking for focus with the key's time, the way
     /// pagers and xdotool do, counts as the player's own action.
     pub fn focus_menu() {
+        focus(MENU_TITLE);
+    }
+
+    pub fn focus(title: &'static [u8]) {
         let time = KEY_TIME.load(Ordering::SeqCst);
         std::thread::spawn(move || {
-            if let Err(e) = activate(MENU_TITLE, time) {
-                log::info!("couldn't focus the menu: {e}");
+            if let Err(e) = activate(title, time) {
+                log::info!("couldn't focus {}: {e}", String::from_utf8_lossy(title));
             }
         });
     }
@@ -243,7 +256,7 @@ mod x11 {
             atom(b"_NET_WM_NAME")?,
             atom(b"UTF8_STRING")?,
         );
-        // The window manager lists the menu once it has mapped it, a moment after show().
+        // The window manager lists the window once it has mapped it, a moment after show().
         for _ in 0..25 {
             if let Some(window) = find(&conn, root, clients, pid, name, utf8, title)? {
                 let event = ClientMessageEvent::new(32, window, active, [2, time, 0, 0, 0]);
@@ -258,7 +271,7 @@ mod x11 {
             }
             std::thread::sleep(Duration::from_millis(20));
         }
-        Err("the menu window didn't show up".into())
+        Err("the window didn't show up".into())
     }
 
     fn find(

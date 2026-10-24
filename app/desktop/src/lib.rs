@@ -2,6 +2,7 @@
 //! campaign logic to `exile-core`.
 
 mod assistant;
+mod chat;
 mod commands;
 mod hotkeys;
 mod menu;
@@ -89,6 +90,7 @@ pub fn run() {
                 saved.route_edge,
                 saved.route_enabled,
             ));
+            app.manage(chat::ChatState::default());
             // The windows are created here, after manage(): their events and the first IPC calls
             // read AppState, and a panic inside a window procedure aborts the process.
             for window in app.config().app.windows.clone() {
@@ -133,6 +135,13 @@ pub fn run() {
                 api.prevent_close();
                 let _ = window.hide();
             }
+            // The chat keeps its conversation while hidden.
+            tauri::WindowEvent::CloseRequested { api, .. }
+                if window.label() == chat::CHAT_LABEL =>
+            {
+                api.prevent_close();
+                chat::close(window.app_handle());
+            }
             _ => {}
         })
         .invoke_handler(tauri::generate_handler![
@@ -141,6 +150,14 @@ pub fn run() {
             commands::get_assistant,
             commands::connect_agent,
             commands::copy_assistant_config,
+            commands::get_chat,
+            commands::set_api_key,
+            commands::forget_api_key,
+            commands::chat_send,
+            commands::chat_stop,
+            commands::chat_new,
+            commands::open_chat,
+            commands::close_chat,
             commands::pick_pob_folder,
             commands::get_pob_sync,
             commands::set_pob_sync,
