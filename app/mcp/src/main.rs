@@ -35,7 +35,9 @@ const INSTRUCTIONS: &str = "Tools for one Path of Exile 1 build, the one the pla
 calculated by the player's own Path of Building, and for the Path of Exile Wiki and build guides.
 
 Start a conversation with player_status: where the player is in the game (from the game's log), the guide they follow and the build the tools read. \
-It costs nothing, so call it again when the player asks what to do now. A level-up is the only time the log names the level, so a fresh character may show none yet.
+It costs nothing, so call it again when the player asks what to do now. A level-up is the only time the log names the level, so a fresh character may show none yet. \
+Its mules are characters of another class to make first: the player's class gets those gems too late or never, and that class gets them for Enemy at the Gate, \
+right after Hillock. Bring them up before the player starts the real character, say it takes a couple of minutes, and that the mule must be in the same league to use the stash.
 
 Check that the build you have is the one the player is talking about: game (these tools are Path of Exile 1 only), \
 main skill, class and ascendancy, league. If build_overview shows something else than the player describes, say so and ask \

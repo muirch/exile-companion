@@ -448,18 +448,30 @@ impl Session {
     }
 }
 
-/// Class, level and the stage names of a build, read without Path of Building.
+/// Class, level and the stage names of a build, read without Path of Building, with the mules its
+/// class needs and the gems the campaign never gives it.
 fn build_outline(xml: &str) -> Value {
-    match exile_pob::parse_xml(xml.as_bytes()) {
-        Ok(b) => json!({
-            "class": b.class_name,
-            "ascendancy": b.ascend_class_name,
-            "level": b.level,
-            "trees": b.specs.iter().map(|s| &s.title).collect::<Vec<_>>(),
-            "skill_sets": b.skill_sets.iter().map(|s| &s.title).collect::<Vec<_>>(),
-        }),
-        Err(e) => json!({ "error": e.to_string() }),
+    let b = match exile_pob::parse_xml(xml.as_bytes()) {
+        Ok(b) => b,
+        Err(e) => return json!({ "error": e.to_string() }),
+    };
+    let mut v = json!({
+        "class": b.class_name,
+        "ascendancy": b.ascend_class_name,
+        "level": b.level,
+        "trees": b.specs.iter().map(|s| &s.title).collect::<Vec<_>>(),
+        "skill_sets": b.skill_sets.iter().map(|s| &s.title).collect::<Vec<_>>(),
+    });
+    let gems = exile_core::gems::GemTable::from_json_bytes(
+        exile_data::GEMS_JSON,
+        exile_data::GEM_SOURCES_JSON,
+    );
+    if let (Some(class), Ok(gems)) = (b.class_name.as_deref(), gems) {
+        let plan = exile_core::gemplan::plan(&b, class, &gems);
+        v["mules"] = json!(plan.mules);
+        v["not_in_campaign"] = json!(plan.not_in_campaign);
     }
+    v
 }
 
 fn read(path: &std::path::Path) -> Result<String, String> {
