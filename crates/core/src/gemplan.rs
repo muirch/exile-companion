@@ -125,6 +125,8 @@ struct Wanted {
     is_support: bool,
     /// Character level from which the build uses the gem.
     need_level: u32,
+    /// The gem's own level requirement.
+    required: u32,
 }
 
 /// The level a skill set stands for: the player's stage, else its title if it names one, else no
@@ -177,6 +179,7 @@ fn wanted_gems(build: &PobBuild, gems: &GemTable, stages: &[PresetStage]) -> Vec
                     id,
                     is_support: gem.is_support,
                     need_level: set_level.unwrap_or(0).max(required),
+                    required,
                 });
             }
         }
@@ -257,7 +260,10 @@ pub fn plan_with_stages(
         }
     }
 
-    // Buy at the first vendor in or after the act the gem is needed in, else the last one before.
+    // Buy in the act the gem is needed in. Without a vendor there, buy it from the last one before,
+    // so the player has it when the build starts using it, else from the next one. An earlier act
+    // only counts if the character can use the gem by its end: a level 28 gem bought in act 1
+    // would ride along for twenty levels.
     for (i, w) in wanted.iter().enumerate() {
         if placed.contains(&i) {
             continue;
@@ -270,7 +276,14 @@ pub fn plan_with_stages(
             .collect();
         if let Some(s) = vendors
             .iter()
-            .find(|s| s.act >= need_act)
+            .find(|s| s.act == need_act)
+            .or_else(|| {
+                vendors
+                    .iter()
+                    .rev()
+                    .find(|s| s.act < need_act && w.required <= act_expected_level(s.act as u8 + 1))
+            })
+            .or_else(|| vendors.iter().find(|s| s.act > need_act))
             .or_else(|| vendors.last())
         {
             placed.insert(i);
@@ -481,6 +494,32 @@ mod tests {
         assert!(s.contains(&("a1q1".into(), "A".into(), GemAction::Take)));
         assert!(s.contains(&("a1q1".into(), "S".into(), GemAction::Buy)));
         assert!(s.contains(&("a1q2".into(), "B".into(), GemAction::Take)));
+    }
+
+    #[test]
+    fn a_gem_needed_in_an_act_without_a_vendor_is_bought_before_it() {
+        // Cobra Lash for a Ranger: Nessa sells it after the first quest, then nobody until Siosa.
+        let gems =
+            r#"{"C": {"id": "C", "name": "Cobra Lash", "required_level": 1, "is_support": false}}"#;
+        let quests = r#"{
+          "a1q1": {"id": "a1q1", "name": "Enemy at the Gate", "act": "1", "reward_offers": {"a1q1": {
+            "quest_npc": "Tarkleigh", "vendor": {"C": {"classes": ["Ranger"], "npc": "Nessa"}}}}},
+          "a3q12": {"id": "a3q12", "name": "A Fixture of Fate", "act": "3", "reward_offers": {"a3q12": {
+            "quest_npc": "Siosa", "vendor": {"C": {"classes": [], "npc": "Siosa"}}}}}
+        }"#;
+        let t = GemTable::from_json_bytes(gems.as_bytes(), quests.as_bytes()).unwrap();
+        let mut b = build(vec![group(vec![gem("C", false)])]);
+        b.skill_sets[0].title = Some("level 12".into());
+        assert_eq!(
+            summary(&plan(&b, "Ranger", &t)),
+            [("a1q1".into(), "C".into(), GemAction::Buy)]
+        );
+        // Needed in act 3, it's bought there.
+        b.skill_sets[0].title = Some("level 25".into());
+        assert_eq!(
+            summary(&plan(&b, "Ranger", &t)),
+            [("a3q12".into(), "C".into(), GemAction::Buy)]
+        );
     }
 
     #[test]
