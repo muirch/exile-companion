@@ -23,6 +23,8 @@ impl Provider {
 /// A Claude model, for the Anthropic provider.
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Default, Serialize, Deserialize)]
 pub enum Model {
+    #[serde(rename = "claude-haiku-5-5")]
+    Haiku,
     #[default]
     #[serde(rename = "claude-sonnet-5-5")]
     Sonnet,
@@ -33,6 +35,7 @@ pub enum Model {
 impl Model {
     pub fn id(self) -> &'static str {
         match self {
+            Model::Haiku => "claude-haiku-5-5",
             Model::Sonnet => "claude-sonnet-5-5",
             Model::Opus => "claude-opus-5-5",
         }
@@ -40,26 +43,35 @@ impl Model {
 
     pub fn label(self) -> &'static str {
         match self {
+            Model::Haiku => "Haiku 5.5",
             Model::Sonnet => "Sonnet 5.5",
             Model::Opus => "Opus 5.5",
         }
     }
 
-    /// Dollars per million tokens of input, output, cache reads and 5-minute cache writes.
-    fn prices(self) -> [f64; 4] {
+    /// Dollars per million tokens of input, output and cache reads. Haiku's are for prompts up
+    /// to 100k tokens, which a chat stays under.
+    fn prices(self) -> [f64; 3] {
         match self {
-            Model::Sonnet => [2.0, 10.0, 0.2, 2.5],
-            Model::Opus => [4.0, 20.0, 0.2, 5.0],
+            Model::Haiku => [0.1, 0.5, 0.01],
+            Model::Sonnet => [2.0, 10.0, 0.2],
+            Model::Opus => [4.0, 20.0, 0.2],
         }
+    }
+
+    /// Haiku 5.5 has neither the progress notes between tool calls nor server-side fallback.
+    pub fn has_updates_and_fallback(self) -> bool {
+        self != Model::Haiku
     }
 }
 
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Default, Serialize, Deserialize)]
 #[serde(rename_all = "lowercase")]
 pub enum Effort {
-    Low,
-    // Anthropic's starting point for multistep tool use on Sonnet 5.5. Opus 5.5 defaults to it.
+    // Anthropic's starting point for chat on Sonnet 5.5. It skips thinking on simple questions,
+    // and thinking is most of what an answer costs.
     #[default]
+    Low,
     Medium,
     High,
 }
@@ -138,9 +150,11 @@ impl Usage {
         };
     }
 
-    /// At the model's list prices. A refusal served by a fallback model bills at that model's.
+    /// At the model's list prices, with cache writes at the 1-hour rate of twice the input price.
+    /// A refusal served by a fallback model bills at that model's.
     pub fn priced(mut self, model: Model) -> Usage {
-        let [input, output, read, write] = model.prices();
+        let [input, output, read] = model.prices();
+        let write = input * 2.0;
         self.cost = Some(
             (self.input_tokens as f64 * input
                 + self.output_tokens as f64 * output
@@ -198,6 +212,14 @@ mod tests {
         }
         .priced(Model::Sonnet);
         assert!((u.cost.unwrap() - (0.002 + 0.01 + 0.02)).abs() < 1e-9);
+        let haiku = Usage {
+            input_tokens: 1_000,
+            output_tokens: 1_000,
+            cache_write_tokens: 10_000,
+            ..Default::default()
+        }
+        .priced(Model::Haiku);
+        assert!((haiku.cost.unwrap() - (0.0001 + 0.0005 + 0.002)).abs() < 1e-9);
     }
 
     #[test]
