@@ -4,6 +4,7 @@
 //! Path of Building (through exile-pob-engine) and the Path of Exile Wiki about the player's build.
 //! By default it uses the build and the PoB folder from Exile Companion's settings.
 
+mod compact;
 mod paths;
 mod progress;
 mod session;
@@ -85,7 +86,14 @@ fn failure(v: impl Into<String>) -> CallToolResult {
 
 fn json_result(r: Result<Value, String>) -> CallToolResult {
     match r {
-        Ok(v) => text(v.to_string()),
+        Ok(v) => text(compact::compact(v, true).to_string()),
+        Err(e) => failure(e),
+    }
+}
+
+fn wiki_result(r: Result<Value, String>) -> CallToolResult {
+    match r {
+        Ok(v) => text(compact::compact(v, false).to_string()),
         Err(e) => failure(e),
     }
 }
@@ -268,7 +276,7 @@ impl Companion {
             .map_err(|e| e.to_string())
             .and_then(|r| r.map_err(|e| e.to_string()))
             .and_then(|v| serde_json::to_value(v).map_err(|e| e.to_string()));
-        json_result(r)
+        wiki_result(r)
     }
 }
 
