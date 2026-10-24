@@ -10,15 +10,14 @@ use rmcp::transport::TokioChildProcess;
 use rmcp::{RoleClient, ServiceExt};
 use serde_json::Value;
 
-use crate::request;
-use crate::turn::{ToolOutput, Tools};
+use crate::turn::{ToolDef, ToolOutput, Tools};
 use crate::ChatError;
 
 pub struct Server {
     client: RunningService<RoleClient, ()>,
     pub instructions: String,
-    /// In the Messages API's form, in the server's order, so the prompt cache holds.
-    pub tools: Vec<Value>,
+    /// In the server's order, so the prompt cache holds.
+    pub tools: Vec<ToolDef>,
 }
 
 impl Server {
@@ -48,11 +47,14 @@ impl Server {
         let tools = listed
             .iter()
             .map(|t| {
-                request::tool(
-                    &t.name,
-                    t.description.as_deref().unwrap_or(""),
-                    Value::Object((*t.input_schema).clone()),
-                )
+                let mut schema = (*t.input_schema).clone();
+                // Some providers behind OpenRouter reject a schema that names its own dialect.
+                schema.remove("$schema");
+                ToolDef {
+                    name: t.name.to_string(),
+                    description: t.description.as_deref().unwrap_or("").to_string(),
+                    schema: Value::Object(schema),
+                }
             })
             .collect();
         Ok(Server {

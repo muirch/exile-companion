@@ -1,17 +1,22 @@
-//! The build assistant's chat in the overlay. Claude is called with the player's own API key and
-//! uses the tools of exile-companion-mcp, the server the player's own agent would start.
+//! The build assistant's chat in the overlay. A model is called with the player's own key, from
+//! Anthropic, OpenRouter or a server the player names, and uses the tools of exile-companion-mcp,
+//! the server the player's own agent would start.
 
+mod anthropic;
 mod config;
 mod http;
 mod mcp;
-mod request;
+mod openai;
 mod stream;
 mod turn;
 
-pub use config::{Config, Effort, Model, Usage};
-pub use http::Anthropic;
+pub use anthropic::Anthropic;
+pub use config::{Config, Effort, Model, Provider, Usage};
 pub use mcp::Server;
-pub use turn::{ChatEvent, Conversation, Llm, Setup, Stop, ToolOutput, Tools, TurnEnd};
+pub use openai::OpenAi;
+pub use turn::{
+    ChatEvent, Conversation, Dialect, Llm, Setup, Stop, ToolDef, ToolOutput, Tools, TurnEnd,
+};
 
 /// Goes after the server's own instructions. Those say how to use the tools, this says how the
 /// answer is read.
@@ -48,37 +53,40 @@ pub enum ChatError {
 
 impl ChatError {
     /// What the chat window says, with what the player can do about it.
-    pub fn player_message(&self) -> String {
+    pub fn player_message(&self, provider: Provider) -> String {
+        let who = provider.name();
         match self {
-            ChatError::Network(_) => {
-                "Couldn't reach Anthropic. Check the connection and ask again.".into()
-            }
+            ChatError::Network(_) => match provider {
+                Provider::Custom => {
+                    "Couldn't reach the model's server. Check the address in the settings and that the server runs.".into()
+                }
+                _ => format!("Couldn't reach {who}. Check the connection and ask again."),
+            },
             ChatError::Truncated => "The answer broke off. Ask again.".into(),
             ChatError::Tools(e) => format!("The assistant's tools didn't start. {e}"),
             ChatError::Api {
                 status,
                 kind,
                 message,
-                ..
             } => match (kind.as_str(), *status) {
                 ("authentication_error", _) | (_, 401) => {
-                    "Anthropic refused the API key. Check it in the settings.".into()
+                    format!("{who} refused the API key. Check it in the settings.")
                 }
                 ("permission_error", _) | (_, 403) => {
                     format!("This API key can't use the model. {message}")
                 }
-                ("rate_limit_error", _) | (_, 429) => {
-                    "Anthropic's rate limit for this key is reached. Wait a minute and ask again."
-                        .into()
-                }
-                ("overloaded_error", _) | (_, 529) => {
-                    "Anthropic is overloaded right now. Ask again in a minute.".into()
-                }
+                (_, 402) => format!("The account at {who} is out of credit."),
                 _ if message.contains("credit balance") => {
-                    "The API key's account is out of credit. Top it up in the Anthropic Console."
-                        .into()
+                    format!("The account at {who} is out of credit.")
                 }
-                _ => format!("Anthropic returned an error. {message}"),
+                ("rate_limit_error", _) | (_, 429) => {
+                    format!("{who} limits how often this key can ask. Wait a minute and ask again.")
+                }
+                ("overloaded_error", _) | (_, 529) | (_, 503) => {
+                    format!("{who} is overloaded right now. Ask again in a minute.")
+                }
+                (_, 404) => format!("{who} doesn't know this model. Check its name in the settings. {message}"),
+                _ => format!("{who} returned an error. {message}"),
             },
         }
     }
@@ -98,19 +106,28 @@ mod tests {
 
     #[test]
     fn errors_say_what_to_do() {
-        assert!(api(401, "authentication_error", "invalid x-api-key")
-            .player_message()
-            .contains("settings"));
+        assert_eq!(
+            api(401, "authentication_error", "invalid x-api-key")
+                .player_message(Provider::Anthropic),
+            "Anthropic refused the API key. Check it in the settings."
+        );
         assert!(api(0, "overloaded_error", "Overloaded")
-            .player_message()
+            .player_message(Provider::Anthropic)
             .contains("overloaded"));
         assert!(api(
             400,
             "invalid_request_error",
             "Your credit balance is too low to access the Anthropic API."
         )
-        .player_message()
+        .player_message(Provider::Anthropic)
         .contains("out of credit"));
+        assert_eq!(
+            api(402, "", "Insufficient credits").player_message(Provider::OpenRouter),
+            "The account at OpenRouter is out of credit."
+        );
+        assert!(ChatError::Network("refused".into())
+            .player_message(Provider::Custom)
+            .contains("address"));
     }
 
     #[test]
