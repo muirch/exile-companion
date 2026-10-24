@@ -10,7 +10,7 @@ pub const MENU_LABEL: &str = "menu";
 pub const SETTINGS_LABEL: &str = "settings";
 
 /// Opens the quick menu with its top-left corner at the cursor, kept on the cursor's monitor.
-#[cfg(windows)]
+#[cfg(any(windows, target_os = "linux"))]
 pub fn open_at_cursor(app: &AppHandle) {
     let Some(menu) = app.get_webview_window(MENU_LABEL) else {
         return;
@@ -73,7 +73,9 @@ pub fn set_route_enabled(app: &AppHandle, enabled: bool) {
 pub fn set_hold_key(name: &str) {
     #[cfg(windows)]
     win::set_hold_key(name);
-    #[cfg(not(windows))]
+    #[cfg(target_os = "linux")]
+    x11::set_hold_key(name);
+    #[cfg(not(any(windows, target_os = "linux")))]
     let _ = name;
 }
 
@@ -82,17 +84,134 @@ pub fn set_hold_key(name: &str) {
 pub fn watch_menu_hold(app: AppHandle) {
     #[cfg(windows)]
     win::watch(app);
-    #[cfg(not(windows))]
+    #[cfg(target_os = "linux")]
+    x11::watch(app);
+    #[cfg(not(any(windows, target_os = "linux")))]
     let _ = app;
+}
+
+/// What a press and a release of the menu key do, whichever way the platform reports them.
+#[cfg(any(windows, target_os = "linux"))]
+mod hold {
+    use std::sync::{Mutex, OnceLock};
+    use std::time::Duration;
+
+    use exile_core::hold::HoldKey;
+    use tauri::{AppHandle, Emitter};
+
+    const HOLD: Duration = Duration::from_millis(450);
+
+    pub static APP: OnceLock<AppHandle> = OnceLock::new();
+    static HOLD_KEY: Mutex<HoldKey> = Mutex::new(HoldKey::new());
+
+    fn hold_key() -> std::sync::MutexGuard<'static, HoldKey> {
+        HOLD_KEY.lock().unwrap_or_else(|e| e.into_inner())
+    }
+
+    /// `was_down`: the key was already down, so this press is a key repeat.
+    pub fn pressed(was_down: bool) {
+        let Some(press) = hold_key().down(was_down) else {
+            return;
+        };
+        if let Some(app) = APP.get() {
+            if crate::overlay::game_focused(app) {
+                let _ = app.emit("overlay://peek", ());
+            }
+        }
+        std::thread::spawn(move || {
+            std::thread::sleep(HOLD);
+            if hold_key().still_held(press) {
+                if let Some(app) = APP.get() {
+                    if crate::overlay::game_focused(app) {
+                        let app2 = app.clone();
+                        let _ = app.run_on_main_thread(move || super::open_at_cursor(&app2));
+                    }
+                }
+            }
+        });
+    }
+
+    pub fn released() {
+        hold_key().up();
+    }
+}
+
+/// Raw XInput2 key events: they only report keys, every key still reaches the game. X sends
+/// them while an X11 window has focus, which the game under Proton is.
+#[cfg(target_os = "linux")]
+mod x11 {
+    use std::sync::atomic::{AtomicBool, Ordering};
+
+    use tauri::AppHandle;
+    use x11rb::connection::Connection;
+    use x11rb::protocol::xinput::{self, ConnectionExt as _};
+    use x11rb::protocol::Event;
+
+    // Physical keys, as on Windows: the key left of 1 is the menu key in any layout. These are
+    // the evdev codes plus 8 that Xwayland uses.
+    const TILDE_KEY: u32 = 49;
+    const TAB_KEY: u32 = 23;
+
+    static TAB: AtomicBool = AtomicBool::new(false);
+
+    pub fn set_hold_key(name: &str) {
+        TAB.store(name == "Tab", Ordering::SeqCst);
+    }
+
+    pub fn watch(app: AppHandle) {
+        if super::hold::APP.set(app).is_err() {
+            return;
+        }
+        std::thread::spawn(|| {
+            if let Err(e) = run() {
+                log::info!("the menu key isn't watched: {e}");
+            }
+        });
+    }
+
+    fn run() -> Result<(), Box<dyn std::error::Error>> {
+        let (conn, screen) = x11rb::connect(None)?;
+        let root = conn.setup().roots[screen].root;
+        conn.xinput_xi_query_version(2, 0)?.reply()?;
+        conn.xinput_xi_select_events(
+            root,
+            &[xinput::EventMask {
+                deviceid: xinput::Device::ALL_MASTER.into(),
+                mask: vec![
+                    xinput::XIEventMask::RAW_KEY_PRESS | xinput::XIEventMask::RAW_KEY_RELEASE,
+                ],
+            }],
+        )?;
+        conn.flush()?;
+        let mut down = false;
+        loop {
+            let (key, press) = match conn.wait_for_event()? {
+                Event::XinputRawKeyPress(e) => (e.detail, true),
+                Event::XinputRawKeyRelease(e) => (e.detail, false),
+                _ => continue,
+            };
+            let watched = if TAB.load(Ordering::SeqCst) {
+                TAB_KEY
+            } else {
+                TILDE_KEY
+            };
+            if key != watched {
+                continue;
+            }
+            if press {
+                super::hold::pressed(down);
+            } else {
+                super::hold::released();
+            }
+            down = press;
+        }
+    }
 }
 
 #[cfg(windows)]
 mod win {
     use std::sync::atomic::{AtomicU32, Ordering};
-    use std::sync::{Mutex, OnceLock};
-    use std::time::Duration;
 
-    use exile_core::hold::HoldKey;
     use tauri::AppHandle;
     use windows_sys::Win32::Foundation::{LPARAM, LRESULT, WPARAM};
     use windows_sys::Win32::System::LibraryLoader::GetModuleHandleW;
@@ -103,10 +222,6 @@ mod win {
         KBDLLHOOKSTRUCT, MSG, WH_KEYBOARD_LL, WM_KEYDOWN, WM_KEYUP, WM_SYSKEYDOWN, WM_SYSKEYUP,
     };
 
-    const HOLD: Duration = Duration::from_millis(450);
-
-    static APP: OnceLock<AppHandle> = OnceLock::new();
-    static HOLD_KEY: Mutex<HoldKey> = Mutex::new(HoldKey::new());
     static HOLD_VK: AtomicU32 = AtomicU32::new(VK_OEM_3 as u32);
 
     pub fn set_hold_key(name: &str) {
@@ -118,7 +233,7 @@ mod win {
     }
 
     pub fn watch(app: AppHandle) {
-        if APP.set(app).is_err() {
+        if super::hold::APP.set(app).is_err() {
             return;
         }
         std::thread::spawn(|| unsafe {
@@ -146,40 +261,13 @@ mod win {
                     // before the event: down means key repeat.
                     WM_KEYDOWN | WM_SYSKEYDOWN => {
                         let was_down = unsafe { GetAsyncKeyState(info.vkCode as i32) } < 0;
-                        pressed(was_down);
+                        super::hold::pressed(was_down);
                     }
-                    WM_KEYUP | WM_SYSKEYUP => hold_key().up(),
+                    WM_KEYUP | WM_SYSKEYUP => super::hold::released(),
                     _ => {}
                 }
             }
         }
         unsafe { CallNextHookEx(std::ptr::null_mut(), code, wparam, lparam) }
-    }
-
-    fn hold_key() -> std::sync::MutexGuard<'static, HoldKey> {
-        HOLD_KEY.lock().unwrap_or_else(|e| e.into_inner())
-    }
-
-    fn pressed(was_down: bool) {
-        let Some(press) = hold_key().down(was_down) else {
-            return;
-        };
-        if let Some(app) = APP.get() {
-            if super::super::overlay::game_focused(app) {
-                use tauri::Emitter;
-                let _ = app.emit("overlay://peek", ());
-            }
-        }
-        std::thread::spawn(move || {
-            std::thread::sleep(HOLD);
-            if hold_key().still_held(press) {
-                if let Some(app) = APP.get() {
-                    if super::super::overlay::game_focused(app) {
-                        let app2 = app.clone();
-                        let _ = app.run_on_main_thread(move || super::open_at_cursor(&app2));
-                    }
-                }
-            }
-        });
     }
 }
