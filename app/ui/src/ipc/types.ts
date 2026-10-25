@@ -125,7 +125,8 @@ export type ItemCard =
   | { kind: 'gear'; name: string; card: GearCard; needsLevel: number | null }
   | { kind: 'missing'; name: string; message: string }
   | { kind: 'ready'; level: number; gems: string[]; items: { name: string; slot: string; level: number }[] }
-  | { kind: 'kitava'; penalty: number; short: { element: string; after: number }[] };
+  | { kind: 'kitava'; penalty: number; short: { element: string; after: number }[] }
+  | { kind: 'next'; act: number; card: NextCard };
 
 /** Payload of `chat://event`, mirrors `exile_assistant::ChatEvent`. */
 export type ChatEvent =

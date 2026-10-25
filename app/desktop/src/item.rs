@@ -29,6 +29,11 @@ pub enum ItemCard {
     },
     /// A level-up made gems of the build or remembered upgrades usable.
     Ready(UsableNow),
+    /// A new act: the few changes that bring the build closest to the guide's stage.
+    Next {
+        act: u8,
+        card: exile_assistant::NextCard,
+    },
     /// The player entered Kitava's zone and some resistance falls below the cap after him.
     Kitava {
         penalty: i32,
@@ -50,6 +55,22 @@ static CHECKING: AtomicBool = AtomicBool::new(false);
 /// Upgrades checked before the character could wear them. Kept until they come due or the app
 /// quits.
 static REMEMBERED: Mutex<Vec<Remembered>> = Mutex::new(Vec::new());
+
+const NEXT_STEPS: usize = 3;
+
+/// Called on reaching a new act. Says nothing without a followed guide or when the build is on
+/// track.
+pub fn next_on_act(app: &AppHandle, act: u8) {
+    let app = app.clone();
+    tauri::async_runtime::spawn(async move {
+        let mut card = crate::chat::next_card(&app).await;
+        if card.missing.is_some() || (card.steps.is_empty() && card.later_stage.is_none()) {
+            return;
+        }
+        card.steps.truncate(NEXT_STEPS);
+        emit(&app, &ItemCard::Next { act, card });
+    });
+}
 
 /// Called on entering Kitava's zone. Measures without a model and says nothing when the
 /// resistances stay capped or there's no build.

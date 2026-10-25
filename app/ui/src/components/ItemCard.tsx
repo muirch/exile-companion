@@ -1,5 +1,14 @@
-import type { GearCard, GemCard, ItemCard as Card } from '../ipc/types';
+import type { GearCard, GemCard, ItemCard as Card, NextStep } from '../ipc/types';
+import { stepDetail } from './chatLog';
 import { TooltipHeader, TooltipSep } from './Tooltip';
+
+// The chat's What's next colours: gem teal, unique brown for ascendancy, white for the rest.
+const STEP_TINT: Record<NextStep['kind'], string> = {
+  gem: 'text-gem',
+  passive: 'text-value',
+  gear: 'text-value',
+  ascendancy: 'text-unique',
+};
 
 const TINT = 'var(--color-currency)';
 
@@ -111,9 +120,28 @@ function Kitava({ card }: { card: Extract<Card, { kind: 'kitava' }> }): React.JS
   );
 }
 
+function Next({ card }: { card: Extract<Card, { kind: 'next' }> }): React.JSX.Element {
+  return (
+    <>
+      {card.card.laterStage && (
+        <p className="text-[13px] leading-snug text-quest">
+          Your level has reached the guide's next stage, {card.card.laterStage}.
+        </p>
+      )}
+      {card.card.steps.map((s) => (
+        <p key={`${s.kind}-${s.name}`} className="leading-snug">
+          <span className={`text-[15px] ${STEP_TINT[s.kind]}`}>{s.name}</span>
+          {stepDetail(s) && <span className="block text-[13px] text-plain">{stepDetail(s)}</span>}
+        </p>
+      ))}
+    </>
+  );
+}
+
 function title(card: Card): string {
   if (card.kind === 'ready') return `Level ${card.level}`;
   if (card.kind === 'kitava') return 'Kitava ahead';
+  if (card.kind === 'next') return `Act ${card.act}`;
   return card.name;
 }
 
@@ -121,6 +149,7 @@ function subtitle(card: Card): string | null {
   if (card.kind === 'gem') return 'Gem';
   if (card.kind === 'ready') return 'Usable now';
   if (card.kind === 'kitava') return `Resistances ${card.penalty}% after him`;
+  if (card.kind === 'next') return card.card.stage ? `Next for ${card.card.stage}` : "What's next";
   if (card.kind === 'gear') {
     return card.card.replaces ? `${card.card.slot} · instead of ${card.card.replaces}` : card.card.slot;
   }
@@ -146,6 +175,8 @@ function Body({ card }: { card: Card }): React.JSX.Element {
       return <Ready card={card} />;
     case 'kitava':
       return <Kitava card={card} />;
+    case 'next':
+      return <Next card={card} />;
   }
 }
 

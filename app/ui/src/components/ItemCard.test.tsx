@@ -95,6 +95,31 @@ describe('ItemCard', () => {
     expect(screen.getByText('Fire 60% · Lightning 41%')).toBeInTheDocument();
   });
 
+  it("shows what's next on a new act", () => {
+    render(
+      <ItemCard
+        compact={false}
+        card={{
+          kind: 'next',
+          act: 3,
+          card: {
+            missing: null,
+            stage: 'Act 3 tree',
+            laterStage: null,
+            steps: [
+              { kind: 'gem', name: 'Onslaught', slot: null, points: null, dpsPct: 12, ehpPct: 0 },
+              { kind: 'passive', name: 'Heart of Flame', slot: null, points: 3, dpsPct: 5, ehpPct: 0 },
+            ],
+          },
+        }}
+      />,
+    );
+    expect(screen.getByRole('heading', { name: 'Act 3' })).toBeInTheDocument();
+    expect(screen.getByText('Next for Act 3 tree')).toBeInTheDocument();
+    expect(screen.getByText('Onslaught')).toHaveClass('text-gem');
+    expect(screen.getByText('Heart of Flame')).toBeInTheDocument();
+  });
+
   it('lists where the build uses a gem and where to get it', () => {
     render(
       <ItemCard

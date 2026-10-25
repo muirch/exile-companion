@@ -496,7 +496,15 @@ fn spawn_pipeline(app: AppHandle, stream: LineStream, machine: CampaignMachine) 
         let cb_app = app.clone();
         let result = run_pipeline(stream, machine, None, LocalePack::EN, move |st, delta| {
             let _ = cb_app.emit("campaign://state-updated", st);
-            let before = tx.send_replace(st.clone()).level;
+            let old = tx.send_replace(st.clone());
+            let before = old.level;
+            // Only a new act further on, not the first state of a fresh log or a logout to an
+            // earlier town.
+            if let (Some(was), Some(now)) = (old.act, st.act) {
+                if delta.act_changed && now > was {
+                    crate::item::next_on_act(&cb_app, now);
+                }
+            }
             if delta.zone_changed || delta.level_changed {
                 let app_state = cb_app.state::<AppState>();
                 let exp = st
