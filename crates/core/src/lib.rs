@@ -40,6 +40,7 @@ pub mod resolve;
 pub mod route;
 pub mod source;
 pub mod state;
+pub mod vendor_search;
 
 /// Crate version, surfaced in diagnostics / the UI "about" panel.
 pub const VERSION: &str = env!("CARGO_PKG_VERSION");
