@@ -205,6 +205,7 @@ mod tests {
             act,
             action,
             npc: "Nessa".into(),
+            need_level: 1,
         }
     }
 

@@ -29,6 +29,8 @@ pub struct GemStep {
     pub act: u32,
     pub action: GemAction,
     pub npc: String,
+    /// Character level from which the build uses the gem.
+    pub need_level: u32,
 }
 
 /// Which gem steps the route shows.
@@ -527,6 +529,7 @@ fn step(w: &Wanted, s: &GemSource, action: GemAction) -> GemStep {
         act: s.act,
         action,
         npc: s.npc.clone(),
+        need_level: w.need_level,
     }
 }
 

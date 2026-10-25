@@ -12,6 +12,8 @@ pub struct CopiedItem {
     pub name: String,
     /// The base type under a rare's or unique's name.
     pub base: Option<String>,
+    /// From the item's Requirements block. A gem's own "Level:" line is its gem level, not this.
+    pub required_level: Option<u32>,
 }
 
 impl CopiedItem {
@@ -45,7 +47,22 @@ pub fn parse(text: &str) -> Option<CopiedItem> {
         rarity,
         name: name.to_string(),
         base,
+        required_level: required_level(text),
     })
+}
+
+fn required_level(text: &str) -> Option<u32> {
+    text.lines()
+        .map(str::trim)
+        .skip_while(|l| *l != "Requirements:")
+        .skip(1)
+        .take_while(|l| !l.starts_with("---"))
+        .find_map(|l| l.strip_prefix("Level: "))
+        .and_then(|l| {
+            l.split(|c: char| !c.is_ascii_digit())
+                .next()
+                .and_then(|n| n.parse().ok())
+        })
 }
 
 #[derive(Debug, Clone, PartialEq, Eq, Serialize)]
@@ -199,6 +216,15 @@ mod tests {
     }
 
     #[test]
+    fn reads_the_level_requirement_not_the_gem_level() {
+        let gem = "Item Class: Skill Gems\nRarity: Gem\nHerald of Ash\n--------\nLevel: 1\n--------\nRequirements:\nLevel: 16 (unmet)\nStr: 40\n--------\n";
+        assert_eq!(parse(gem).unwrap().required_level, Some(16));
+        let boots = "Item Class: Boots\nRarity: Normal\nIron Greaves\n--------\nArmour: 9\n--------\nRequirements:\nLevel: 5\n--------\nItem Level: 10";
+        assert_eq!(parse(boots).unwrap().required_level, Some(5));
+        assert_eq!(parse(BOW).unwrap().required_level, None);
+    }
+
+    #[test]
     fn other_text_is_not_an_item() {
         assert!(parse("hello").is_none());
         assert!(parse("").is_none());
@@ -284,6 +310,7 @@ mod tests {
                 act: 1,
                 action: GemAction::Buy,
                 npc: "Nessa".into(),
+                need_level: 1,
             }],
             ..Default::default()
         };
