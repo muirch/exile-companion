@@ -2,12 +2,16 @@ import { useEffect, useLayoutEffect, useRef, useState } from 'react';
 
 import { fitOverlay, lockOverlay } from '../ipc/commands';
 import { isTauri } from '../ipc/env';
+import { onItemCard } from '../ipc/events';
+import type { ItemCard as Card } from '../ipc/types';
 import { holdLabel, shortcutLabel } from './HotkeySection';
 import { useAppStore } from '../store/useAppStore';
+import { ItemCard } from './ItemCard';
 import { CompactPanel, RouteNav, StatusPanel } from './StatusPanel';
 import { Brand, TooltipHeader } from './Tooltip';
 
 const NOTICE_MS = 9000;
+export const ITEM_CARD_MS = 12000;
 const FULL_WIDTH = 404;
 const COMPACT_WIDTH = 340;
 
@@ -65,6 +69,22 @@ function StartupNotice(): React.JSX.Element {
   );
 }
 
+// The last copied item, until it has been on screen for a while. Measuring stays until the answer.
+export function useItemCard(): Card | null {
+  const [card, setCard] = useState<Card | null>(null);
+  useEffect(() => {
+    if (!isTauri()) return;
+    const off = onItemCard(setCard);
+    return () => void off.then((f) => f());
+  }, []);
+  useEffect(() => {
+    if (!card || card.kind === 'measuring') return;
+    const t = setTimeout(() => setCard(null), ITEM_CARD_MS);
+    return () => clearTimeout(t);
+  }, [card]);
+  return card;
+}
+
 export function OverlayRoot(): React.JSX.Element {
   const grabbed = useAppStore((s) => s.ui.grabbed);
   const opacity = useAppStore((s) => s.ui.opacity);
@@ -82,6 +102,9 @@ export function OverlayRoot(): React.JSX.Element {
   const visible = ((gameFocused && routeEnabled) || grabbed) && !faded;
   const [shownOnce, setShownOnce] = useState(false);
   if (visible && !shownOnce) setShownOnce(true);
+  const itemCard = useItemCard();
+  const zoom = textScale * (isTauri() ? screenZoom(window.screen.height) : 1);
+  const width = compact ? COMPACT_WIDTH : FULL_WIDTH;
 
   // The overlay has keyboard focus while it is unlocked, so Esc reaches it.
   useEffect(() => {
@@ -114,6 +137,14 @@ export function OverlayRoot(): React.JSX.Element {
   return (
     <div ref={box} className="inline-block p-2">
       {!shownOnce && <StartupNotice />}
+      {itemCard && (gameFocused || grabbed) && (
+        <div
+          className="pointer-events-none mb-2"
+          style={{ backgroundColor: `rgb(0 0 0 / ${opacity})`, zoom, width }}
+        >
+          <ItemCard card={itemCard} compact={compact} />
+        </div>
+      )}
       <div
         hidden={!shownOnce}
         className={[
@@ -126,8 +157,8 @@ export function OverlayRoot(): React.JSX.Element {
         ].join(' ')}
         style={{
           backgroundColor: `rgb(0 0 0 / ${opacity})`,
-          zoom: textScale * (isTauri() ? screenZoom(window.screen.height) : 1),
-          width: compact ? COMPACT_WIDTH : FULL_WIDTH,
+          zoom,
+          width,
         }}
       >
         {grabbed && (

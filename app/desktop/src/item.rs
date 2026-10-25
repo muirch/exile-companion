@@ -1,0 +1,161 @@
+//! The item check key: copies the item under the cursor the way Awakened PoE Trade does and shows
+//! what it means for the build in the overlay.
+
+use std::sync::atomic::{AtomicBool, Ordering};
+#[cfg(windows)]
+use std::time::Duration;
+
+use exile_assistant::{GearCard, Tools};
+use exile_core::item_check::{self, CopiedItem, GemCard};
+use serde::Serialize;
+use tauri::{AppHandle, Emitter, Manager};
+
+use crate::state::AppState;
+
+#[derive(Debug, Clone, Serialize)]
+#[serde(tag = "kind", rename_all = "camelCase")]
+pub enum ItemCard {
+    Measuring {
+        name: String,
+    },
+    Gem(GemCard),
+    Gear {
+        name: String,
+        card: GearCard,
+    },
+    /// Why there is nothing to show, in the player's words.
+    Missing {
+        name: String,
+        message: String,
+    },
+}
+
+fn emit(app: &AppHandle, card: &ItemCard) {
+    let _ = app.emit("item://card", card);
+}
+
+static CHECKING: AtomicBool = AtomicBool::new(false);
+
+/// Awakened PoE Trade's timings: the game puts the text on the clipboard within a few frames.
+#[cfg(windows)]
+const POLL: Duration = Duration::from_millis(48);
+#[cfg(windows)]
+const POLL_LIMIT: Duration = Duration::from_millis(500);
+
+pub fn check(app: &AppHandle) {
+    if CHECKING.swap(true, Ordering::SeqCst) {
+        return;
+    }
+    let app = app.clone();
+    tauri::async_runtime::spawn(async move {
+        if let Some(text) = copy_item_text(&app).await {
+            if let Some(item) = item_check::parse(&text) {
+                show(&app, &item, text).await;
+            }
+        }
+        CHECKING.store(false, Ordering::SeqCst);
+    });
+}
+
+/// Ctrl+C in the game, then wait for the item text. An item already on the clipboard is cleared
+/// first, so an old copy isn't taken for the new one.
+async fn copy_item_text(app: &AppHandle) -> Option<String> {
+    #[cfg(windows)]
+    {
+        use tauri_plugin_clipboard_manager::ClipboardExt;
+        let clipboard = app.clipboard();
+        let before = clipboard.read_text().ok().unwrap_or_default();
+        let had_item = item_check::parse(&before).is_some();
+        if had_item {
+            let _ = clipboard.write_text("");
+        }
+        crate::hotkeys::copy_item();
+        let mut waited = Duration::ZERO;
+        let mut found = None;
+        while waited < POLL_LIMIT {
+            tokio::time::sleep(POLL).await;
+            waited += POLL;
+            let now = clipboard.read_text().ok().unwrap_or_default();
+            if item_check::parse(&now).is_some() {
+                found = Some(now);
+                break;
+            }
+        }
+        if !had_item {
+            let _ = clipboard.write_text(before);
+        }
+        found
+    }
+    #[cfg(not(windows))]
+    {
+        let _ = app;
+        None
+    }
+}
+
+async fn show(app: &AppHandle, item: &CopiedItem, text: String) {
+    let name = item.title();
+    let missing = |message: &str| ItemCard::Missing {
+        name: name.clone(),
+        message: message.into(),
+    };
+    let has_build = {
+        let state = app.state::<AppState>();
+        let builds = state.build.lock().unwrap_or_else(|e| e.into_inner());
+        builds.build().is_some()
+    };
+    if !has_build {
+        emit(
+            app,
+            &missing("Import your build in the settings to check items against it."),
+        );
+        return;
+    }
+    if item.is_gem() {
+        let plan = crate::runtime::current_gem_plan(app);
+        let card = {
+            let state = app.state::<AppState>();
+            let builds = state.build.lock().unwrap_or_else(|e| e.into_inner());
+            builds
+                .build()
+                .map(|b| item_check::gem_card(b, plan.as_ref(), &item.name))
+        };
+        if let Some(card) = card {
+            emit(app, &ItemCard::Gem(card));
+        }
+        return;
+    }
+    emit(app, &ItemCard::Measuring { name: name.clone() });
+    let server = match crate::chat::server(app).await {
+        Ok(s) => s,
+        Err(e) => {
+            log::warn!("item check: {e}");
+            emit(
+                app,
+                &missing("Path of Building isn't running for the assistant."),
+            );
+            return;
+        }
+    };
+    let out = server
+        .call("compare_item", serde_json::json!({ "text": text }))
+        .await;
+    if out.is_error {
+        log::warn!("compare_item: {}", out.text);
+        emit(app, &missing(&out.text));
+        return;
+    }
+    let card = serde_json::from_str::<serde_json::Value>(&out.text)
+        .ok()
+        .and_then(|v| exile_assistant::from_compare_item(&v));
+    match card {
+        Some(card) => emit(
+            app,
+            &ItemCard::Gear {
+                name: name.clone(),
+                card,
+            },
+        ),
+        None => emit(app, &missing("It doesn't go in any slot of your build.")),
+    }
+}

@@ -23,9 +23,11 @@ const CFG: HotkeySettings = {
     openChat: 'Alt+KeyA',
     vendorSearch: 'Alt+KeyG',
     hideout: 'F5',
+    itemCheck: 'Alt+KeyD',
   },
   relogEnabled: false,
   hideoutEnabled: false,
+  itemCheckEnabled: false,
   vendorSearchEnabled: false,
 };
 
@@ -148,6 +150,13 @@ describe('HotkeySection', () => {
     render(<HotkeySection />);
     await user.click(await screen.findByRole('switch', { name: 'Hideout' }));
     expect(commands.setHotkeys).toHaveBeenCalledWith({ ...CFG, hideoutEnabled: true });
+  });
+
+  it('toggles item check', async () => {
+    const user = userEvent.setup();
+    render(<HotkeySection />);
+    await user.click(await screen.findByRole('switch', { name: 'Item check' }));
+    expect(commands.setHotkeys).toHaveBeenCalledWith({ ...CFG, itemCheckEnabled: true });
   });
 
   it('toggles gem search', async () => {

@@ -185,6 +185,26 @@ export function HotkeySection(): React.JSX.Element {
       </Row>
       <Note>Types /hideout in the game chat, like Awakened PoE Trade's F5.</Note>
 
+      <Row label="Item check" className="mt-2">
+        <Toggle
+          on={cfg.itemCheckEnabled}
+          label="Item check"
+          onChange={(v) => void commit({ ...cfg, itemCheckEnabled: v })}
+        />
+        <Binding
+          value={cfg.hotkeys.itemCheck}
+          recording={recording === 'itemCheck'}
+          dim={!cfg.itemCheckEnabled}
+          onRecord={() => setRecording(recording === 'itemCheck' ? null : 'itemCheck')}
+        />
+        <BindNote error={errorFor('itemCheck')} />
+      </Row>
+      <Note>
+        Point at an item in the game and press it. The overlay says what the item would change for
+        your build, measured with Path of Building, or where your build uses a gem. It copies the
+        item with Ctrl+C, like Awakened PoE Trade's Ctrl+D.
+      </Note>
+
       <Row label="Gem search" className="mt-2">
         <Toggle
           on={cfg.vendorSearchEnabled}
@@ -204,8 +224,8 @@ export function HotkeySection(): React.JSX.Element {
         game highlights them. If they don't fit in one search, press again for the rest.
       </Note>
       <Note>
-        Relog, hideout and gem search are the only keys that send anything to the game: one action
-        per key press, after you let go of the keys, and only while the game is in front.
+        Relog, hideout, item check and gem search are the only keys that send anything to the game:
+        one action per key press, and only while the game is in front.
       </Note>
       <Note flush>Click a key to change it. Backspace clears it, Esc cancels.</Note>
     </div>

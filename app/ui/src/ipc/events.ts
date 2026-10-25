@@ -13,6 +13,7 @@ import type {
   NextObjective,
   ReplayProgress,
   HotkeySettings,
+  ItemCard,
   RouteView,
   Settings,
   SourceStatus,
@@ -63,6 +64,10 @@ export const onRouteEnabled = (cb: (enabled: boolean) => void): Promise<Unlisten
 
 export const onMenuOpened = (cb: () => void): Promise<UnlistenFn> =>
   listen('menu://opened', () => cb());
+
+/** A copied item, measured against the build. */
+export const onItemCard = (cb: (card: ItemCard) => void): Promise<UnlistenFn> =>
+  listen<ItemCard>('item://card', (e) => cb(e.payload));
 
 export const onHotkeysChanged = (cb: (value: HotkeySettings) => void): Promise<UnlistenFn> =>
   listen<HotkeySettings>('hotkeys://changed', (e) => cb(e.payload));

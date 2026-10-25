@@ -74,7 +74,7 @@ fn bare_route_view(app: &AppHandle) -> Option<RouteView> {
     app_state.route.view(edge)
 }
 
-fn current_gem_plan(app: &AppHandle) -> Option<exile_core::gemplan::GemPlan> {
+pub(crate) fn current_gem_plan(app: &AppHandle) -> Option<exile_core::gemplan::GemPlan> {
     let app_state = app.state::<AppState>();
     let builds = lock(&app_state.build);
     let build = builds.build()?;

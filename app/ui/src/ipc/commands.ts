@@ -329,9 +329,11 @@ const DEFAULT_HOTKEYS: HotkeySettings = {
     openChat: 'Alt+KeyA',
     vendorSearch: 'Alt+KeyG',
     hideout: 'F5',
+    itemCheck: 'Alt+KeyD',
   },
   relogEnabled: false,
   hideoutEnabled: false,
+  itemCheckEnabled: false,
   vendorSearchEnabled: false,
 };
 let mockHotkeys = DEFAULT_HOTKEYS;

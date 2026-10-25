@@ -231,7 +231,7 @@ fn busy(app: &AppHandle) -> bool {
     task.as_ref().is_some_and(|t| !t.inner().is_finished())
 }
 
-async fn server(app: &AppHandle) -> Result<Arc<Server>, ChatError> {
+pub(crate) async fn server(app: &AppHandle) -> Result<Arc<Server>, ChatError> {
     let state = app.state::<ChatState>();
     let mut slot = state.server.lock().await;
     if let Some(s) = slot.as_ref().filter(|s| s.is_running()) {

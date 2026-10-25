@@ -5,6 +5,7 @@ mod assistant;
 mod chat;
 mod commands;
 mod hotkeys;
+mod item;
 mod menu;
 mod overlay;
 mod pob;

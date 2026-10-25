@@ -25,6 +25,7 @@ pub struct Hotkeys {
     pub open_chat: String,
     pub vendor_search: String,
     pub hideout: String,
+    pub item_check: String,
 }
 
 impl Default for Hotkeys {
@@ -38,6 +39,8 @@ impl Default for Hotkeys {
             open_chat: "Alt+KeyA".into(),
             vendor_search: "Alt+KeyG".into(),
             hideout: "F5".into(),
+            // Not Ctrl+D: Awakened PoE Trade has it, and players run both.
+            item_check: "Alt+KeyD".into(),
         }
     }
 }
@@ -64,6 +67,7 @@ enum Action {
     OpenChat,
     VendorSearch,
     Hideout,
+    ItemCheck,
 }
 
 #[derive(Debug, Clone, Serialize)]
@@ -99,6 +103,9 @@ pub fn register_all(app: &AppHandle) -> Vec<BindError> {
     }
     if saved.hideout_enabled {
         bindings.push(("hideout", keys.hideout.as_str(), Action::Hideout));
+    }
+    if saved.item_check_enabled {
+        bindings.push(("itemCheck", keys.item_check.as_str(), Action::ItemCheck));
     }
     if saved.vendor_search_enabled {
         bindings.push((
@@ -151,6 +158,8 @@ fn run(app: &AppHandle, action: Action) {
         Action::Relog => {}
         Action::Hideout if in_game => into_game(app, "/hideout".into(), Keys::ChatCommand),
         Action::Hideout => {}
+        Action::ItemCheck if in_game => crate::item::check(app),
+        Action::ItemCheck => {}
         Action::OpenChat => crate::chat::toggle(app),
         Action::VendorSearch if in_game => vendor_search(app),
         Action::VendorSearch => {}
@@ -242,6 +251,14 @@ fn into_game(app: &AppHandle, text: String, keys: Keys) {
     let _ = (app, text, keys);
 }
 
+/// Ctrl+C over the item under the cursor, the way Awakened PoE Trade copies it: Ctrl goes down
+/// only if the player isn't holding it, and the shortcut's other modifiers stay as they are.
+/// Copying an item is the game's own text copy, not a game action.
+pub fn copy_item() {
+    #[cfg(windows)]
+    win::copy();
+}
+
 #[cfg(windows)]
 mod win {
     use windows_sys::Win32::UI::Input::KeyboardAndMouse::{
@@ -250,6 +267,7 @@ mod win {
     };
 
     pub use windows_sys::Win32::UI::Input::KeyboardAndMouse::{VK_DELETE, VK_RETURN};
+    const VK_C: u16 = 0x43;
     pub const VK_F: u16 = 0x46;
     pub const VK_V: u16 = 0x56;
 
@@ -293,6 +311,15 @@ mod win {
                 return false;
             }
             std::thread::sleep(std::time::Duration::from_millis(10));
+        }
+    }
+
+    pub fn copy() {
+        let ctrl_held = unsafe { GetAsyncKeyState(i32::from(VK_CONTROL)) } as u16 & 0x8000 != 0;
+        if ctrl_held {
+            send(&[key(VK_C, false), key(VK_C, true)]);
+        } else {
+            tap(VK_C, true);
         }
     }
 

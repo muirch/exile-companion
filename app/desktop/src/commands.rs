@@ -386,6 +386,7 @@ pub struct HotkeySettings {
     hotkeys: crate::hotkeys::Hotkeys,
     relog_enabled: bool,
     hideout_enabled: bool,
+    item_check_enabled: bool,
     vendor_search_enabled: bool,
 }
 
@@ -396,6 +397,7 @@ pub fn get_hotkeys(app: AppHandle) -> HotkeySettings {
         hotkeys: s.hotkeys,
         relog_enabled: s.relog_enabled,
         hideout_enabled: s.hideout_enabled,
+        item_check_enabled: s.item_check_enabled,
         vendor_search_enabled: s.vendor_search_enabled,
     }
 }
@@ -410,6 +412,7 @@ pub fn set_hotkeys(
     s.hotkeys = value.hotkeys;
     s.relog_enabled = value.relog_enabled;
     s.hideout_enabled = value.hideout_enabled;
+    s.item_check_enabled = value.item_check_enabled;
     s.vendor_search_enabled = value.vendor_search_enabled;
     settings::save(&app, &s)?;
     let _ = app.emit(
@@ -418,6 +421,7 @@ pub fn set_hotkeys(
             hotkeys: s.hotkeys.clone(),
             relog_enabled: s.relog_enabled,
             hideout_enabled: s.hideout_enabled,
+            item_check_enabled: s.item_check_enabled,
             vendor_search_enabled: s.vendor_search_enabled,
         },
     );

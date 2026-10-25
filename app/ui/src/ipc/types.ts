@@ -87,6 +87,33 @@ export interface NextStep {
   ehpPct: number;
 }
 
+/** Mirrors `exile_assistant::GearCard`: the best slot for a copied item, measured with PoB. */
+export interface GearCard {
+  slot: string;
+  replaces: string | null;
+  verdict: 'upgrade' | 'downgrade' | 'mixed' | 'same';
+  dpsPct: number;
+  ehpPct: number;
+  life: number;
+  resists: { element: string; change: number; after: number }[];
+  /** PoB couldn't calculate some of the item, so the numbers leave it out. */
+  partly: boolean;
+}
+
+/** Mirrors `exile_core::item_check::GemCard`. */
+export interface GemCard {
+  name: string;
+  uses: { set: string | null; skill: string; links: string[] }[];
+  get: string | null;
+}
+
+/** Payload of `item://card`, mirrors `item::ItemCard`. */
+export type ItemCard =
+  | { kind: 'measuring'; name: string }
+  | ({ kind: 'gem' } & GemCard)
+  | { kind: 'gear'; name: string; card: GearCard }
+  | { kind: 'missing'; name: string; message: string };
+
 /** Payload of `chat://event`, mirrors `exile_assistant::ChatEvent`. */
 export type ChatEvent =
   | { kind: 'text'; text: string }
@@ -157,12 +184,14 @@ export interface Hotkeys {
   openChat: string;
   vendorSearch: string;
   hideout: string;
+  itemCheck: string;
 }
 
 export interface HotkeySettings {
   hotkeys: Hotkeys;
   relogEnabled: boolean;
   hideoutEnabled: boolean;
+  itemCheckEnabled: boolean;
   vendorSearchEnabled: boolean;
 }
 
