@@ -43,6 +43,7 @@ All of them can be changed in the settings.
 | Alt+A | Open or close the assistant's chat |
 | Alt+M | Unlock the overlay to drag it, press again to lock |
 | Alt+Left, Alt+Right | Previous or next step of the route |
+| F5 | Go to your hideout, off until you turn it on |
 | F9 | Relog to character select, off until you turn it on |
 | Alt+G | At a vendor, search for the gems the route says to buy there, off until you turn it on |
 
@@ -50,7 +51,7 @@ All of them can be changed in the settings.
 
 Exile Companion reads `Client.txt`, a text log the game writes to disk anyway, plus the keys you bind and, when you ask, the clipboard. If you paste a build link (pobb.in, poe.ninja, pastebin and the other sites Path of Building imports from), it downloads that one build. If you turn on sync with Path of Building, it reads and writes one build file in PoB's Builds folder. When you ask the assistant, your question and what its tools read about your build and your progress go to the AI provider you picked, and nothing goes while you don't ask. It leaves the game process alone. It doesn't read the game's memory or hook its rendering, and it doesn't play for you.
 
-Two keys send something to the game, and both are off until you turn them on. F9 types `/exit` in chat, the way Awakened PoE Trade does. Alt+G types a search into the open vendor window, the way Exile-UI does, and the game highlights the gems. Each is one action per key press, sent after you let go of the keys and only while the game is in front.
+Three keys send something to the game, and all are off until you turn them on. F5 types `/hideout` and F9 types `/exit` in chat, the way Awakened PoE Trade does. Alt+G types a search into the open vendor window, the way Exile-UI does, and the game highlights the gems. Each is one action per key press, sent after you let go of the keys and only while the game is in front.
 
 Exile Companion isn't affiliated with or endorsed by Grinding Gear Games. Path of Exile is their trademark. It's a free, non-commercial fan tool.
 
