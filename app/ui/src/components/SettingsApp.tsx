@@ -56,6 +56,7 @@ import {
   Toggle,
 } from '../kit';
 import { useAppStore } from '../store/useAppStore';
+import { GemRows } from './GemRows';
 import { HotkeySection } from './HotkeySection';
 import { ReplayControls } from './ReplayControls';
 import { Brand } from './Tooltip';
@@ -555,6 +556,7 @@ function BuildSection(): React.JSX.Element {
         </>
       )}
       <PresetRows />
+      <GemRows />
     </Section>
   );
 }

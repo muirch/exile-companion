@@ -18,6 +18,8 @@ import type {
   BindError,
   ChatProvider,
   ChatView,
+  GemOverride,
+  GemRow,
   HotkeySettings,
   NextCard,
   NextObjective,
@@ -216,6 +218,21 @@ export const clearBuild = (): Promise<void> => {
 
 export const getBuild = (): Promise<BuildSummary | null> =>
   isTauri() ? invoke('get_build') : Promise.resolve(mock.getBuildMock());
+
+let mockGemRows: GemRow[] = [
+  { name: 'Fireball', place: 'Quest reward from Tarkleigh in act 1', over: null },
+  { name: 'Arcane Surge', place: 'Sold by Nessa in act 1', over: null },
+  { name: 'Herald of Ash', place: 'Sold by Yeena in act 2', over: null },
+];
+
+export const getGemRows = (): Promise<GemRow[]> =>
+  isTauri() ? invoke('get_gem_rows') : Promise.resolve(mockGemRows);
+
+export const setGemOverride = (name: string, over: GemOverride | null): Promise<void> => {
+  if (isTauri()) return invoke('set_gem_override', { name, over });
+  mockGemRows = mockGemRows.map((r) => (r.name === name ? { ...r, over } : r));
+  return Promise.resolve();
+};
 
 export const getGuidance = (): Promise<NextObjective> =>
   isTauri() ? invoke('get_guidance') : Promise.resolve(mock.getGuidanceMock());

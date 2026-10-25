@@ -80,11 +80,12 @@ pub(crate) fn current_gem_plan(app: &AppHandle) -> Option<exile_core::gemplan::G
     let build = builds.build()?;
     let class = build.class_name.as_deref()?;
     let saved = settings::load(app).unwrap_or_default();
-    Some(exile_core::gemplan::plan_with_stages(
+    Some(exile_core::gemplan::plan_with_overrides(
         build,
         class,
         &app_state.gems,
         &saved.preset_stages,
+        &saved.gem_overrides,
     ))
 }
 
@@ -282,9 +283,10 @@ pub fn import_build(app: &AppHandle, xml: Vec<u8>) -> Result<BuildSummary, Strin
         log::warn!("build import: {e}");
         "That's not a Path of Building build.".to_string()
     })?;
-    // Stages belong to the old build's skill sets.
+    // Stages belong to the old build's skill sets, overrides to its gems.
     if let Ok(mut s) = settings::load(app) {
         s.preset_stages.clear();
+        s.gem_overrides.clear();
         let _ = settings::save(app, &s);
     }
     if let Some(path) = build_path(app) {
@@ -326,6 +328,75 @@ pub fn clear_build(app: &AppHandle) {
     emit_route(app);
 }
 
+/// A gem of the build as the settings list it: where the plan puts it and what the player said.
+#[derive(Debug, Clone, serde::Serialize)]
+#[serde(rename_all = "camelCase")]
+pub struct GemRow {
+    pub name: String,
+    /// "Quest reward from Tarkleigh in act 1", none when the campaign doesn't give it.
+    pub place: Option<String>,
+    pub over: Option<exile_core::gemplan::GemOverride>,
+}
+
+pub fn gem_rows(app: &AppHandle) -> Vec<GemRow> {
+    let plan = current_gem_plan(app);
+    let overrides = settings::load(app).unwrap_or_default().gem_overrides;
+    let app_state = app.state::<AppState>();
+    let builds = lock(&app_state.build);
+    let Some(build) = builds.build() else {
+        return Vec::new();
+    };
+    let mut rows: Vec<GemRow> = Vec::new();
+    for gem in build
+        .skill_sets
+        .iter()
+        .flat_map(|s| &s.groups)
+        .filter(|g| g.enabled && g.source.is_none())
+        .flat_map(|g| &g.gems)
+        .filter(|g| g.enabled)
+    {
+        let Some(name) = gem.name_spec.clone() else {
+            continue;
+        };
+        if rows.iter().any(|r| r.name == name) {
+            continue;
+        }
+        let place = plan
+            .as_ref()
+            .and_then(|p| p.steps.iter().find(|s| s.name == name))
+            .map(|s| match s.action {
+                exile_core::gemplan::GemAction::Take => {
+                    format!("Quest reward from {} in act {}", s.npc, s.act)
+                }
+                exile_core::gemplan::GemAction::Buy => {
+                    format!("Sold by {} in act {}", s.npc, s.act)
+                }
+            });
+        rows.push(GemRow {
+            over: overrides.get(&name).copied(),
+            name,
+            place,
+        });
+    }
+    rows
+}
+
+pub fn set_gem_override(
+    app: &AppHandle,
+    name: String,
+    over: Option<exile_core::gemplan::GemOverride>,
+) -> Result<(), String> {
+    let mut s = settings::load(app)?;
+    match over {
+        Some(o) => s.gem_overrides.insert(name, o),
+        None => s.gem_overrides.remove(&name),
+    };
+    settings::save(app, &s)?;
+    emit_route(app);
+    emit_build_summary(app);
+    Ok(())
+}
+
 /// The current build summary, if a build is loaded.
 pub fn current_build_summary(app: &AppHandle) -> Option<BuildSummary> {
     let app_state = app.state::<AppState>();
@@ -333,8 +404,14 @@ pub fn current_build_summary(app: &AppHandle) -> Option<BuildSummary> {
     let build = builds.build()?;
     let mut summary = BuildSummary::from_build(build);
     if let Some(class) = build.class_name.as_deref() {
-        let stages = settings::load(app).unwrap_or_default().preset_stages;
-        let plan = exile_core::gemplan::plan_with_stages(build, class, &app_state.gems, &stages);
+        let saved = settings::load(app).unwrap_or_default();
+        let plan = exile_core::gemplan::plan_with_overrides(
+            build,
+            class,
+            &app_state.gems,
+            &saved.preset_stages,
+            &saved.gem_overrides,
+        );
         summary.not_in_campaign = plan.not_in_campaign;
         summary.mules = plan.mules;
     }

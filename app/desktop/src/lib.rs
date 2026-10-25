@@ -178,6 +178,8 @@ pub fn run() {
             commands::import_build_code,
             commands::clear_build,
             commands::get_build,
+            commands::get_gem_rows,
+            commands::set_gem_override,
             commands::get_guidance,
             commands::get_route,
             commands::get_source,

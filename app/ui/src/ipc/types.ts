@@ -107,6 +107,17 @@ export interface GemCard {
   get: string | null;
 }
 
+/** Mirrors `exile_core::gemplan::GemOverride`. */
+export type GemOverride = { act: number } | 'have';
+
+/** Mirrors `runtime::GemRow`: a gem of the build in the settings. */
+export interface GemRow {
+  name: string;
+  /** Where the plan takes it. Null when the campaign doesn't give it or the player has it. */
+  place: string | null;
+  over: GemOverride | null;
+}
+
 /** Payload of `item://card`, mirrors `item::ItemCard`. */
 export type ItemCard =
   | { kind: 'measuring'; name: string }

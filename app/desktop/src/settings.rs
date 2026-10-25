@@ -33,6 +33,8 @@ pub struct Settings {
     pub fade_after: u32,
     /// Per skill set of the loaded build, in order. Reset when a build is imported.
     pub preset_stages: Vec<exile_core::gemplan::PresetStage>,
+    /// The player's word on single gems of the build. Reset when a build is imported.
+    pub gem_overrides: exile_core::gemplan::GemOverrides,
     /// Path of Building's folder, found or picked. The build assistant runs it.
     pub pob_path: Option<String>,
     /// Keep the build the same as a build file in PoB's Builds folder.
@@ -65,6 +67,7 @@ impl Default for Settings {
             compact: true,
             fade_after: 0,
             preset_stages: Vec::new(),
+            gem_overrides: Default::default(),
             pob_path: None,
             pob_sync: false,
             pob_build: None,

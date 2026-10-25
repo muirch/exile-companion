@@ -371,6 +371,20 @@ pub fn quit_app(app: AppHandle) {
 }
 
 #[tauri::command]
+pub fn get_gem_rows(app: AppHandle) -> Vec<runtime::GemRow> {
+    runtime::gem_rows(&app)
+}
+
+#[tauri::command]
+pub fn set_gem_override(
+    app: AppHandle,
+    name: String,
+    over: Option<exile_core::gemplan::GemOverride>,
+) -> Result<(), String> {
+    runtime::set_gem_override(&app, name, over)
+}
+
+#[tauri::command]
 pub fn get_route_enabled(app: AppHandle) -> bool {
     crate::menu::route_enabled(&app)
 }
