@@ -7,6 +7,7 @@ mod card;
 mod config;
 mod gear;
 mod http;
+pub mod kitava;
 mod mcp;
 mod ollama;
 mod openai;

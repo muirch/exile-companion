@@ -30,6 +30,7 @@ pub mod gems;
 pub mod guidance;
 pub mod hold;
 pub mod item_check;
+pub mod kitava;
 pub mod level_up;
 pub mod locale;
 pub mod logfile;
