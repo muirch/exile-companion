@@ -65,6 +65,10 @@ export const onRouteEnabled = (cb: (enabled: boolean) => void): Promise<Unlisten
 export const onMenuOpened = (cb: () => void): Promise<UnlistenFn> =>
   listen('menu://opened', () => cb());
 
+/** The experience share in the area the character just entered or at its new level. */
+export const onExp = (cb: (exp: number | null) => void): Promise<UnlistenFn> =>
+  listen<number | null>('exp://area', (e) => cb(e.payload));
+
 /** A copied item, measured against the build. */
 export const onItemCard = (cb: (card: ItemCard) => void): Promise<UnlistenFn> =>
   listen<ItemCard>('item://card', (e) => cb(e.payload));

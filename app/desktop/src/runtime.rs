@@ -420,6 +420,15 @@ fn spawn_pipeline(app: AppHandle, stream: LineStream, machine: CampaignMachine) 
         let result = run_pipeline(stream, machine, None, LocalePack::EN, move |st, delta| {
             let _ = cb_app.emit("campaign://state-updated", st);
             let before = tx.send_replace(st.clone()).level;
+            if delta.zone_changed || delta.level_changed {
+                let app_state = cb_app.state::<AppState>();
+                let exp = st
+                    .area_id
+                    .as_deref()
+                    .and_then(|id| app_state.data.zones.by_id(id))
+                    .and_then(|zone| exile_core::exp::in_zone(st.level, zone));
+                let _ = cb_app.emit("exp://area", exp);
+            }
             // A fresh log starts at 0, that's not a level-up the player made.
             if delta.level_changed && before > 0 {
                 crate::item::level_up(&cb_app, before, st.level);

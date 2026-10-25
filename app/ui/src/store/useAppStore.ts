@@ -29,6 +29,8 @@ interface AppStore {
   guidance: NextObjective | null;
   route: RouteView | null;
   routeEnabled: boolean;
+  /** Share of experience in the current area, 0.01 to 1. Null in towns and when unknown. */
+  exp: number | null;
   hotkeys: Hotkeys;
   source: { mode: SourceMode; path: string | null; error: string | null };
   replay: ReplayProgress;
@@ -48,6 +50,7 @@ interface AppStore {
   setGuidance: (guidance: NextObjective | null) => void;
   setRoute: (route: RouteView | null) => void;
   setRouteEnabled: (routeEnabled: boolean) => void;
+  setExp: (exp: number | null) => void;
   setHotkeys: (hotkeys: Hotkeys) => void;
   setSourceStatus: (status: SourceStatus) => void;
   setReplayProgress: (progress: ReplayProgress) => void;
@@ -67,6 +70,7 @@ export const useAppStore = create<AppStore>((set) => ({
   guidance: null,
   route: null,
   routeEnabled: true,
+  exp: null,
   hotkeys: {
     menuHold: 'Backquote',
     moveOverlay: 'Alt+KeyM',
@@ -97,6 +101,7 @@ export const useAppStore = create<AppStore>((set) => ({
   setGuidance: (guidance) => set({ guidance }),
   setRoute: (route) => set({ route }),
   setRouteEnabled: (routeEnabled) => set({ routeEnabled }),
+  setExp: (exp) => set({ exp }),
   setHotkeys: (hotkeys) => set({ hotkeys }),
   setSourceStatus: (status) =>
     set({ source: { mode: status.mode, path: status.path ?? null, error: status.error ?? null } }),

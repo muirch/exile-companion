@@ -10,16 +10,24 @@ import { TooltipHeader, TooltipSep } from './Tooltip';
 const TINT = 'var(--color-currency)';
 
 // Act, level and step share the band's subtitle, so the first line under the band is an action.
+/** "XP 64%" when the area costs experience, nothing at full experience or in town. */
+export function expLabel(exp: number | null): string | null {
+  if (exp == null || exp >= 0.995) return null;
+  return `XP ${exp < 0.1 ? (exp * 100).toFixed(1) : Math.round(exp * 100)}%`;
+}
+
 function useSubtitle(): string | undefined {
   const act = useAppStore((s) => s.campaign.act);
   const location = useAppStore((s) => s.campaign.location_kind);
   const level = useAppStore((s) => s.campaign.level);
   const klass = useAppStore((s) => s.campaign.class);
   const route = useAppStore((s) => s.route);
+  const exp = useAppStore((s) => s.exp);
   const parts = [
     act != null ? `Act ${act}${location === 'town' ? ' town' : ''}` : null,
     level > 0 ? (klass ? `${klass} level ${level}` : `Level ${level}`) : null,
     route ? `Step ${route.section_edge + 1} / ${route.section_edge_count}` : null,
+    expLabel(exp),
   ].filter(Boolean);
   return parts.length > 0 ? parts.join(' · ') : undefined;
 }
@@ -89,11 +97,13 @@ export function CompactPanel(): React.JSX.Element {
   const zone = useAppStore((s) => s.campaign.zone);
   const act = useAppStore((s) => s.campaign.act);
   const route = useAppStore((s) => s.route);
+  const exp = useAppStore((s) => s.exp);
   const actions = hasActions(route);
   const where = [
     zone?.name ?? 'Waiting for the game',
     act != null ? `Act ${act}` : null,
     route ? `${route.section_edge + 1} / ${route.section_edge_count}` : null,
+    expLabel(exp),
   ]
     .filter(Boolean)
     .join(' · ');

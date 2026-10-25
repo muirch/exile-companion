@@ -15,6 +15,7 @@ import { isTauri } from './ipc/env';
 import {
   onBuildUpdated,
   onCampaignState,
+  onExp,
   onGameFocus,
   onGuidance,
   onHotkeysChanged,
@@ -53,6 +54,7 @@ export function useBackendSync(): void {
       onGuidance(st.setGuidance),
       onRouteView(st.setRoute),
       onRouteEnabled(st.setRouteEnabled),
+      onExp(st.setExp),
       onSourceStatus(st.setSourceStatus),
       onReplayProgress(st.setReplayProgress),
       onOverlayGrab(st.setGrabbed),
