@@ -19,6 +19,8 @@ pub struct Settings {
     pub hotkeys: crate::hotkeys::Hotkeys,
     /// Off by default: it is the one feature that sends input to the game.
     pub relog_enabled: bool,
+    /// Off by default: it types into the game's search field.
+    pub vendor_search_enabled: bool,
     /// Read once at startup: the edges differ between the two route variants.
     pub league_start: bool,
     pub gem_hints: exile_core::gemplan::GemHints,
@@ -52,6 +54,7 @@ impl Default for Settings {
             route_enabled: true,
             hotkeys: crate::hotkeys::Hotkeys::default(),
             relog_enabled: false,
+            vendor_search_enabled: false,
             league_start: true,
             gem_hints: Default::default(),
             compact: true,

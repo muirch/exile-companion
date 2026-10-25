@@ -385,6 +385,7 @@ pub fn set_route_enabled(app: AppHandle, enabled: bool) {
 pub struct HotkeySettings {
     hotkeys: crate::hotkeys::Hotkeys,
     relog_enabled: bool,
+    vendor_search_enabled: bool,
 }
 
 #[tauri::command]
@@ -393,6 +394,7 @@ pub fn get_hotkeys(app: AppHandle) -> HotkeySettings {
     HotkeySettings {
         hotkeys: s.hotkeys,
         relog_enabled: s.relog_enabled,
+        vendor_search_enabled: s.vendor_search_enabled,
     }
 }
 
@@ -405,12 +407,14 @@ pub fn set_hotkeys(
     let mut s = settings::load(&app)?;
     s.hotkeys = value.hotkeys;
     s.relog_enabled = value.relog_enabled;
+    s.vendor_search_enabled = value.vendor_search_enabled;
     settings::save(&app, &s)?;
     let _ = app.emit(
         "hotkeys://changed",
         HotkeySettings {
             hotkeys: s.hotkeys.clone(),
             relog_enabled: s.relog_enabled,
+            vendor_search_enabled: s.vendor_search_enabled,
         },
     );
     Ok(crate::hotkeys::register_all(&app))

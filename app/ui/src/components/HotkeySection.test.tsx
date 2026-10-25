@@ -21,8 +21,10 @@ const CFG: HotkeySettings = {
     routeNext: 'Alt+ArrowRight',
     relog: 'F9',
     openChat: 'Alt+KeyA',
+    vendorSearch: 'Alt+KeyG',
   },
   relogEnabled: false,
+  vendorSearchEnabled: false,
 };
 
 const nextStepButton = (): Promise<HTMLElement> =>
@@ -130,12 +132,27 @@ describe('HotkeySection', () => {
   it('toggles relog', async () => {
     const user = userEvent.setup();
     render(<HotkeySection />);
-    const toggle = await screen.findByRole('switch');
+    const toggle = await screen.findByRole('switch', { name: 'Relog' });
     expect(toggle).toHaveAttribute('aria-checked', 'false');
 
     await user.click(toggle);
 
     expect(toggle).toHaveAttribute('aria-checked', 'true');
     expect(commands.setHotkeys).toHaveBeenCalledWith({ ...CFG, relogEnabled: true });
+  });
+
+  it('toggles gem search', async () => {
+    const user = userEvent.setup();
+    render(<HotkeySection />);
+    const toggle = await screen.findByRole('switch', { name: 'Gem search' });
+
+    await user.click(toggle);
+
+    expect(commands.setHotkeys).toHaveBeenCalledWith({ ...CFG, vendorSearchEnabled: true });
+  });
+
+  it('dims the gem search key while it is off', async () => {
+    render(<HotkeySection />);
+    expect(await screen.findByRole('button', { name: 'Alt+G' })).toHaveClass('opacity-50');
   });
 });

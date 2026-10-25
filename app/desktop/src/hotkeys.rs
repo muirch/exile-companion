@@ -1,4 +1,7 @@
 use std::sync::atomic::Ordering;
+use std::sync::{LazyLock, Mutex};
+
+use exile_core::vendor_search::SearchCycle;
 
 use serde::{Deserialize, Serialize};
 use tauri::{AppHandle, Manager};
@@ -20,6 +23,7 @@ pub struct Hotkeys {
     pub route_next: String,
     pub relog: String,
     pub open_chat: String,
+    pub vendor_search: String,
 }
 
 impl Default for Hotkeys {
@@ -31,6 +35,7 @@ impl Default for Hotkeys {
             route_next: "Alt+ArrowRight".into(),
             relog: "F9".into(),
             open_chat: "Alt+KeyA".into(),
+            vendor_search: "Alt+KeyG".into(),
         }
     }
 }
@@ -55,6 +60,7 @@ enum Action {
     RouteNext,
     Relog,
     OpenChat,
+    VendorSearch,
 }
 
 #[derive(Debug, Clone, Serialize)]
@@ -87,6 +93,13 @@ pub fn register_all(app: &AppHandle) -> Vec<BindError> {
     // An unused binding stays free for the game.
     if saved.relog_enabled {
         bindings.push(("relog", keys.relog.as_str(), Action::Relog));
+    }
+    if saved.vendor_search_enabled {
+        bindings.push((
+            "vendorSearch",
+            keys.vendor_search.as_str(),
+            Action::VendorSearch,
+        ));
     }
 
     let mut errors = Vec::new();
@@ -128,38 +141,97 @@ fn run(app: &AppHandle, action: Action) {
             runtime::move_route(app, RouteMove::Next);
         }
         // Only ever into the game: typing a chat command into another window would be wrong.
-        Action::Relog if in_game => chat_command(app, "/exit"),
+        Action::Relog if in_game => into_game(app, "/exit".into(), Keys::ChatCommand),
         Action::Relog => {}
         Action::OpenChat => crate::chat::toggle(app),
+        Action::VendorSearch if in_game => vendor_search(app),
+        Action::VendorSearch => {}
     }
 }
 
-/// Sends one chat command, the way Awakened PoE Trade does: release the shortcut's keys, put the
-/// text on the clipboard, Enter, Ctrl+V, Enter, then put the old clipboard back.
-fn chat_command(app: &AppHandle, text: &str) {
+static SEARCH: LazyLock<Mutex<SearchCycle>> = LazyLock::new(Default::default);
+
+/// Types the search string for the gems to buy here into the game's search field. The game
+/// highlights them in the open vendor window. A list too long for one string takes more presses.
+fn vendor_search(app: &AppHandle) {
+    if SENDING.load(Ordering::SeqCst) {
+        return;
+    }
+    let strings = runtime::vendor_search_strings(app);
+    let press = SEARCH
+        .lock()
+        .unwrap_or_else(|e| e.into_inner())
+        .press(strings, std::time::Instant::now());
+    if let Some(press) = press {
+        into_game(app, press.text, Keys::Search);
+    }
+}
+
+#[derive(Clone, Copy)]
+enum Keys {
+    /// Enter, Ctrl+V, Enter: one chat command.
+    ChatCommand,
+    /// Ctrl+F, Delete, Ctrl+V, Enter: one search in the open stash or vendor window. Ctrl+F
+    /// selects what the field already holds, so Delete clears it.
+    Search,
+}
+
+/// Set from a key press until the game has had our keys, so key repeat or a second press can't
+/// send twice.
+static SENDING: std::sync::atomic::AtomicBool = std::sync::atomic::AtomicBool::new(false);
+
+/// One action per key press, done the way Exile-UI and Awakened PoE Trade do it: wait until the
+/// player lets go of the shortcut's modifiers (we never send key-ups for keys they hold), check
+/// the game is still in front, paste the text through the clipboard, then put the old clipboard
+/// back and ignore the key for a moment.
+fn into_game(app: &AppHandle, text: String, keys: Keys) {
     #[cfg(windows)]
     {
+        use std::time::Duration;
         use tauri_plugin_clipboard_manager::ClipboardExt;
-        let clipboard = app.clipboard();
-        let previous = clipboard.read_text().ok();
-        if clipboard.write_text(text).is_err() {
+
+        if SENDING.swap(true, Ordering::SeqCst) {
             return;
         }
-        win::release_modifiers();
-        win::tap(win::VK_RETURN, false);
-        win::tap(win::VK_V, true);
-        win::tap(win::VK_RETURN, false);
         let app = app.clone();
         std::thread::spawn(move || {
-            // The game reads the clipboard when it handles Ctrl+V, a moment after we sent it.
-            std::thread::sleep(std::time::Duration::from_millis(250));
-            if let Some(prev) = previous {
-                let _ = app.clipboard().write_text(prev);
+            let in_game = || {
+                app.state::<AppState>()
+                    .game_foreground
+                    .load(Ordering::SeqCst)
+            };
+            if win::wait_modifiers_up(Duration::from_secs(1)) && in_game() {
+                let clipboard = app.clipboard();
+                let previous = clipboard.read_text().ok();
+                if clipboard.write_text(text).is_ok() {
+                    match keys {
+                        Keys::ChatCommand => {
+                            win::tap(win::VK_RETURN, false);
+                            win::tap(win::VK_V, true);
+                            win::tap(win::VK_RETURN, false);
+                        }
+                        Keys::Search => {
+                            win::tap(win::VK_F, true);
+                            // Exile-UI's pause: the field takes a moment to get focus.
+                            std::thread::sleep(Duration::from_millis(100));
+                            win::tap(win::VK_DELETE, false);
+                            win::tap(win::VK_V, true);
+                            win::tap(win::VK_RETURN, false);
+                        }
+                    }
+                    // The game reads the clipboard when it handles Ctrl+V, a moment after we sent it.
+                    std::thread::sleep(Duration::from_millis(250));
+                    if let Some(prev) = previous {
+                        let _ = app.clipboard().write_text(prev);
+                    }
+                }
             }
+            std::thread::sleep(Duration::from_millis(200));
+            SENDING.store(false, Ordering::SeqCst);
         });
     }
     #[cfg(not(windows))]
-    let _ = (app, text);
+    let _ = (app, text, keys);
 }
 
 #[cfg(windows)]
@@ -169,7 +241,8 @@ mod win {
         VK_CONTROL, VK_LWIN, VK_MENU, VK_RWIN, VK_SHIFT,
     };
 
-    pub use windows_sys::Win32::UI::Input::KeyboardAndMouse::VK_RETURN;
+    pub use windows_sys::Win32::UI::Input::KeyboardAndMouse::{VK_DELETE, VK_RETURN};
+    pub const VK_F: u16 = 0x46;
     pub const VK_V: u16 = 0x56;
 
     fn key(vk: u16, up: bool) -> INPUT {
@@ -197,12 +270,21 @@ mod win {
         }
     }
 
-    // Alt still held from Alt+something would turn our Enter into the game's Alt+Enter.
-    pub fn release_modifiers() {
-        for vk in [VK_MENU, VK_CONTROL, VK_SHIFT, VK_LWIN, VK_RWIN] {
-            if unsafe { GetAsyncKeyState(i32::from(vk)) } as u16 & 0x8000 != 0 {
-                send(&[key(vk, true)]);
+    // Alt still held from Alt+something would turn our Enter into the game's Alt+Enter, and Alt
+    // with our Ctrl+F into Ctrl+Alt+F.
+    pub fn wait_modifiers_up(timeout: std::time::Duration) -> bool {
+        let start = std::time::Instant::now();
+        loop {
+            let held = [VK_MENU, VK_CONTROL, VK_SHIFT, VK_LWIN, VK_RWIN]
+                .iter()
+                .any(|&vk| unsafe { GetAsyncKeyState(i32::from(vk)) } as u16 & 0x8000 != 0);
+            if !held {
+                return true;
             }
+            if start.elapsed() >= timeout {
+                return false;
+            }
+            std::thread::sleep(std::time::Duration::from_millis(10));
         }
     }
 

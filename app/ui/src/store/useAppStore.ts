@@ -74,6 +74,7 @@ export const useAppStore = create<AppStore>((set) => ({
     routeNext: 'Alt+ArrowRight',
     relog: 'F9',
     openChat: 'Alt+KeyA',
+    vendorSearch: 'Alt+KeyG',
   },
   source: { mode: 'idle', path: null, error: null },
   replay: { position: 0, total: 0, speed: 'X1', paused: false },

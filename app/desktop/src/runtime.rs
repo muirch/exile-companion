@@ -60,23 +60,47 @@ pub fn load_route(data: &DataPack, league_start: bool) -> Arc<Route> {
 }
 
 pub fn current_route_view(app: &AppHandle) -> Option<RouteView> {
-    let app_state = app.state::<AppState>();
-    let edge = lock(&app_state.tracker).active();
-    let mut view = app_state.route.view(edge)?;
-    let builds = lock(&app_state.build);
-    if let Some(build) = builds.build() {
-        if let Some(class) = build.class_name.as_deref() {
-            let saved = settings::load(app).unwrap_or_default();
-            let plan = exile_core::gemplan::plan_with_stages(
-                build,
-                class,
-                &app_state.gems,
-                &saved.preset_stages,
-            );
-            exile_core::gemplan::annotate(&mut view, &plan, saved.gem_hints);
-        }
+    let mut view = bare_route_view(app)?;
+    if let Some(plan) = current_gem_plan(app) {
+        let hints = settings::load(app).unwrap_or_default().gem_hints;
+        exile_core::gemplan::annotate(&mut view, &plan, hints);
     }
     Some(view)
+}
+
+fn bare_route_view(app: &AppHandle) -> Option<RouteView> {
+    let app_state = app.state::<AppState>();
+    let edge = lock(&app_state.tracker).active();
+    app_state.route.view(edge)
+}
+
+fn current_gem_plan(app: &AppHandle) -> Option<exile_core::gemplan::GemPlan> {
+    let app_state = app.state::<AppState>();
+    let builds = lock(&app_state.build);
+    let build = builds.build()?;
+    let class = build.class_name.as_deref()?;
+    let saved = settings::load(app).unwrap_or_default();
+    Some(exile_core::gemplan::plan_with_stages(
+        build,
+        class,
+        &app_state.gems,
+        &saved.preset_stages,
+    ))
+}
+
+/// Search strings for the gems to buy here. Uses the plan's buys even when the player hides
+/// vendor steps in the route.
+pub fn vendor_search_strings(app: &AppHandle) -> Vec<String> {
+    let (Some(mut view), Some(plan)) = (bare_route_view(app), current_gem_plan(app)) else {
+        return Vec::new();
+    };
+    exile_core::gemplan::annotate(
+        &mut view,
+        &plan,
+        exile_core::gemplan::GemHints::RewardsAndVendors,
+    );
+    let names = exile_core::vendor_search::vendor_gems(&view, &plan);
+    exile_core::vendor_search::search_strings(&names)
 }
 
 pub fn load_gems() -> Arc<GemTable> {

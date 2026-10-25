@@ -327,8 +327,10 @@ const DEFAULT_HOTKEYS: HotkeySettings = {
     routeNext: 'Alt+ArrowRight',
     relog: 'F9',
     openChat: 'Alt+KeyA',
+    vendorSearch: 'Alt+KeyG',
   },
   relogEnabled: false,
+  vendorSearchEnabled: false,
 };
 let mockHotkeys = DEFAULT_HOTKEYS;
 

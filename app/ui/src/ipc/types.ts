@@ -155,11 +155,13 @@ export interface Hotkeys {
   routeNext: string;
   relog: string;
   openChat: string;
+  vendorSearch: string;
 }
 
 export interface HotkeySettings {
   hotkeys: Hotkeys;
   relogEnabled: boolean;
+  vendorSearchEnabled: boolean;
 }
 
 export interface BindError {

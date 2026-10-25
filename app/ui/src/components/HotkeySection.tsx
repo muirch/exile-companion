@@ -152,7 +152,11 @@ export function HotkeySection(): React.JSX.Element {
       ))}
 
       <Row label="Relog" className="mt-2">
-        <Toggle on={cfg.relogEnabled} onChange={(v) => void commit({ ...cfg, relogEnabled: v })} />
+        <Toggle
+          on={cfg.relogEnabled}
+          label="Relog"
+          onChange={(v) => void commit({ ...cfg, relogEnabled: v })}
+        />
         <Binding
           value={cfg.hotkeys.relog}
           recording={recording === 'relog'}
@@ -163,8 +167,29 @@ export function HotkeySection(): React.JSX.Element {
       </Row>
       <Note>
         Types /exit in the game chat to go back to character select, like Awakened PoE Trade's F9.
-        It's the only thing Exile Companion sends to the game, one command per key press and only
-        while the game is in front.
+      </Note>
+
+      <Row label="Gem search" className="mt-2">
+        <Toggle
+          on={cfg.vendorSearchEnabled}
+          label="Gem search"
+          onChange={(v) => void commit({ ...cfg, vendorSearchEnabled: v })}
+        />
+        <Binding
+          value={cfg.hotkeys.vendorSearch}
+          recording={recording === 'vendorSearch'}
+          dim={!cfg.vendorSearchEnabled}
+          onRecord={() => setRecording(recording === 'vendorSearch' ? null : 'vendorSearch')}
+        />
+        <BindNote error={errorFor('vendorSearch')} />
+      </Row>
+      <Note>
+        With a vendor window open, types a search for the gems the route says to buy here, and the
+        game highlights them. If they don't fit in one search, press again for the rest.
+      </Note>
+      <Note>
+        Relog and gem search are the only keys that send anything to the game: one action per key
+        press, after you let go of the keys, and only while the game is in front.
       </Note>
       <Note flush>Click a key to change it. Backspace clears it, Esc cancels.</Note>
     </div>
