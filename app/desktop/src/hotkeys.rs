@@ -24,6 +24,7 @@ pub struct Hotkeys {
     pub relog: String,
     pub open_chat: String,
     pub vendor_search: String,
+    pub hideout: String,
 }
 
 impl Default for Hotkeys {
@@ -36,6 +37,7 @@ impl Default for Hotkeys {
             relog: "F9".into(),
             open_chat: "Alt+KeyA".into(),
             vendor_search: "Alt+KeyG".into(),
+            hideout: "F5".into(),
         }
     }
 }
@@ -61,6 +63,7 @@ enum Action {
     Relog,
     OpenChat,
     VendorSearch,
+    Hideout,
 }
 
 #[derive(Debug, Clone, Serialize)]
@@ -93,6 +96,9 @@ pub fn register_all(app: &AppHandle) -> Vec<BindError> {
     // An unused binding stays free for the game.
     if saved.relog_enabled {
         bindings.push(("relog", keys.relog.as_str(), Action::Relog));
+    }
+    if saved.hideout_enabled {
+        bindings.push(("hideout", keys.hideout.as_str(), Action::Hideout));
     }
     if saved.vendor_search_enabled {
         bindings.push((
@@ -143,6 +149,8 @@ fn run(app: &AppHandle, action: Action) {
         // Only ever into the game: typing a chat command into another window would be wrong.
         Action::Relog if in_game => into_game(app, "/exit".into(), Keys::ChatCommand),
         Action::Relog => {}
+        Action::Hideout if in_game => into_game(app, "/hideout".into(), Keys::ChatCommand),
+        Action::Hideout => {}
         Action::OpenChat => crate::chat::toggle(app),
         Action::VendorSearch if in_game => vendor_search(app),
         Action::VendorSearch => {}

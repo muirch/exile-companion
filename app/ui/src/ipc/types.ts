@@ -156,11 +156,13 @@ export interface Hotkeys {
   relog: string;
   openChat: string;
   vendorSearch: string;
+  hideout: string;
 }
 
 export interface HotkeySettings {
   hotkeys: Hotkeys;
   relogEnabled: boolean;
+  hideoutEnabled: boolean;
   vendorSearchEnabled: boolean;
 }
 

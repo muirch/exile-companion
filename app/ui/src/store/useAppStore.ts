@@ -75,6 +75,7 @@ export const useAppStore = create<AppStore>((set) => ({
     relog: 'F9',
     openChat: 'Alt+KeyA',
     vendorSearch: 'Alt+KeyG',
+    hideout: 'F5',
   },
   source: { mode: 'idle', path: null, error: null },
   replay: { position: 0, total: 0, speed: 'X1', paused: false },

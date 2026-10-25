@@ -169,6 +169,22 @@ export function HotkeySection(): React.JSX.Element {
         Types /exit in the game chat to go back to character select, like Awakened PoE Trade's F9.
       </Note>
 
+      <Row label="Hideout" className="mt-2">
+        <Toggle
+          on={cfg.hideoutEnabled}
+          label="Hideout"
+          onChange={(v) => void commit({ ...cfg, hideoutEnabled: v })}
+        />
+        <Binding
+          value={cfg.hotkeys.hideout}
+          recording={recording === 'hideout'}
+          dim={!cfg.hideoutEnabled}
+          onRecord={() => setRecording(recording === 'hideout' ? null : 'hideout')}
+        />
+        <BindNote error={errorFor('hideout')} />
+      </Row>
+      <Note>Types /hideout in the game chat, like Awakened PoE Trade's F5.</Note>
+
       <Row label="Gem search" className="mt-2">
         <Toggle
           on={cfg.vendorSearchEnabled}
@@ -188,8 +204,8 @@ export function HotkeySection(): React.JSX.Element {
         game highlights them. If they don't fit in one search, press again for the rest.
       </Note>
       <Note>
-        Relog and gem search are the only keys that send anything to the game: one action per key
-        press, after you let go of the keys, and only while the game is in front.
+        Relog, hideout and gem search are the only keys that send anything to the game: one action
+        per key press, after you let go of the keys, and only while the game is in front.
       </Note>
       <Note flush>Click a key to change it. Backspace clears it, Esc cancels.</Note>
     </div>

@@ -22,8 +22,10 @@ const CFG: HotkeySettings = {
     relog: 'F9',
     openChat: 'Alt+KeyA',
     vendorSearch: 'Alt+KeyG',
+    hideout: 'F5',
   },
   relogEnabled: false,
+  hideoutEnabled: false,
   vendorSearchEnabled: false,
 };
 
@@ -139,6 +141,13 @@ describe('HotkeySection', () => {
 
     expect(toggle).toHaveAttribute('aria-checked', 'true');
     expect(commands.setHotkeys).toHaveBeenCalledWith({ ...CFG, relogEnabled: true });
+  });
+
+  it('toggles the hideout key', async () => {
+    const user = userEvent.setup();
+    render(<HotkeySection />);
+    await user.click(await screen.findByRole('switch', { name: 'Hideout' }));
+    expect(commands.setHotkeys).toHaveBeenCalledWith({ ...CFG, hideoutEnabled: true });
   });
 
   it('toggles gem search', async () => {

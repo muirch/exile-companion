@@ -19,6 +19,7 @@ pub struct Settings {
     pub hotkeys: crate::hotkeys::Hotkeys,
     /// Off by default: it is the one feature that sends input to the game.
     pub relog_enabled: bool,
+    pub hideout_enabled: bool,
     /// Off by default: it types into the game's search field.
     pub vendor_search_enabled: bool,
     /// Read once at startup: the edges differ between the two route variants.
@@ -54,6 +55,7 @@ impl Default for Settings {
             route_enabled: true,
             hotkeys: crate::hotkeys::Hotkeys::default(),
             relog_enabled: false,
+            hideout_enabled: false,
             vendor_search_enabled: false,
             league_start: true,
             gem_hints: Default::default(),

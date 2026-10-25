@@ -328,8 +328,10 @@ const DEFAULT_HOTKEYS: HotkeySettings = {
     relog: 'F9',
     openChat: 'Alt+KeyA',
     vendorSearch: 'Alt+KeyG',
+    hideout: 'F5',
   },
   relogEnabled: false,
+  hideoutEnabled: false,
   vendorSearchEnabled: false,
 };
 let mockHotkeys = DEFAULT_HOTKEYS;
