@@ -23,6 +23,7 @@ pub mod clock;
 pub mod data;
 pub mod error;
 pub mod events;
+pub mod exp;
 pub mod followed_guide;
 pub mod game_window;
 pub mod gemplan;
