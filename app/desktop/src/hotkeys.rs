@@ -202,7 +202,7 @@ static SENDING: std::sync::atomic::AtomicBool = std::sync::atomic::AtomicBool::n
 /// the game is still in front, paste the text through the clipboard, then put the old clipboard
 /// back and ignore the key for a moment.
 fn into_game(app: &AppHandle, text: String, keys: Keys) {
-    #[cfg(windows)]
+    #[cfg(any(windows, target_os = "linux"))]
     {
         use std::time::Duration;
         use tauri_plugin_clipboard_manager::ClipboardExt;
@@ -217,23 +217,23 @@ fn into_game(app: &AppHandle, text: String, keys: Keys) {
                     .game_foreground
                     .load(Ordering::SeqCst)
             };
-            if win::wait_modifiers_up(Duration::from_secs(1)) && in_game() {
+            if os::wait_modifiers_up(Duration::from_secs(1)) && in_game() {
                 let clipboard = app.clipboard();
                 let previous = clipboard.read_text().ok();
                 if clipboard.write_text(text).is_ok() {
                     match keys {
                         Keys::ChatCommand => {
-                            win::tap(win::VK_RETURN, false);
-                            win::tap(win::VK_V, true);
-                            win::tap(win::VK_RETURN, false);
+                            os::tap(os::VK_RETURN, false);
+                            os::tap(os::VK_V, true);
+                            os::tap(os::VK_RETURN, false);
                         }
                         Keys::Search => {
-                            win::tap(win::VK_F, true);
+                            os::tap(os::VK_F, true);
                             // The field takes a moment to get focus.
                             std::thread::sleep(Duration::from_millis(100));
-                            win::tap(win::VK_DELETE, false);
-                            win::tap(win::VK_V, true);
-                            win::tap(win::VK_RETURN, false);
+                            os::tap(os::VK_DELETE, false);
+                            os::tap(os::VK_V, true);
+                            os::tap(os::VK_RETURN, false);
                         }
                     }
                     // The game reads the clipboard when it handles Ctrl+V, a moment after we sent it.
@@ -247,7 +247,7 @@ fn into_game(app: &AppHandle, text: String, keys: Keys) {
             SENDING.store(false, Ordering::SeqCst);
         });
     }
-    #[cfg(not(windows))]
+    #[cfg(not(any(windows, target_os = "linux")))]
     let _ = (app, text, keys);
 }
 
@@ -255,9 +255,14 @@ fn into_game(app: &AppHandle, text: String, keys: Keys) {
 /// only if the player isn't holding it, and the shortcut's other modifiers stay as they are.
 /// Copying an item is the game's own text copy, not a game action.
 pub fn copy_item() {
-    #[cfg(windows)]
-    win::copy();
+    #[cfg(any(windows, target_os = "linux"))]
+    os::copy();
 }
+
+#[cfg(windows)]
+use win as os;
+#[cfg(target_os = "linux")]
+use xtest as os;
 
 #[cfg(windows)]
 mod win {
@@ -333,6 +338,99 @@ mod win {
             ]);
         } else {
             send(&[key(vk, false), key(vk, true)]);
+        }
+    }
+}
+
+/// The same keys through XTest. The game under Proton is an X11 window, and XTest's fake events
+/// reach it like the player's own. Keycodes are the standard X ones the menu key watcher uses.
+#[cfg(target_os = "linux")]
+mod xtest {
+    use std::time::{Duration, Instant};
+
+    use x11rb::connection::Connection;
+    use x11rb::protocol::xproto::{ConnectionExt as _, KEY_PRESS_EVENT, KEY_RELEASE_EVENT};
+    use x11rb::protocol::xtest::ConnectionExt as _;
+    use x11rb::rust_connection::RustConnection;
+
+    pub const VK_RETURN: u8 = 36;
+    pub const VK_DELETE: u8 = 119;
+    pub const VK_F: u8 = 41;
+    pub const VK_V: u8 = 55;
+    const VK_C: u8 = 54;
+    const CONTROL_L: u8 = 37;
+    // Alt, Control, Shift and Super, left and right.
+    const MODIFIERS: [u8; 8] = [64, 108, 37, 105, 50, 62, 133, 134];
+
+    fn connect() -> Option<RustConnection> {
+        x11rb::connect(None).ok().map(|(conn, _)| conn)
+    }
+
+    fn held(conn: &RustConnection, keys: &[u8]) -> bool {
+        let Some(map) = conn.query_keymap().ok().and_then(|c| c.reply().ok()) else {
+            return false;
+        };
+        keys.iter()
+            .any(|&k| map.keys[usize::from(k / 8)] & (1 << (k % 8)) != 0)
+    }
+
+    fn send(conn: &RustConnection, events: &[(u8, bool)]) {
+        for &(key, down) in events {
+            let kind = if down {
+                KEY_PRESS_EVENT
+            } else {
+                KEY_RELEASE_EVENT
+            };
+            let _ = conn.xtest_fake_input(kind, key, x11rb::CURRENT_TIME, x11rb::NONE, 0, 0, 0);
+        }
+        let _ = conn.flush();
+    }
+
+    // Alt still held from Alt+something would turn our Enter into the game's Alt+Enter.
+    pub fn wait_modifiers_up(timeout: Duration) -> bool {
+        let Some(conn) = connect() else {
+            return false;
+        };
+        let start = Instant::now();
+        while held(&conn, &MODIFIERS) {
+            if start.elapsed() >= timeout {
+                return false;
+            }
+            std::thread::sleep(Duration::from_millis(10));
+        }
+        true
+    }
+
+    pub fn copy() {
+        let Some(conn) = connect() else {
+            return;
+        };
+        if held(&conn, &[CONTROL_L, 105]) {
+            send(&conn, &[(VK_C, true), (VK_C, false)]);
+        } else {
+            tap_on(&conn, VK_C, true);
+        }
+    }
+
+    fn tap_on(conn: &RustConnection, key: u8, with_ctrl: bool) {
+        if with_ctrl {
+            send(
+                conn,
+                &[
+                    (CONTROL_L, true),
+                    (key, true),
+                    (key, false),
+                    (CONTROL_L, false),
+                ],
+            );
+        } else {
+            send(conn, &[(key, true), (key, false)]);
+        }
+    }
+
+    pub fn tap(key: u8, with_ctrl: bool) {
+        if let Some(conn) = connect() {
+            tap_on(&conn, key, with_ctrl);
         }
     }
 }

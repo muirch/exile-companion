@@ -3,7 +3,7 @@
 
 use std::sync::atomic::{AtomicBool, Ordering};
 use std::sync::Mutex;
-#[cfg(windows)]
+#[cfg(any(windows, target_os = "linux"))]
 use std::time::Duration;
 
 use exile_assistant::{GearCard, Tools};
@@ -121,9 +121,9 @@ pub fn level_up(app: &AppHandle, from: u32, to: u32) {
 }
 
 /// The game puts the text on the clipboard within a few frames.
-#[cfg(windows)]
+#[cfg(any(windows, target_os = "linux"))]
 const POLL: Duration = Duration::from_millis(48);
-#[cfg(windows)]
+#[cfg(any(windows, target_os = "linux"))]
 const POLL_LIMIT: Duration = Duration::from_millis(500);
 
 pub fn check(app: &AppHandle) {
@@ -144,7 +144,7 @@ pub fn check(app: &AppHandle) {
 /// Ctrl+C in the game, then wait for the item text. An item already on the clipboard is cleared
 /// first, so an old copy isn't taken for the new one.
 async fn copy_item_text(app: &AppHandle) -> Option<String> {
-    #[cfg(windows)]
+    #[cfg(any(windows, target_os = "linux"))]
     {
         use tauri_plugin_clipboard_manager::ClipboardExt;
         let clipboard = app.clipboard();
@@ -170,7 +170,7 @@ async fn copy_item_text(app: &AppHandle) -> Option<String> {
         }
         found
     }
-    #[cfg(not(windows))]
+    #[cfg(not(any(windows, target_os = "linux")))]
     {
         let _ = app;
         None
