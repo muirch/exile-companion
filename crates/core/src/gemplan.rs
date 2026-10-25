@@ -7,7 +7,7 @@
 //! level. A quest reward goes to the gem needed soonest, and a vendor buy waits until the act the
 //! gem is needed in, so the first town doesn't list the whole campaign.
 
-use std::collections::HashSet;
+use std::collections::{BTreeMap, HashSet};
 
 use exile_pob::PobBuild;
 
@@ -67,6 +67,19 @@ pub enum PresetStage {
     /// Not part of the plan, like a separator or an alternative setup.
     Skip,
 }
+
+/// What the player says about one gem of the build, overriding where the plan puts it.
+#[derive(Debug, Clone, Copy, PartialEq, Eq, serde::Serialize, serde::Deserialize)]
+#[serde(rename_all = "camelCase")]
+pub enum GemOverride {
+    /// Take or buy it in time for this act.
+    Act(u8),
+    /// The player has it already, from a mule or bought before the run. Left out of the plan.
+    Have,
+}
+
+/// By the gem's name in the build.
+pub type GemOverrides = BTreeMap<String, GemOverride>;
 
 /// A skill set as the settings list it: what the planner makes of it on its own.
 #[derive(Debug, Clone, PartialEq, Eq, serde::Serialize)]
@@ -186,7 +199,12 @@ fn set_levels(build: &PobBuild, stages: &[PresetStage]) -> Vec<Option<u32>> {
 
 /// Enabled gems from enabled socket groups, first appearance wins. Item-granted skills are left
 /// out: nobody hands those out. Sets with no enabled gem (separators) add nothing.
-fn wanted_gems(build: &PobBuild, gems: &GemTable, stages: &[PresetStage]) -> Vec<Wanted> {
+fn wanted_gems(
+    build: &PobBuild,
+    gems: &GemTable,
+    stages: &[PresetStage],
+    overrides: &GemOverrides,
+) -> Vec<Wanted> {
     let levels = set_levels(build, stages);
     let mut seen = HashSet::new();
     let mut out = Vec::new();
@@ -207,11 +225,18 @@ fn wanted_gems(build: &PobBuild, gems: &GemTable, stages: &[PresetStage]) -> Vec
                     continue;
                 }
                 let required = gems.gem(&id).map_or(1, |g| g.required_level);
+                let name = gem.name_spec.clone().unwrap_or_else(|| id.clone());
+                let need_level = match overrides.get(&name) {
+                    Some(GemOverride::Have) => continue,
+                    Some(GemOverride::Act(act)) => act_expected_level(*act),
+                    None => set_level.unwrap_or(0),
+                }
+                .max(required);
                 out.push(Wanted {
-                    name: gem.name_spec.clone().unwrap_or_else(|| id.clone()),
+                    name,
                     id,
                     is_support: gem.is_support,
-                    need_level: set_level.unwrap_or(0).max(required),
+                    need_level,
                     required,
                 });
             }
@@ -244,7 +269,18 @@ pub fn plan_with_stages(
     gems: &GemTable,
     stages: &[PresetStage],
 ) -> GemPlan {
-    let wanted = wanted_gems(build, gems, stages);
+    plan_with_overrides(build, class, gems, stages, &GemOverrides::new())
+}
+
+/// The plan with the player's word on single gems on top of the preset stages.
+pub fn plan_with_overrides(
+    build: &PobBuild,
+    class: &str,
+    gems: &GemTable,
+    stages: &[PresetStage],
+    overrides: &GemOverrides,
+) -> GemPlan {
+    let wanted = wanted_gems(build, gems, stages, overrides);
     let mut sources: Vec<(usize, &GemSource)> = Vec::new();
     let mut not_in_campaign = Vec::new();
     for (i, w) in wanted.iter().enumerate() {
@@ -600,6 +636,36 @@ mod tests {
             .iter()
             .map(|s| (s.quest_id.clone(), s.gem_id.clone(), s.action))
             .collect()
+    }
+
+    #[test]
+    fn a_gem_the_player_has_is_left_out() {
+        let b = build(vec![group(vec![gem("A", false), gem("B", false)])]);
+        let overrides = GemOverrides::from([("A".to_string(), GemOverride::Have)]);
+        let p = plan_with_overrides(&b, "Witch", &table(), &[], &overrides);
+        assert!(p.steps.iter().all(|s| s.gem_id != "A"));
+        assert!(!p.not_in_campaign.contains(&"A".to_string()));
+        // The reward A would have taken goes to B.
+        assert!(summary(&p).contains(&("a1q1".into(), "B".into(), GemAction::Take)));
+    }
+
+    #[test]
+    fn a_gem_moved_to_a_later_act_waits_for_it() {
+        let b = build(vec![group(vec![gem("A", false), gem("B", false)])]);
+        let overrides = GemOverrides::from([("A".to_string(), GemOverride::Act(10))]);
+        let p = plan_with_overrides(&b, "Witch", &table(), &[], &overrides);
+        let a = p.steps.iter().find(|s| s.gem_id == "A").unwrap();
+        assert_eq!(a.need_level, act_expected_level(10));
+        // B, needed now, gets the first reward.
+        assert!(summary(&p).contains(&("a1q1".into(), "B".into(), GemAction::Take)));
+    }
+
+    #[test]
+    fn overrides_come_through_settings_as_json() {
+        let o: GemOverrides =
+            serde_json::from_str(r#"{"Alpha": {"act": 3}, "Beta": "have"}"#).unwrap();
+        assert_eq!(o["Alpha"], GemOverride::Act(3));
+        assert_eq!(o["Beta"], GemOverride::Have);
     }
 
     #[test]
