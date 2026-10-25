@@ -31,12 +31,18 @@ export function resistLine(c: GearCard): string {
     .join(' · ');
 }
 
-function Gear({ card }: { card: GearCard }): React.JSX.Element {
+function Gear({ card, needsLevel }: { card: GearCard; needsLevel: number | null }): React.JSX.Element {
   const numbers = gearNumbers(card);
   const resists = resistLine(card);
+  const worth = card.verdict === 'upgrade' || card.verdict === 'mixed';
   return (
     <>
       <p className="text-[15px] leading-snug text-value">{VERDICT[card.verdict]}</p>
+      {needsLevel != null && (
+        <p className="text-[13px] leading-snug text-plain">
+          Needs level {needsLevel}.{worth && " You'll get a reminder then."}
+        </p>
+      )}
       {numbers && <p className="text-[14px] leading-snug text-value">{numbers}</p>}
       {resists && <p className="text-[13px] leading-snug text-plain">{resists}</p>}
       {card.partly && (
@@ -76,12 +82,29 @@ function Gem({ card }: { card: GemCard }): React.JSX.Element {
   );
 }
 
+function Ready({ card }: { card: Extract<Card, { kind: 'ready' }> }): React.JSX.Element {
+  return (
+    <>
+      {card.gems.length > 0 && (
+        <p className="text-[15px] leading-snug text-gem">{card.gems.join(' · ')}</p>
+      )}
+      {card.items.map((i) => (
+        <p key={i.slot} className="leading-snug">
+          <span className="text-[15px] text-value">{i.name}</span>
+          <span className="block text-[13px] text-plain">{i.slot}</span>
+        </p>
+      ))}
+    </>
+  );
+}
+
 function title(card: Card): string {
-  return card.name;
+  return card.kind === 'ready' ? `Level ${card.level}` : card.name;
 }
 
 function subtitle(card: Card): string | null {
   if (card.kind === 'gem') return 'Gem';
+  if (card.kind === 'ready') return 'Usable now';
   if (card.kind === 'gear') {
     return card.card.replaces ? `${card.card.slot} · instead of ${card.card.replaces}` : card.card.slot;
   }
@@ -102,7 +125,9 @@ function Body({ card }: { card: Card }): React.JSX.Element {
     case 'gem':
       return <Gem card={card} />;
     case 'gear':
-      return <Gear card={card.card} />;
+      return <Gear card={card.card} needsLevel={card.needsLevel} />;
+    case 'ready':
+      return <Ready card={card} />;
   }
 }
 

@@ -419,7 +419,11 @@ fn spawn_pipeline(app: AppHandle, stream: LineStream, machine: CampaignMachine) 
         let cb_app = app.clone();
         let result = run_pipeline(stream, machine, None, LocalePack::EN, move |st, delta| {
             let _ = cb_app.emit("campaign://state-updated", st);
-            tx.send_replace(st.clone());
+            let before = tx.send_replace(st.clone()).level;
+            // A fresh log starts at 0, that's not a level-up the player made.
+            if delta.level_changed && before > 0 {
+                crate::item::level_up(&cb_app, before, st.level);
+            }
             if delta.zone_changed {
                 if let Some(area_id) = &st.area_id {
                     follow_route(&cb_app, area_id, st.level);

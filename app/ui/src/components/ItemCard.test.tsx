@@ -31,7 +31,7 @@ describe('gear numbers', () => {
 
 describe('ItemCard', () => {
   it('shows the verdict, the slot and what it replaces', () => {
-    render(<ItemCard compact={false} card={{ kind: 'gear', name: 'Death Song, Iron Ring', card: GEAR }} />);
+    render(<ItemCard compact={false} card={{ kind: 'gear', name: 'Death Song, Iron Ring', card: GEAR, needsLevel: null }} />);
     expect(screen.getByRole('heading', { name: 'Death Song, Iron Ring' })).toBeInTheDocument();
     expect(screen.getByText('Ring 1 · instead of Iron Ring')).toBeInTheDocument();
     expect(screen.getByText('Upgrade')).toBeInTheDocument();
@@ -39,8 +39,41 @@ describe('ItemCard', () => {
   });
 
   it('says when PoB could not count all of the item', () => {
-    render(<ItemCard compact card={{ kind: 'gear', name: 'Ring', card: { ...GEAR, partly: true } }} />);
+    render(<ItemCard compact card={{ kind: 'gear', name: 'Ring', card: { ...GEAR, partly: true }, needsLevel: null }} />);
     expect(screen.getByText("Path of Building can't count all of it.")).toBeInTheDocument();
+  });
+
+  it('says an upgrade waits for a level and will be reminded', () => {
+    render(<ItemCard compact card={{ kind: 'gear', name: 'Ring', card: GEAR, needsLevel: 24 }} />);
+    expect(screen.getByText("Needs level 24. You'll get a reminder then.")).toBeInTheDocument();
+  });
+
+  it('only names the level for an item that is no better', () => {
+    render(
+      <ItemCard
+        compact
+        card={{ kind: 'gear', name: 'Ring', card: { ...GEAR, verdict: 'downgrade' }, needsLevel: 24 }}
+      />,
+    );
+    expect(screen.getByText('Needs level 24.')).toBeInTheDocument();
+  });
+
+  it('lists what a level-up made usable', () => {
+    render(
+      <ItemCard
+        compact={false}
+        card={{
+          kind: 'ready',
+          level: 16,
+          gems: ['Herald of Ash', 'Onslaught'],
+          items: [{ name: 'Death Song, Short Bow', slot: 'Weapon 1', level: 16 }],
+        }}
+      />,
+    );
+    expect(screen.getByRole('heading', { name: 'Level 16' })).toBeInTheDocument();
+    expect(screen.getByText('Usable now')).toBeInTheDocument();
+    expect(screen.getByText('Herald of Ash · Onslaught')).toBeInTheDocument();
+    expect(screen.getByText('Weapon 1')).toBeInTheDocument();
   });
 
   it('lists where the build uses a gem and where to get it', () => {

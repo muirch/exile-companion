@@ -2,11 +2,13 @@
 //! what it means for the build in the overlay.
 
 use std::sync::atomic::{AtomicBool, Ordering};
+use std::sync::Mutex;
 #[cfg(windows)]
 use std::time::Duration;
 
 use exile_assistant::{GearCard, Tools};
 use exile_core::item_check::{self, CopiedItem, GemCard};
+use exile_core::level_up::{self, Remembered, UsableNow};
 use serde::Serialize;
 use tauri::{AppHandle, Emitter, Manager};
 
@@ -22,7 +24,11 @@ pub enum ItemCard {
     Gear {
         name: String,
         card: GearCard,
+        /// The character's level is below the item's, so it is remembered for the level-up.
+        needs_level: Option<u32>,
     },
+    /// A level-up made gems of the build or remembered upgrades usable.
+    Ready(UsableNow),
     /// Why there is nothing to show, in the player's words.
     Missing {
         name: String,
@@ -35,6 +41,19 @@ fn emit(app: &AppHandle, card: &ItemCard) {
 }
 
 static CHECKING: AtomicBool = AtomicBool::new(false);
+
+/// Upgrades checked before the character could wear them. Kept until they come due or the app
+/// quits.
+static REMEMBERED: Mutex<Vec<Remembered>> = Mutex::new(Vec::new());
+
+/// Called when the log says the character went from level `from` to `to`.
+pub fn level_up(app: &AppHandle, from: u32, to: u32) {
+    let plan = crate::runtime::current_gem_plan(app);
+    let mut list = REMEMBERED.lock().unwrap_or_else(|e| e.into_inner());
+    if let Some(now) = level_up::usable_now(plan.as_ref(), &mut list, from, to) {
+        emit(app, &ItemCard::Ready(now));
+    }
+}
 
 /// Awakened PoE Trade's timings: the game puts the text on the clipboard within a few frames.
 #[cfg(windows)]
@@ -148,14 +167,34 @@ async fn show(app: &AppHandle, item: &CopiedItem, text: String) {
     let card = serde_json::from_str::<serde_json::Value>(&out.text)
         .ok()
         .and_then(|v| exile_assistant::from_compare_item(&v));
+    let level = app.state::<AppState>().current_state().level;
     match card {
-        Some(card) => emit(
-            app,
-            &ItemCard::Gear {
-                name: name.clone(),
-                card,
-            },
-        ),
+        Some(card) => {
+            let needs_level = item.required_level.filter(|&l| l > level && level > 0);
+            if let Some(l) = needs_level {
+                if matches!(
+                    card.verdict,
+                    exile_assistant::Verdict::Upgrade | exile_assistant::Verdict::Mixed
+                ) {
+                    level_up::remember(
+                        &mut REMEMBERED.lock().unwrap_or_else(|e| e.into_inner()),
+                        Remembered {
+                            name: name.clone(),
+                            slot: card.slot.clone(),
+                            level: l,
+                        },
+                    );
+                }
+            }
+            emit(
+                app,
+                &ItemCard::Gear {
+                    name: name.clone(),
+                    card,
+                    needs_level,
+                },
+            );
+        }
         None => emit(app, &missing("It doesn't go in any slot of your build.")),
     }
 }
