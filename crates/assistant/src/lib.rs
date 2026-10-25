@@ -5,6 +5,7 @@
 mod anthropic;
 mod card;
 mod config;
+mod gear;
 mod http;
 mod mcp;
 mod ollama;
@@ -15,6 +16,7 @@ mod turn;
 pub use anthropic::Anthropic;
 pub use card::{from_what_next, Kind, NextCard, Step};
 pub use config::{Config, Effort, Model, Provider, Usage};
+pub use gear::{from_compare_item, GearCard, Resist, Verdict};
 pub use mcp::Server;
 pub use ollama::Ollama;
 pub use openai::OpenAi;

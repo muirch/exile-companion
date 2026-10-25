@@ -29,6 +29,7 @@ pub mod gemplan;
 pub mod gems;
 pub mod guidance;
 pub mod hold;
+pub mod item_check;
 pub mod locale;
 pub mod logfile;
 pub mod migrate;
