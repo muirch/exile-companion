@@ -136,6 +136,18 @@ impl GemTable {
         self.gems.get(id)
     }
 
+    /// The gem as the game names it. Path of Building leaves " Support" off support gems, the
+    /// game keeps it.
+    pub fn by_name(&self, name: &str) -> Option<&GemInfo> {
+        let name = name.trim();
+        self.gems.values().find(|g| {
+            g.name.eq_ignore_ascii_case(name)
+                || g.name
+                    .strip_suffix(" Support")
+                    .is_some_and(|base| base.eq_ignore_ascii_case(name))
+        })
+    }
+
     pub fn len(&self) -> usize {
         self.gems.len()
     }

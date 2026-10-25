@@ -91,15 +91,11 @@ fn current_gem_plan(app: &AppHandle) -> Option<exile_core::gemplan::GemPlan> {
 /// Search strings for the gems to buy here. Uses the plan's buys even when the player hides
 /// vendor steps in the route.
 pub fn vendor_search_strings(app: &AppHandle) -> Vec<String> {
-    let (Some(mut view), Some(plan)) = (bare_route_view(app), current_gem_plan(app)) else {
+    let (Some(view), Some(plan)) = (bare_route_view(app), current_gem_plan(app)) else {
         return Vec::new();
     };
-    exile_core::gemplan::annotate(
-        &mut view,
-        &plan,
-        exile_core::gemplan::GemHints::RewardsAndVendors,
-    );
-    let names = exile_core::vendor_search::vendor_gems(&view, &plan);
+    let gems = app.state::<AppState>().gems.clone();
+    let names = exile_core::vendor_search::vendor_gems(&view, &plan, &gems);
     exile_core::vendor_search::search_strings(&names)
 }
 

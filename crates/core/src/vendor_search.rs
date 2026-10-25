@@ -3,26 +3,50 @@
 
 use std::time::{Duration, Instant};
 
-use crate::gemplan::{GemAction, GemPlan};
+use crate::gemplan::{GemAction, GemPlan, GemStep};
+use crate::gems::GemTable;
 use crate::route::{Part, RouteView};
 
 /// The game's search field takes 250 characters.
 const MAX_LEN: usize = 250;
 
-/// Gems to buy where the player is now: the buys the overlay lists for this area, else every buy
-/// of the plan in the current act (the player came back to town after the route moved on).
-pub fn vendor_gems(view: &RouteView, plan: &GemPlan) -> Vec<String> {
+/// Gems to buy where the player is now, by their names in the game: the buys after the quests
+/// handed in here (and the mules' on the first step), else every buy of the plan in the current
+/// act (the player came back to town after the route moved on).
+pub fn vendor_gems(view: &RouteView, plan: &GemPlan, gems: &GemTable) -> Vec<String> {
+    let quests: Vec<&str> = view
+        .here
+        .iter()
+        .flat_map(|s| &s.parts)
+        .filter_map(|p| match p {
+            Part::Quest { id, .. } => Some(id.as_str()),
+            _ => None,
+        })
+        .collect();
+    let game_name = |name: &str| {
+        gems.by_name(name)
+            .map_or_else(|| name.to_string(), |g| g.name.clone())
+    };
+    let step_name = |s: &GemStep| {
+        gems.gem(&s.gem_id)
+            .map_or_else(|| game_name(&s.name), |g| g.name.clone())
+    };
     let mut names = Vec::new();
-    for part in view.here.iter().flat_map(|s| &s.parts) {
-        if let Part::RewardVendor { item, .. } = part {
-            push_unique(&mut names, item);
+    if view.edge == 0 {
+        for gem in plan.mules.iter().flat_map(|m| &m.buy) {
+            push_unique(&mut names, game_name(&gem.name));
+        }
+    }
+    for step in &plan.steps {
+        if step.action == GemAction::Buy && quests.contains(&step.quest_id.as_str()) {
+            push_unique(&mut names, step_name(step));
         }
     }
     if names.is_empty() {
         if let Some(act) = section_act(&view.section) {
             for step in &plan.steps {
                 if step.action == GemAction::Buy && step.act == act {
-                    push_unique(&mut names, &step.name);
+                    push_unique(&mut names, step_name(step));
                 }
             }
         }
@@ -30,9 +54,9 @@ pub fn vendor_gems(view: &RouteView, plan: &GemPlan) -> Vec<String> {
     names
 }
 
-fn push_unique(names: &mut Vec<String>, name: &str) {
-    if !names.iter().any(|n| n == name) {
-        names.push(name.to_string());
+fn push_unique(names: &mut Vec<String>, name: String) {
+    if !names.contains(&name) {
+        names.push(name);
     }
 }
 
@@ -132,15 +156,27 @@ impl SearchCycle {
 #[cfg(test)]
 mod tests {
     use super::*;
-    use crate::gemplan::GemStep;
+    use crate::gemplan::{Mule, MuleGem};
     use crate::route::Step;
 
-    fn view(section: &str, parts: Vec<Part>) -> RouteView {
+    const GEMS: &str = r#"{
+      "G/Frostblink": {"id": "G/Frostblink", "name": "Frostblink", "required_level": 4, "is_support": false},
+      "G/ArcaneSurge": {"id": "G/ArcaneSurge", "name": "Arcane Surge Support", "required_level": 1, "is_support": true},
+      "G/Clarity": {"id": "G/Clarity", "name": "Clarity", "required_level": 8, "is_support": false},
+      "G/HeraldAsh": {"id": "G/HeraldAsh", "name": "Herald of Ash", "required_level": 16, "is_support": false},
+      "G/Onslaught": {"id": "G/Onslaught", "name": "Onslaught Support", "required_level": 1, "is_support": true}
+    }"#;
+
+    fn gems() -> GemTable {
+        GemTable::from_json_bytes(GEMS.as_bytes(), b"{}").unwrap()
+    }
+
+    fn view(section: &str, edge: u32, parts: Vec<Part>) -> RouteView {
         RouteView {
             section: section.into(),
-            edge: 3,
+            edge,
             edge_count: 10,
-            section_edge: 3,
+            section_edge: edge,
             section_edge_count: 5,
             finished_section: None,
             area_id: "1_1_town".into(),
@@ -153,20 +189,21 @@ mod tests {
         }
     }
 
-    fn vendor(item: &str) -> Part {
-        Part::RewardVendor {
-            item: item.into(),
-            cost: None,
+    fn quest(id: &str) -> Part {
+        Part::Quest {
+            id: id.into(),
+            name: id.into(),
         }
     }
 
-    fn buy(name: &str, act: u32) -> GemStep {
+    // PoB's names: supports without " Support".
+    fn step(id: &str, name: &str, quest: &str, act: u32, action: GemAction) -> GemStep {
         GemStep {
-            gem_id: name.into(),
+            gem_id: id.into(),
             name: name.into(),
-            quest_id: "q".into(),
+            quest_id: quest.into(),
             act,
-            action: GemAction::Buy,
+            action,
             npc: "Nessa".into(),
         }
     }
@@ -210,58 +247,77 @@ mod tests {
     }
 
     #[test]
-    fn takes_the_buys_listed_here() {
-        let v = view(
-            "Act 1",
-            vec![
-                Part::Text {
-                    text: "Buy ".into(),
-                },
-                vendor("Frostblink"),
-                vendor("Frostblink"),
-                Part::RewardQuest {
-                    item: "Fireball".into(),
-                },
-                vendor("Arcane Surge Support"),
-            ],
-        );
+    fn buys_after_the_quests_handed_in_here_by_game_name() {
+        let v = view("Act 1", 3, vec![quest("a1q1")]);
         let plan = GemPlan {
-            steps: vec![buy("Clarity", 1)],
+            steps: vec![
+                step("G/Frostblink", "Frostblink", "a1q1", 1, GemAction::Buy),
+                step("G/ArcaneSurge", "Arcane Surge", "a1q1", 1, GemAction::Buy),
+                step("G/Clarity", "Clarity", "a1q5", 1, GemAction::Buy),
+            ],
             ..Default::default()
         };
         assert_eq!(
-            vendor_gems(&v, &plan),
+            vendor_gems(&v, &plan, &gems()),
             vec!["Frostblink", "Arcane Surge Support"]
         );
     }
 
     #[test]
     fn falls_back_to_the_acts_buys() {
-        let v = view("Act 2", vec![Part::Text { text: "Go".into() }]);
+        let v = view("Act 2", 3, vec![Part::Text { text: "Go".into() }]);
         let plan = GemPlan {
             steps: vec![
-                buy("Clarity", 1),
-                buy("Herald of Ash", 2),
-                buy("Onslaught Support", 2),
+                step("G/Clarity", "Clarity", "a1q1", 1, GemAction::Buy),
+                step("G/HeraldAsh", "Herald of Ash", "a2q1", 2, GemAction::Buy),
+                step("G/Onslaught", "Onslaught", "a2q2", 2, GemAction::Buy),
             ],
             ..Default::default()
         };
         assert_eq!(
-            vendor_gems(&v, &plan),
+            vendor_gems(&v, &plan, &gems()),
             vec!["Herald of Ash", "Onslaught Support"]
         );
     }
 
     #[test]
     fn quest_rewards_are_not_bought() {
-        let v = view("Act 2", vec![Part::Text { text: "Go".into() }]);
-        let mut take = buy("Fireball", 2);
-        take.action = GemAction::Take;
+        let v = view("Act 2", 3, vec![quest("a2q1")]);
         let plan = GemPlan {
-            steps: vec![take],
+            steps: vec![step(
+                "G/HeraldAsh",
+                "Herald of Ash",
+                "a2q1",
+                2,
+                GemAction::Take,
+            )],
             ..Default::default()
         };
-        assert!(vendor_gems(&v, &plan).is_empty());
+        assert!(vendor_gems(&v, &plan, &gems()).is_empty());
+    }
+
+    #[test]
+    fn mules_buy_on_the_first_step() {
+        let v = view(
+            "Act 1",
+            0,
+            vec![Part::Text {
+                text: "Start".into(),
+            }],
+        );
+        let plan = GemPlan {
+            mules: vec![Mule {
+                class: "Shadow".into(),
+                take: None,
+                buy: vec![MuleGem {
+                    name: "Onslaught".into(),
+                    npc: "Nessa".into(),
+                    own_act: None,
+                }],
+            }],
+            ..Default::default()
+        };
+        assert_eq!(vendor_gems(&v, &plan, &gems()), vec!["Onslaught Support"]);
     }
 
     #[test]
