@@ -153,7 +153,8 @@ async fn copy_item_text(app: &AppHandle) -> Option<String> {
         if had_item {
             let _ = clipboard.write_text("");
         }
-        crate::hotkeys::copy_item();
+        // Waits for the shortcut's keys on Linux, so off the async threads.
+        let _ = tauri::async_runtime::spawn_blocking(crate::hotkeys::copy_item).await;
         let mut waited = Duration::ZERO;
         let mut found = None;
         while waited < POLL_LIMIT {
@@ -167,6 +168,9 @@ async fn copy_item_text(app: &AppHandle) -> Option<String> {
         }
         if !had_item {
             let _ = clipboard.write_text(before);
+        }
+        if found.is_none() {
+            log::info!("item check: no item text on the clipboard after Ctrl+C");
         }
         found
     }

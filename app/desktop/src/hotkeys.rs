@@ -145,6 +145,7 @@ fn run(app: &AppHandle, action: Action) {
         .state::<AppState>()
         .game_foreground
         .load(Ordering::SeqCst);
+    log::info!("{action:?} pressed, game in front: {in_game}");
     match action {
         Action::MoveOverlay => overlay::toggle_grab(app),
         Action::RoutePrev => {
@@ -175,6 +176,9 @@ fn vendor_search(app: &AppHandle) {
         return;
     }
     let strings = runtime::vendor_search_strings(app);
+    if strings.is_empty() {
+        log::info!("gem search: the route has no gems to buy here");
+    }
     let press = SEARCH
         .lock()
         .unwrap_or_else(|e| e.into_inner())
@@ -217,7 +221,15 @@ fn into_game(app: &AppHandle, text: String, keys: Keys) {
                     .game_foreground
                     .load(Ordering::SeqCst)
             };
-            if os::wait_modifiers_up(Duration::from_secs(1)) && in_game() {
+            let keys_up = os::wait_modifiers_up(Duration::from_secs(1));
+            if !keys_up || !in_game() {
+                log::info!(
+                    "nothing sent: keys still held {}, game in front {}",
+                    !keys_up,
+                    in_game()
+                );
+            }
+            if keys_up && in_game() {
                 let clipboard = app.clipboard();
                 let previous = clipboard.read_text().ok();
                 if clipboard.write_text(text).is_ok() {
@@ -359,19 +371,9 @@ mod xtest {
     pub const VK_V: u8 = 55;
     const VK_C: u8 = 54;
     const CONTROL_L: u8 = 37;
-    // Alt, Control, Shift and Super, left and right.
-    const MODIFIERS: [u8; 8] = [64, 108, 37, 105, 50, 62, 133, 134];
 
     fn connect() -> Option<RustConnection> {
         x11rb::connect(None).ok().map(|(conn, _)| conn)
-    }
-
-    fn held(conn: &RustConnection, keys: &[u8]) -> bool {
-        let Some(map) = conn.query_keymap().ok().and_then(|c| c.reply().ok()) else {
-            return false;
-        };
-        keys.iter()
-            .any(|&k| map.keys[usize::from(k / 8)] & (1 << (k % 8)) != 0)
     }
 
     fn send(conn: &RustConnection, events: &[(u8, bool)]) {
@@ -386,13 +388,22 @@ mod xtest {
         let _ = conn.flush();
     }
 
-    // Alt still held from Alt+something would turn our Enter into the game's Alt+Enter.
+    fn any_held(conn: &RustConnection) -> bool {
+        conn.query_keymap()
+            .ok()
+            .and_then(|c| c.reply().ok())
+            .is_some_and(|map| map.keys.iter().any(|&b| b != 0))
+    }
+
+    // Every key, not only the modifiers: while the shortcut's own key is down, X keeps the
+    // keyboard grabbed for our shortcut and sends our fake keys back to us instead of the game.
+    // Alt still held would also turn our Enter into the game's Alt+Enter.
     pub fn wait_modifiers_up(timeout: Duration) -> bool {
         let Some(conn) = connect() else {
             return false;
         };
         let start = Instant::now();
-        while held(&conn, &MODIFIERS) {
+        while any_held(&conn) {
             if start.elapsed() >= timeout {
                 return false;
             }
@@ -401,13 +412,13 @@ mod xtest {
         true
     }
 
+    // Waits for the shortcut's keys to come up first, for the grab above. Ctrl+C then goes alone.
     pub fn copy() {
-        let Some(conn) = connect() else {
+        if !wait_modifiers_up(Duration::from_secs(1)) {
+            log::info!("item check: keys still held, nothing sent");
             return;
-        };
-        if held(&conn, &[CONTROL_L, 105]) {
-            send(&conn, &[(VK_C, true), (VK_C, false)]);
-        } else {
+        }
+        if let Some(conn) = connect() {
             tap_on(&conn, VK_C, true);
         }
     }
