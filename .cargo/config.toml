@@ -1,0 +1,5 @@
+# LuaJIT, built by mlua for exile-pob-engine, links the static C runtime. Rust has to use the same
+# one, or the exe carries two runtimes with their own heaps (link warning LNK4098). It also drops
+# the VC++ redistributable from what players need.
+[target.x86_64-pc-windows-msvc]
+rustflags = ["-C", "target-feature=+crt-static"]
