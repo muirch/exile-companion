@@ -93,7 +93,7 @@ fn wrap(alternatives: &str) -> String {
 }
 
 // Spaces and punctuation become `.`, so the string needs no quotes and no escapes. " Support"
-// shrinks to `.*t`, the trick Exile-UI uses to fit more gems into one string.
+// shrinks to `.*t` so more gems fit into one string.
 fn pattern(name: &str) -> String {
     let lower = name.trim().to_lowercase();
     let (base, support) = match lower.strip_suffix(" support") {

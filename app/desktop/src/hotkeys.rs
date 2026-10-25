@@ -39,7 +39,7 @@ impl Default for Hotkeys {
             open_chat: "Alt+KeyA".into(),
             vendor_search: "Alt+KeyG".into(),
             hideout: "F5".into(),
-            // Not Ctrl+D: Awakened PoE Trade has it, and players run both.
+            // Not Ctrl+D: trade tools take it, and players run them alongside.
             item_check: "Alt+KeyD".into(),
         }
     }
@@ -197,7 +197,7 @@ enum Keys {
 /// send twice.
 static SENDING: std::sync::atomic::AtomicBool = std::sync::atomic::AtomicBool::new(false);
 
-/// One action per key press, done the way Exile-UI and Awakened PoE Trade do it: wait until the
+/// One action per key press: wait until the
 /// player lets go of the shortcut's modifiers (we never send key-ups for keys they hold), check
 /// the game is still in front, paste the text through the clipboard, then put the old clipboard
 /// back and ignore the key for a moment.
@@ -229,7 +229,7 @@ fn into_game(app: &AppHandle, text: String, keys: Keys) {
                         }
                         Keys::Search => {
                             win::tap(win::VK_F, true);
-                            // Exile-UI's pause: the field takes a moment to get focus.
+                            // The field takes a moment to get focus.
                             std::thread::sleep(Duration::from_millis(100));
                             win::tap(win::VK_DELETE, false);
                             win::tap(win::VK_V, true);
@@ -251,7 +251,7 @@ fn into_game(app: &AppHandle, text: String, keys: Keys) {
     let _ = (app, text, keys);
 }
 
-/// Ctrl+C over the item under the cursor, the way Awakened PoE Trade copies it: Ctrl goes down
+/// Ctrl+C over the item under the cursor: Ctrl goes down
 /// only if the player isn't holding it, and the shortcut's other modifiers stay as they are.
 /// Copying an item is the game's own text copy, not a game action.
 pub fn copy_item() {

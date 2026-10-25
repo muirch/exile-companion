@@ -1,5 +1,5 @@
 //! The experience penalty for fighting monsters far from the character's level, Path of Exile 1's
-//! formula as the wiki and Exile-UI have it.
+//! formula as the wiki has it.
 
 use crate::data::ZoneInfo;
 

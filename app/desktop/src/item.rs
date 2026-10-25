@@ -1,5 +1,5 @@
-//! The item check key: copies the item under the cursor the way Awakened PoE Trade does and shows
-//! what it means for the build in the overlay.
+//! The item check key: copies the item under the cursor and shows what it means for the build in
+//! the overlay.
 
 use std::sync::atomic::{AtomicBool, Ordering};
 use std::sync::Mutex;
@@ -99,7 +99,7 @@ pub fn level_up(app: &AppHandle, from: u32, to: u32) {
     }
 }
 
-/// Awakened PoE Trade's timings: the game puts the text on the clipboard within a few frames.
+/// The game puts the text on the clipboard within a few frames.
 #[cfg(windows)]
 const POLL: Duration = Duration::from_millis(48);
 #[cfg(windows)]

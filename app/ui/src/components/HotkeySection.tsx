@@ -166,7 +166,7 @@ export function HotkeySection(): React.JSX.Element {
         <BindNote error={errorFor('relog')} />
       </Row>
       <Note>
-        Types /exit in the game chat to go back to character select, like Awakened PoE Trade's F9.
+        Types /exit in the game chat to go back to character select.
       </Note>
 
       <Row label="Hideout" className="mt-2">
@@ -183,7 +183,7 @@ export function HotkeySection(): React.JSX.Element {
         />
         <BindNote error={errorFor('hideout')} />
       </Row>
-      <Note>Types /hideout in the game chat, like Awakened PoE Trade's F5.</Note>
+      <Note>Types /hideout in the game chat.</Note>
 
       <Row label="Item check" className="mt-2">
         <Toggle
@@ -202,7 +202,7 @@ export function HotkeySection(): React.JSX.Element {
       <Note>
         Point at an item in the game and press it. The overlay says what the item would change for
         your build, measured with Path of Building, or where your build uses a gem. It copies the
-        item with Ctrl+C, like Awakened PoE Trade's Ctrl+D.
+        item's text with Ctrl+C, the game's own copy.
       </Note>
 
       <Row label="Gem search" className="mt-2">
