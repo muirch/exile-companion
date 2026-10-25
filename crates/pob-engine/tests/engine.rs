@@ -97,6 +97,42 @@ fn answers_questions_about_a_loaded_build() {
 }
 
 #[test]
+fn audits_the_taken_tree_by_branch() {
+    let Some(pob) = pob_dir() else { return };
+    let mut e = engine(&pob);
+    e.call("load_build", json!({ "xml": FIXTURE }), SLOW)
+        .unwrap();
+    let empty = e.call("tree_audit", json!({}), SLOW).unwrap();
+    assert_eq!(empty["branches"], json!([]));
+
+    let power = e
+        .call("node_power", json!({ "limit": 1, "max_points": 8 }), SLOW)
+        .unwrap();
+    let nearest = &power["reachable"][0];
+    let name = nearest["node"]["name"].as_str().unwrap().to_string();
+    e.call(
+        "apply_changes",
+        json!({ "changes": [{ "add_nodes": [name] }] }),
+        SLOW,
+    )
+    .unwrap();
+
+    let audit = e.call("tree_audit", json!({}), SLOW).unwrap();
+    let branches = audit["branches"].as_array().unwrap();
+    assert_eq!(branches.len(), 1, "{audit}");
+    // The path can pass through other notables, they come off with the branch.
+    let notables = branches[0]["notables"].as_array().unwrap();
+    assert!(notables.contains(&json!(name)), "{audit}");
+    // A cheaper branch inside the path can win: the first travel node gives damage itself, so
+    // keeping it costs less per point than dropping all of it.
+    let points = branches[0]["points"].as_u64().unwrap();
+    assert!(
+        points > 0 && points <= nearest["points"].as_u64().unwrap(),
+        "{audit}"
+    );
+}
+
+#[test]
 fn shows_the_sidebar_and_the_config_assumptions() {
     let Some(pob) = pob_dir() else { return };
     let mut e = engine(&pob);

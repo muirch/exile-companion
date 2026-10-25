@@ -48,7 +48,7 @@ before you measure anything. Don't answer about one build with numbers from anot
 Numbers come from Path of Building with the build's own Configuration (boss, buffs, charges, custom modifiers). \
 Check build_details for those assumptions before you judge damage or defences, and tell the player when an answer depends on them. \
 Guides often add placeholder custom mods (+200% resistances and the like), so their numbers are higher than a real character's. \
-To weigh a change, measure it with what_if, compare_item, passive_value or gem_value instead of estimating. \
+To weigh a change, measure it with what_if, compare_item, passive_value or gem_value instead of estimating. For a respec, tree_audit lists the taken branches that give the least per point. \
 A percent is not a recommendation by itself. Keystones and big notables have drawbacks Path of Building doesn't price in \
 (read the node's own text, and the wiki for the keystone), they cost points on the way, and players rarely take some of them for good reasons. \
 Say the trade-off and how sure you are, and point out what you couldn't measure. \
@@ -149,6 +149,12 @@ pub struct StageDiffParams {
     pub guide: Option<String>,
     pub from: Stage,
     pub to: Stage,
+}
+
+#[derive(Debug, Deserialize, schemars::JsonSchema)]
+pub struct AuditParams {
+    /// How many branches to list. Default 8.
+    pub limit: Option<u32>,
 }
 
 #[derive(Debug, Deserialize, schemars::JsonSchema)]
@@ -392,6 +398,18 @@ impl Companion {
     )]
     async fn defences(&self) -> Result<CallToolResult, McpError> {
         Ok(self.pob("defences", json!({})).await)
+    }
+
+    #[tool(
+        description = "For a respec: the branches of the taken passive tree that give the least per point, each with the notables in it, the points it frees and the DPS, EHP and life lost without it. Separate places on the tree, cheapest first."
+    )]
+    async fn tree_audit(
+        &self,
+        Parameters(p): Parameters<AuditParams>,
+    ) -> Result<CallToolResult, McpError> {
+        Ok(self
+            .pob("tree_audit", json!({ "limit": p.limit.unwrap_or(8) }))
+            .await)
     }
 
     #[tool(

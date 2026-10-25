@@ -302,6 +302,84 @@ function bridge.node_power(params)
 	return { taken = taken, reachable = reachable }
 end
 
+-- Taken passives that give the least, for a respec. Every allocated node is the root of the
+-- branch PoB would drop with it (node.depends: the nodes only connected through it). Each branch
+-- is measured without it, ranked by what it costs per point, and branches that overlap one
+-- already listed are skipped, so the list reads as separate places on the tree.
+function bridge.tree_audit(params)
+	local limit = params.limit or 8
+	local base = output()
+	local calc = build.calcsTab:GetMiscCalculator()
+	local function score(r)
+		return r.dps_pct + r.ehp_pct
+	end
+
+	local branches = {}
+	for _, node in pairs(build.spec.allocNodes) do
+		if not node.ascendancyName and node.type ~= "ClassStart" and node.type ~= "AscendClassStart"
+			and node.depends and #node.depends > 0 then
+			local remove, names, points = {}, {}, 0
+			for _, n in ipairs(node.depends) do
+				remove[n] = true
+				points = points + 1
+				if n.type == "Notable" or n.type == "Keystone" then
+					names[#names + 1] = n.dn
+				end
+			end
+			-- A branch of travel nodes alone frees points but says nothing to the player.
+			if #names > 0 then
+				local o = calc({ removeNodes = remove })
+				branches[#branches + 1] = {
+					root = node,
+					remove = remove,
+					points = points,
+					notables = names,
+					dps_pct = pct(dps(o), dps(base)),
+					ehp_pct = pct(o.TotalEHP, base.TotalEHP),
+					life = (num(o.Life) or 0) - (num(base.Life) or 0),
+				}
+			end
+		end
+	end
+	-- Losses are negative, so the cheapest branch per point has the highest score per point. A
+	-- bigger branch wins a tie: it frees more for the same loss.
+	table.sort(branches, function(a, b)
+		local sa, sb = score(a) / a.points, score(b) / b.points
+		if math.abs(sa - sb) > 1e-6 then
+			return sa > sb
+		end
+		return a.points > b.points
+	end)
+
+	local picked, used = {}, {}
+	for _, b in ipairs(branches) do
+		local overlaps = false
+		for n in pairs(b.remove) do
+			if used[n] then
+				overlaps = true
+				break
+			end
+		end
+		if not overlaps then
+			for n in pairs(b.remove) do
+				used[n] = true
+			end
+			picked[#picked + 1] = {
+				from = nodeInfo(b.root),
+				notables = b.notables,
+				points = b.points,
+				dps_pct = b.dps_pct,
+				ehp_pct = b.ehp_pct,
+				life = b.life,
+			}
+			if #picked >= limit then
+				break
+			end
+		end
+	end
+	return { branches = picked }
+end
+
 local findGroup
 
 -- DPS lost when each gem of a socket group is turned off, the main group by default.

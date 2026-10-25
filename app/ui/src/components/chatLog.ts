@@ -52,6 +52,7 @@ const TOOL_LABELS: Record<string, string> = {
   defences: 'Checking defences',
   gem_value: 'Measuring gems',
   passive_value: 'Measuring passives',
+  tree_audit: 'Looking for weak passives',
   compare_with_guide: 'Comparing with the guide',
   compare_item: 'Comparing the item',
   what_if: 'Trying the change',
