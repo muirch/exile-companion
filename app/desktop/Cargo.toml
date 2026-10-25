@@ -8,7 +8,9 @@ description = "The Exile Companion desktop app."
 
 [lib]
 name = "exile_companion"
-crate-type = ["lib", "cdylib", "staticlib"]
+# Only a Rust lib: the cdylib and staticlib were for mobile builds and wrote a pdb with the same
+# name as the exe.
+crate-type = ["lib"]
 
 [build-dependencies]
 tauri-build = { version = "=2.6.3", features = [] }
