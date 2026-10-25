@@ -98,13 +98,29 @@ function Ready({ card }: { card: Extract<Card, { kind: 'ready' }> }): React.JSX.
   );
 }
 
+function Kitava({ card }: { card: Extract<Card, { kind: 'kitava' }> }): React.JSX.Element {
+  return (
+    <>
+      <p className="text-[15px] leading-snug text-value">
+        {card.short.map((r) => `${r.element} ${Math.round(r.after)}%`).join(' · ')}
+      </p>
+      <p className="font-body text-[13px] leading-snug text-plain italic">
+        Below the 75% cap once he's dead. Fix it before the fight, the penalty stays.
+      </p>
+    </>
+  );
+}
+
 function title(card: Card): string {
-  return card.kind === 'ready' ? `Level ${card.level}` : card.name;
+  if (card.kind === 'ready') return `Level ${card.level}`;
+  if (card.kind === 'kitava') return 'Kitava ahead';
+  return card.name;
 }
 
 function subtitle(card: Card): string | null {
   if (card.kind === 'gem') return 'Gem';
   if (card.kind === 'ready') return 'Usable now';
+  if (card.kind === 'kitava') return `Resistances ${card.penalty}% after him`;
   if (card.kind === 'gear') {
     return card.card.replaces ? `${card.card.slot} · instead of ${card.card.replaces}` : card.card.slot;
   }
@@ -128,6 +144,8 @@ function Body({ card }: { card: Card }): React.JSX.Element {
       return <Gear card={card.card} needsLevel={card.needsLevel} />;
     case 'ready':
       return <Ready card={card} />;
+    case 'kitava':
+      return <Kitava card={card} />;
   }
 }
 

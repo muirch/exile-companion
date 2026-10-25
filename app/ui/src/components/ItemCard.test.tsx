@@ -76,6 +76,25 @@ describe('ItemCard', () => {
     expect(screen.getByText('Weapon 1')).toBeInTheDocument();
   });
 
+  it('warns about resistances below the cap after Kitava', () => {
+    render(
+      <ItemCard
+        compact={false}
+        card={{
+          kind: 'kitava',
+          penalty: -30,
+          short: [
+            { element: 'Fire', after: 60.4 },
+            { element: 'Lightning', after: 41 },
+          ],
+        }}
+      />,
+    );
+    expect(screen.getByRole('heading', { name: 'Kitava ahead' })).toBeInTheDocument();
+    expect(screen.getByText('Resistances -30% after him')).toBeInTheDocument();
+    expect(screen.getByText('Fire 60% · Lightning 41%')).toBeInTheDocument();
+  });
+
   it('lists where the build uses a gem and where to get it', () => {
     render(
       <ItemCard

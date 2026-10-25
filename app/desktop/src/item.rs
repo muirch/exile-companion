@@ -29,6 +29,11 @@ pub enum ItemCard {
     },
     /// A level-up made gems of the build or remembered upgrades usable.
     Ready(UsableNow),
+    /// The player entered Kitava's zone and some resistance falls below the cap after him.
+    Kitava {
+        penalty: i32,
+        short: Vec<exile_assistant::kitava::Short>,
+    },
     /// Why there is nothing to show, in the player's words.
     Missing {
         name: String,
@@ -45,6 +50,45 @@ static CHECKING: AtomicBool = AtomicBool::new(false);
 /// Upgrades checked before the character could wear them. Kept until they come due or the app
 /// quits.
 static REMEMBERED: Mutex<Vec<Remembered>> = Mutex::new(Vec::new());
+
+/// Called on entering Kitava's zone. Measures without a model and says nothing when the
+/// resistances stay capped or there's no build.
+pub fn kitava(app: &AppHandle, penalty: i32) {
+    use exile_assistant::kitava;
+    let app = app.clone();
+    tauri::async_runtime::spawn(async move {
+        let has_build = {
+            let state = app.state::<AppState>();
+            let builds = state.build.lock().unwrap_or_else(|e| e.into_inner());
+            builds.build().is_some()
+        };
+        if !has_build {
+            return;
+        }
+        let Ok(server) = crate::chat::server(&app).await else {
+            return;
+        };
+        let read = |out: exile_assistant::ToolOutput| {
+            (!out.is_error)
+                .then(|| serde_json::from_str::<serde_json::Value>(&out.text).ok())
+                .flatten()
+        };
+        let defences = read(server.call("defences", serde_json::json!({})).await);
+        let what_if = read(
+            server
+                .call("what_if", kitava::penalty_change(penalty))
+                .await,
+        );
+        let (Some(defences), Some(what_if)) = (defences, what_if) else {
+            log::warn!("kitava check: the tools didn't answer");
+            return;
+        };
+        let short = kitava::short_resists(&defences, &what_if);
+        if !short.is_empty() {
+            emit(&app, &ItemCard::Kitava { penalty, short });
+        }
+    });
+}
 
 /// Called when the log says the character went from level `from` to `to`.
 pub fn level_up(app: &AppHandle, from: u32, to: u32) {

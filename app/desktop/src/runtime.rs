@@ -427,6 +427,9 @@ fn spawn_pipeline(app: AppHandle, stream: LineStream, machine: CampaignMachine) 
             if delta.zone_changed {
                 if let Some(area_id) = &st.area_id {
                     follow_route(&cb_app, area_id, st.level);
+                    if let Some(penalty) = exile_core::kitava::penalty_after(area_id) {
+                        crate::item::kitava(&cb_app, penalty);
+                    }
                 }
             }
             // Guidance depends on the campaign state, so recompute it on every meaningful change.
