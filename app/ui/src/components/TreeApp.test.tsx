@@ -3,7 +3,7 @@ import userEvent from '@testing-library/user-event';
 import { afterAll, beforeAll, beforeEach, describe, expect, it, vi } from 'vitest';
 
 import * as commands from '../ipc/commands';
-import type { TreeLayout, TreeMode, TreeStage } from '../ipc/types';
+import type { TreeLayout, TreeMode, TreePrefs, TreeStage } from '../ipc/types';
 import { TreeApp, markName } from './TreeApp';
 
 vi.mock('../ipc/commands', () => ({
@@ -14,7 +14,11 @@ vi.mock('../ipc/commands', () => ({
     return Promise.resolve();
   }),
   closeTree: vi.fn(() => Promise.resolve()),
+  getTreePrefs: vi.fn(() => Promise.resolve(prefs)),
+  setTreePrefs: vi.fn(() => Promise.resolve()),
 }));
+
+let prefs: TreePrefs = { folded: [], list: false };
 
 const LAYOUT: TreeLayout = {
   nodes: [
@@ -128,6 +132,7 @@ afterAll(() => {
 beforeEach(() => {
   mode = 'tree';
   canCompare = true;
+  prefs = { folded: [], list: false };
   vi.clearAllMocks();
   vi.mocked(commands.getTreeStage).mockImplementation((stage) => Promise.resolve(stageFor(stage ?? 1)));
 });
@@ -249,6 +254,39 @@ describe('TreeApp', () => {
     await screen.findByTestId('tree');
     expect(screen.queryByTestId('ascendancy-Guardian')).toBeNull();
     expect(screen.queryByTestId('ascendancy-Farrul')).toBeNull();
+  });
+
+  it('folds a bloodline to a bar and remembers it', async () => {
+    render(<TreeApp />);
+    await screen.findByTestId('tree');
+    await userEvent.click(screen.getByRole('button', { name: 'Fold Farrul Bloodline' }));
+    expect(commands.setTreePrefs).toHaveBeenCalledWith({ folded: ['Farrul'], list: false });
+    const bar = screen.getByTestId('ascendancy-Farrul');
+    expect(bar.querySelector('svg path[d^="M1 5h8M5"]')).not.toBeNull();
+    expect(bar.querySelector('[data-node]')).toBeNull();
+    expect(screen.getByRole('button', { name: 'Unfold Farrul Bloodline' })).toHaveAttribute('aria-expanded', 'false');
+  });
+
+  it('opens folded the way the player left it', async () => {
+    prefs = { folded: ['Guardian'], list: false };
+    render(<TreeApp />);
+    expect(await screen.findByRole('button', { name: 'Unfold Guardian' })).toBeInTheDocument();
+    expect(screen.getByTestId('ascendancy-Farrul').querySelector('[data-node="61"]')).not.toBeNull();
+  });
+
+  it('lists the keystones, ascendancy notables and masteries next to the tree', async () => {
+    render(<TreeApp />);
+    await screen.findByTestId('tree');
+    expect(screen.queryByRole('complementary')).toBeNull();
+    await userEvent.click(screen.getByRole('button', { name: 'List' }));
+    expect(commands.setTreePrefs).toHaveBeenCalledWith({ folded: [], list: true });
+    const list = screen.getByRole('complementary', { name: 'Keystones, ascendancy and masteries' });
+    const major = [...list.querySelectorAll('[data-list-node]')].map((el) => el.getAttribute('data-list-node'));
+    // Ascendancy and bloodline notables first, then the keystones.
+    expect(major).toEqual(['30', '61', '20']);
+    expect(within(list).getByText('Converts all Evasion Rating to Armour')).toHaveClass('text-magic');
+    expect(within(list).getByText('Life Mastery')).toBeInTheDocument();
+    expect(within(list).getByText('Regenerate 1% of Life per second')).toBeInTheDocument();
   });
 
   it('opens a card with the node and the stage that takes it', async () => {

@@ -37,6 +37,7 @@ import type {
   SpeedMultiplier,
   TreeLayout,
   TreeMode,
+  TreePrefs,
   TreeStage,
 } from './types';
 
@@ -254,6 +255,13 @@ export const getTreeStage = (stage: number | null): Promise<TreeStage | null> =>
 
 export const setTreeMode = (mode: TreeMode): Promise<void> =>
   isTauri() ? invoke('set_tree_mode', { mode }) : import('./mock-tree').then((m) => m.setTreeModeMock(mode));
+
+/** How the player left the tree window's ascendancy maps and mastery list. */
+export const getTreePrefs = (): Promise<TreePrefs> =>
+  isTauri() ? invoke('get_tree_prefs') : import('./mock-tree').then((m) => m.treePrefsMock());
+
+export const setTreePrefs = (prefs: TreePrefs): Promise<void> =>
+  isTauri() ? invoke('set_tree_prefs', { prefs }) : import('./mock-tree').then((m) => m.setTreePrefsMock(prefs));
 
 export const getTreeShown = (): Promise<boolean> =>
   isTauri() ? invoke('get_tree_shown') : import('./mock-tree').then((m) => m.treeShownMock());

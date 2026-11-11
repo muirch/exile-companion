@@ -58,7 +58,8 @@ shot tree-warmup "$URL/?window=tree" 632 540 8000
 for t in tree:window=tree tree-new:window=tree\&mode=new tree-character:window=tree\&mode=character\&hover \
   tree-nochar:window=tree\&mode=character\&nochar tree-mastery:window=tree\&stage=4\&hover=mastery \
   tree-ascendancy:window=tree\&mode=new\&hover=ascendancy tree-early:window=tree\&stage=0 \
-  tree-bloodline:window=tree\&stage=11; do
+  tree-bloodline:window=tree\&stage=11 tree-list:window=tree\&stage=11\&list \
+  tree-folded:window=tree\&stage=11\&folded=Guardian; do
   stage "${t%%:*}" "${t#*:}" 632 540
   shot "${t%%:*}" "file://$OUT/.stage-${t%%:*}.html" 700 580 8000
 done
@@ -77,8 +78,9 @@ ffmpeg -loglevel error -y -i chat-nokey.png -i chat-empty.png -i chat-answered.p
 ffmpeg -loglevel error -y -i gems.png -i gems-early.png -i gems-hover.png -i gems-notes.png \
   -filter_complex "[0][1][2][3]hstack=4" gems-both.png
 ffmpeg -loglevel error -y -i tree.png -i tree-new.png -i tree-character.png -i tree-nochar.png \
-  -i tree-mastery.png -i tree-ascendancy.png -i tree-early.png -i tree-bloodline.png \
-  -filter_complex "[0][1][2][3]hstack=4[r1];[4][5][6][7]hstack=4[r2];[r1][r2]vstack=2" tree-all.png
+  -i tree-mastery.png -i tree-ascendancy.png -i tree-early.png -i tree-bloodline.png -i tree-list.png \
+  -i tree-folded.png -filter_complex "[0][1][2][3][4]hstack=5[r1];[5][6][7][8][9]hstack=5[r2];[r1][r2]vstack=2" \
+  tree-all.png
 rm -f .stage-*.html tree-warmup.png
 echo "$OUT/overview.png"
 echo "$OUT/chat.png"
