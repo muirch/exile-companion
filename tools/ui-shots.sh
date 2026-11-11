@@ -53,13 +53,14 @@ for g in gems:window=gems gems-early:window=gems\&set=0 gems-hover:window=gems\&
   stage "${g%%:*}" "${g#*:}" 340 540
   shot "${g%%:*}" "file://$OUT/.stage-${g%%:*}.html" 440 580
 done
-# The first load of the tree's data and fonts is slow on the dev server, so warm them up once.
-shot tree-warmup "$URL/?window=tree" 632 540 6000
+# The dev server builds the tree's mock data on the first request, so ask for it once first.
+shot tree-warmup "$URL/?window=tree" 632 540 8000
 for t in tree:window=tree tree-new:window=tree\&mode=new tree-character:window=tree\&mode=character\&hover \
-  tree-nochar:window=tree\&mode=character\&nochar tree-mastery:window=tree\&stage=4\&hover=mastery; do
+  tree-nochar:window=tree\&mode=character\&nochar tree-mastery:window=tree\&stage=4\&hover=mastery \
+  tree-ascendancy:window=tree\&mode=new\&hover=ascendancy tree-early:window=tree\&stage=0 \
+  tree-bloodline:window=tree\&stage=11; do
   stage "${t%%:*}" "${t#*:}" 632 540
-  # The tree's data loads late, and Chrome hides text until its font is in.
-  shot "${t%%:*}" "file://$OUT/.stage-${t%%:*}.html" 700 580 6000
+  shot "${t%%:*}" "file://$OUT/.stage-${t%%:*}.html" 700 580 8000
 done
 shot settings "$URL/?window=settings" 560 2300
 
@@ -76,8 +77,8 @@ ffmpeg -loglevel error -y -i chat-nokey.png -i chat-empty.png -i chat-answered.p
 ffmpeg -loglevel error -y -i gems.png -i gems-early.png -i gems-hover.png -i gems-notes.png \
   -filter_complex "[0][1][2][3]hstack=4" gems-both.png
 ffmpeg -loglevel error -y -i tree.png -i tree-new.png -i tree-character.png -i tree-nochar.png \
-  -i tree-mastery.png -filter_complex "[0][1][2]hstack=3[r1];[3][4]hstack=2,pad=iw*3/2:ih[r2];[r1][r2]vstack=2" \
-  tree-all.png
+  -i tree-mastery.png -i tree-ascendancy.png -i tree-early.png -i tree-bloodline.png \
+  -filter_complex "[0][1][2][3]hstack=4[r1];[4][5][6][7]hstack=4[r2];[r1][r2]vstack=2" tree-all.png
 rm -f .stage-*.html tree-warmup.png
 echo "$OUT/overview.png"
 echo "$OUT/chat.png"
