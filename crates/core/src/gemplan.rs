@@ -161,6 +161,16 @@ pub struct GemPlan {
     pub free_rewards: Vec<String>,
 }
 
+impl GemStep {
+    /// "Quest reward from Tarkleigh in act 1", "Sold by Nessa in act 1".
+    pub fn place(&self) -> String {
+        match self.action {
+            GemAction::Take => format!("Quest reward from {} in act {}", self.npc, self.act),
+            GemAction::Buy => format!("Sold by {} in act {}", self.npc, self.act),
+        }
+    }
+}
+
 impl GemPlan {
     pub fn for_quest<'a>(&'a self, quest_id: &'a str) -> impl Iterator<Item = &'a GemStep> + 'a {
         self.steps.iter().filter(move |s| s.quest_id == quest_id)
