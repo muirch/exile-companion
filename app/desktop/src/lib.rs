@@ -4,6 +4,7 @@
 mod assistant;
 mod chat;
 mod commands;
+mod gems;
 mod hotkeys;
 mod item;
 mod menu;
@@ -130,6 +131,10 @@ pub fn run() {
             tauri::WindowEvent::Moved(_) => overlay::on_moved(window),
             tauri::WindowEvent::Focused(false) if window.label() == menu::MENU_LABEL => {
                 let _ = window.hide();
+                gems::close_layer_if_unfocused(window.app_handle());
+            }
+            tauri::WindowEvent::Focused(false) if window.label() == gems::GEMS_LABEL => {
+                gems::close_layer_if_unfocused(window.app_handle());
             }
             // Settings is created once at startup. Closing it only hides it.
             tauri::WindowEvent::CloseRequested { api, .. }
@@ -161,6 +166,8 @@ pub fn run() {
             commands::chat_stop,
             commands::chat_new,
             commands::get_profile,
+            commands::get_links,
+            commands::close_gems,
             commands::follow_guide,
             commands::forget_guide,
             commands::list_characters,

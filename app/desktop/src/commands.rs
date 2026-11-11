@@ -216,6 +216,17 @@ pub async fn chat_delete(app: AppHandle, id: String) -> Result<(), String> {
     crate::chat::delete_saved(&app, &id).await
 }
 
+/// The links of skill set `set`, or of the one the character's level is at.
+#[tauri::command]
+pub fn get_links(app: AppHandle, set: Option<usize>) -> Option<exile_core::links::Links> {
+    crate::gems::links(&app, set)
+}
+
+#[tauri::command]
+pub fn close_gems(app: AppHandle) {
+    crate::gems::hide(&app);
+}
+
 #[tauri::command]
 pub fn get_profile(app: AppHandle) -> crate::profile::Profile {
     crate::profile::profile(&app)

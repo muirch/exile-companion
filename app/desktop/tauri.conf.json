@@ -49,6 +49,24 @@
         "visible": false
       },
       {
+        "label": "gems",
+        "create": false,
+        "focus": false,
+        "title": "Exile Companion gems",
+        "url": "index.html",
+        "width": 340,
+        "height": 540,
+        "resizable": false,
+        "maximizable": false,
+        "minimizable": false,
+        "decorations": false,
+        "transparent": true,
+        "alwaysOnTop": true,
+        "skipTaskbar": true,
+        "shadow": false,
+        "visible": false
+      },
+      {
         "label": "settings",
         "create": false,
         "focus": false,

@@ -28,15 +28,18 @@ pub fn open_at_cursor(app: &AppHandle) {
         }
         let _ = menu.set_position(tauri::PhysicalPosition::new(x, y));
     }
+    crate::gems::show(app);
     let _ = app.emit("menu://opened", ());
     let _ = menu.show();
     let _ = menu.set_focus();
 }
 
+/// Closes the layer the menu key opens: the menu and the gems window.
 pub fn close(app: &AppHandle) {
     if let Some(menu) = app.get_webview_window(MENU_LABEL) {
         let _ = menu.hide();
     }
+    crate::gems::hide(app);
 }
 
 pub fn open_settings(app: &AppHandle) {

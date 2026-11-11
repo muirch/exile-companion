@@ -522,7 +522,7 @@ const CHAT_MIN_SIZE: (f64, f64) = (340.0, 320.0);
 
 /// PoE scales its UI with the monitor height, and the overlay does the same, so the chat follows:
 /// 100% at 1080p.
-fn screen_zoom(logical_height: f64) -> f64 {
+pub(crate) fn screen_zoom(logical_height: f64) -> f64 {
     (logical_height / 1080.0).clamp(0.75, 2.0)
 }
 
