@@ -88,9 +88,46 @@ impl GuideStore {
     }
 }
 
+/// Whether a build carries exactly the guide's items, as it does after the guide became the
+/// player's build. Its gear then says nothing about what the character wears.
+pub fn has_guide_gear(build_xml: &[u8], guide_xml: &[u8]) -> bool {
+    match (
+        exile_pob::item_names(build_xml),
+        exile_pob::item_names(guide_xml),
+    ) {
+        (Ok(build), Ok(guide)) => !build.is_empty() && build == guide,
+        _ => false,
+    }
+}
+
 #[cfg(test)]
 mod tests {
     use super::*;
+
+    #[test]
+    fn tells_a_build_with_the_guides_items() {
+        let items = |names: &[&str]| {
+            let items: String = names
+                .iter()
+                .map(|n| format!("<Item>Rarity: MAGIC\n{n}\n</Item>"))
+                .collect();
+            format!("<PathOfBuilding><Items>{items}</Items></PathOfBuilding>")
+        };
+        let guide = items(&["Iron Ring", "Rustic Sash"]);
+        assert!(has_guide_gear(
+            items(&["Rustic Sash", "Iron Ring"]).as_bytes(),
+            guide.as_bytes()
+        ));
+        assert!(!has_guide_gear(
+            items(&["Iron Ring"]).as_bytes(),
+            guide.as_bytes()
+        ));
+        assert!(!has_guide_gear(
+            items(&[]).as_bytes(),
+            items(&[]).as_bytes()
+        ));
+        assert!(!has_guide_gear(b"not xml <", guide.as_bytes()));
+    }
 
     #[test]
     fn keeps_the_guide_and_its_stage() {
