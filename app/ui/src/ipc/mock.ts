@@ -409,6 +409,7 @@ export function itemCardMock(): ItemCard | null {
     kind: 'gear',
     name: 'Storm Loop, Ruby Ring',
     needsLevel: null,
+    guideGear: false,
     card: {
       slot: 'Ring 1',
       replaces: 'Iron Ring',
