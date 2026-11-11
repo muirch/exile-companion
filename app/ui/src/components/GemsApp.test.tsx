@@ -5,7 +5,7 @@ import { beforeEach, describe, expect, it, vi } from 'vitest';
 import * as commands from '../ipc/commands';
 import { linksMock } from '../ipc/mock';
 import type { LinkGem } from '../ipc/types';
-import { GemsApp, bySlot, connectors, gemLevel, parseNotes } from './GemsApp';
+import { GemsApp, blocks, connectors, gemLevel, parseNotes } from './GemsApp';
 
 vi.mock('../ipc/commands', () => ({
   getLinks: vi.fn((set: number | null) => Promise.resolve(links(set))),
@@ -22,6 +22,7 @@ const gem = (name: string, support: boolean): LinkGem => ({
   name,
   color: 'red',
   support,
+  granted: false,
   level: 20,
   quality: 20,
   requiredLevel: 12,
@@ -42,13 +43,31 @@ describe('gem links', () => {
     expect(connectors([gem('Sunder', false), gem('Ruthless', true), gem('Bleed', true)])).toEqual([null, '├', '└']);
   });
 
-  it('puts the groups of one item under one slot', () => {
-    const slots = bySlot(linksMock(1).groups);
-    expect(slots.map((s) => [s.slot, s.groups.length])).toEqual([
+  it('puts the groups of one item under one slot, in the build order', () => {
+    const shape = blocks(linksMock(1).groups).map((b) =>
+      b.kind === 'heading' ? b.text : [b.slot, b.groups.length],
+    );
+    expect(shape).toEqual([
       ['Body Armour', 2],
       ['Boots', 1],
       ['Helmet', 1],
       ['Gloves', 1],
+      [null, 1],
+    ]);
+  });
+
+  it('keeps an early stage in order, with its labels as headings', () => {
+    const shape = blocks(linksMock(0).groups).map((b) =>
+      b.kind === 'heading' ? b.text : b.groups.map((g) => g.gems[0].name).join('+'),
+    );
+    expect(shape).toEqual([
+      'Frost Blades',
+      'Frost Blades',
+      'Level 4',
+      'Frostblink',
+      'Summon Holy Relic',
+      '- Sunder Swap -',
+      'Sunder',
     ]);
   });
 
@@ -92,6 +111,19 @@ describe('GemsApp', () => {
     expect(within(body).getByText('Sunder')).toBeInTheDocument();
     expect(within(body).getByText('Animate Guardian')).toBeInTheDocument();
     expect(commands.getLinks).toHaveBeenCalledWith(null);
+  });
+
+  it('heads the parts of an early stage and says what the tree grants', async () => {
+    render(<GemsApp />);
+    await userEvent.click(await screen.findByRole('combobox', { name: 'Stage' }));
+    await userEvent.click(screen.getByRole('option', { name: 'Level 1-12' }));
+    expect(await screen.findByRole('heading', { name: '- Sunder Swap -' })).toBeInTheDocument();
+    expect(screen.getByText('GET THESE GEMS FROM RANGER MULE')).toBeInTheDocument();
+    expect(screen.queryByText('No slot')).toBeNull();
+    await userEvent.click(screen.getByRole('combobox', { name: 'Stage' }));
+    await userEvent.click(screen.getByRole('option', { name: 'Level 12-22' }));
+    await userEvent.hover(await screen.findByRole('button', { name: 'Summon Sentinel of Radiance' }));
+    expect(screen.getByRole('tooltip')).toHaveTextContent('Granted skill');
   });
 
   it('shows where a gem comes from on hover', async () => {

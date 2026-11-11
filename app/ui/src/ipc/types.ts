@@ -31,6 +31,8 @@ export interface LinkGem {
   name: string;
   color: GemColor;
   support: boolean;
+  /** The passive tree or an item gives the skill, not a gem. */
+  granted: boolean;
   level: number | null;
   quality: number | null;
   requiredLevel: number | null;
