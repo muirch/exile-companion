@@ -22,11 +22,26 @@ const LAYOUT: TreeLayout = {
     { id: 11, x: 162, y: 0, kind: 'notable', name: 'Heart of Oak', stats: ['+20 to maximum Life', '5% increased Armour'] },
     { id: 13, x: 0, y: 82, kind: 'jewel', name: 'Jewel Socket', stats: [] },
     { id: 20, x: 1000, y: 0, kind: 'keystone', name: 'Iron Reflexes', stats: ['Converts all Evasion Rating to Armour'] },
+    {
+      id: 12,
+      x: 400,
+      y: -100,
+      kind: 'mastery',
+      name: 'Life Mastery',
+      stats: [],
+      mastery: [
+        { effect: 9755, stats: ['+50 to maximum Life'] },
+        { effect: 4119, stats: ['Regenerate 1% of Life per second'] },
+      ],
+    },
+    { id: 30, x: -8000, y: 8918, kind: 'notable', name: 'Radiant Crusade', stats: ['Summon a Sentinel'], ascendancy: 'Guardian' },
+    { id: 31, x: -8000, y: 9000, kind: 'ascendancyStart', name: 'Guardian', stats: [], ascendancy: 'Guardian' },
   ],
   edges: [
     { a: 10, b: 11, arc: 162, clockwise: true },
     { a: 11, b: 20, arc: null, clockwise: false },
     { a: 13, b: 10, arc: null, clockwise: false },
+    { a: 30, b: 31, arc: null, clockwise: true },
   ],
 };
 
@@ -44,6 +59,7 @@ function stageFor(stage: number): TreeStage {
     points: 3,
     notables: 1,
     focus: { minX: 0, minY: -162, maxX: 1000, maxY: 82 },
+    ascendancies: ['Guardian'],
   };
   if (shown === 'tree') {
     return {
@@ -52,7 +68,10 @@ function stageFor(stage: number): TreeStage {
       extra: 0,
       addedNames: [],
       ascendancy: [{ name: 'Radiant Crusade', mark: 'taken' }],
-      nodes: [10, 11, 20].map((id) => ({ id, mark: 'taken' as const, since: id === 10 ? 0 : 1 })),
+      nodes: [
+        ...[10, 11, 20, 30].map((id) => ({ id, mark: 'taken' as const, since: id === 10 ? 0 : 1, effect: null })),
+        { id: 12, mark: 'taken', since: 1, effect: 4119 },
+      ],
       edges: [
         { edge: 0, mark: 'taken' },
         { edge: 1, mark: 'taken' },
@@ -66,10 +85,11 @@ function stageFor(stage: number): TreeStage {
     addedNames: ['Heart of Oak', 'Iron Reflexes'],
     ascendancy: [{ name: 'Radiant Crusade', mark: 'added' }],
     nodes: [
-      { id: 10, mark: 'taken', since: 0 },
-      { id: 11, mark: 'added', since: 1 },
-      { id: 13, mark: 'extra', since: 0 },
-      { id: 20, mark: 'added', since: 1 },
+      { id: 10, mark: 'taken', since: 0, effect: null },
+      { id: 11, mark: 'added', since: 1, effect: null },
+      { id: 13, mark: 'extra', since: 0, effect: null },
+      { id: 20, mark: 'added', since: 1, effect: null },
+      { id: 30, mark: 'added', since: 1, effect: null },
     ],
     edges: [
       { edge: 0, mark: 'added' },
@@ -115,13 +135,27 @@ const marks = (): Record<string, string | null> =>
     ]),
   );
 
+// Moves the pointer onto a node of the main tree, from where the fitted view put it.
+function hoverNode(id: number): void {
+  const svg = screen.getByTestId('tree');
+  const node = svg.querySelector(`[data-node="${id}"] circle`)!;
+  const [vx, vy, vw] = svg.getAttribute('viewBox')!.split(' ').map(Number);
+  const scale = 600 / vw;
+  act(() => {
+    fireEvent.pointerMove(screen.getByTestId('tree-box'), {
+      clientX: (Number(node.getAttribute('cx')) - vx) * scale,
+      clientY: (Number(node.getAttribute('cy')) - vy) * scale,
+    });
+  });
+}
+
 describe('TreeApp', () => {
   it("shows the stage's tree as PoB does by default", async () => {
     render(<TreeApp />);
     expect(await screen.findByText('3 points, 1 notable.')).toBeInTheDocument();
     await screen.findByTestId('tree');
     expect(screen.getByText('Radiant Crusade')).toBeInTheDocument();
-    expect(marks()).toEqual({ '10': 'taken', '11': 'taken', '20': 'taken' });
+    expect(marks()).toEqual({ '10': 'taken', '11': 'taken', '12': 'taken', '20': 'taken' });
     expect(screen.getByRole('button', { name: 'Tree' })).toHaveAttribute('aria-pressed', 'true');
     expect(screen.getByRole('combobox', { name: 'Stage' })).toHaveTextContent('Level 12-22');
     // Notables and keystones the stage takes carry their names.
@@ -160,20 +194,42 @@ describe('TreeApp', () => {
     expect(screen.getByText('Refunded at this stage')).toBeInTheDocument();
   });
 
+  it('shows the picked mastery effect on its card', async () => {
+    render(<TreeApp />);
+    await screen.findByTestId('tree');
+    hoverNode(12);
+    const card = await screen.findByRole('tooltip');
+    expect(card).toHaveTextContent('Life Mastery');
+    expect(card).toHaveTextContent('Regenerate 1% of Life per second');
+    expect(card).not.toHaveTextContent('+50 to maximum Life');
+  });
+
+  it('draws the ascendancy apart, with its own card', async () => {
+    mode = 'character';
+    render(<TreeApp />);
+    await screen.findByText('2 to take');
+    const map = screen.getByTestId('ascendancy-Guardian');
+    expect(map.querySelector('[data-node="30"]')).toHaveAttribute('data-mark', 'added');
+    // The start isn't taken, so it's drawn like any node out of play.
+    expect(map.querySelector('[data-node="31"]')).toBeNull();
+    expect(screen.getByTestId('tree').querySelector('[data-node="30"]')).toBeNull();
+    // Fitted into the 150px square, the notable sits near the top middle.
+    const svg = map.querySelector('svg')!;
+    const [vx, vy, vw] = svg.getAttribute('viewBox')!.split(' ').map(Number);
+    const scale = 150 / vw;
+    act(() => {
+      fireEvent.pointerMove(map, { clientX: (-8000 - vx) * scale, clientY: (8918 - vy) * scale });
+    });
+    const card = await screen.findByRole('tooltip');
+    expect(card).toHaveTextContent('Radiant Crusade');
+    expect(card).toHaveTextContent('Notable · To take');
+  });
+
   it('opens a card with the node and the stage that takes it', async () => {
     render(<TreeApp />);
     await screen.findByTestId('tree');
     const tree = screen.getByTestId('tree-box');
-    // The view fits 1000 x 244 tree units plus padding into 600 x 400, so find the node's spot.
-    const node = screen.getByTestId('tree').querySelector('[data-node="11"] circle')!;
-    const svg = screen.getByTestId('tree');
-    const [vx, vy, vw] = svg.getAttribute('viewBox')!.split(' ').map(Number);
-    const scale = 600 / vw;
-    const cx = (Number(node.getAttribute('cx')) - vx) * scale;
-    const cy = (Number(node.getAttribute('cy')) - vy) * scale;
-    act(() => {
-      fireEvent.pointerMove(tree, { clientX: cx, clientY: cy });
-    });
+    hoverNode(11);
     const card = await screen.findByRole('tooltip');
     expect(card).toHaveTextContent('Heart of Oak');
     expect(card).toHaveTextContent('Notable');

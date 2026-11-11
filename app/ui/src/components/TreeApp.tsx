@@ -34,8 +34,12 @@ const KIND: Record<NodeKind, string> = {
   keystone: 'Keystone',
   jewel: 'Jewel socket',
   mastery: 'Mastery',
+  ascendancyStart: 'Ascendancy',
 };
 const CARD_WIDTH = 250;
+const INSET = 150;
+// The corner map is drawn small, so its nodes are drawn bigger than on the tree.
+const INSET_GROW = 1.8;
 
 const modes = (canCompare: boolean): { value: TreeMode; label: string; disabled?: boolean }[] => [
   { value: 'tree', label: 'Tree' },
@@ -126,16 +130,157 @@ function Legend({ stage }: { stage: TreeStage }): React.JSX.Element {
 }
 
 // The browser mock opens a card with ?hover, for screenshots.
-function mockHover(layout: TreeLayout, stage: TreeStage): TreeNode | null {
-  if (isTauri() || !new URLSearchParams(window.location.search).has('hover')) return null;
-  const marked = stage.nodes.find((m) => m.mark === (stage.mode === 'tree' ? 'taken' : 'added') && layout.nodes.find((n) => n.id === m.id)?.kind === 'notable');
-  return layout.nodes.find((n) => n.id === marked?.id) ?? null;
+function mockHover(layout: TreeLayout, stage: TreeStage): Hover | null {
+  const kind = new URLSearchParams(window.location.search).get('hover');
+  if (isTauri() || kind === null) return null;
+  const want = (n: TreeNode | undefined): boolean => (kind === 'mastery' ? n?.kind === 'mastery' : n?.kind === 'notable' && !n.ascendancy);
+  const marked = stage.nodes.find((m) => (kind === 'mastery' || m.mark === (stage.mode === 'tree' ? 'taken' : 'added')) && want(layout.nodes.find((n) => n.id === m.id)));
+  const node = layout.nodes.find((n) => n.id === marked?.id);
+  return node ? { node } : null;
 }
 
 interface Hover {
   node: TreeNode;
-  x: number;
-  y: number;
+  /** Where an ascendancy node sits on screen. Main tree nodes follow the view. */
+  at?: { x: number; y: number };
+}
+
+/** A node the stage marks, filled when taken, ringed when added, slashed when extra. */
+function MarkedNode({
+  n,
+  mark,
+  px,
+  grow = 1,
+}: {
+  n: TreeNode;
+  mark: Mark;
+  px: (v: number) => number;
+  grow?: number;
+}): React.JSX.Element {
+  const r = RADIUS[n.kind] * grow;
+  const fill = mark === 'taken' ? COLOR.taken : '#0a0a0a';
+  const stroke = mark === 'taken' ? 'var(--color-value)' : COLOR[mark];
+  const sw = px(mark === 'taken' ? 1 : 2);
+  const cross = r + px(2.5);
+  return (
+    <g data-node={n.id} data-mark={mark}>
+      {n.kind === 'jewel' ? (
+        <rect x={n.x - r} y={n.y - r} width={r * 2} height={r * 2} transform={`rotate(45 ${n.x} ${n.y})`} fill={fill} stroke={stroke} strokeWidth={sw} />
+      ) : (
+        <circle cx={n.x} cy={n.y} r={r} fill={fill} stroke={stroke} strokeWidth={sw} />
+      )}
+      {mark === 'extra' && (
+        <path d={`M${n.x - cross} ${n.y - cross}L${n.x + cross} ${n.y + cross}`} stroke={COLOR.extra} strokeWidth={px(1.5)} />
+      )}
+    </g>
+  );
+}
+
+type Marks = Map<number, TreeStage['nodes'][number]>;
+
+function edgePaths(layout: TreeLayout, byId: Map<number, TreeNode>, edgeMarks: Map<number, Mark>, keep: (n: TreeNode) => boolean): Record<Mark | 'off', string> {
+  const out: Record<Mark | 'off', string> = { off: '', taken: '', added: '', extra: '' };
+  layout.edges.forEach((e, i) => {
+    const a = byId.get(e.a);
+    const b = byId.get(e.b);
+    if (a && b && keep(a)) out[edgeMarks.get(i) ?? 'off'] += edgePath(a, b, e);
+  });
+  return out;
+}
+
+function Edges({ paths, px }: { paths: Record<Mark | 'off', string>; px: (v: number) => number }): React.JSX.Element {
+  return (
+    <>
+      <path d={paths.off} fill="none" stroke={OFF_EDGE} strokeWidth={px(1)} />
+      {(['taken', 'extra', 'added'] as Mark[]).map((m) =>
+        paths[m] ? (
+          <path
+            key={m}
+            data-edges={m}
+            d={paths[m]}
+            fill="none"
+            stroke={COLOR[m]}
+            strokeWidth={px(2)}
+            strokeDasharray={m === 'added' ? `${px(4)} ${px(3)}` : undefined}
+          />
+        ) : null,
+      )}
+    </>
+  );
+}
+
+/**
+ * An ascendancy drawn apart in the corner, the way the game opens it in its own panel. It doesn't
+ * move with the tree.
+ */
+function AscendancyMap({
+  name,
+  layout,
+  byId,
+  marks,
+  edgeMarks,
+  left,
+  top,
+  hover,
+  onHover,
+}: {
+  name: string;
+  layout: TreeLayout;
+  byId: Map<number, TreeNode>;
+  marks: Marks;
+  edgeMarks: Map<number, Mark>;
+  left: number;
+  top: number;
+  hover: Hover | null;
+  onHover: (h: Hover | null) => void;
+}): React.JSX.Element | null {
+  const nodes = useMemo(() => layout.nodes.filter((n) => n.ascendancy === name), [layout, name]);
+  const paths = useMemo(() => edgePaths(layout, byId, edgeMarks, (n) => n.ascendancy === name), [layout, byId, edgeMarks, name]);
+  const b = bounds(nodes);
+  if (!b) return null;
+  const v = fit(b, INSET, INSET, 160);
+  const px = (x: number): number => x / v.scale;
+  const onMove = (e: React.PointerEvent<HTMLDivElement>): void => {
+    e.stopPropagation();
+    const r = e.currentTarget.getBoundingClientRect();
+    const n = nodeAt(nodes, v, e.clientX - r.left, e.clientY - r.top);
+    if (!n) return onHover(null);
+    if (n.id === hover?.node.id) return;
+    const s = toScreen(v, n.x, n.y);
+    onHover({ node: n, at: { x: left + s.x, y: top + s.y } });
+  };
+  return (
+    <div
+      data-testid={`ascendancy-${name}`}
+      className="absolute cursor-default border border-edge bg-[#050505]"
+      style={{ left, top, width: INSET, height: INSET }}
+      onPointerDown={(e) => e.stopPropagation()}
+      onPointerMove={onMove}
+      onWheel={(e) => e.stopPropagation()}
+    >
+      <svg width={INSET} height={INSET} viewBox={`${v.x} ${v.y} ${INSET / v.scale} ${INSET / v.scale}`} className="absolute inset-0">
+        <Edges paths={paths} px={px} />
+        {nodes.map((n) => {
+          const m = marks.get(n.id);
+          if (m) return <MarkedNode key={n.id} n={n} mark={m.mark} px={px} grow={INSET_GROW} />;
+          return (
+            <circle key={n.id} cx={n.x} cy={n.y} r={RADIUS[n.kind] * INSET_GROW} fill={OFF_NODE} stroke={OFF_RING} strokeWidth={px(1)} />
+          );
+        })}
+        {hover?.node.ascendancy === name && (
+          <circle
+            cx={hover.node.x}
+            cy={hover.node.y}
+            r={RADIUS[hover.node.kind] * INSET_GROW + px(4)}
+            fill="none"
+            stroke="var(--color-value)"
+            strokeWidth={px(1)}
+          />
+        )}
+      </svg>
+      <span className="pointer-events-none absolute top-1 left-1.5 font-caps text-[11px] text-label">{name}</span>
+    </div>
+  );
 }
 
 function NodeCard({
@@ -143,18 +288,23 @@ function NodeCard({
   stage,
   mark,
   since,
+  effect,
+  at,
   box,
 }: {
   hover: Hover;
   stage: TreeStage;
   mark: Mark | undefined;
   since: number | null | undefined;
+  effect: number | null | undefined;
+  at: { x: number; y: number };
   box: { w: number; h: number };
 }): React.JSX.Element {
   const { node } = hover;
+  const stats = node.mastery?.find((m) => m.effect === effect)?.stats ?? node.stats;
   const r = 10;
-  const left = hover.x + r + CARD_WIDTH > box.w ? Math.max(0, hover.x - r - CARD_WIDTH) : hover.x + r;
-  const below = hover.y < box.h / 2;
+  const left = at.x + r + CARD_WIDTH > box.w ? Math.max(0, at.x - r - CARD_WIDTH) : at.x + r;
+  const below = at.y < box.h / 2;
   const kind = [KIND[node.kind], mark && stage.mode !== 'tree' && mark !== 'taken' ? markName(stage.mode, mark) : null]
     .filter(Boolean)
     .join(' · ');
@@ -166,12 +316,12 @@ function NodeCard({
       id="node-card"
       role="tooltip"
       className="pointer-events-none absolute z-10 flex flex-col gap-0.5 border border-edge bg-[#0a0a0a] px-3 py-2"
-      style={{ left, width: CARD_WIDTH, ...(below ? { top: hover.y + r } : { bottom: box.h - hover.y + r }) }}
+      style={{ left, width: CARD_WIDTH, ...(below ? { top: at.y + r } : { bottom: box.h - at.y + r }) }}
     >
       <p className="font-caps text-[15px] leading-snug text-value">{node.name}</p>
       <p className="font-caps text-[13px] text-label">{kind}</p>
-      {node.stats.length > 0 && (
-        <p className="mt-1 font-body text-[13px] leading-snug whitespace-pre-line text-plain">{node.stats.join('\n')}</p>
+      {stats.length > 0 && (
+        <p className="mt-1 font-body text-[13px] leading-snug whitespace-pre-line text-plain">{stats.join('\n')}</p>
       )}
       {where && <p className="mt-1 font-body text-[13px] leading-snug text-plain italic">{where}</p>}
     </div>
@@ -183,40 +333,22 @@ function TreeCanvas({ layout, stage }: { layout: TreeLayout; stage: TreeStage })
   const [size, setSize] = useState({ w: 0, h: 0 });
   // Until the player moves the tree it stays fitted, also when the window is resized.
   const [moved, setMoved] = useState<View | null>(null);
-  const [hover, setHover] = useState<TreeNode | null>(() => mockHover(layout, stage));
+  const [hover, setHover] = useState<Hover | null>(() => mockHover(layout, stage));
   const drag = useRef<{ x: number; y: number; moved: boolean } | null>(null);
 
   const byId = useMemo(() => new Map(layout.nodes.map((n) => [n.id, n])), [layout]);
   const marks = useMemo(() => new Map(stage.nodes.map((n) => [n.id, n])), [stage]);
   const edgeMarks = useMemo(() => new Map(stage.edges.map((e) => [e.edge, e.mark])), [stage]);
-  const focus = useMemo(() => stage.focus ?? bounds(layout.nodes), [stage, layout]);
-
-  const offEdges = useMemo(
-    () =>
-      layout.edges
-        .map((e, i) => {
-          const a = byId.get(e.a);
-          const b = byId.get(e.b);
-          return a && b && !edgeMarks.has(i) ? edgePath(a, b, e) : '';
-        })
-        .join(''),
-    [layout, byId, edgeMarks],
-  );
-  const markedEdges = useMemo(() => {
-    const out: Record<Mark, string> = { taken: '', added: '', extra: '' };
-    for (const [i, mark] of edgeMarks) {
-      const e = layout.edges[i];
-      const a = e && byId.get(e.a);
-      const b = e && byId.get(e.b);
-      if (a && b) out[mark] += edgePath(a, b, e);
-    }
-    return out;
-  }, [layout, byId, edgeMarks]);
+  const main = useMemo(() => layout.nodes.filter((n) => !n.ascendancy), [layout]);
+  // An unpicked mastery isn't drawn, so it can't be hovered either.
+  const hoverable = useMemo(() => main.filter((n) => n.kind !== 'mastery' || marks.has(n.id)), [main, marks]);
+  const focus = useMemo(() => stage.focus ?? bounds(main), [stage, main]);
+  const paths = useMemo(() => edgePaths(layout, byId, edgeMarks, (n) => !n.ascendancy), [layout, byId, edgeMarks]);
   const offNodes = useMemo(
-    () => circlesPath(layout.nodes.filter((n) => !marks.has(n.id) && n.kind !== 'mastery' && n.kind !== 'jewel')),
-    [layout, marks],
+    () => circlesPath(main.filter((n) => !marks.has(n.id) && n.kind !== 'mastery' && n.kind !== 'jewel')),
+    [main, marks],
   );
-  const offJewels = useMemo(() => layout.nodes.filter((n) => !marks.has(n.id) && n.kind === 'jewel'), [layout, marks]);
+  const offJewels = useMemo(() => main.filter((n) => !marks.has(n.id) && n.kind === 'jewel'), [main, marks]);
 
   useLayoutEffect(() => {
     const el = box.current;
@@ -287,9 +419,9 @@ function TreeCanvas({ layout, stage }: { layout: TreeLayout; stage: TreeStage })
       drag.current = { ...p, moved: true };
       return;
     }
-    const n = nodeAt(layout.nodes, view, p.x, p.y);
+    const n = nodeAt(hoverable, view, p.x, p.y);
     if (!n) setHover(null);
-    else if (n.id !== hover?.id) setHover(n);
+    else if (n.id !== hover?.node.id || hover.at) setHover({ node: n });
   };
 
   const labels = useMemo(() => {
@@ -297,7 +429,7 @@ function TreeCanvas({ layout, stage }: { layout: TreeLayout; stage: TreeStage })
     const wanted = stage.nodes
       .map((m) => ({ m, n: byId.get(m.id) }))
       .filter(({ m, n }) =>
-        n && n.name && (n.kind === 'keystone' || (n.kind === 'notable' && (stage.mode === 'tree' || m.mark === 'added'))),
+        n && n.name && !n.ascendancy && (n.kind === 'keystone' || (n.kind === 'notable' && (stage.mode === 'tree' || m.mark === 'added'))),
       )
       .map(({ m, n }) => {
         const s = toScreen(view, n!.x, n!.y);
@@ -315,7 +447,8 @@ function TreeCanvas({ layout, stage }: { layout: TreeLayout; stage: TreeStage })
 
   const px = (v: number): number => (view ? v / view.scale : v);
   const viewBox = view ? `${view.x} ${view.y} ${size.w / view.scale} ${size.h / view.scale}` : '0 0 1 1';
-  const hovered = hover ? marks.get(hover.id) : undefined;
+  const hovered = hover ? marks.get(hover.node.id) : undefined;
+  const hoverAt = hover && (hover.at ?? (view ? toScreen(view, hover.node.x, hover.node.y) : null));
 
   return (
     <div
@@ -330,7 +463,7 @@ function TreeCanvas({ layout, stage }: { layout: TreeLayout; stage: TreeStage })
     >
       {view && (
         <svg className="absolute inset-0" width={size.w} height={size.h} viewBox={viewBox} data-testid="tree">
-          <path d={offEdges} fill="none" stroke={OFF_EDGE} strokeWidth={px(1)} />
+          <Edges paths={paths} px={px} />
           <path d={offNodes} fill={OFF_NODE} stroke={OFF_RING} strokeWidth={px(1)} />
           {offJewels.map((n) => (
             <rect
@@ -345,44 +478,12 @@ function TreeCanvas({ layout, stage }: { layout: TreeLayout; stage: TreeStage })
               strokeWidth={px(1)}
             />
           ))}
-          {(['taken', 'extra', 'added'] as Mark[]).map((m) =>
-            markedEdges[m] ? (
-              <path
-                key={m}
-                data-edges={m}
-                d={markedEdges[m]}
-                fill="none"
-                stroke={COLOR[m]}
-                strokeWidth={px(2)}
-                strokeDasharray={m === 'added' ? `${px(4)} ${px(3)}` : undefined}
-              />
-            ) : null,
-          )}
           {stage.nodes.map((m) => {
             const n = byId.get(m.id);
-            if (!n) return null;
-            const r = RADIUS[n.kind];
-            const fill = m.mark === 'taken' ? COLOR.taken : '#0a0a0a';
-            const stroke = m.mark === 'taken' ? 'var(--color-value)' : COLOR[m.mark];
-            const sw = px(m.mark === 'taken' ? 1 : 2);
-            const shape =
-              n.kind === 'jewel' ? (
-                <rect x={n.x - r} y={n.y - r} width={r * 2} height={r * 2} transform={`rotate(45 ${n.x} ${n.y})`} fill={fill} stroke={stroke} strokeWidth={sw} />
-              ) : (
-                <circle cx={n.x} cy={n.y} r={r} fill={fill} stroke={stroke} strokeWidth={sw} />
-              );
-            const cross = r + px(2.5);
-            return (
-              <g key={m.id} data-node={m.id} data-mark={m.mark}>
-                {shape}
-                {m.mark === 'extra' && (
-                  <path d={`M${n.x - cross} ${n.y - cross}L${n.x + cross} ${n.y + cross}`} stroke={COLOR.extra} strokeWidth={px(1.5)} />
-                )}
-              </g>
-            );
+            return n && !n.ascendancy ? <MarkedNode key={m.id} n={n} mark={m.mark} px={px} /> : null;
           })}
-          {hover && (
-            <circle cx={hover.x} cy={hover.y} r={RADIUS[hover.kind] + px(5)} fill="none" stroke="var(--color-value)" strokeWidth={px(1)} />
+          {hover && !hover.node.ascendancy && (
+            <circle cx={hover.node.x} cy={hover.node.y} r={RADIUS[hover.node.kind] + px(5)} fill="none" stroke="var(--color-value)" strokeWidth={px(1)} />
           )}
         </svg>
       )}
@@ -398,7 +499,24 @@ function TreeCanvas({ layout, stage }: { layout: TreeLayout; stage: TreeStage })
           {l.text}
         </span>
       ))}
-      {hover && view && <NodeCard hover={{ node: hover, ...toScreen(view, hover.x, hover.y) }} stage={stage} mark={hovered?.mark} since={hovered?.since} box={size} />}
+      {size.h > INSET &&
+        stage.ascendancies.map((name, i) => (
+          <AscendancyMap
+            key={name}
+            name={name}
+            layout={layout}
+            byId={byId}
+            marks={marks}
+            edgeMarks={edgeMarks}
+            left={i * (INSET + 4)}
+            top={size.h - INSET}
+            hover={hover}
+            onHover={setHover}
+          />
+        ))}
+      {hover && hoverAt && (
+        <NodeCard hover={hover} stage={stage} mark={hovered?.mark} since={hovered?.since} effect={hovered?.effect} at={hoverAt} box={size} />
+      )}
       <div className="absolute right-0 bottom-0 flex gap-1">
         <Button onClick={() => setView(null)} onPointerDown={(e) => e.stopPropagation()}>
           Fit

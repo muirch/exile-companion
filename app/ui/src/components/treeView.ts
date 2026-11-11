@@ -14,6 +14,7 @@ export const RADIUS: Record<NodeKind, number> = {
   keystone: 58,
   jewel: 38,
   mastery: 30,
+  ascendancyStart: 50,
 };
 
 const MIN_SCALE = 0.01;
@@ -33,10 +34,10 @@ export function bounds(nodes: TreeNode[]): Bounds | null {
   return b;
 }
 
-/** `b` centred in a `w` by `h` box. */
-export function fit(b: Bounds, w: number, h: number): View {
-  const bw = b.maxX - b.minX + 2 * PAD;
-  const bh = b.maxY - b.minY + 2 * PAD;
+/** `b` centred in a `w` by `h` box, with `pad` tree units around it. */
+export function fit(b: Bounds, w: number, h: number, pad = PAD): View {
+  const bw = b.maxX - b.minX + 2 * pad;
+  const bh = b.maxY - b.minY + 2 * pad;
   const scale = clampScale(Math.min(w / bw, h / bh));
   const cx = (b.minX + b.maxX) / 2;
   const cy = (b.minY + b.maxY) / 2;
