@@ -4,6 +4,7 @@
 //! Path of Building (through exile-pob-engine) and the Path of Exile Wiki about the player's build.
 //! By default it uses the build and the PoB folder from Exile Companion's settings.
 
+mod character;
 mod compact;
 mod paths;
 mod progress;
@@ -62,6 +63,7 @@ Compare with the guide stage closest to the player's level and progress, and kee
 Measuring changes nothing. apply_changes keeps changes in the player's build, and the app and later conversations see them: \
 use it only when the player says to keep a change, after you measured it, with the reason in a few words. \
 build_history lists what was kept and undo_change takes the last change back. \
+The player's build should be their own character, so its gear, tree and defences are real: import_character reads it from pathofexile.com, and the guide stays the followed guide. \
 A new player who wants to level with a guide has no build of their own yet. With their OK, use_as_my_build makes the guide their build in Exile Companion, \
 so the overlay shows its gems along the campaign route. Follow the guide too. undo_change takes that back as well. \
 load_build switches the tools to another build until back_to_my_build. That build doesn't keep changes, and it stays in use across conversations \
@@ -195,6 +197,20 @@ pub struct FollowParams {
     pub tree: Option<u32>,
     pub item_set: Option<u32>,
     pub skill_set: Option<u32>,
+}
+
+#[derive(Debug, Deserialize, schemars::JsonSchema)]
+pub struct CharactersParams {
+    /// The pathofexile.com account name with its #1234. The last imported one when left out.
+    pub account: Option<String>,
+}
+
+#[derive(Debug, Deserialize, schemars::JsonSchema)]
+pub struct ImportCharacterParams {
+    /// The pathofexile.com account name with its #1234. The last imported one when left out.
+    pub account: Option<String>,
+    /// The character's name. The last imported one when left out, else the one the game's log says is played.
+    pub character: Option<String>,
 }
 
 #[derive(Debug, Deserialize, schemars::JsonSchema)]
@@ -361,6 +377,41 @@ impl Companion {
         let r = tokio::task::spawn_blocking(move || session.lock().unwrap().forget_guide())
             .await
             .unwrap_or_else(|e| Err(e.to_string()));
+        Ok(json_result(r))
+    }
+
+    #[tool(
+        description = "The characters on a pathofexile.com account, with class, level and league, and which one the game's log says is played. Needs a public profile."
+    )]
+    async fn list_characters(
+        &self,
+        Parameters(p): Parameters<CharactersParams>,
+    ) -> Result<CallToolResult, McpError> {
+        let session = self.session.clone();
+        let r = tokio::task::spawn_blocking(move || {
+            session.lock().unwrap().characters(p.account.as_deref())
+        })
+        .await
+        .unwrap_or_else(|e| Err(e.to_string()));
+        Ok(json_result(r))
+    }
+
+    #[tool(
+        description = "Imports the player's own character from pathofexile.com, tree, gear and gems, as their build in Exile Companion, the way Path of Building's Import tab does. Run it again to refresh after level-ups or new gear. The old build goes into the history. Needs a public profile."
+    )]
+    async fn import_character(
+        &self,
+        Parameters(p): Parameters<ImportCharacterParams>,
+    ) -> Result<CallToolResult, McpError> {
+        let session = self.session.clone();
+        let r = tokio::task::spawn_blocking(move || {
+            session
+                .lock()
+                .unwrap()
+                .import_character(p.account.as_deref(), p.character.as_deref())
+        })
+        .await
+        .unwrap_or_else(|e| Err(e.to_string()));
         Ok(json_result(r))
     }
 

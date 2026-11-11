@@ -283,6 +283,104 @@ impl Session {
         Ok(json!({ "change": entry.id, "build": summary }))
     }
 
+    fn build_dir(&self) -> Result<PathBuf, String> {
+        self.build_file()
+            .and_then(|f| f.parent().map(PathBuf::from))
+            .ok_or_else(|| "Exile Companion's settings folder wasn't found.".to_string())
+    }
+
+    /// The account to use: the one given, else the one the last import used.
+    fn account(&self, given: Option<&str>) -> Result<(String, String), String> {
+        let saved = exile_core::character::read_link(&self.build_dir()?)
+            .ok()
+            .flatten();
+        let account = given
+            .filter(|a| !a.trim().is_empty())
+            .map(exile_core::character::account_name)
+            .or_else(|| saved.as_ref().map(|l| l.account.clone()))
+            .ok_or("Give the pathofexile.com account name, with the #1234 at the end.")?;
+        let realm = saved.map_or_else(|| "pc".to_string(), |l| l.realm);
+        Ok((account, realm))
+    }
+
+    /// The account's characters on pathofexile.com, and which one the game's log says is played.
+    pub fn characters(&self, account: Option<&str>) -> Result<Value, String> {
+        let (account, realm) = self.account(account)?;
+        let list = crate::character::characters(&account, &realm)?;
+        let playing = crate::progress::game_progress(self.opts.log.as_deref())["character"].clone();
+        Ok(json!({
+            "account": account,
+            "characters": crate::character::outline(&list),
+            "playing": playing,
+        }))
+    }
+
+    /// Imports the player's character from pathofexile.com as their build in Exile Companion, the
+    /// way PoB's Import tab does. Without a name it takes the last imported character, else the
+    /// one the game's log says is played.
+    pub fn import_character(
+        &mut self,
+        account: Option<&str>,
+        character: Option<&str>,
+    ) -> Result<Value, String> {
+        let dir = self.build_dir()?;
+        let (account, realm) = self.account(account)?;
+        let saved = exile_core::character::read_link(&dir).ok().flatten();
+        let playing = crate::progress::game_progress(self.opts.log.as_deref())["character"]
+            .as_str()
+            .map(str::to_string);
+        let name = character
+            .filter(|c| !c.trim().is_empty())
+            .map(|c| c.trim().to_string())
+            .or_else(|| saved.filter(|l| l.account == account).map(|l| l.character))
+            .or(playing)
+            .ok_or("Say which character to import.")?;
+        let list = crate::character::characters(&account, &realm)?;
+        let entry = crate::character::pick(&list, &name)?.clone();
+        let name = entry["name"].as_str().unwrap_or(&name).to_string();
+        let (passives, items) = crate::character::passives_and_items(&account, &name, &realm)?;
+        let path = dir.join("build.xml");
+        let before = match std::fs::read(&path) {
+            Ok(bytes) => bytes,
+            Err(e) if e.kind() == std::io::ErrorKind::NotFound => Vec::new(),
+            Err(e) => return Err(format!("{}: {e}", path.display())),
+        };
+        self.build_xml = None;
+        let out = self.engine()?.call(
+            "import_character",
+            json!({ "character": entry, "passives": passives, "items": items }),
+            CALL,
+        );
+        let out = match self.keep_alive(out) {
+            Ok(v) => v,
+            Err(e) => {
+                self.engine = None;
+                return Err(e);
+            }
+        };
+        let xml = out["xml"]
+            .as_str()
+            .ok_or("Path of Building gave no build back.")?
+            .to_string();
+        let change = BuildHistory::new(&path)
+            .record(
+                &before,
+                xml.as_bytes(),
+                &format!("imported {name} from pathofexile.com"),
+                json!([{ "imported_character": name }]),
+                json!({}),
+            )
+            .map_err(|e| format!("Couldn't save the build: {e}"))?;
+        exile_core::character::write_link(
+            &dir,
+            &exile_core::character::CharacterLink::new(&account, &name, &realm),
+        )
+        .map_err(|e| format!("Couldn't remember the character: {e}"))?;
+        self.disk_xml = Some(xml);
+        self.has_build = true;
+        Ok(json!({ "change": change.id, "character": name, "build": out["summary"] }))
+    }
+
     /// Drops a build from load_build and goes back to the player's own.
     pub fn back_to_mine(&mut self) -> Result<Value, String> {
         if self.build_xml.take().is_none() {
