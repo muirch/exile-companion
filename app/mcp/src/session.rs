@@ -475,9 +475,10 @@ impl Session {
             None => match self.build_path().map(|p| read(&p)) {
                 // After use_as_my_build the two are the same. Saying so saves the second copy.
                 Some(Ok(xml)) => match build_outline(&xml) {
-                    v if Some(&v) == guide_outline.as_ref() => {
-                        json!({ "same_outline_as_guide": true })
-                    }
+                    v if Some(&v) == guide_outline.as_ref() => json!({
+                        "same_outline_as_guide": true,
+                        "note": "The build is the guide's own PoB, not the player's character, so gear, tree and defences are the guide's. Offer import_character: it needs the pathofexile.com account name with its #1234 and a public profile.",
+                    }),
                     v => v,
                 },
                 Some(Err(e)) => json!({ "error": e }),
