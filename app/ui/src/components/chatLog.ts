@@ -67,6 +67,7 @@ const TOOL_LABELS: Record<string, string> = {
   forget_guide: 'Forgetting the guide',
   guide_stages: 'Reading the guide',
   guide_stage_diff: 'Reading the guide',
+  guide_notes: "Reading the author's notes",
   find_guides: 'Looking for guides',
   wiki_search: 'Searching the wiki',
   wiki_page: 'Reading the wiki',
