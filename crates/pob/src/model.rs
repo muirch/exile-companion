@@ -30,6 +30,8 @@ pub struct PobBuild {
     /// Skill sets, in document order. Legacy builds with `<Skill>`s directly under `<Skills>` get a
     /// single synthetic set with no id/title.
     pub skill_sets: Vec<SkillSet>,
+    /// The author's notes, without PoB's colour codes. `None` when the build has none.
+    pub notes: Option<String>,
 }
 
 impl Default for PobBuild {
@@ -44,6 +46,7 @@ impl Default for PobBuild {
             active_skill_set_id: None,
             specs: Vec::new(),
             skill_sets: Vec::new(),
+            notes: None,
         }
     }
 }

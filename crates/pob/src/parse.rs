@@ -2,7 +2,7 @@
 //!
 //! A streaming quick-xml walk. Children are matched BY NAME (document order is not guaranteed) and
 //! every attribute is optional. We only read the elements we care about (`Build`, `Tree`/`Spec`,
-//! `Skills`/`SkillSet`/`Skill`/`Gem`) and ignore the rest (`Calcs`, `PlayerStat`, `Notes`, `URL`,
+//! `Skills`/`SkillSet`/`Skill`/`Gem`, `Notes`) and ignore the rest (`Calcs`, `PlayerStat`, `URL`,
 //! `Sockets`, ...). Both `<Skill>`-directly-under-`<Skills>` (legacy) and the newer `<SkillSet>`
 //! grouping are handled.
 
@@ -38,6 +38,30 @@ pub fn parse_xml(xml: &[u8]) -> Result<PobBuild, PobError> {
                 p.open(&e, true);
             }
             Event::End(e) => p.close(local_name(e.name().as_ref())),
+            Event::Text(t) if p.notes.is_some() => {
+                let text = t.xml10_content().map_err(quick_xml::Error::from)?;
+                p.note(&text);
+            }
+            Event::CData(t) if p.notes.is_some() => {
+                let text = t.decode().map_err(quick_xml::Error::from)?;
+                p.note(&text);
+            }
+            Event::GeneralRef(r) if p.notes.is_some() => {
+                let c = match r.resolve_char_ref()? {
+                    Some(c) => Some(c),
+                    None => match r.as_ref() {
+                        b"amp" => Some('&'),
+                        b"lt" => Some('<'),
+                        b"gt" => Some('>'),
+                        b"quot" => Some('"'),
+                        b"apos" => Some('\''),
+                        _ => None,
+                    },
+                };
+                if let Some(c) = c {
+                    p.note(c.encode_utf8(&mut [0; 4]));
+                }
+            }
             Event::Eof => break,
             _ => {}
         }
@@ -65,6 +89,8 @@ struct Parser {
     cur_group: Option<SkillGroup>,
     /// Skills written directly under `<Skills>` (no enclosing `<SkillSet>`).
     legacy: SkillSet,
+    /// Text of `<Notes>` while inside it.
+    notes: Option<String>,
 }
 
 impl Parser {
@@ -103,7 +129,14 @@ impl Parser {
                     group.gems.push(read_gem(e));
                 }
             }
+            "Notes" if !empty => self.notes = Some(String::new()),
             _ => {}
+        }
+    }
+
+    fn note(&mut self, text: &str) {
+        if let Some(notes) = self.notes.as_mut() {
+            notes.push_str(text);
         }
     }
 
@@ -122,6 +155,11 @@ impl Parser {
             "Skill" => {
                 if let Some(group) = self.cur_group.take() {
                     self.push_group(group);
+                }
+            }
+            "Notes" => {
+                if let Some(notes) = self.notes.take() {
+                    self.build.notes = clean_notes(&notes);
                 }
             }
             _ => {}
@@ -151,6 +189,31 @@ impl Parser {
         }
         self.build
     }
+}
+
+/// Drops PoB's colour codes (`^7`, `^xRRGGBB`) and Windows line ends.
+fn clean_notes(raw: &str) -> Option<String> {
+    let mut out = String::with_capacity(raw.len());
+    let mut chars = raw.chars().peekable();
+    while let Some(c) = chars.next() {
+        match c {
+            '^' if chars.peek().is_some_and(char::is_ascii_digit) => {
+                chars.next();
+            }
+            '^' if chars.peek() == Some(&'x') => {
+                let rest: String = chars.clone().skip(1).take(6).collect();
+                if rest.len() == 6 && rest.chars().all(|c| c.is_ascii_hexdigit()) {
+                    chars.nth(6);
+                } else {
+                    out.push(c);
+                }
+            }
+            '\r' => {}
+            c => out.push(c),
+        }
+    }
+    let out = out.trim();
+    (!out.is_empty()).then(|| out.to_string())
 }
 
 fn read_spec(e: &BytesStart<'_>) -> TreeSpec {
@@ -295,6 +358,30 @@ mod tests {
 
     fn parse(s: &str) -> PobBuild {
         parse_xml(s.as_bytes()).expect("parse")
+    }
+
+    #[test]
+    fn reads_notes_without_colour_codes() {
+        let b = parse(
+            "<PathOfBuilding><Build level=\"1\"/><Notes>\r\n  ^xE05030Act 1^7 -&#10;Help Alira &amp; skip ^xZZ<![CDATA[ <ok>]]>\r\n</Notes></PathOfBuilding>",
+        );
+        assert_eq!(
+            b.notes.as_deref(),
+            Some("Act 1 -\nHelp Alira & skip ^xZZ <ok>")
+        );
+    }
+
+    #[test]
+    fn empty_notes_are_none() {
+        assert_eq!(
+            parse("<PathOfBuilding><Notes>\n  </Notes></PathOfBuilding>").notes,
+            None
+        );
+        assert_eq!(
+            parse("<PathOfBuilding><Notes/></PathOfBuilding>").notes,
+            None
+        );
+        assert_eq!(parse(SAMPLE).notes, None);
     }
 
     #[test]
