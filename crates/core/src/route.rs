@@ -105,6 +105,33 @@ pub struct Route {
     pub edge_levels: Vec<Option<u32>>,
 }
 
+/// What the player does with the act 2 bandits. The route's steps and quests depend on it.
+#[derive(Debug, Clone, Copy, Default, PartialEq, Eq, serde::Serialize, serde::Deserialize)]
+#[serde(rename_all = "camelCase")]
+pub enum Bandit {
+    #[default]
+    KillAll,
+    Alira,
+    Kraityn,
+    Oak,
+}
+
+/// The `#ifdef` names exile-leveling's route switches on. Without a bandit define the route
+/// drops the whole bandit part of act 2.
+pub fn route_defines(league_start: bool, bandit: Bandit) -> HashSet<String> {
+    let bandit = match bandit {
+        Bandit::KillAll => "BANDIT_KILL",
+        Bandit::Alira => "BANDIT_ALIRA",
+        Bandit::Kraityn => "BANDIT_KRAITYN",
+        Bandit::Oak => "BANDIT_OAK",
+    };
+    let mut defines = HashSet::from([bandit.to_string()]);
+    if league_start {
+        defines.insert("LEAGUE_START".to_string());
+    }
+    defines
+}
+
 #[derive(Debug, Clone, PartialEq, Eq)]
 pub struct RouteWarning {
     pub line: usize,
@@ -548,6 +575,29 @@ pub struct RouteView {
 }
 
 impl Route {
+    /// Where a player at `edge` of this route stands in `to`, another variant of the same route.
+    /// Variants share the edges before and after the part that differs. A player inside that part
+    /// goes to its start in `to`.
+    pub fn edge_in(&self, edge: usize, to: &Route) -> usize {
+        let (from, into) = (&self.edges, &to.edges);
+        let edge = edge.min(from.len().saturating_sub(1));
+        let prefix = from.iter().zip(into).take_while(|(a, b)| a == b).count();
+        let suffix = from
+            .iter()
+            .rev()
+            .zip(into.iter().rev())
+            .take(from.len().min(into.len()) - prefix)
+            .take_while(|(a, b)| a == b)
+            .count();
+        if edge < prefix {
+            edge
+        } else if edge >= from.len() - suffix {
+            into.len() - (from.len() - edge)
+        } else {
+            prefix.min(into.len().saturating_sub(1))
+        }
+    }
+
     fn locate_edge(&self, edge: usize) -> Option<(usize, usize)> {
         self.sections.iter().enumerate().find_map(|(si, s)| {
             s.steps
@@ -774,6 +824,28 @@ Take {portal|use}
         assert!(steps[4].parts.contains(&Part::WaypointGet));
         let portal_step = &steps[5];
         assert_eq!(portal_step.sub_steps[0][1], Part::Dir { degrees: 270 });
+    }
+
+    #[test]
+    fn edge_in_maps_a_place_between_route_variants() {
+        let src = "#section Act 1
+Find and kill {kill|Hillock}
+➞ {enter|1_1_town}
+➞ {enter|1_1_2}
+#ifdef DETOUR
+➞ {enter|1_1_2a}
+#endif
+➞ {enter|1_1_town}
+➞ {enter|1_1_2}
+";
+        let (long, _) = parse(src, &["DETOUR"]);
+        let (short, _) = parse(src, &[]);
+        // long: 1_1_1, 1_1_town, 1_1_2, 1_1_2a, 1_1_town, 1_1_2. short drops 1_1_2a.
+        assert_eq!(long.edges.len(), short.edges.len() + 1);
+        let mapped: Vec<_> = (0..6).map(|e| long.edge_in(e, &short)).collect();
+        assert_eq!(mapped, [0, 1, 2, 3, 3, 4]);
+        let back: Vec<_> = (0..5).map(|e| short.edge_in(e, &long)).collect();
+        assert_eq!(back, [0, 1, 2, 4, 5]);
     }
 
     #[test]
