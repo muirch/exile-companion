@@ -6,6 +6,7 @@ mod anthropic;
 mod card;
 mod config;
 mod gear;
+pub mod history;
 mod http;
 pub mod kitava;
 mod mcp;

@@ -17,7 +17,8 @@ pub struct ToolDef {
 }
 
 /// The shape of the messages a provider takes. A conversation stays in one of them.
-#[derive(Debug, Clone, Copy, PartialEq, Eq)]
+#[derive(Debug, Clone, Copy, PartialEq, Eq, serde::Serialize, serde::Deserialize)]
+#[serde(rename_all = "camelCase")]
 pub enum Dialect {
     Anthropic,
     OpenAi,
@@ -162,6 +163,15 @@ impl Conversation {
 
     pub fn messages(&self) -> &[Value] {
         &self.messages
+    }
+
+    pub fn dialect(&self) -> Option<Dialect> {
+        self.dialect
+    }
+
+    /// A saved conversation, to go on with.
+    pub fn restore(messages: Vec<Value>, dialect: Option<Dialect>) -> Self {
+        Self { messages, dialect }
     }
 
     /// Asks one question and runs the tools until the model answers. The conversation keeps the
