@@ -194,6 +194,29 @@ pub async fn chat_new(app: AppHandle) {
 }
 
 #[tauri::command]
+pub fn chat_history(app: AppHandle) -> Vec<exile_assistant::history::ChatSummary> {
+    crate::chat::history(&app)
+}
+
+#[tauri::command]
+pub fn chat_open_saved(app: AppHandle, id: String) -> Result<crate::chat::OpenedChat, String> {
+    crate::chat::open_saved(&app, &id)
+}
+
+#[tauri::command]
+pub async fn chat_resume(
+    app: AppHandle,
+    id: String,
+) -> Result<Vec<exile_assistant::history::SavedExchange>, String> {
+    crate::chat::resume(&app, &id).await
+}
+
+#[tauri::command]
+pub async fn chat_delete(app: AppHandle, id: String) -> Result<(), String> {
+    crate::chat::delete_saved(&app, &id).await
+}
+
+#[tauri::command]
 pub fn open_chat(app: AppHandle) {
     crate::chat::open(&app);
 }

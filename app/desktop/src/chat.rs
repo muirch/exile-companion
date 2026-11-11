@@ -4,8 +4,10 @@ use std::sync::atomic::{AtomicU64, Ordering};
 use std::sync::{Arc, Mutex, OnceLock};
 use std::time::Duration;
 
+use exile_assistant::history::{ChatStore, ChatSummary, SavedChat, SavedExchange, Warmth};
 use exile_assistant::{
-    Anthropic, ChatError, Config, Conversation, Llm, OpenAi, Provider, Server, Setup, Stop, Usage,
+    Anthropic, ChatError, ChatEvent, Config, Conversation, Dialect, Llm, OpenAi, Provider, Server,
+    Setup, Stop, Usage,
 };
 use serde::Serialize;
 use tauri::async_runtime::JoinHandle;
@@ -27,21 +29,56 @@ pub struct ChatState {
     task: Mutex<Option<JoinHandle<()>>>,
     /// Counts openings of the window, so a pending unload knows the chat came back.
     opened: AtomicU64,
-    /// Names the conversation to OpenRouter. New chat starts another.
-    session: Mutex<Option<String>>,
+    /// The chat being written to its file. Its id also names the conversation to OpenRouter.
+    chat: Mutex<Option<SavedChat>>,
 }
 
-fn session_id(app: &AppHandle) -> String {
+fn now() -> u64 {
+    std::time::SystemTime::now()
+        .duration_since(std::time::UNIX_EPOCH)
+        .map_or(0, |d| d.as_secs())
+}
+
+fn store(app: &AppHandle) -> Option<ChatStore> {
+    let dir = app.path().app_data_dir().ok()?;
+    Some(ChatStore::new(dir.join("chats")))
+}
+
+/// The current chat's id, starting a chat when there is none.
+fn chat_id(app: &AppHandle, config: &Config) -> String {
     let state = app.state::<ChatState>();
-    let mut session = state.session.lock().unwrap_or_else(|e| e.into_inner());
-    session
-        .get_or_insert_with(|| {
-            let nanos = std::time::SystemTime::now()
-                .duration_since(std::time::UNIX_EPOCH)
-                .map_or(0, |d| d.as_nanos());
-            format!("chat-{nanos:x}")
-        })
-        .clone()
+    let mut chat = state.chat.lock().unwrap_or_else(|e| e.into_inner());
+    chat.get_or_insert_with(|| {
+        let nanos = std::time::SystemTime::now()
+            .duration_since(std::time::UNIX_EPOCH)
+            .map_or(0, |d| d.as_nanos());
+        SavedChat::new(
+            format!("chat-{nanos:x}"),
+            now(),
+            config.provider,
+            config.model_label(),
+        )
+    })
+    .id
+    .clone()
+}
+
+fn dialect_of(provider: Provider) -> Dialect {
+    match provider {
+        Provider::Anthropic => Dialect::Anthropic,
+        Provider::OpenRouter | Provider::Custom => Dialect::OpenAi,
+    }
+}
+
+/// The answer's text as the chat window puts it together.
+fn add_to_answer(answer: &mut String, event: &ChatEvent) {
+    match event {
+        ChatEvent::Text { text } => answer.push_str(text),
+        ChatEvent::Paragraph if !answer.is_empty() && !answer.ends_with("\n\n") => {
+            answer.push_str("\n\n")
+        }
+        _ => {}
+    }
 }
 
 /// Which providers have a key stored.
@@ -317,13 +354,17 @@ async fn turn(app: AppHandle, question: String) {
         }
         None => false,
     };
-    let llm = model(&config, api_key, ollama, &session_id(&app));
+    let id = chat_id(&app, &config);
+    let llm = model(&config, api_key, ollama, &id);
     let label = config.model_label();
     let state = app.state::<ChatState>();
     let mut conversation = state.conversation.lock().await;
     let events = app.clone();
+    let answer = Arc::new(Mutex::new(String::new()));
+    let written = answer.clone();
     let result = conversation
         .ask(&setup, llm.as_ref(), server.as_ref(), &question, move |e| {
+            add_to_answer(&mut written.lock().unwrap_or_else(|e| e.into_inner()), &e);
             let _ = events.emit_to(CHAT_LABEL, "chat://event", e);
         })
         .await;
@@ -345,7 +386,98 @@ async fn turn(app: AppHandle, question: String) {
         }
         Err(e) => failed(e),
     };
+    let answer = std::mem::take(&mut *answer.lock().unwrap_or_else(|e| e.into_inner()));
+    let exchange = SavedExchange {
+        question,
+        answer,
+        stop: over.stop.to_string(),
+        message: over.message.clone(),
+        dollars: over.dollars,
+        model: over.model.clone(),
+    };
+    save_turn(&app, exchange, &conversation);
     finish(&app, over);
+}
+
+fn save_turn(app: &AppHandle, exchange: SavedExchange, conversation: &Conversation) {
+    let state = app.state::<ChatState>();
+    let mut chat = state.chat.lock().unwrap_or_else(|e| e.into_inner());
+    let Some(chat) = chat.as_mut() else {
+        return;
+    };
+    chat.record(exchange, conversation, now());
+    if let Some(store) = store(app) {
+        if let Err(e) = store.save(chat) {
+            log::warn!("could not save chat {}: {e}", chat.id);
+        }
+    }
+}
+
+pub fn history(app: &AppHandle) -> Vec<ChatSummary> {
+    store(app).map(|s| s.list()).unwrap_or_default()
+}
+
+/// A saved chat as the window shows it before the player goes on with it.
+#[derive(Debug, Clone, Serialize)]
+#[serde(rename_all = "camelCase")]
+pub struct OpenedChat {
+    pub id: String,
+    pub title: String,
+    pub exchanges: Vec<SavedExchange>,
+    pub warmth: Warmth,
+    /// Why the picked provider can't go on with it, if it can't.
+    pub blocked: Option<String>,
+}
+
+pub fn open_saved(app: &AppHandle, id: &str) -> Result<OpenedChat, String> {
+    let store = store(app).ok_or("No folder for chats.")?;
+    let chat = store.load(id).map_err(|e| e.to_string())?;
+    let config = settings::load(app).unwrap_or_default().chat;
+    let blocked = (!chat.continues_with(dialect_of(config.provider))).then(|| {
+        let with = match chat.provider {
+            Provider::Anthropic => "Anthropic",
+            Provider::OpenRouter => "OpenRouter",
+            Provider::Custom => "your own server",
+        };
+        format!(
+            "This chat was with {with}, which keeps the conversation in another shape. Switch to it in the settings to go on with this chat."
+        )
+    });
+    let claude = (config.provider == Provider::Anthropic).then_some(config.model);
+    Ok(OpenedChat {
+        id: chat.id.clone(),
+        title: chat.title.clone(),
+        warmth: chat.warmth(now(), claude),
+        exchanges: chat.exchanges,
+        blocked,
+    })
+}
+
+/// Makes a saved chat the current one, so the next question goes on with it.
+pub async fn resume(app: &AppHandle, id: &str) -> Result<Vec<SavedExchange>, String> {
+    let store = store(app).ok_or("No folder for chats.")?;
+    let chat = store.load(id).map_err(|e| e.to_string())?;
+    stop(app);
+    let state = app.state::<ChatState>();
+    *state.conversation.lock().await = chat.conversation();
+    let exchanges = chat.exchanges.clone();
+    *state.chat.lock().unwrap_or_else(|e| e.into_inner()) = Some(chat);
+    Ok(exchanges)
+}
+
+pub async fn delete_saved(app: &AppHandle, id: &str) -> Result<(), String> {
+    let current = app
+        .state::<ChatState>()
+        .chat
+        .lock()
+        .unwrap_or_else(|e| e.into_inner())
+        .as_ref()
+        .is_some_and(|c| c.id == id);
+    if current {
+        new_chat(app).await;
+    }
+    let store = store(app).ok_or("No folder for chats.")?;
+    store.delete(id).map_err(|e| e.to_string())
 }
 
 pub fn send(app: &AppHandle, question: String) -> Result<(), String> {
@@ -381,7 +513,7 @@ pub async fn new_chat(app: &AppHandle) {
     stop(app);
     let state = app.state::<ChatState>();
     *state.conversation.lock().await = Conversation::default();
-    *state.session.lock().unwrap_or_else(|e| e.into_inner()) = None;
+    *state.chat.lock().unwrap_or_else(|e| e.into_inner()) = None;
 }
 
 /// Right of the screen center, clear of the overlay at the bottom and the play field around the
@@ -525,5 +657,42 @@ pub fn toggle(app: &AppHandle) {
         close(app);
     } else {
         open(app);
+    }
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    #[test]
+    fn saved_answer_reads_like_the_window() {
+        let mut answer = String::new();
+        for e in [
+            ChatEvent::Paragraph,
+            ChatEvent::Tool {
+                name: "what_next".into(),
+            },
+            ChatEvent::Text {
+                text: "Checking.".into(),
+            },
+            ChatEvent::Paragraph,
+            ChatEvent::Paragraph,
+            ChatEvent::Note {
+                text: "Measuring".into(),
+            },
+            ChatEvent::Text {
+                text: "Help Alira.".into(),
+            },
+        ] {
+            add_to_answer(&mut answer, &e);
+        }
+        assert_eq!(answer, "Checking.\n\nHelp Alira.");
+    }
+
+    #[test]
+    fn providers_map_to_their_message_shape() {
+        assert_eq!(dialect_of(Provider::Anthropic), Dialect::Anthropic);
+        assert_eq!(dialect_of(Provider::OpenRouter), Dialect::OpenAi);
+        assert_eq!(dialect_of(Provider::Custom), Dialect::OpenAi);
     }
 }
