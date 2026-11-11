@@ -1334,6 +1334,7 @@ dependencies = [
 name = "exile-pob-engine"
 version = "0.1.0"
 dependencies = [
+ "exile-pob",
  "flate2",
  "mlua",
  "serde",

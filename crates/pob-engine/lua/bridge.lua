@@ -197,6 +197,31 @@ local function configChanges()
 	return changed, custom
 end
 
+-- A character from pathofexile.com's character-window API, put together the way PoB's Import tab
+-- does it: `character` is its entry from get-characters, `passives` and `items` the responses of
+-- get-passive-skills and get-items. Becomes the loaded build.
+function bridge.import_character(params)
+	main.popups = {}
+	loadBuildFromXML(nil, params.character.name)
+	local tab = build.importTab
+	local passives = copyTable(params.passives)
+	-- Account-name imports leave out the quest choices, so PoB keeps the build's own.
+	passives.bandit_choice = passives.bandit_choice or build.configTab.input.bandit
+	passives.pantheon_major = passives.pantheon_major or build.configTab.input.pantheonMajorGod
+	passives.pantheon_minor = passives.pantheon_minor or build.configTab.input.pantheonMinorGod
+	local tree = copyTable(params.character)
+	tree.passives = passives
+	tree.jewels = passives.items
+	tab:ImportPassiveTreeAndJewels(tree, true)
+	local gear = copyTable(params.character)
+	gear.equipment = params.items.items
+	gear.guardian = params.items.guardian
+	tab:ImportItemsAndSkills(gear, true, true, false)
+	runCallback("OnFrame")
+	main.popups = {}
+	return { xml = build:SaveDB("code"), summary = bridge.summary() }
+end
+
 -- The build as PoB saves it, and the share code PoB's Import/Export tab gives.
 function bridge.export_build()
 	local xml = build:SaveDB("code")
