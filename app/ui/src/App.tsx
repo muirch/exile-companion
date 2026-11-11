@@ -6,6 +6,7 @@ import { MenuApp } from './components/MenuApp';
 import { OverlayRoot } from './components/OverlayRoot';
 import { SettingsApp } from './components/SettingsApp';
 import { TreeApp } from './components/TreeApp';
+import { WindowError } from './components/WindowError';
 import { isTauri } from './ipc/env';
 import { useBackendSync } from './useBackendSync';
 
@@ -18,12 +19,20 @@ function windowLabel(): string {
 const LABEL = windowLabel();
 document.documentElement.dataset.window = LABEL;
 
-export function App(): React.JSX.Element {
-  useBackendSync();
+function Window(): React.JSX.Element {
   if (LABEL === 'menu') return <MenuApp />;
   if (LABEL === 'settings') return <SettingsApp />;
   if (LABEL === 'chat') return <ChatApp />;
   if (LABEL === 'gems') return <GemsApp />;
   if (LABEL === 'tree') return <TreeApp />;
   return <OverlayRoot />;
+}
+
+export function App(): React.JSX.Element {
+  useBackendSync();
+  return (
+    <WindowError>
+      <Window />
+    </WindowError>
+  );
 }
