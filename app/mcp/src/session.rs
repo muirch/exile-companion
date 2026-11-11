@@ -441,7 +441,8 @@ impl Session {
         let (guide, _) = self.guide_or_followed(guide)?;
         let xml = self.to_xml(&guide)?;
         let build = exile_pob::parse_xml(xml.as_bytes()).map_err(|e| e.to_string())?;
-        Ok(notes_answer(build.notes.as_deref(), find))
+        let plain = build.notes.as_deref().map(exile_pob::plain_notes);
+        Ok(notes_answer(plain.as_deref(), find))
     }
 
     /// What a new conversation needs first: where the player is in the game, the guide they

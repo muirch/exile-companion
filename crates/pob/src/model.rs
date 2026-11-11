@@ -30,7 +30,8 @@ pub struct PobBuild {
     /// Skill sets, in document order. Legacy builds with `<Skill>`s directly under `<Skills>` get a
     /// single synthetic set with no id/title.
     pub skill_sets: Vec<SkillSet>,
-    /// The author's notes, without PoB's colour codes. `None` when the build has none.
+    /// The author's notes as PoB keeps them, colour codes and all (see [`crate::plain_notes`]).
+    /// `None` when the build has none.
     pub notes: Option<String>,
 }
 

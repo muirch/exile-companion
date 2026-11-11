@@ -159,7 +159,10 @@ impl Parser {
             }
             "Notes" => {
                 if let Some(notes) = self.notes.take() {
-                    self.build.notes = clean_notes(&notes);
+                    let notes = notes.replace('\r', "");
+                    let notes = notes.trim();
+                    self.build.notes =
+                        (!plain_notes(notes).trim().is_empty()).then(|| notes.to_string());
                 }
             }
             _ => {}
@@ -191,8 +194,8 @@ impl Parser {
     }
 }
 
-/// Drops PoB's colour codes (`^7`, `^xRRGGBB`) and Windows line ends.
-fn clean_notes(raw: &str) -> Option<String> {
+/// The notes without PoB's colour codes (`^7`, `^xRRGGBB`), for whoever reads only the text.
+pub fn plain_notes(raw: &str) -> String {
     let mut out = String::with_capacity(raw.len());
     let mut chars = raw.chars().peekable();
     while let Some(c) = chars.next() {
@@ -212,8 +215,7 @@ fn clean_notes(raw: &str) -> Option<String> {
             c => out.push(c),
         }
     }
-    let out = out.trim();
-    (!out.is_empty()).then(|| out.to_string())
+    out
 }
 
 fn read_spec(e: &BytesStart<'_>) -> TreeSpec {
@@ -361,14 +363,15 @@ mod tests {
     }
 
     #[test]
-    fn reads_notes_without_colour_codes() {
+    fn keeps_the_notes_colour_codes_and_drops_them_on_request() {
         let b = parse(
             "<PathOfBuilding><Build level=\"1\"/><Notes>\r\n  ^xE05030Act 1^7 -&#10;Help Alira &amp; skip ^xZZ<![CDATA[ <ok>]]>\r\n</Notes></PathOfBuilding>",
         );
-        assert_eq!(
-            b.notes.as_deref(),
-            Some("Act 1 -\nHelp Alira & skip ^xZZ <ok>")
-        );
+        let notes = b.notes.unwrap();
+        assert_eq!(notes, "^xE05030Act 1^7 -\nHelp Alira & skip ^xZZ <ok>");
+        assert_eq!(plain_notes(&notes), "Act 1 -\nHelp Alira & skip ^xZZ <ok>");
+        let only_codes = parse("<PathOfBuilding><Notes>^7 ^xFFFFFF</Notes></PathOfBuilding>");
+        assert_eq!(only_codes.notes, None);
     }
 
     #[test]
