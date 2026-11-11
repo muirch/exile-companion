@@ -74,6 +74,7 @@ pub enum NodeKind {
     Keystone,
     Jewel,
     Mastery,
+    AscendancyStart,
 }
 
 #[derive(Debug, Clone, PartialEq, Serialize)]
@@ -84,6 +85,20 @@ pub struct TreeNode {
     pub y: f64,
     pub kind: NodeKind,
     pub name: String,
+    pub stats: Vec<String>,
+    /// The ascendancy or bloodline the node belongs to. None on the main tree.
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub ascendancy: Option<String>,
+    /// A mastery's effects to pick from.
+    #[serde(skip_serializing_if = "Vec::is_empty")]
+    pub mastery: Vec<MasteryEffect>,
+}
+
+#[derive(Debug, Clone, PartialEq, Serialize, Deserialize)]
+#[serde(rename_all = "camelCase")]
+pub struct MasteryEffect {
+    pub effect: u32,
+    #[serde(default)]
     pub stats: Vec<String>,
 }
 
@@ -98,8 +113,8 @@ pub struct TreeEdge {
     pub clockwise: bool,
 }
 
-/// The main tree without the ascendancies, the class starts and the cluster jewel templates, in
-/// PoB's tree coordinates (y grows down).
+/// The tree and the ascendancies without the class starts and the cluster jewel templates, in
+/// PoB's tree coordinates (y grows down). Each ascendancy sits apart from the main tree.
 #[derive(Debug, Clone, PartialEq, Serialize)]
 #[serde(rename_all = "camelCase")]
 pub struct TreeLayout {
@@ -107,14 +122,6 @@ pub struct TreeLayout {
     pub edges: Vec<TreeEdge>,
     #[serde(skip)]
     index: HashMap<u32, usize>,
-    #[serde(skip)]
-    ascendancy: HashMap<u32, AscendancyNode>,
-}
-
-#[derive(Debug, Clone, PartialEq)]
-struct AscendancyNode {
-    name: String,
-    notable: bool,
 }
 
 #[derive(Deserialize)]
@@ -159,6 +166,7 @@ struct RawNode {
     class_start_index: Option<u32>,
     ascendancy_name: Option<String>,
     expansion_jewel: Option<Value>,
+    mastery_effects: Vec<MasteryEffect>,
 }
 
 /// Where a node sits on its orbit, as PoB places it. GGG's export spaces 16 and 40 node orbits at
@@ -201,23 +209,10 @@ impl TreeLayout {
         let mut nodes = Vec::new();
         let mut placed = Vec::new();
         let mut links = Vec::new();
-        let mut ascendancy = HashMap::new();
         for (key, n) in &raw.nodes {
             let Ok(id) = key.parse::<u32>() else {
                 continue;
             };
-            if let Some(asc) = &n.ascendancy_name {
-                if !asc.is_empty() && !n.is_ascendancy_start {
-                    ascendancy.insert(
-                        id,
-                        AscendancyNode {
-                            name: n.name.clone().unwrap_or_default(),
-                            notable: n.is_notable,
-                        },
-                    );
-                }
-                continue;
-            }
             let in_cluster = n
                 .expansion_jewel
                 .as_ref()
@@ -235,7 +230,9 @@ impl TreeLayout {
             let per = skills_per_orbit.get(n.orbit).copied().unwrap_or(1);
             let radius = orbit_radii.get(n.orbit).copied().unwrap_or(0.);
             let angle = orbit_angle(per, n.orbit_index);
-            let kind = if n.is_keystone {
+            let kind = if n.is_ascendancy_start {
+                NodeKind::AscendancyStart
+            } else if n.is_keystone {
                 NodeKind::Keystone
             } else if n.is_notable {
                 NodeKind::Notable
@@ -253,6 +250,8 @@ impl TreeLayout {
                 kind,
                 name: n.name.clone().unwrap_or_default(),
                 stats: n.stats.clone(),
+                ascendancy: n.ascendancy_name.clone().filter(|a| !a.is_empty()),
+                mastery: n.mastery_effects.clone(),
             });
             placed.push(Placed {
                 group: group_id,
@@ -277,7 +276,10 @@ impl TreeLayout {
             for t in targets {
                 let Some(&j) = index.get(&t) else { continue };
                 let b = &nodes[j];
-                if b.kind == NodeKind::Mastery || !seen.insert((a.id.min(t), a.id.max(t))) {
+                if b.kind == NodeKind::Mastery
+                    || a.ascendancy != b.ascendancy
+                    || !seen.insert((a.id.min(t), a.id.max(t)))
+                {
                     continue;
                 }
                 let (pa, pb) = (&placed[i], &placed[j]);
@@ -294,11 +296,15 @@ impl TreeLayout {
                 });
             }
         }
+        // GGG's export keeps some ascendancy nodes that no longer link to anything, such as the
+        // Guardian's Searing Purity, far from the rest.
+        let linked: HashSet<u32> = edges.iter().flat_map(|e| [e.a, e.b]).collect();
+        nodes.retain(|n| n.ascendancy.is_none() || linked.contains(&n.id));
+        let index = nodes.iter().enumerate().map(|(i, n)| (n.id, i)).collect();
         Ok(Self {
             nodes,
             edges,
             index,
-            ascendancy,
         })
     }
 
@@ -336,6 +342,9 @@ pub struct NodeMark {
     pub mark: Mark,
     /// The first stage of the guide that takes the node.
     pub since: Option<usize>,
+    /// The effect picked on a mastery: the stage's, or for a node only the other tree has, that
+    /// tree's.
+    pub effect: Option<u32>,
 }
 
 #[derive(Debug, Clone, PartialEq, Serialize)]
@@ -379,7 +388,10 @@ pub struct TreeStage {
     pub extra: usize,
     /// Notables and keystones marked Added, in tree order.
     pub added_names: Vec<String>,
+    /// The ascendancy notables, in the order the guide takes them.
     pub ascendancy: Vec<AscendancyMark>,
+    /// The ascendancies to draw: the ones with marked nodes, else the guide's.
+    pub ascendancies: Vec<String>,
     pub nodes: Vec<NodeMark>,
     pub edges: Vec<EdgeMark>,
     /// What the marked nodes cover. None when nothing is marked.
@@ -430,21 +442,28 @@ pub fn tree_stage(
     let now: HashSet<u32> = spec
         .map(|s| s.nodes.iter().copied().collect())
         .unwrap_or_default();
-    let mine: Option<HashSet<u32>> = character
-        .and_then(PobBuild::selected_spec)
-        .map(|s| s.nodes.iter().copied().collect());
+    let my_spec = character.and_then(PobBuild::selected_spec);
+    let mine: Option<HashSet<u32>> = my_spec.map(|s| s.nodes.iter().copied().collect());
     let mode = match (mode, &mine) {
         (TreeMode::Character, None) => TreeMode::Tree,
         (m, _) => m,
     };
-    let before: HashSet<u32> = match mode {
-        TreeMode::Tree => now.clone(),
-        TreeMode::New => stage
-            .checked_sub(1)
-            .and_then(|i| guide.specs.get(i))
-            .map(|s| s.nodes.iter().copied().collect())
-            .unwrap_or_default(),
-        TreeMode::Character => mine.clone().unwrap_or_default(),
+    let before_spec = match mode {
+        TreeMode::Tree => spec,
+        TreeMode::New => stage.checked_sub(1).and_then(|i| guide.specs.get(i)),
+        TreeMode::Character => my_spec,
+    };
+    let before: HashSet<u32> = before_spec
+        .map(|s| s.nodes.iter().copied().collect())
+        .unwrap_or_default();
+    let effect = |id: u32| {
+        let pick = |s: Option<&exile_pob::TreeSpec>| {
+            s?.mastery_effects
+                .iter()
+                .find(|(node, _)| *node == id)
+                .map(|(_, e)| *e)
+        };
+        pick(spec).or_else(|| pick(before_spec))
     };
     let mark_of = |id: u32| match (now.contains(&id), before.contains(&id)) {
         (true, true) => Some(Mark::Taken),
@@ -459,6 +478,8 @@ pub fn tree_stage(
     let mut added_names = Vec::new();
     let (mut points, mut notables, mut added, mut extra) = (0, 0, 0, 0);
     let mut focus: Option<Bounds> = None;
+    let mut ascendancy = Vec::new();
+    let mut ascendancies: Vec<String> = Vec::new();
     for n in &layout.nodes {
         let Some(mark) = mark_of(n.id) else { continue };
         marks.insert(n.id, mark);
@@ -466,7 +487,25 @@ pub fn tree_stage(
             id: n.id,
             mark,
             since: since(n.id),
+            effect: (n.kind == NodeKind::Mastery)
+                .then(|| effect(n.id))
+                .flatten(),
         });
+        if let Some(asc) = &n.ascendancy {
+            if !ascendancies.contains(asc) {
+                ascendancies.push(asc.clone());
+            }
+            if n.kind == NodeKind::Notable {
+                ascendancy.push((
+                    since(n.id),
+                    AscendancyMark {
+                        name: n.name.clone(),
+                        mark,
+                    },
+                ));
+            }
+            continue;
+        }
         if mark != Mark::Extra {
             points += 1;
             notables += usize::from(n.kind == NodeKind::Notable);
@@ -501,18 +540,10 @@ pub fn tree_stage(
             Some(EdgeMark { edge: i, mark })
         })
         .collect();
-    let mut asc_ids: Vec<u32> = now.union(&before).copied().collect();
-    asc_ids.sort_unstable_by_key(|id| (since(*id).unwrap_or(usize::MAX), *id));
-    let ascendancy = asc_ids
-        .into_iter()
-        .filter_map(|id| {
-            let node = layout.ascendancy.get(&id).filter(|a| a.notable)?;
-            Some(AscendancyMark {
-                name: node.name.clone(),
-                mark: mark_of(id)?,
-            })
-        })
-        .collect();
+    ascendancy.sort_by_key(|(since, _)| since.unwrap_or(usize::MAX));
+    if ascendancies.is_empty() {
+        ascendancies.extend(guide.ascend_class_name.clone());
+    }
     TreeStage {
         stages: stage_titles(guide),
         stage,
@@ -524,7 +555,8 @@ pub fn tree_stage(
         added,
         extra,
         added_names,
-        ascendancy,
+        ascendancy: ascendancy.into_iter().map(|(_, a)| a).collect(),
+        ascendancies,
         nodes,
         edges,
         focus,
@@ -539,23 +571,27 @@ mod tests {
 
     // Group 1 at the origin with a 16-node orbit (2) and a 6-node orbit (1), group 2 to the right.
     // 10-11 sit on one orbit (an arc), 11-20 cross groups (a line), 12 is a mastery, 30 is an
-    // ascendancy notable, 31 its start, 40 a class start, 50 sits in a cluster jewel proxy group.
+    // ascendancy notable in group 4, 31 its start, 32 an ascendancy node linked to nothing, 40 a
+    // class start that links to 31, 50 sits in a cluster jewel proxy group.
     const TREE: &str = r#"return {
     ["groups"]= {
         [1]= { ["x"]= 0, ["y"]= 0, ["orbits"]= { 0, 1, 2 } },
         [2]= { ["x"]= 1000, ["y"]= 0 },
         [3]= { ["x"]= 5000, ["y"]= 5000, ["isProxy"]= true },
+        [4]= { ["x"]= -8000, ["y"]= 9000 },
     },
     ["nodes"]= {
         ["root"]= { ["group"]= 0, ["out"]= { "40" }, ["in"]= {} },
         [10]= { ["skill"]= 10, ["name"]= "Strength", ["stats"]= { "+10 to Strength" }, ["group"]= 1, ["orbit"]= 2, ["orbitIndex"]= 0, ["out"]= { "11" }, ["in"]= {} },
         [11]= { ["skill"]= 11, ["name"]= "Heart", ["isNotable"]= true, ["stats"]= {}, ["group"]= 1, ["orbit"]= 2, ["orbitIndex"]= 4, ["out"]= { "20" }, ["in"]= { "10" } },
-        [12]= { ["skill"]= 12, ["name"]= "Life Mastery", ["isMastery"]= true, ["group"]= 1, ["orbit"]= 0, ["orbitIndex"]= 0, ["out"]= {}, ["in"]= { "10" } },
+        [12]= { ["skill"]= 12, ["name"]= "Life Mastery", ["isMastery"]= true, ["group"]= 1, ["orbit"]= 0, ["orbitIndex"]= 0, ["out"]= {}, ["in"]= { "10" },
+            ["masteryEffects"]= { { ["effect"]= 9755, ["stats"]= { "+50 to maximum Life" } }, { ["effect"]= 4119, ["stats"]= { "Regenerate 1% of Life per second" } } } },
         [13]= { ["skill"]= 13, ["name"]= "Socket", ["isJewelSocket"]= true, ["group"]= 1, ["orbit"]= 1, ["orbitIndex"]= 3, ["out"]= {}, ["in"]= { "10" } },
         [20]= { ["skill"]= 20, ["name"]= "Iron Reflexes", ["isKeystone"]= true, ["group"]= 2, ["orbit"]= 0, ["orbitIndex"]= 0, ["out"]= {}, ["in"]= { "11" } },
-        [30]= { ["skill"]= 30, ["name"]= "Radiant Crusade", ["isNotable"]= true, ["ascendancyName"]= "Guardian", ["group"]= 2, ["orbit"]= 0, ["orbitIndex"]= 0, ["out"]= {}, ["in"]= { "31" } },
-        [31]= { ["skill"]= 31, ["name"]= "Guardian", ["isAscendancyStart"]= true, ["ascendancyName"]= "Guardian", ["group"]= 2, ["orbit"]= 0, ["orbitIndex"]= 0, ["out"]= { "30" }, ["in"]= {} },
-        [40]= { ["skill"]= 40, ["name"]= "TEMPLAR", ["classStartIndex"]= 5, ["group"]= 2, ["orbit"]= 0, ["orbitIndex"]= 0, ["out"]= { "20" }, ["in"]= {} },
+        [30]= { ["skill"]= 30, ["name"]= "Radiant Crusade", ["isNotable"]= true, ["ascendancyName"]= "Guardian", ["group"]= 4, ["orbit"]= 1, ["orbitIndex"]= 0, ["out"]= {}, ["in"]= { "31" } },
+        [31]= { ["skill"]= 31, ["name"]= "Guardian", ["isAscendancyStart"]= true, ["ascendancyName"]= "Guardian", ["group"]= 4, ["orbit"]= 0, ["orbitIndex"]= 0, ["out"]= { "30" }, ["in"]= { "40" } },
+        [32]= { ["skill"]= 32, ["name"]= "Searing Purity", ["isNotable"]= true, ["ascendancyName"]= "Guardian", ["group"]= 2, ["orbit"]= 0, ["orbitIndex"]= 0, ["out"]= {}, ["in"]= {} },
+        [40]= { ["skill"]= 40, ["name"]= "TEMPLAR", ["classStartIndex"]= 5, ["group"]= 2, ["orbit"]= 0, ["orbitIndex"]= 0, ["out"]= { "20", "31" }, ["in"]= {} },
         [50]= { ["skill"]= 50, ["name"]= "Cluster", ["group"]= 3, ["orbit"]= 0, ["orbitIndex"]= 0, ["out"]= {}, ["in"]= {} },
     },
     ["constants"]= {
@@ -598,7 +634,7 @@ mod tests {
     fn places_nodes_where_pob_does() {
         let l = layout();
         let ids: Vec<u32> = l.nodes.iter().map(|n| n.id).collect();
-        assert_eq!(ids, vec![10, 11, 12, 13, 20]);
+        assert_eq!(ids, vec![10, 11, 12, 13, 20, 30, 31]);
         let at = |id| {
             let n = l.node(id).unwrap();
             (n.x, n.y)
@@ -611,6 +647,18 @@ mod tests {
         assert_eq!(at(20), (1000., 0.));
         assert_eq!(l.node(20).unwrap().kind, NodeKind::Keystone);
         assert_eq!(l.node(13).unwrap().kind, NodeKind::Jewel);
+        assert_eq!(at(30), (-8000., 8918.));
+        assert_eq!(l.node(30).unwrap().ascendancy.as_deref(), Some("Guardian"));
+        assert_eq!(l.node(31).unwrap().kind, NodeKind::AscendancyStart);
+        assert_eq!(l.node(10).unwrap().ascendancy, None);
+        let effects: Vec<u32> = l
+            .node(12)
+            .unwrap()
+            .mastery
+            .iter()
+            .map(|m| m.effect)
+            .collect();
+        assert_eq!(effects, vec![9755, 4119]);
     }
 
     #[test]
@@ -645,6 +693,12 @@ mod tests {
                     arc: None,
                     clockwise: false
                 },
+                TreeEdge {
+                    a: 30,
+                    b: 31,
+                    arc: None,
+                    clockwise: true
+                },
             ]
         );
     }
@@ -657,8 +711,9 @@ mod tests {
         assert!(s.nodes.iter().all(|n| n.mark == Mark::Taken));
         assert_eq!(
             s.nodes.iter().map(|n| n.id).collect::<Vec<_>>(),
-            vec![10, 11, 20]
+            vec![10, 11, 20, 30]
         );
+        assert_eq!(s.ascendancies, vec!["Guardian"]);
         assert_eq!((s.points, s.notables, s.added, s.extra), (3, 1, 0, 0));
         assert_eq!(s.edges.len(), 2);
         assert_eq!(
@@ -690,7 +745,8 @@ mod tests {
                 (10, Mark::Taken),
                 (11, Mark::Added),
                 (13, Mark::Extra),
-                (20, Mark::Added)
+                (20, Mark::Added),
+                (30, Mark::Added)
             ]
         );
         assert_eq!(s.added_names, vec!["Heart", "Iron Reflexes"]);
@@ -702,6 +758,40 @@ mod tests {
         assert_eq!(edge(2), Some(Mark::Extra));
         assert_eq!(s.nodes[1].since, Some(1));
         assert_eq!(s.nodes[0].since, Some(0));
+    }
+
+    #[test]
+    fn a_mastery_carries_the_picked_effect() {
+        let mut g = guide();
+        g.specs[1].nodes.push(12);
+        g.specs[1].mastery_effects = vec![(12, 4119)];
+        let s = tree_stage(&layout(), &g, 1, None, TreeMode::Tree);
+        let mastery = s.nodes.iter().find(|n| n.id == 12).unwrap();
+        assert_eq!(mastery.effect, Some(4119));
+        assert!(s
+            .nodes
+            .iter()
+            .filter(|n| n.id != 12)
+            .all(|n| n.effect.is_none()));
+        // Refunded at the next stage, it keeps the effect the stage before had.
+        let next = PobBuild {
+            specs: vec![g.specs[1].clone(), spec("Later", &[10])],
+            ..PobBuild::default()
+        };
+        let s = tree_stage(&layout(), &next, 1, None, TreeMode::New);
+        let mastery = s.nodes.iter().find(|n| n.id == 12).unwrap();
+        assert_eq!((mastery.mark, mastery.effect), (Mark::Extra, Some(4119)));
+    }
+
+    #[test]
+    fn draws_the_guides_ascendancy_before_it_takes_any() {
+        let g = PobBuild {
+            ascend_class_name: Some("Guardian".into()),
+            ..guide()
+        };
+        let s = tree_stage(&layout(), &g, 0, None, TreeMode::Tree);
+        assert_eq!(s.ascendancies, vec!["Guardian"]);
+        assert!(s.ascendancy.is_empty());
     }
 
     #[test]
@@ -723,7 +813,8 @@ mod tests {
                 (10, Mark::Taken),
                 (11, Mark::Added),
                 (13, Mark::Extra),
-                (20, Mark::Added)
+                (20, Mark::Added),
+                (30, Mark::Added)
             ]
         );
     }
@@ -786,6 +877,17 @@ mod tests {
         let l = TreeLayout::from_lua(&std::fs::read_to_string(file).unwrap()).unwrap();
         assert!(l.nodes.len() > 2300, "{} nodes", l.nodes.len());
         assert!(l.edges.len() > 2300, "{} edges", l.edges.len());
-        assert!(l.ascendancy.values().any(|a| a.name == "Radiant Crusade"));
+        let crusade = l
+            .nodes
+            .iter()
+            .find(|n| n.name == "Radiant Crusade")
+            .unwrap();
+        assert_eq!(crusade.ascendancy.as_deref(), Some("Guardian"));
+        assert!(!l.nodes.iter().any(|n| n.name == "Searing Purity"));
+        assert!(l
+            .nodes
+            .iter()
+            .filter(|n| n.kind == NodeKind::Mastery)
+            .all(|n| !n.mastery.is_empty()));
     }
 }
