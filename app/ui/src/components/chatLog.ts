@@ -1,4 +1,4 @@
-import type { ChatEvent, NextStep, TurnOver } from '../ipc/types';
+import type { ChatEvent, NextStep, SavedExchange, TurnOver, Warmth } from '../ipc/types';
 
 export interface Exchange {
   question: string;
@@ -38,6 +38,41 @@ export function applyEvent(log: Exchange[], event: ChatEvent): Exchange[] {
 
 export const finish = (log: Exchange[], over: TurnOver): Exchange[] =>
   updateLast(log, (e) => ({ ...e, over, tool: null, note: null }));
+
+export const fromSaved = (saved: SavedExchange[]): Exchange[] =>
+  saved.map((s) => ({
+    question: s.question,
+    answer: s.answer,
+    tool: null,
+    note: null,
+    over: { stop: s.stop, message: s.message, usage: null, dollars: s.dollars, model: s.model },
+  }));
+
+const MONTHS = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
+const two = (n: number): string => String(n).padStart(2, '0');
+const dayOf = (x: Date): number => new Date(x.getFullYear(), x.getMonth(), x.getDate()).getTime();
+
+/** "Today 14:05", "Yesterday 21:10" or "Nov 9", in the PC's time zone. */
+export function whenLabel(unixSecs: number, now: Date = new Date()): string {
+  const d = new Date(unixSecs * 1000);
+  const time = `${two(d.getHours())}:${two(d.getMinutes())}`;
+  const days = Math.round((dayOf(now) - dayOf(d)) / 86_400_000);
+  if (days === 0) return `Today ${time}`;
+  if (days === 1) return `Yesterday ${time}`;
+  return `${MONTHS[d.getMonth()]} ${d.getDate()}`;
+}
+
+/** "21k tokens", "800 tokens". */
+export function tokensLabel(tokens: number): string {
+  return tokens >= 1000 ? `${Math.round(tokens / 1000)}k tokens` : `${tokens} tokens`;
+}
+
+/** What going on with a cold chat costs, or null while the provider still caches it. */
+export function coldText(warmth: Warmth): string | null {
+  if (warmth.kind === 'warm') return null;
+  const price = warmth.dollars === null ? '' : `, $${warmth.dollars.toFixed(2)}`;
+  return `This chat has gone cold. The provider caches a chat for an hour after its last question, so going on sends it all again at full price once. That's about ${tokensLabel(warmth.tokens)}${price}.`;
+}
 
 export const isWorking = (log: Exchange[]): boolean => {
   const last = log.at(-1);

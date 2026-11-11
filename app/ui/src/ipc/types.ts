@@ -138,6 +138,40 @@ export type ChatEvent =
 
 export type ChatStop = 'done' | 'cut' | 'refused' | 'tooManySteps' | 'empty' | 'stopped' | 'error';
 
+/** A saved chat in the history list (mirrors `exile_assistant::history::ChatSummary`). */
+export interface ChatSummary {
+  id: string;
+  title: string;
+  /** Unix seconds of the last question. */
+  updated: number;
+  model: string;
+  questions: number;
+  dollars: number | null;
+}
+
+/** Mirrors `exile_assistant::history::SavedExchange`. */
+export interface SavedExchange {
+  question: string;
+  answer: string;
+  stop: ChatStop;
+  message: string | null;
+  dollars: number | null;
+  model: string | null;
+}
+
+/** Whether the provider still caches the chat (mirrors `exile_assistant::history::Warmth`). */
+export type Warmth = { kind: 'warm' } | { kind: 'cold'; tokens: number; dollars: number | null };
+
+/** A saved chat opened for reading (mirrors `chat::OpenedChat`). */
+export interface OpenedChat {
+  id: string;
+  title: string;
+  exchanges: SavedExchange[];
+  warmth: Warmth;
+  /** Why the picked provider can't go on with it. */
+  blocked: string | null;
+}
+
 /** Payload of `chat://over`, mirrors `chat::TurnOver`. */
 export interface TurnOver {
   stop: ChatStop;

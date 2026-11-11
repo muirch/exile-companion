@@ -3,7 +3,7 @@ import userEvent from '@testing-library/user-event';
 import { beforeEach, describe, expect, it, vi } from 'vitest';
 
 import * as commands from '../ipc/commands';
-import type { ChatEvent, ChatView, TurnOver } from '../ipc/types';
+import type { ChatEvent, ChatView, OpenedChat, TurnOver } from '../ipc/types';
 import { ChatApp } from './ChatApp';
 
 const READY: ChatView = {
@@ -16,6 +16,16 @@ const READY: ChatView = {
 let view: ChatView = READY;
 let emit: (e: ChatEvent) => void = () => {};
 let over: (o: TurnOver) => void = () => {};
+const COLD: OpenedChat = {
+  id: 'chat-1',
+  title: 'Which bandit?',
+  exchanges: [
+    { question: 'Which bandit?', answer: 'Help Alira.', stop: 'done', message: null, dollars: 0.03, model: 'Sonnet 5.5' },
+  ],
+  warmth: { kind: 'cold', tokens: 21_000, dollars: 0.084 },
+  blocked: null,
+};
+let saved: OpenedChat = COLD;
 
 vi.mock('../ipc/commands', () => ({
   getChat: vi.fn(() => Promise.resolve(view)),
@@ -24,6 +34,14 @@ vi.mock('../ipc/commands', () => ({
   chatNew: vi.fn(() => Promise.resolve()),
   closeChat: vi.fn(() => Promise.resolve()),
   openSettings: vi.fn(() => Promise.resolve()),
+  chatHistory: vi.fn(() =>
+    Promise.resolve([
+      { id: 'chat-1', title: 'Which bandit?', updated: 0, model: 'Sonnet 5.5', questions: 2, dollars: 0.03 },
+    ]),
+  ),
+  chatOpenSaved: vi.fn(() => Promise.resolve(saved)),
+  chatResume: vi.fn(() => Promise.resolve(saved.exchanges)),
+  chatDelete: vi.fn(() => Promise.resolve()),
   getNextCard: vi.fn(() =>
     Promise.resolve({
       missing: null,
@@ -53,6 +71,7 @@ const DONE: TurnOver = { stop: 'done', message: null, usage: null, dollars: 0.02
 
 beforeEach(() => {
   view = READY;
+  saved = COLD;
   vi.clearAllMocks();
 });
 
@@ -148,5 +167,46 @@ describe('ChatApp', () => {
     expect(await screen.findByText('Ask about your build.')).toBeInTheDocument();
     await userEvent.keyboard('{Escape}');
     expect(commands.closeChat).toHaveBeenCalled();
+  });
+
+  it('lists past chats and goes on with one after the cold cache warning', async () => {
+    render(<ChatApp />);
+    await userEvent.click(screen.getByRole('button', { name: 'History' }));
+    await userEvent.click(await screen.findByRole('button', { name: /Which bandit\?/ }));
+    expect(commands.chatOpenSaved).toHaveBeenCalledWith('chat-1');
+    expect(await screen.findByText(/This chat has gone cold/)).toHaveTextContent('about 21k tokens, $0.08.');
+    expect(screen.getByText('Help Alira.')).toBeInTheDocument();
+    expect(screen.getByRole('textbox', { name: 'Question for the assistant' })).toBeDisabled();
+
+    await userEvent.click(screen.getByRole('button', { name: 'Continue anyway' }));
+    expect(commands.chatResume).toHaveBeenCalledWith('chat-1');
+    const box = await screen.findByRole('textbox', { name: 'Question for the assistant' });
+    expect(box).toBeEnabled();
+    expect(screen.getByText('Help Alira.')).toBeInTheDocument();
+    expect(screen.getByRole('button', { name: 'History' })).toHaveAttribute('aria-pressed', 'false');
+  });
+
+  it('offers no Continue when the picked provider cannot take the chat', async () => {
+    saved = { ...COLD, warmth: { kind: 'warm' }, blocked: 'This chat was with Anthropic.' };
+    render(<ChatApp />);
+    await userEvent.click(screen.getByRole('button', { name: 'History' }));
+    await userEvent.click(await screen.findByRole('button', { name: /Which bandit\?/ }));
+    expect(await screen.findByText('This chat was with Anthropic.')).toBeInTheDocument();
+    expect(screen.queryByRole('button', { name: /Continue/ })).toBeNull();
+  });
+
+  it('deletes a saved chat with two clicks and goes back to the list', async () => {
+    saved = { ...COLD, warmth: { kind: 'warm' } };
+    render(<ChatApp />);
+    await userEvent.click(screen.getByRole('button', { name: 'History' }));
+    await userEvent.click(await screen.findByRole('button', { name: /Which bandit\?/ }));
+    expect(await screen.findByRole('button', { name: 'Continue' })).toBeInTheDocument();
+    expect(screen.queryByText(/gone cold/)).toBeNull();
+    await userEvent.click(screen.getByRole('button', { name: 'Delete' }));
+    expect(commands.chatDelete).not.toHaveBeenCalled();
+    await new Promise((r) => setTimeout(r, 550));
+    await userEvent.click(screen.getByRole('button', { name: 'Click again to delete' }));
+    expect(commands.chatDelete).toHaveBeenCalledWith('chat-1');
+    expect(await screen.findByText('Past chats')).toBeInTheDocument();
   });
 });

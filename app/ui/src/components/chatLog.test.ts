@@ -4,13 +4,19 @@ import type { TurnOver } from '../ipc/types';
 import {
   applyEvent,
   ask,
+  coldText,
   costLabel,
   finish,
+  fromSaved,
   isWorking,
   splitAnswer,
   stepDetail,
+  tokensLabel,
   toolLabel,
+  whenLabel,
 } from './chatLog';
+
+const at = (d: Date): number => d.getTime() / 1000;
 
 const done: TurnOver = { stop: 'done', message: null, usage: null, dollars: 0.04, model: 'Sonnet 5.5' };
 
@@ -78,5 +84,28 @@ describe('chat log', () => {
     expect(costLabel(0.126)).toBe('13¢');
     expect(costLabel(1.5)).toBe('$1.50');
     expect(costLabel(null)).toBeNull();
+  });
+
+  it('turns saved exchanges back into finished ones', () => {
+    const [e] = fromSaved([
+      { question: 'Bandit?', answer: 'Alira.', stop: 'done', message: null, dollars: 0.02, model: 'Sonnet 5.5' },
+    ]);
+    expect(e.answer).toBe('Alira.');
+    expect(e.over).toEqual({ stop: 'done', message: null, usage: null, dollars: 0.02, model: 'Sonnet 5.5' });
+    expect(isWorking([e])).toBe(false);
+  });
+
+  it('says when a chat was in plain words', () => {
+    const now = new Date(2026, 10, 11, 15, 0);
+    expect(whenLabel(at(new Date(2026, 10, 11, 9, 5)), now)).toBe('Today 09:05');
+    expect(whenLabel(at(new Date(2026, 10, 10, 23, 59)), now)).toBe('Yesterday 23:59');
+    expect(whenLabel(at(new Date(2026, 10, 2, 12, 0)), now)).toBe('Nov 2');
+  });
+
+  it('warns about a cold chat with its size and price when known', () => {
+    expect(coldText({ kind: 'warm' })).toBeNull();
+    expect(coldText({ kind: 'cold', tokens: 21_400, dollars: 0.0856 })).toContain('about 21k tokens, $0.09.');
+    expect(coldText({ kind: 'cold', tokens: 800, dollars: null })).toContain('about 800 tokens.');
+    expect(tokensLabel(1500)).toBe('2k tokens');
   });
 });
