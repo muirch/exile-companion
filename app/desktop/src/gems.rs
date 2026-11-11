@@ -1,10 +1,11 @@
 //! The gems window: the build's links for the character's stage, shown with the quick menu while
-//! the menu key is held, like a game overlay layer. It goes when neither of them has the focus.
+//! the menu key is held, like a game overlay layer. It goes when no window of the layer has the
+//! focus.
 
 use std::sync::OnceLock;
 use std::time::Duration;
 
-use tauri::{AppHandle, Emitter, LogicalSize, Manager, PhysicalPosition};
+use tauri::{AppHandle, Emitter, Manager};
 
 use crate::settings;
 use crate::state::AppState;
@@ -16,41 +17,19 @@ const MIN_SIZE: (f64, f64) = (300.0, 320.0);
 
 static SIZED: OnceLock<()> = OnceLock::new();
 
-/// Scaled to the monitor like the overlay the first time, then the size the player gave it, on
-/// the left unless the player moved it.
 fn place(app: &AppHandle, window: &tauri::WebviewWindow) {
-    let Some(m) = app
-        .get_webview_window("overlay")
-        .and_then(|w| w.current_monitor().ok().flatten())
-    else {
-        return;
-    };
-    let (mp, ms) = (m.position(), m.size());
-    let zoom = crate::chat::screen_zoom(ms.height as f64 / m.scale_factor());
-    let scaled = |(w, h): (f64, f64)| LogicalSize::new(w * zoom, h * zoom);
-    let (width, height) = if SIZED.set(()).is_ok() {
-        let _ = window.set_zoom(zoom);
-        let _ = window.set_min_size(Some(scaled(MIN_SIZE)));
-        let _ = window.set_size(scaled(SIZE));
-        let px = |v: f64| (v * zoom * m.scale_factor()) as i32;
-        (px(SIZE.0), px(SIZE.1))
-    } else {
-        let size = window.outer_size().unwrap_or_default();
-        (size.width as i32, size.height as i32)
-    };
-    let max_x = (ms.width as i32 - width).max(0);
-    let max_y = (ms.height as i32 - height).max(0);
-    let (x, y) = match settings::load(app).ok().and_then(|s| s.gems_anchor) {
-        Some((fx, fy)) => (
-            (fx * ms.width as f64) as i32,
-            (fy * ms.height as f64) as i32,
-        ),
-        None => (ms.width as i32 / 40, ms.height as i32 / 8),
-    };
-    let _ = window.set_position(PhysicalPosition::new(
-        mp.x + x.clamp(0, max_x),
-        mp.y + y.clamp(0, max_y),
-    ));
+    let anchor = settings::load(app).ok().and_then(|s| s.gems_anchor);
+    crate::panel::place(
+        app,
+        window,
+        &SIZED,
+        crate::panel::Place {
+            size: SIZE,
+            min_size: MIN_SIZE,
+            anchor,
+            default_anchor: (1.0 / 40.0, 1.0 / 8.0),
+        },
+    );
 }
 
 /// Shows the window without taking the focus from the menu.
@@ -76,20 +55,17 @@ pub fn hide(app: &AppHandle) {
 }
 
 fn remember_place(app: &AppHandle, window: &tauri::WebviewWindow) {
-    let (Ok(pos), Ok(Some(m))) = (window.outer_position(), window.current_monitor()) else {
+    let Some(spot) = crate::panel::spot(window) else {
         return;
     };
-    let (mp, ms) = (m.position(), m.size());
-    let fx = (pos.x - mp.x) as f64 / ms.width as f64;
-    let fy = (pos.y - mp.y) as f64 / ms.height as f64;
     if let Ok(mut s) = settings::load(app) {
-        s.gems_anchor = Some((fx.clamp(0.0, 1.0), fy.clamp(0.0, 1.0)));
+        s.gems_anchor = Some(spot.anchor);
         let _ = settings::save(app, &s);
     }
 }
 
-/// Focus moves from the menu to the gems window when the player clicks it. Only when neither has
-/// it a moment later did the player go back to the game.
+/// Focus moves from the menu to the gems or tree window when the player clicks it. Only when none
+/// of them has it a moment later did the player go back to the game.
 pub fn close_layer_if_unfocused(app: &AppHandle) {
     let app = app.clone();
     tauri::async_runtime::spawn(async move {
@@ -99,12 +75,10 @@ pub fn close_layer_if_unfocused(app: &AppHandle) {
                 .and_then(|w| w.is_focused().ok())
                 .unwrap_or(false)
         };
-        if !focused(GEMS_LABEL) && !focused(crate::menu::MENU_LABEL) {
+        let layer = [GEMS_LABEL, crate::tree::TREE_LABEL, crate::menu::MENU_LABEL];
+        if !layer.into_iter().any(focused) {
             let app2 = app.clone();
-            let _ = app.run_on_main_thread(move || {
-                hide(&app2);
-                crate::menu::close(&app2);
-            });
+            let _ = app.run_on_main_thread(move || crate::menu::close(&app2));
         }
     });
 }

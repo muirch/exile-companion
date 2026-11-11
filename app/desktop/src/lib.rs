@@ -9,11 +9,13 @@ mod hotkeys;
 mod item;
 mod menu;
 mod overlay;
+mod panel;
 mod pob;
 mod profile;
 mod runtime;
 mod settings;
 mod state;
+mod tree;
 
 use tauri::Manager;
 
@@ -133,7 +135,9 @@ pub fn run() {
                 let _ = window.hide();
                 gems::close_layer_if_unfocused(window.app_handle());
             }
-            tauri::WindowEvent::Focused(false) if window.label() == gems::GEMS_LABEL => {
+            tauri::WindowEvent::Focused(false)
+                if [gems::GEMS_LABEL, tree::TREE_LABEL].contains(&window.label()) =>
+            {
                 gems::close_layer_if_unfocused(window.app_handle());
             }
             // Settings is created once at startup. Closing it only hides it.
@@ -169,6 +173,12 @@ pub fn run() {
             commands::get_links,
             commands::close_gems,
             commands::get_notes,
+            commands::get_tree_layout,
+            commands::get_tree_stage,
+            commands::set_tree_mode,
+            commands::get_tree_shown,
+            commands::set_tree_shown,
+            commands::close_tree,
             commands::follow_guide,
             commands::forget_guide,
             commands::list_characters,

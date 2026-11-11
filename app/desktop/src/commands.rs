@@ -233,6 +233,43 @@ pub fn get_notes(app: AppHandle) -> Option<String> {
 }
 
 #[tauri::command]
+pub fn get_tree_layout(
+    app: AppHandle,
+    version: Option<String>,
+) -> Result<std::sync::Arc<exile_core::tree::TreeLayout>, String> {
+    crate::tree::layout(&app, version.as_deref())
+}
+
+/// Stage `stage` of the guide's tree, or the one the character's level is at.
+#[tauri::command]
+pub fn get_tree_stage(
+    app: AppHandle,
+    stage: Option<usize>,
+) -> Result<Option<exile_core::tree::TreeStage>, String> {
+    crate::tree::stage(&app, stage)
+}
+
+#[tauri::command]
+pub fn set_tree_mode(app: AppHandle, mode: exile_core::tree::TreeMode) -> Result<(), String> {
+    crate::tree::set_mode(&app, mode)
+}
+
+#[tauri::command]
+pub fn get_tree_shown(app: AppHandle) -> bool {
+    crate::tree::shown(&app)
+}
+
+#[tauri::command]
+pub fn set_tree_shown(app: AppHandle, on: bool) -> Result<(), String> {
+    crate::tree::set_shown(&app, on)
+}
+
+#[tauri::command]
+pub fn close_tree(app: AppHandle) {
+    crate::tree::hide(&app);
+}
+
+#[tauri::command]
 pub fn get_profile(app: AppHandle) -> crate::profile::Profile {
     crate::profile::profile(&app)
 }

@@ -7,7 +7,8 @@
     "menu",
     "settings",
     "chat",
-    "gems"
+    "gems",
+    "tree"
   ],
   "permissions": [
     "core:default",

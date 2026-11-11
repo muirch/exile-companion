@@ -52,6 +52,61 @@ export interface Links {
   groups: LinkGroup[];
 }
 
+/** Mirrors `exile_core::tree`: PoB's passive tree and what a guide's stage marks on it. */
+export type NodeKind = 'normal' | 'notable' | 'keystone' | 'jewel' | 'mastery';
+
+export interface TreeNode {
+  id: number;
+  x: number;
+  y: number;
+  kind: NodeKind;
+  name: string;
+  stats: string[];
+}
+
+export interface TreeEdge {
+  a: number;
+  b: number;
+  /** The orbit's radius when the edge runs along it, from `a` to `b`. */
+  arc: number | null;
+  clockwise: boolean;
+}
+
+export interface TreeLayout {
+  nodes: TreeNode[];
+  edges: TreeEdge[];
+}
+
+export type TreeMode = 'tree' | 'new' | 'character';
+/** Added is new at the stage or still to take, Extra refunded or taken beyond the guide. */
+export type Mark = 'taken' | 'added' | 'extra';
+
+export interface Bounds {
+  minX: number;
+  minY: number;
+  maxX: number;
+  maxY: number;
+}
+
+export interface TreeStage {
+  stages: string[];
+  stage: number;
+  version: string | null;
+  /** The mode shown. Character falls back to tree without a character. */
+  mode: TreeMode;
+  canCompare: boolean;
+  points: number;
+  notables: number;
+  added: number;
+  extra: number;
+  addedNames: string[];
+  ascendancy: { name: string; mark: Mark }[];
+  nodes: { id: number; mark: Mark; since: number | null }[];
+  /** `edge` indexes `TreeLayout.edges`. */
+  edges: { edge: number; mark: Mark }[];
+  focus: Bounds | null;
+}
+
 /** The followed guide (mirrors `runtime::GuideView`). */
 export interface GuideView {
   summary: BuildSummary;

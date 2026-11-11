@@ -2,12 +2,14 @@ import { useEffect, useRef, useState } from 'react';
 
 import {
   closeMenu,
+  getTreeShown,
   openChat,
   openSettings,
   quitApp,
   routeNext,
   routePrev,
   setRouteEnabled,
+  setTreeShown,
   startMove,
   updateSettings,
 } from '../ipc/commands';
@@ -84,15 +86,17 @@ export function MenuApp(): React.JSX.Element {
   const routeEnabled = useAppStore((s) => s.routeEnabled);
   const compact = useAppStore((s) => s.ui.compact);
   const keys = useAppStore((s) => s.hotkeys);
+  const [treeShown, setTreeShownState] = useState(false);
   const panel = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
-    const focusFirst = (): void => {
+    const opened = (): void => {
       panel.current?.querySelector<HTMLButtonElement>('[data-first]')?.focus();
+      void getTreeShown().then((on) => setTreeShownState(Boolean(on)));
     };
-    focusFirst();
+    opened();
     if (!isTauri()) return;
-    const off = onMenuOpened(focusFirst);
+    const off = onMenuOpened(opened);
     const onKey = (e: KeyboardEvent): void => {
       if (e.key === 'Escape') void closeMenu();
     };
@@ -127,6 +131,14 @@ export function MenuApp(): React.JSX.Element {
         label="Full layout"
         state={!compact}
         onClick={() => void updateSettings({ compact: !compact })}
+      />
+      <Row
+        label="Passive tree"
+        state={treeShown}
+        onClick={() => {
+          setTreeShownState(!treeShown);
+          void setTreeShown(!treeShown);
+        }}
       />
       <TooltipSep tint={TINT} />
       {/* The menu stays open so a wrong step can be fixed with a few clicks. */}
