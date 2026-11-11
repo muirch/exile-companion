@@ -1,5 +1,5 @@
-//! Writes the browser mock's passive tree: part of PoB's tree around a guide's first stages, and
-//! each of those stages in every mode, against a made-up character.
+//! Writes the browser mock's passive tree: part of PoB's tree around a guide's first stages with
+//! the guide's ascendancy, and each of those stages in every mode, against a made-up character.
 //!
 //! cargo run -p exile-core --example dump_tree -- <PoB src> <guide.xml> > app/ui/src/ipc/mock-tree.json
 
@@ -44,7 +44,12 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
             (false, true) => Some(e.a),
             _ => None,
         })
-        .filter(|id| !next.contains(id) && layout.node(*id).is_some_and(|n| n.stats.len() == 1))
+        .filter(|id| {
+            !next.contains(id)
+                && layout
+                    .node(*id)
+                    .is_some_and(|n| n.stats.len() == 1 && n.ascendancy.is_none())
+        })
         .take(3)
         .collect();
     mine.extend(extra);
@@ -72,12 +77,15 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
             max_y: a.max_y.max(b.max_y),
         })
         .ok_or("the guide's first stages mark nothing")?;
+    let drawn: HashSet<&String> = stages.iter().flat_map(|s| &s.ascendancies).collect();
     let inside = |id: u32| {
         layout.node(id).is_some_and(|n| {
-            n.x > focus.min_x - MARGIN
-                && n.x < focus.max_x + MARGIN
-                && n.y > focus.min_y - MARGIN
-                && n.y < focus.max_y + MARGIN
+            n.ascendancy.as_ref().is_some_and(|a| drawn.contains(a))
+                || (n.ascendancy.is_none()
+                    && n.x > focus.min_x - MARGIN
+                    && n.x < focus.max_x + MARGIN
+                    && n.y > focus.min_y - MARGIN
+                    && n.y < focus.max_y + MARGIN)
         })
     };
     let keep: HashSet<u32> = layout
