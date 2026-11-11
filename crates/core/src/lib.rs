@@ -46,6 +46,7 @@ pub mod resolve;
 pub mod route;
 pub mod source;
 pub mod state;
+pub mod tree;
 pub mod vendor_search;
 
 /// Crate version, surfaced in diagnostics / the UI "about" panel.
