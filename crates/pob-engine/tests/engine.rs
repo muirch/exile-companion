@@ -434,6 +434,52 @@ fn compares_the_build_with_a_guide() {
     );
 }
 
+// A guide with a spectre group, the way PoB saves the monster picked for Raise Spectre.
+fn guide_with_minions() -> String {
+    GUIDE.replacen(
+        "\t</Build>",
+        "\t\t<Spectre id=\"Metadata/Monsters/BloodChieftain/MonkeyChiefBloodEnrage\"/>\n\t</Build>",
+        1,
+    )
+    .replacen(
+        "\t\t</SkillSet>",
+        "\t\t\t<Skill slot=\"Gloves\" enabled=\"true\">\
+         <Gem nameSpec=\"Raise Spectre\" skillId=\"RaiseSpectre\" gemId=\"Metadata/Items/Gems/SkillGemRaiseSpectre\" level=\"20\" quality=\"0\" enabled=\"true\" skillMinion=\"Metadata/Monsters/BloodChieftain/MonkeyChiefBloodEnrage\"/>\
+         <Gem nameSpec=\"Minion Life Support\" skillId=\"SupportMinionLife\" gemId=\"Metadata/Items/Gems/SupportGemMinionLife\" level=\"20\" quality=\"0\" enabled=\"true\"/>\
+         </Skill>\n\t\t</SkillSet>",
+        1,
+    )
+}
+
+#[test]
+fn guide_stages_name_the_spectres() {
+    let Some(pob) = pob_dir() else { return };
+    let mut e = engine(&pob);
+    e.call("load_build", json!({ "xml": FIXTURE }), SLOW)
+        .unwrap();
+    e.call(
+        "load_reference",
+        json!({ "xml": guide_with_minions() }),
+        SLOW,
+    )
+    .unwrap();
+    let stages = e
+        .call("guide_stages", json!({ "reference": 1 }), SLOW)
+        .unwrap();
+    let skills = stages["skill_sets"][0]["skills"].as_array().unwrap();
+    let spectre = skills
+        .iter()
+        .find(|s| s["skill"] == "Raise Spectre")
+        .unwrap_or_else(|| panic!("{skills:?}"));
+    assert_eq!(spectre["spectres"], json!(["Carnage Chieftain"]));
+    assert_eq!(spectre["supports"], json!(["Minion Life"]));
+    let caustic = skills
+        .iter()
+        .find(|s| s["skill"] == "Caustic Arrow")
+        .unwrap();
+    assert!(caustic["spectres"].is_null(), "{caustic}");
+}
+
 #[test]
 fn reports_pob_errors_and_keeps_serving() {
     let Some(pob) = pob_dir() else { return };

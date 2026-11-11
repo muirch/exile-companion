@@ -1151,6 +1151,22 @@ local function setGear(ref, set)
 	return gear
 end
 
+local GUARDIAN_SLOTS = { "Weapon 1", "Weapon 2", "Helmet", "Body Armour", "Gloves", "Boots" }
+
+-- The monsters a group's Raise Spectre gems are set to, by the names PoB shows.
+local function groupSpectres(g)
+	local names = {}
+	for _, gem in ipairs(g.gemList or {}) do
+		if gem.enabled ~= false and gem.skillId == "RaiseSpectre" and gem.skillMinion then
+			local minion = data.minions[gem.skillMinion]
+			names[#names + 1] = minion and minion.name or gem.skillMinion
+		end
+	end
+	if #names > 0 then
+		return names
+	end
+end
+
 local function setSkills(groups)
 	local skills = {}
 	for _, g in ipairs(groups or {}) do
@@ -1163,7 +1179,7 @@ local function setSkills(groups)
 				end
 			end
 			table.sort(gems)
-			skills[#skills + 1] = { skill = active, slot = g.slot, supports = gems }
+			skills[#skills + 1] = { skill = active, slot = g.slot, supports = gems, spectres = groupSpectres(g) }
 		end
 	end
 	return skills
@@ -1262,7 +1278,7 @@ function bridge.guide_stage_diff(params)
 	for _, sk in ipairs(toSkills) do
 		local old = before[sk.skill]
 		if not old then
-			skills[#skills + 1] = { skill = sk.skill, change = "new", supports = sk.supports }
+			skills[#skills + 1] = { skill = sk.skill, change = "new", supports = sk.supports, spectres = sk.spectres }
 		elseif table.concat(old.supports, ",") ~= table.concat(sk.supports, ",") then
 			skills[#skills + 1] = { skill = sk.skill, change = "supports", from = old.supports, to = sk.supports }
 		end
