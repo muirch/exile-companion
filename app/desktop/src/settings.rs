@@ -46,6 +46,8 @@ pub struct Settings {
     pub chat: exile_assistant::Config,
     /// The chat window's top-left corner as fractions of its monitor, once the player moved it.
     pub chat_anchor: Option<(f64, f64)>,
+    /// The gems window's top-left corner as fractions of its monitor, once the player moved it.
+    pub gems_anchor: Option<(f64, f64)>,
 }
 
 impl Default for Settings {
@@ -74,6 +76,7 @@ impl Default for Settings {
             pob_build: None,
             chat: Default::default(),
             chat_anchor: None,
+            gems_anchor: None,
         }
     }
 }

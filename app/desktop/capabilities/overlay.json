@@ -6,7 +6,8 @@
     "overlay",
     "menu",
     "settings",
-    "chat"
+    "chat",
+    "gems"
   ],
   "permissions": [
     "core:default",
