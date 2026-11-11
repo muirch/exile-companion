@@ -102,7 +102,7 @@ export function Choice<T extends string | number | boolean>({
   onChange,
 }: {
   value: T;
-  options: { value: T; label: string; literal?: boolean }[];
+  options: { value: T; label: string; literal?: boolean; disabled?: boolean }[];
   onChange: (v: T) => void;
 }): React.JSX.Element {
   return (
@@ -111,6 +111,7 @@ export function Choice<T extends string | number | boolean>({
         <Button
           key={String(o.value)}
           literal={o.literal}
+          disabled={o.disabled}
           aria-pressed={value === o.value}
           onClick={() => onChange(o.value)}
         >
