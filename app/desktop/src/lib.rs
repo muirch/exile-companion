@@ -176,6 +176,8 @@ pub fn run() {
             commands::get_tree_layout,
             commands::get_tree_stage,
             commands::set_tree_mode,
+            commands::get_tree_prefs,
+            commands::set_tree_prefs,
             commands::get_tree_shown,
             commands::set_tree_shown,
             commands::close_tree,
