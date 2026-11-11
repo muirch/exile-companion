@@ -129,12 +129,15 @@ fn committed_trials_cover_the_normal_lab() {
 
 #[test]
 fn bundled_route_parses_cleanly() {
-    use exile_core::route::parse_route;
-    use std::collections::HashSet;
+    use exile_core::route::{parse_route, route_defines, Bandit};
 
     let pack = committed_pack();
     let source = exile_data::ROUTE_ACTS.join("\n");
-    for defines in [HashSet::new(), HashSet::from(["LEAGUE_START".to_string()])] {
+    let bandits = [Bandit::KillAll, Bandit::Alira, Bandit::Kraityn, Bandit::Oak];
+    for defines in [false, true]
+        .into_iter()
+        .flat_map(|league| bandits.map(|b| route_defines(league, b)))
+    {
         let (route, warnings) = parse_route(&source, &pack.zones, &pack.quests, &defines);
         assert!(warnings.is_empty(), "{warnings:#?}");
         assert_eq!(route.sections.len(), 10);
@@ -145,12 +148,16 @@ fn bundled_route_parses_cleanly() {
 
 #[test]
 fn tracker_walks_the_bundled_route_end_to_end() {
-    use exile_core::route::{parse_route, RouteTracker};
-    use std::collections::HashSet;
+    use exile_core::route::{parse_route, route_defines, Bandit, RouteTracker};
 
     let pack = committed_pack();
     let source = exile_data::ROUTE_ACTS.join("\n");
-    let (route, _) = parse_route(&source, &pack.zones, &pack.quests, &HashSet::new());
+    let (route, _) = parse_route(
+        &source,
+        &pack.zones,
+        &pack.quests,
+        &route_defines(false, Bandit::KillAll),
+    );
     let mut tracker = RouteTracker::default();
     for (i, area) in route.edges.iter().enumerate().skip(1) {
         assert!(
@@ -167,12 +174,16 @@ fn tracker_walks_the_bundled_route_end_to_end() {
 
 #[test]
 fn high_level_character_in_act1_town_gets_the_last_act1_visit() {
-    use exile_core::route::{parse_route, RouteTracker};
-    use std::collections::HashSet;
+    use exile_core::route::{parse_route, route_defines, Bandit, RouteTracker};
 
     let pack = committed_pack();
     let source = exile_data::ROUTE_ACTS.join("\n");
-    let (route, _) = parse_route(&source, &pack.zones, &pack.quests, &HashSet::new());
+    let (route, _) = parse_route(
+        &source,
+        &pack.zones,
+        &pack.quests,
+        &route_defines(false, Bandit::KillAll),
+    );
     let town_visits: Vec<usize> = (0..route.edges.len())
         .filter(|&i| route.edges[i] == "1_1_town")
         .collect();
@@ -184,4 +195,68 @@ fn high_level_character_in_act1_town_gets_the_last_act1_visit() {
     let mut done = RouteTracker::default();
     done.on_area(&route, "1_1_town", Some(90));
     assert_eq!(Some(&done.active()), town_visits.last());
+}
+
+fn bundled_route(bandit: exile_core::route::Bandit) -> exile_core::route::Route {
+    use exile_core::route::{parse_route, route_defines};
+    let pack = committed_pack();
+    let source = exile_data::ROUTE_ACTS.join("\n");
+    parse_route(
+        &source,
+        &pack.zones,
+        &pack.quests,
+        &route_defines(true, bandit),
+    )
+    .0
+}
+
+fn steps(route: &exile_core::route::Route) -> impl Iterator<Item = &exile_core::route::Step> {
+    route.sections.iter().flat_map(|s| &s.steps)
+}
+
+#[test]
+fn every_bandit_choice_keeps_the_act2_quests() {
+    use exile_core::route::{Bandit, Part};
+
+    for bandit in [Bandit::KillAll, Bandit::Alira, Bandit::Kraityn, Bandit::Oak] {
+        let route = bundled_route(bandit);
+        let hands_in = |id: &str| {
+            steps(&route).any(|s| {
+                s.parts
+                    .iter()
+                    .any(|p| matches!(p, Part::Quest { id: q, .. } if q == id))
+            })
+        };
+        assert!(hands_in("a1q9"), "{bandit:?}: no The Way Forward");
+        assert!(
+            route.edges.iter().any(|e| e == "1_2_11"),
+            "{bandit:?}: no Vaal Ruins"
+        );
+    }
+
+    let alira = bundled_route(Bandit::Alira);
+    assert!(steps(&alira).any(|s| {
+        s.parts.first()
+            == Some(&Part::Text {
+                text: "Help ".into(),
+            })
+            && matches!(s.parts.get(1), Some(Part::Kill { name }) if name == "Alira Darktongue")
+    }));
+}
+
+#[test]
+fn switching_the_bandit_keeps_the_place_outside_act2() {
+    use exile_core::route::Bandit;
+
+    let from = bundled_route(Bandit::KillAll);
+    let to = bundled_route(Bandit::Kraityn);
+    assert_ne!(from.edges, to.edges);
+    let act2 = from.edges.iter().position(|e| e == "1_2_town").unwrap();
+    for edge in (0..act2).chain(from.edges.len() - 100..from.edges.len()) {
+        let moved = from.edge_in(edge, &to);
+        assert_eq!(from.edges[edge], to.edges[moved], "edge {edge}");
+    }
+    for edge in 0..from.edges.len() {
+        assert!(from.edge_in(edge, &to) < to.edges.len());
+    }
 }
