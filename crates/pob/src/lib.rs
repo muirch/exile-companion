@@ -25,7 +25,7 @@ pub use error::PobError;
 pub use items::item_names;
 pub use link::code_url;
 pub use model::{Gem, PobBuild, SkillGroup, SkillSet, TreeSpec};
-pub use parse::parse_xml;
+pub use parse::{parse_xml, plain_notes};
 
 /// Import a build from a PoB code (as pasted): decode base64+zlib, then parse the XML.
 pub fn import_code(code: &str) -> Result<PobBuild, PobError> {
