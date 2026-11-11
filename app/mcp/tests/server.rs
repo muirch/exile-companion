@@ -114,6 +114,7 @@ fn lists_its_tools() {
         "find_guides",
         "guide_stages",
         "guide_stage_diff",
+        "guide_notes",
         "apply_changes",
         "build_history",
         "undo_change",
@@ -137,6 +138,30 @@ fn says_what_is_missing_instead_of_failing() {
     let (text, is_error) = c.tool("build_overview", json!({}));
     assert!(is_error);
     assert!(text.contains("exile-pob-engine"), "{text}");
+}
+
+#[test]
+fn reads_a_guides_notes_without_pob() {
+    let empty = tempfile::tempdir().unwrap();
+    let mut c = Client::start_env(&["--engine", "/nowhere/exile-pob-engine"], empty.path());
+    let guide = "<PathOfBuilding><Build level=\"90\" className=\"Templar\"/><Notes>^xE05030Act 1^7\n\nHelp Alira for the resistances.\n\nAct 6: raise a Carnage Chieftain.</Notes></PathOfBuilding>";
+    let (text, is_error) = c.tool("guide_notes", json!({ "guide": guide, "find": "ALIRA" }));
+    assert!(!is_error, "{text}");
+    let v: Value = serde_json::from_str(&text).unwrap();
+    assert_eq!(v["found"], json!(["Help Alira for the resistances."]));
+
+    let (text, _) = c.tool("guide_notes", json!({ "guide": guide }));
+    let v: Value = serde_json::from_str(&text).unwrap();
+    assert!(
+        v["notes"].as_str().unwrap().starts_with("Act 1\n\nHelp"),
+        "{v}"
+    );
+
+    let (text, is_error) = c.tool(
+        "guide_notes",
+        json!({ "guide": "<PathOfBuilding><Build/></PathOfBuilding>" }),
+    );
+    assert!(!is_error && text.contains("no notes"), "{text}");
 }
 
 // Needs a Path of Building copy (EXILE_POB_DIR) and the engine binary built next to this one,

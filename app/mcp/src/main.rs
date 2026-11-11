@@ -55,6 +55,8 @@ Say the trade-off and how sure you are, and point out what you couldn't measure.
 When the player picks a guide, save it with follow_guide so later conversations know it. \
 compare_with_guide, passive_value, guide_stages and guide_stage_diff use the followed guide when you pass none. \
 Advise from the difference to the guide. guide_stages and guide_stage_diff walk a guide stage by stage, also for a player without a build yet. \
+When the guide has_notes, read them with guide_notes before you advise on what to do in the campaign: authors write there what Path of Building can't hold, \
+such as bandits, spectres and when to swap skills. Say when an answer comes from the notes. \
 When the player moves on to another stage, update it with follow_guide. Don't suggest passives, keystones or items the guide doesn't take unless the player asks to explore. \
 Compare with the guide stage closest to the player's level and progress, and keep endgame gear out of a beginner's next steps. \
 Measuring changes nothing. apply_changes keeps changes in the player's build, and the app and later conversations see them: \
@@ -133,6 +135,14 @@ pub struct GuideParams {
 pub struct StagesParams {
     /// The guide's build: a PoB code, a build link, build XML, or the guide's page with a build link on it. The followed guide when left out.
     pub guide: Option<String>,
+}
+
+#[derive(Debug, Deserialize, schemars::JsonSchema)]
+pub struct NotesParams {
+    /// The guide's build, as for guide_stages. The followed guide when left out.
+    pub guide: Option<String>,
+    /// Words to look for, e.g. "bandit" or "spectre". Only the paragraphs that have all of them come back.
+    pub find: Option<String>,
 }
 
 #[derive(Debug, Deserialize, schemars::JsonSchema)]
@@ -573,6 +583,25 @@ impl Companion {
             let (guide, _) = s.guide_or_followed(p.guide)?;
             let reference = s.reference(&guide)?;
             s.call_any("guide_stages", json!({ "reference": reference }))
+        })
+        .await
+        .unwrap_or_else(|e| Err(e.to_string()));
+        Ok(json_result(r))
+    }
+
+    #[tool(
+        description = "The notes the guide's author wrote in its Path of Building: what to do in each act, bandits, lab order, spectres to raise, gear to look for, swaps. Many builds have none, player_status says has_notes when there are. Notes can be long, pass find to get only the paragraphs about one thing. Works without the player's build and doesn't start Path of Building."
+    )]
+    async fn guide_notes(
+        &self,
+        Parameters(p): Parameters<NotesParams>,
+    ) -> Result<CallToolResult, McpError> {
+        let session = self.session.clone();
+        let r = tokio::task::spawn_blocking(move || {
+            session
+                .lock()
+                .unwrap()
+                .guide_notes(p.guide, p.find.as_deref())
         })
         .await
         .unwrap_or_else(|e| Err(e.to_string()));
