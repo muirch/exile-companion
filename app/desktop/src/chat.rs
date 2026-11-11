@@ -27,6 +27,21 @@ pub struct ChatState {
     task: Mutex<Option<JoinHandle<()>>>,
     /// Counts openings of the window, so a pending unload knows the chat came back.
     opened: AtomicU64,
+    /// Names the conversation to OpenRouter. New chat starts another.
+    session: Mutex<Option<String>>,
+}
+
+fn session_id(app: &AppHandle) -> String {
+    let state = app.state::<ChatState>();
+    let mut session = state.session.lock().unwrap_or_else(|e| e.into_inner());
+    session
+        .get_or_insert_with(|| {
+            let nanos = std::time::SystemTime::now()
+                .duration_since(std::time::UNIX_EPOCH)
+                .map_or(0, |d| d.as_nanos());
+            format!("chat-{nanos:x}")
+        })
+        .clone()
 }
 
 /// Which providers have a key stored.
@@ -203,18 +218,21 @@ pub async fn forget_key(app: &AppHandle, provider: Provider) -> Result<ChatView,
 }
 
 /// `ollama` says the custom server is Ollama, the one that takes an effort.
-fn model(config: &Config, api_key: Option<String>, ollama: bool) -> Box<dyn Llm + Send> {
+fn model(
+    config: &Config,
+    api_key: Option<String>,
+    ollama: bool,
+    session: &str,
+) -> Box<dyn Llm + Send> {
     let key = api_key.unwrap_or_default();
     match config.provider {
         Provider::Anthropic => {
             Box::new(Anthropic::new(key, config.model, config.effort, USER_AGENT))
         }
-        Provider::OpenRouter => Box::new(OpenAi::openrouter(
-            key,
-            config.router_model.clone(),
-            config.effort,
-            USER_AGENT,
-        )),
+        Provider::OpenRouter => Box::new(
+            OpenAi::openrouter(key, config.router_model.clone(), config.effort, USER_AGENT)
+                .with_session(session),
+        ),
         Provider::Custom => Box::new(OpenAi::custom(
             &config.custom_url,
             Some(key),
@@ -299,7 +317,7 @@ async fn turn(app: AppHandle, question: String) {
         }
         None => false,
     };
-    let llm = model(&config, api_key, ollama);
+    let llm = model(&config, api_key, ollama, &session_id(&app));
     let label = config.model_label();
     let state = app.state::<ChatState>();
     let mut conversation = state.conversation.lock().await;
@@ -363,6 +381,7 @@ pub async fn new_chat(app: &AppHandle) {
     stop(app);
     let state = app.state::<ChatState>();
     *state.conversation.lock().await = Conversation::default();
+    *state.session.lock().unwrap_or_else(|e| e.into_inner()) = None;
 }
 
 /// Right of the screen center, clear of the overlay at the bottom and the play field around the
