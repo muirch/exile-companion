@@ -14,6 +14,8 @@ use time::PrimitiveDateTime;
 use crate::data::{ZoneInfo, ZoneTable};
 use crate::events::{DeathCause, LogEvent};
 
+const STRAND: &str = "1_1_1";
+
 /// Where the player currently is, coarsely.
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Default, serde::Serialize)]
 #[cfg_attr(feature = "ts", derive(ts_rs::TS))]
@@ -233,17 +235,24 @@ impl CampaignMachine {
     }
 
     fn apply_level_up(&mut self, character: String, class: String, level: u32) -> StateDelta {
-        // Ignore level-ups for other players in the instance once we know our own character.
-        if let Some(cur) = &self.state.character {
-            if cur != &character {
-                return StateDelta::default();
-            }
+        // Another name levelling up is a party member, unless it happens on the Twilight Strand:
+        // that's a new character of ours, such as the real one after a mule. The log has no
+        // line for logging in as another character.
+        let other = self
+            .state
+            .character
+            .as_ref()
+            .is_some_and(|cur| cur != &character);
+        let new_character = other && self.state.area_id.as_deref() == Some(STRAND);
+        if other && !new_character {
+            return StateDelta::default();
         }
         let character_changed = self.state.character.as_deref() != Some(character.as_str())
             || self.state.class.as_deref() != Some(class.as_str());
         self.state.character = Some(character);
         self.state.class = Some(class);
-        let level_changed = level > self.state.level;
+        let level_changed =
+            level > self.state.level || (new_character && level != self.state.level);
         if level_changed {
             self.state.level = level;
         }
@@ -405,6 +414,49 @@ mod tests {
             None,
         );
         assert_eq!(m.snapshot().level, 12);
+    }
+
+    #[test]
+    fn a_new_character_on_the_twilight_strand_takes_over() {
+        let mut m = machine();
+        let level_up = |m: &mut CampaignMachine, character: &str, class: &str, level| {
+            m.apply(
+                LogEvent::LevelUp {
+                    character: character.into(),
+                    class: class.into(),
+                    level,
+                },
+                None,
+            )
+        };
+        level_up(&mut m, "MuleGuy", "Ranger", 4);
+        m.apply(
+            LogEvent::AreaGenerated {
+                level: 1,
+                world_area_id: "1_1_1".into(),
+                seed: 1,
+            },
+            None,
+        );
+        enter(&mut m, "The Twilight Strand");
+        let d = level_up(&mut m, "RealOne", "Templar", 2);
+        assert!(d.character_changed && d.level_changed);
+        let s = m.snapshot();
+        assert_eq!(s.character.as_deref(), Some("RealOne"));
+        assert_eq!(s.class.as_deref(), Some("Templar"));
+        assert_eq!(s.level, 2);
+        // Off the Strand, the mule is the other player.
+        m.apply(
+            LogEvent::AreaGenerated {
+                level: 1,
+                world_area_id: "1_1_town".into(),
+                seed: 2,
+            },
+            None,
+        );
+        enter(&mut m, "Lioneye's Watch");
+        assert!(!level_up(&mut m, "MuleGuy", "Ranger", 5).is_meaningful());
+        assert_eq!(m.snapshot().character.as_deref(), Some("RealOne"));
     }
 
     #[test]
