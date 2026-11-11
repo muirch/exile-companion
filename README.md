@@ -38,7 +38,7 @@ All of them can be changed in the settings.
 
 | Key | What it does |
 |---|---|
-| Hold Tilde (left of 1) | Open the quick menu with route and layout, previous and next step, the assistant, settings, moving the overlay and quit |
+| Hold Tilde (left of 1) | Open the quick menu (route and layout, previous and next step, the assistant, settings, moving the overlay, quit) and the gems window with the build's links for your stage |
 | Tap Tilde | Show the overlay again after it faded out, and the step's hints in the compact layout |
 | Alt+A | Open or close the assistant's chat |
 | Alt+M | Unlock the overlay to drag it, press again to lock |
