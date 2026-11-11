@@ -70,16 +70,21 @@ fn bare_route_view(app: &AppHandle) -> Option<RouteView> {
     app_state.route().view(edge)
 }
 
-pub(crate) fn current_gem_plan(app: &AppHandle) -> Option<exile_core::gemplan::GemPlan> {
+/// What the route's gems come from: the followed guide, else the player's build.
+pub(crate) fn plan_source(app: &AppHandle) -> Option<exile_pob::PobBuild> {
     let app_state = app.state::<AppState>();
-    let builds = lock(&app_state.build);
-    let build = builds.build()?;
+    let guide = lock(&app_state.guide).clone();
+    guide.or_else(|| lock(&app_state.build).build().cloned())
+}
+
+pub(crate) fn current_gem_plan(app: &AppHandle) -> Option<exile_core::gemplan::GemPlan> {
+    let build = plan_source(app)?;
     let class = build.class_name.as_deref()?;
     let saved = settings::load(app).unwrap_or_default();
     Some(exile_core::gemplan::plan_with_overrides(
-        build,
+        &build,
         class,
-        &app_state.gems,
+        &app.state::<AppState>().gems,
         &saved.preset_stages,
         &saved.gem_overrides,
     ))
@@ -219,26 +224,100 @@ pub fn restore_build(app: &AppHandle) {
     }
 }
 
+fn guide_store(app: &AppHandle) -> Option<exile_core::followed_guide::GuideStore> {
+    let dir = build_path(app)?.parent()?.to_path_buf();
+    Some(exile_core::followed_guide::GuideStore::new(dir))
+}
+
+/// Reads the followed guide again. The assistant follows and forgets guides from its own process.
+pub fn restore_guide(app: &AppHandle) {
+    let guide = guide_store(app)
+        .and_then(|s| s.get().ok().flatten())
+        .and_then(|(_, xml)| match exile_pob::parse_xml(xml.as_bytes()) {
+            Ok(b) => Some(b),
+            Err(e) => {
+                log::warn!("followed guide: {e}");
+                None
+            }
+        });
+    *lock(&app.state::<AppState>().guide) = guide;
+}
+
+/// The followed guide, as the settings show it.
+#[derive(Debug, Clone, serde::Serialize)]
+#[serde(rename_all = "camelCase")]
+pub struct GuideView {
+    pub summary: BuildSummary,
+    pub source: Option<String>,
+}
+
+pub fn current_guide(app: &AppHandle) -> Option<GuideView> {
+    let (followed, _) = guide_store(app)?.get().ok().flatten()?;
+    let guide = lock(&app.state::<AppState>().guide).clone()?;
+    Some(GuideView {
+        summary: BuildSummary::from_build(&guide),
+        source: followed.source,
+    })
+}
+
+/// The character imported from pathofexile.com, when the build came from there.
+pub fn current_character(app: &AppHandle) -> Option<exile_core::character::CharacterLink> {
+    let dir = build_path(app)?.parent()?.to_path_buf();
+    exile_core::character::read_link(&dir).ok().flatten()
+}
+
+/// Stages belong to the plan's skill sets, overrides to its gems. They go when the build the
+/// plan comes from changes into one with other presets.
+pub(crate) fn keep_or_drop_stages(app: &AppHandle, before: Option<&exile_pob::PobBuild>) {
+    let after = plan_source(app);
+    let same = match (before, after.as_ref()) {
+        (Some(a), Some(b)) => exile_core::gemplan::same_presets(a, b),
+        (None, None) => true,
+        _ => false,
+    };
+    if !same {
+        if let Ok(mut s) = settings::load(app) {
+            if !s.preset_stages.is_empty() || !s.gem_overrides.is_empty() {
+                s.preset_stages.clear();
+                s.gem_overrides.clear();
+                let _ = settings::save(app, &s);
+            }
+        }
+    }
+}
+
 /// The assistant changes build.xml from its own process. Picks those changes up while the app runs.
 pub fn watch_build(app: AppHandle) {
-    let stamp = |app: &AppHandle| {
-        let meta = std::fs::metadata(build_path(app)?).ok()?;
+    let stamp = |path: Option<std::path::PathBuf>| {
+        let meta = std::fs::metadata(path?).ok()?;
         Some((meta.modified().ok()?, meta.len()))
     };
+    let guide_file =
+        |app: &AppHandle| build_path(app).and_then(|p| Some(p.parent()?.join("guide.json")));
     tauri::async_runtime::spawn(async move {
-        let mut last = stamp(&app);
+        let mut last = stamp(build_path(&app));
+        let mut last_guide = stamp(guide_file(&app));
         let mut sync_error = None;
         loop {
             tokio::time::sleep(Duration::from_secs(2)).await;
             sync_pob(&app, &mut sync_error);
-            let now = stamp(&app);
-            if now != last && now.is_some() {
-                reload_build(&app);
+            let now = stamp(build_path(&app));
+            let now_guide = stamp(guide_file(&app));
+            let build_changed = now != last && now.is_some();
+            if build_changed || now_guide != last_guide {
+                let before = plan_source(&app);
+                if build_changed {
+                    reload_build(&app);
+                }
+                restore_guide(&app);
+                keep_or_drop_stages(&app, before.as_ref());
                 emit_build_summary(&app);
+                let _ = app.emit("guide://changed", ());
                 emit_guidance(&app, &app.state::<AppState>().current_state());
                 emit_route(&app);
             }
             last = now;
+            last_guide = now_guide;
         }
     });
 }
@@ -270,8 +349,7 @@ pub fn sync_pob(app: &AppHandle, last_error: &mut Option<String>) {
     }
 }
 
-/// The build file changed outside an import. Stages set for the old build's presets go when the
-/// presets aren't the same any more, as on an import.
+/// The build file changed outside an import.
 fn reload_build(app: &AppHandle) {
     let Some(path) = build_path(app) else {
         return;
@@ -286,20 +364,7 @@ fn reload_build(app: &AppHandle) {
             return;
         }
     };
-    let app_state = app.state::<AppState>();
-    let mut builds = lock(&app_state.build);
-    let same = builds
-        .build()
-        .is_some_and(|old| exile_core::gemplan::same_presets(old, &build));
-    if !same {
-        if let Ok(mut s) = settings::load(app) {
-            if !s.preset_stages.is_empty() {
-                s.preset_stages.clear();
-                let _ = settings::save(app, &s);
-            }
-        }
-    }
-    builds.set(build);
+    lock(&app.state::<AppState>().build).set(build);
 }
 
 /// Parse and store a freshly-imported build, save it for the next start, then push the new build
@@ -309,12 +374,7 @@ pub fn import_build(app: &AppHandle, xml: Vec<u8>) -> Result<BuildSummary, Strin
         log::warn!("build import: {e}");
         "That's not a Path of Building build.".to_string()
     })?;
-    // Stages belong to the old build's skill sets, overrides to its gems.
-    if let Ok(mut s) = settings::load(app) {
-        s.preset_stages.clear();
-        s.gem_overrides.clear();
-        let _ = settings::save(app, &s);
-    }
+    let before = plan_source(app);
     if let Some(path) = build_path(app) {
         let saved = path
             .parent()
@@ -326,6 +386,7 @@ pub fn import_build(app: &AppHandle, xml: Vec<u8>) -> Result<BuildSummary, Strin
     }
     let app_state = app.state::<AppState>();
     lock(&app_state.build).set(build);
+    keep_or_drop_stages(app, before.as_ref());
     let summary = current_build_summary(app);
     emit_build_summary(app);
     emit_guidance(app, &app_state.current_state());
@@ -367,9 +428,7 @@ pub struct GemRow {
 pub fn gem_rows(app: &AppHandle) -> Vec<GemRow> {
     let plan = current_gem_plan(app);
     let overrides = settings::load(app).unwrap_or_default().gem_overrides;
-    let app_state = app.state::<AppState>();
-    let builds = lock(&app_state.build);
-    let Some(build) = builds.build() else {
+    let Some(build) = plan_source(app) else {
         return Vec::new();
     };
     let mut rows: Vec<GemRow> = Vec::new();
@@ -424,24 +483,22 @@ pub fn set_gem_override(
 }
 
 /// The current build summary, if a build is loaded.
+/// The build the route's gems come from, with what its plan says about the campaign.
 pub fn current_build_summary(app: &AppHandle) -> Option<BuildSummary> {
-    let app_state = app.state::<AppState>();
-    let builds = lock(&app_state.build);
-    let build = builds.build()?;
-    let mut summary = BuildSummary::from_build(build);
-    if let Some(class) = build.class_name.as_deref() {
-        let saved = settings::load(app).unwrap_or_default();
-        let plan = exile_core::gemplan::plan_with_overrides(
-            build,
-            class,
-            &app_state.gems,
-            &saved.preset_stages,
-            &saved.gem_overrides,
-        );
+    let build = plan_source(app)?;
+    let mut summary = BuildSummary::from_build(&build);
+    if let Some(plan) = current_gem_plan(app) {
         summary.not_in_campaign = plan.not_in_campaign;
         summary.mules = plan.mules;
     }
     Some(summary)
+}
+
+/// The player's own build, as the settings show it next to the guide.
+pub fn current_character_summary(app: &AppHandle) -> Option<BuildSummary> {
+    let app_state = app.state::<AppState>();
+    let builds = lock(&app_state.build);
+    builds.build().map(BuildSummary::from_build)
 }
 
 /// The next objective for the current state + loaded build (for on-demand hydration).

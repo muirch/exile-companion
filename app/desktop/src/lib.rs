@@ -9,6 +9,7 @@ mod item;
 mod menu;
 mod overlay;
 mod pob;
+mod profile;
 mod runtime;
 mod settings;
 mod state;
@@ -99,6 +100,7 @@ pub fn run() {
             }
             overlay::restore_anchor(app.handle(), &saved);
             runtime::restore_build(app.handle());
+            runtime::restore_guide(app.handle());
             runtime::watch_build(app.handle().clone());
 
             if let Some(log) = exile_core::logfile::find_client_log(saved.last_log_path.as_deref())
@@ -158,6 +160,11 @@ pub fn run() {
             commands::chat_send,
             commands::chat_stop,
             commands::chat_new,
+            commands::get_profile,
+            commands::follow_guide,
+            commands::forget_guide,
+            commands::list_characters,
+            commands::import_character,
             commands::chat_history,
             commands::chat_open_saved,
             commands::chat_resume,
