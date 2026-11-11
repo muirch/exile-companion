@@ -86,6 +86,16 @@ pub fn set_mode(app: &AppHandle, mode: TreeMode) -> Result<(), String> {
     settings::save(app, &s)
 }
 
+pub fn prefs(app: &AppHandle) -> settings::TreePrefs {
+    settings::load(app).unwrap_or_default().tree_prefs
+}
+
+pub fn set_prefs(app: &AppHandle, prefs: settings::TreePrefs) -> Result<(), String> {
+    let mut s = settings::load(app)?;
+    s.tree_prefs = prefs;
+    settings::save(app, &s)
+}
+
 fn pob_src(app: &AppHandle) -> Result<PathBuf, String> {
     let path = settings::load(app)?
         .pob_path

@@ -54,6 +54,17 @@ pub struct Settings {
     pub tree_anchor: Option<(f64, f64)>,
     /// The size the player gave the tree window, at 1080p.
     pub tree_size: Option<(f64, f64)>,
+    pub tree_prefs: TreePrefs,
+}
+
+/// How the player left the tree window's side parts.
+#[derive(Debug, Clone, Default, Serialize, Deserialize)]
+#[serde(rename_all = "camelCase", default)]
+pub struct TreePrefs {
+    /// Ascendancies and bloodlines folded to a bar, by id ("Farrul").
+    pub folded: Vec<String>,
+    /// The list of keystones, ascendancy notables and masteries next to the tree.
+    pub list: bool,
 }
 
 impl Default for Settings {
@@ -87,6 +98,7 @@ impl Default for Settings {
             tree_mode: Default::default(),
             tree_anchor: None,
             tree_size: None,
+            tree_prefs: TreePrefs::default(),
         }
     }
 }

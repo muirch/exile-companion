@@ -255,6 +255,16 @@ pub fn set_tree_mode(app: AppHandle, mode: exile_core::tree::TreeMode) -> Result
 }
 
 #[tauri::command]
+pub fn get_tree_prefs(app: AppHandle) -> crate::settings::TreePrefs {
+    crate::tree::prefs(&app)
+}
+
+#[tauri::command]
+pub fn set_tree_prefs(app: AppHandle, prefs: crate::settings::TreePrefs) -> Result<(), String> {
+    crate::tree::set_prefs(&app, prefs)
+}
+
+#[tauri::command]
 pub fn get_tree_shown(app: AppHandle) -> bool {
     crate::tree::shown(&app)
 }
