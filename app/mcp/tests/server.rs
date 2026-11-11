@@ -115,6 +115,8 @@ fn lists_its_tools() {
         "guide_stages",
         "guide_stage_diff",
         "guide_notes",
+        "list_characters",
+        "import_character",
         "apply_changes",
         "build_history",
         "undo_change",
@@ -138,6 +140,14 @@ fn says_what_is_missing_instead_of_failing() {
     let (text, is_error) = c.tool("build_overview", json!({}));
     assert!(is_error);
     assert!(text.contains("exile-pob-engine"), "{text}");
+}
+
+#[test]
+fn asks_for_the_account_before_importing_a_character() {
+    let empty = tempfile::tempdir().unwrap();
+    let mut c = Client::start_env(&["--engine", "/nowhere/exile-pob-engine"], empty.path());
+    let (text, is_error) = c.tool("import_character", json!({}));
+    assert!(is_error && text.contains("account name"), "{text}");
 }
 
 #[test]
