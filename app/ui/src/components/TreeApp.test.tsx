@@ -188,6 +188,7 @@ describe('TreeApp', () => {
     await userEvent.click(await screen.findByRole('button', { name: 'Vs. character' }));
     expect(commands.setTreeMode).toHaveBeenCalledWith('character');
     expect(await screen.findByText('2 to take')).toBeInTheDocument();
+    await screen.findByTestId('tree');
     expect(screen.getByText(/the guide\s+doesn't take/)).toBeInTheDocument();
     expect(marks()).toEqual({ '10': 'taken', '11': 'added', '13': 'extra', '20': 'added' });
     const legend = screen.getByText('Not in the guide').parentElement!;
@@ -236,8 +237,9 @@ describe('TreeApp', () => {
   it('draws the ascendancy apart, with its own card', async () => {
     mode = 'character';
     render(<TreeApp />);
-    await screen.findByText('2 to take');
-    const map = screen.getByTestId('ascendancy-Guardian');
+    // The summary comes before the tree's layout, so wait for the map itself.
+    const map = await screen.findByTestId('ascendancy-Guardian');
+    expect(screen.getByText('2 to take')).toBeInTheDocument();
     expect(map.querySelector('[data-node="30"]')).toHaveAttribute('data-mark', 'added');
     // The start isn't taken, so it's drawn like any node out of play.
     expect(map.querySelector('[data-node="31"]')).toBeNull();
