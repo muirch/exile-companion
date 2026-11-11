@@ -8,7 +8,7 @@ A companion app for Path of Exile 1 that sits over the game. It knows your build
 [![License: MIT](https://img.shields.io/badge/license-MIT-blue.svg)](LICENSE)
 ![Path of Exile 1](https://img.shields.io/badge/Path%20of%20Exile-1-a68a64.svg)
 
-![The assistant's chat next to the campaign overlay, with an item check above the route.](docs/images/companion.png)
+![The full overlay with an item check above the route, the compact overlay with what a level-up made usable, and the assistant's chat.](docs/images/companion.png)
 
 </div>
 
