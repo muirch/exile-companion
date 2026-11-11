@@ -66,6 +66,9 @@ export interface TreeNode {
   ascendancy?: string;
   /** A mastery's effects to pick from. */
   mastery?: { effect: number; stats: string[] }[];
+  /** The game's explanation in brackets, "(Recently refers to the past 4 seconds)". */
+  reminder?: string[];
+  flavour?: string[];
 }
 
 export interface TreeEdge {
