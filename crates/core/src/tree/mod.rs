@@ -92,6 +92,11 @@ pub struct TreeNode {
     /// A mastery's effects to pick from.
     #[serde(skip_serializing_if = "Vec::is_empty")]
     pub mastery: Vec<MasteryEffect>,
+    /// The game's explanation in brackets, "(Recently refers to the past 4 seconds)".
+    #[serde(skip_serializing_if = "Vec::is_empty")]
+    pub reminder: Vec<String>,
+    #[serde(skip_serializing_if = "Vec::is_empty")]
+    pub flavour: Vec<String>,
 }
 
 #[derive(Debug, Clone, PartialEq, Serialize, Deserialize)]
@@ -186,6 +191,8 @@ struct RawNode {
     ascendancy_name: Option<String>,
     expansion_jewel: Option<Value>,
     mastery_effects: Vec<MasteryEffect>,
+    reminder_text: Vec<String>,
+    flavour_text: Vec<String>,
 }
 
 /// Where a node sits on its orbit, as PoB places it. GGG's export spaces 16 and 40 node orbits at
@@ -271,6 +278,8 @@ impl TreeLayout {
                 stats: n.stats.clone(),
                 ascendancy: n.ascendancy_name.clone().filter(|a| !a.is_empty()),
                 mastery: n.mastery_effects.clone(),
+                reminder: n.reminder_text.clone(),
+                flavour: n.flavour_text.clone(),
             });
             placed.push(Placed {
                 group: group_id,
@@ -613,7 +622,7 @@ mod tests {
         [12]= { ["skill"]= 12, ["name"]= "Life Mastery", ["isMastery"]= true, ["group"]= 1, ["orbit"]= 0, ["orbitIndex"]= 0, ["out"]= {}, ["in"]= { "10" },
             ["masteryEffects"]= { { ["effect"]= 9755, ["stats"]= { "+50 to maximum Life" } }, { ["effect"]= 4119, ["stats"]= { "Regenerate 1% of Life per second" } } } },
         [13]= { ["skill"]= 13, ["name"]= "Socket", ["isJewelSocket"]= true, ["group"]= 1, ["orbit"]= 1, ["orbitIndex"]= 3, ["out"]= {}, ["in"]= { "10" } },
-        [20]= { ["skill"]= 20, ["name"]= "Iron Reflexes", ["isKeystone"]= true, ["group"]= 2, ["orbit"]= 0, ["orbitIndex"]= 0, ["out"]= {}, ["in"]= { "11" } },
+        [20]= { ["skill"]= 20, ["name"]= "Iron Reflexes", ["isKeystone"]= true, ["reminderText"]= { "(Armour reduces Physical Damage)" }, ["flavourText"]= { "Steel yourself." }, ["group"]= 2, ["orbit"]= 0, ["orbitIndex"]= 0, ["out"]= {}, ["in"]= { "11" } },
         [30]= { ["skill"]= 30, ["name"]= "Radiant Crusade", ["isNotable"]= true, ["ascendancyName"]= "Guardian", ["group"]= 4, ["orbit"]= 1, ["orbitIndex"]= 0, ["out"]= {}, ["in"]= { "31" } },
         [31]= { ["skill"]= 31, ["name"]= "Guardian", ["isAscendancyStart"]= true, ["ascendancyName"]= "Guardian", ["group"]= 4, ["orbit"]= 0, ["orbitIndex"]= 0, ["out"]= { "30" }, ["in"]= { "40" } },
         [32]= { ["skill"]= 32, ["name"]= "Searing Purity", ["isNotable"]= true, ["ascendancyName"]= "Guardian", ["group"]= 2, ["orbit"]= 0, ["orbitIndex"]= 0, ["out"]= {}, ["in"]= {} },
@@ -688,6 +697,12 @@ mod tests {
         assert_eq!(at(13), (0., 82.));
         assert_eq!(at(20), (1000., 0.));
         assert_eq!(l.node(20).unwrap().kind, NodeKind::Keystone);
+        assert_eq!(
+            l.node(20).unwrap().reminder,
+            vec!["(Armour reduces Physical Damage)"]
+        );
+        assert_eq!(l.node(20).unwrap().flavour, vec!["Steel yourself."]);
+        assert!(l.node(10).unwrap().reminder.is_empty());
         assert_eq!(l.node(13).unwrap().kind, NodeKind::Jewel);
         assert_eq!(at(30), (-8000., 8918.));
         assert_eq!(l.node(30).unwrap().ascendancy.as_deref(), Some("Guardian"));
