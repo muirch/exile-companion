@@ -35,6 +35,9 @@ import type {
   Settings,
   SourceStatus,
   SpeedMultiplier,
+  TreeLayout,
+  TreeMode,
+  TreeStage,
 } from './types';
 
 const EMPTY_STATE: CampaignState = {
@@ -240,6 +243,25 @@ export const closeGems = (): Promise<void> => (isTauri() ? invoke('close_gems') 
 /** The author's notes in the PoB the route's gems come from. */
 export const getNotes = (): Promise<string | null> =>
   isTauri() ? invoke('get_notes') : Promise.resolve(mock.notesMock());
+
+/** PoB's passive tree for `version` ("3_29"), or its newest one. */
+export const getTreeLayout = (version: string | null): Promise<TreeLayout> =>
+  isTauri() ? invoke('get_tree_layout', { version }) : import('./mock-tree').then((m) => m.treeLayoutMock());
+
+/** Stage `stage` of the guide's tree, or the one the character's level is at, in the saved mode. */
+export const getTreeStage = (stage: number | null): Promise<TreeStage | null> =>
+  isTauri() ? invoke('get_tree_stage', { stage }) : import('./mock-tree').then((m) => m.treeStageMock(stage));
+
+export const setTreeMode = (mode: TreeMode): Promise<void> =>
+  isTauri() ? invoke('set_tree_mode', { mode }) : import('./mock-tree').then((m) => m.setTreeModeMock(mode));
+
+export const getTreeShown = (): Promise<boolean> =>
+  isTauri() ? invoke('get_tree_shown') : import('./mock-tree').then((m) => m.treeShownMock());
+
+export const setTreeShown = (on: boolean): Promise<void> =>
+  isTauri() ? invoke('set_tree_shown', { on }) : import('./mock-tree').then((m) => m.setTreeShownMock(on));
+
+export const closeTree = (): Promise<void> => (isTauri() ? invoke('close_tree') : Promise.resolve());
 
 export const getProfile = (): Promise<Profile> =>
   isTauri() ? invoke('get_profile') : Promise.resolve(mock.profileMock());

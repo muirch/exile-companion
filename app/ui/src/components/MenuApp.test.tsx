@@ -43,6 +43,15 @@ describe('MenuApp', () => {
     expect(commands.updateSettings).toHaveBeenCalledWith({ compact: false });
   });
 
+  it('turns the passive tree on and shows it off until then', async () => {
+    render(<MenuApp />);
+    const row = await screen.findByRole('menuitemcheckbox', { name: /Passive tree/ });
+    expect(row).toHaveTextContent('Off');
+    await userEvent.click(row);
+    expect(commands.setTreeShown).toHaveBeenCalledWith(true);
+    expect(row).toHaveTextContent('On');
+  });
+
   it('walks the rows with the arrow keys', async () => {
     render(<MenuApp />);
     expect(screen.getByRole('menuitemcheckbox', { name: /Show route/ })).toHaveFocus();

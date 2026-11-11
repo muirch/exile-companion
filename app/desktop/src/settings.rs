@@ -48,6 +48,12 @@ pub struct Settings {
     pub chat_anchor: Option<(f64, f64)>,
     /// The gems window's top-left corner as fractions of its monitor, once the player moved it.
     pub gems_anchor: Option<(f64, f64)>,
+    /// The passive tree window opens with the layer. Off until the player turns it on.
+    pub tree_shown: bool,
+    pub tree_mode: exile_core::tree::TreeMode,
+    pub tree_anchor: Option<(f64, f64)>,
+    /// The size the player gave the tree window, at 1080p.
+    pub tree_size: Option<(f64, f64)>,
 }
 
 impl Default for Settings {
@@ -77,6 +83,10 @@ impl Default for Settings {
             chat: Default::default(),
             chat_anchor: None,
             gems_anchor: None,
+            tree_shown: false,
+            tree_mode: Default::default(),
+            tree_anchor: None,
+            tree_size: None,
         }
     }
 }
