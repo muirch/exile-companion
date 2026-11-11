@@ -18,6 +18,8 @@ Press Alt+A and ask about your build. The assistant measures every change with y
 
 Answers come from Anthropic, OpenRouter or a model server you name, with your own key, at about $0.001 to $0.03 a question depending on the model. Chats are saved on your PC and you can go back to one later. See [docs/chat.md](docs/chat.md).
 
+Most of it needs no AI model or key. The route and its gems, the item check, the level-up and Kitava cards and the chat's list of what to change next are worked out on your PC from the game's log and your Path of Building. Only the chat's answers go to a model.
+
 The campaign overlay looks like one of the game's item tooltips. The header is the area you're in, the body is what to do there and the last line is the way out, in the game's own text colours. It follows the game's `Client.txt` log on its own and shows the speedrunning route from [exile-leveling](https://github.com/HeartofPhos/exile-leveling). With your build imported, it lists each gem at the quest or vendor where you get it, and suggests a mule when another class gets a gem much earlier.
 
 It also checks the item under the cursor against your build (DPS, EHP, life and resistances), says what a level-up made usable, warns before Kitava when your resistances won't stay capped, and shows when an area costs you experience.
