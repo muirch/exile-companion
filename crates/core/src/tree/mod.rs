@@ -120,6 +120,9 @@ pub struct TreeEdge {
 pub struct TreeLayout {
     pub nodes: Vec<TreeNode>,
     pub edges: Vec<TreeEdge>,
+    /// The name the game shows for each ascendancy and bloodline id, "Farrul" is "Farrul
+    /// Bloodline".
+    pub ascendancy_names: BTreeMap<String, String>,
     #[serde(skip)]
     index: HashMap<u32, usize>,
 }
@@ -129,6 +132,22 @@ struct RawTree {
     groups: BTreeMap<String, RawGroup>,
     nodes: BTreeMap<String, RawNode>,
     constants: RawConstants,
+    #[serde(default)]
+    classes: Vec<RawClass>,
+    #[serde(default)]
+    alternate_ascendancies: Vec<RawAscendancy>,
+}
+
+#[derive(Deserialize)]
+struct RawClass {
+    #[serde(default)]
+    ascendancies: Vec<RawAscendancy>,
+}
+
+#[derive(Deserialize)]
+struct RawAscendancy {
+    id: String,
+    name: String,
 }
 
 #[derive(Deserialize)]
@@ -301,9 +320,17 @@ impl TreeLayout {
         let linked: HashSet<u32> = edges.iter().flat_map(|e| [e.a, e.b]).collect();
         nodes.retain(|n| n.ascendancy.is_none() || linked.contains(&n.id));
         let index = nodes.iter().enumerate().map(|(i, n)| (n.id, i)).collect();
+        let ascendancy_names = raw
+            .classes
+            .iter()
+            .flat_map(|c| &c.ascendancies)
+            .chain(&raw.alternate_ascendancies)
+            .map(|a| (a.id.clone(), a.name.clone()))
+            .collect();
         Ok(Self {
             nodes,
             edges,
+            ascendancy_names,
             index,
         })
     }
@@ -390,7 +417,7 @@ pub struct TreeStage {
     pub added_names: Vec<String>,
     /// The ascendancy notables, in the order the guide takes them.
     pub ascendancy: Vec<AscendancyMark>,
-    /// The ascendancies to draw: the ones with marked nodes, else the guide's.
+    /// The ascendancies with marked nodes, the guide's own first, then a bloodline.
     pub ascendancies: Vec<String>,
     pub nodes: Vec<NodeMark>,
     pub edges: Vec<EdgeMark>,
@@ -541,9 +568,7 @@ pub fn tree_stage(
         })
         .collect();
     ascendancy.sort_by_key(|(since, _)| since.unwrap_or(usize::MAX));
-    if ascendancies.is_empty() {
-        ascendancies.extend(guide.ascend_class_name.clone());
-    }
+    ascendancies.sort_by_key(|a| Some(a) != guide.ascend_class_name.as_ref());
     TreeStage {
         stages: stage_titles(guide),
         stage,
@@ -579,6 +604,7 @@ mod tests {
         [2]= { ["x"]= 1000, ["y"]= 0 },
         [3]= { ["x"]= 5000, ["y"]= 5000, ["isProxy"]= true },
         [4]= { ["x"]= -8000, ["y"]= 9000 },
+        [5]= { ["x"]= -1000, ["y"]= 13000 },
     },
     ["nodes"]= {
         ["root"]= { ["group"]= 0, ["out"]= { "40" }, ["in"]= {} },
@@ -591,8 +617,16 @@ mod tests {
         [30]= { ["skill"]= 30, ["name"]= "Radiant Crusade", ["isNotable"]= true, ["ascendancyName"]= "Guardian", ["group"]= 4, ["orbit"]= 1, ["orbitIndex"]= 0, ["out"]= {}, ["in"]= { "31" } },
         [31]= { ["skill"]= 31, ["name"]= "Guardian", ["isAscendancyStart"]= true, ["ascendancyName"]= "Guardian", ["group"]= 4, ["orbit"]= 0, ["orbitIndex"]= 0, ["out"]= { "30" }, ["in"]= { "40" } },
         [32]= { ["skill"]= 32, ["name"]= "Searing Purity", ["isNotable"]= true, ["ascendancyName"]= "Guardian", ["group"]= 2, ["orbit"]= 0, ["orbitIndex"]= 0, ["out"]= {}, ["in"]= {} },
+        [60]= { ["skill"]= 60, ["name"]= "Farrul Bloodline", ["isAscendancyStart"]= true, ["isBloodline"]= true, ["ascendancyName"]= "Farrul", ["group"]= 5, ["orbit"]= 0, ["orbitIndex"]= 0, ["out"]= { "61" }, ["in"]= {} },
+        [61]= { ["skill"]= 61, ["name"]= "Huntleader", ["isNotable"]= true, ["isBloodline"]= true, ["ascendancyName"]= "Farrul", ["group"]= 5, ["orbit"]= 1, ["orbitIndex"]= 0, ["out"]= {}, ["in"]= { "60" } },
         [40]= { ["skill"]= 40, ["name"]= "TEMPLAR", ["classStartIndex"]= 5, ["group"]= 2, ["orbit"]= 0, ["orbitIndex"]= 0, ["out"]= { "20", "31" }, ["in"]= {} },
         [50]= { ["skill"]= 50, ["name"]= "Cluster", ["group"]= 3, ["orbit"]= 0, ["orbitIndex"]= 0, ["out"]= {}, ["in"]= {} },
+    },
+    ["classes"]= {
+        { ["name"]= "Templar", ["ascendancies"]= { { ["id"]= "Inquisitor", ["name"]= "Inquisitor" }, { ["id"]= "Guardian", ["name"]= "Guardian" } } },
+    },
+    ["alternate_ascendancies"]= {
+        { ["id"]= "Farrul", ["name"]= "Farrul Bloodline", ["flavourText"]= "You and your pack run wild" },
     },
     ["constants"]= {
         ["skillsPerOrbit"]= { 1, 6, 16, 16, 40, 72, 72 },
@@ -634,7 +668,15 @@ mod tests {
     fn places_nodes_where_pob_does() {
         let l = layout();
         let ids: Vec<u32> = l.nodes.iter().map(|n| n.id).collect();
-        assert_eq!(ids, vec![10, 11, 12, 13, 20, 30, 31]);
+        assert_eq!(ids, vec![10, 11, 12, 13, 20, 30, 31, 60, 61]);
+        assert_eq!(
+            l.ascendancy_names.get("Farrul").map(String::as_str),
+            Some("Farrul Bloodline")
+        );
+        assert_eq!(
+            l.ascendancy_names.get("Guardian").map(String::as_str),
+            Some("Guardian")
+        );
         let at = |id| {
             let n = l.node(id).unwrap();
             (n.x, n.y)
@@ -673,7 +715,7 @@ mod tests {
     fn joins_an_orbit_with_an_arc_and_skips_masteries() {
         let l = layout();
         assert_eq!(
-            l.edges,
+            l.edges[..4],
             vec![
                 TreeEdge {
                     a: 10,
@@ -784,14 +826,21 @@ mod tests {
     }
 
     #[test]
-    fn draws_the_guides_ascendancy_before_it_takes_any() {
-        let g = PobBuild {
+    fn draws_a_bloodline_after_the_guides_ascendancy() {
+        let mut g = PobBuild {
             ascend_class_name: Some("Guardian".into()),
             ..guide()
         };
+        g.specs[1].nodes.extend([60, 61]);
+        let s = tree_stage(&layout(), &g, 1, None, TreeMode::Tree);
+        assert_eq!(s.ascendancies, vec!["Guardian", "Farrul"]);
+        let names: Vec<&str> = s.ascendancy.iter().map(|a| a.name.as_str()).collect();
+        assert_eq!(names, vec!["Radiant Crusade", "Huntleader"]);
+        // Bloodline points don't count as tree points.
+        assert_eq!(s.points, 3);
+        // Before the stage takes a point there, an ascendancy isn't drawn at all.
         let s = tree_stage(&layout(), &g, 0, None, TreeMode::Tree);
-        assert_eq!(s.ascendancies, vec!["Guardian"]);
-        assert!(s.ascendancy.is_empty());
+        assert!(s.ascendancies.is_empty());
     }
 
     #[test]

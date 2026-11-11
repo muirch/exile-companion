@@ -1,5 +1,6 @@
-//! Writes the browser mock's passive tree: part of PoB's tree around a guide's first stages with
-//! the guide's ascendancy, and each of those stages in every mode, against a made-up character.
+//! Writes the browser mock's passive tree: part of PoB's tree around a guide's first stages and its
+//! first stage with a bloodline, with the ascendancies, and each of those stages in every mode,
+//! against a made-up character.
 //!
 //! cargo run -p exile-core --example dump_tree -- <PoB src> <guide.xml> > app/ui/src/ipc/mock-tree.json
 
@@ -61,8 +62,15 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
         ..PobBuild::default()
     };
 
+    // The first stages, and the first one with a bloodline, if the guide takes one.
+    let bloodline = (STAGES..guide.specs.len()).find(|&i| {
+        tree_stage(&layout, &guide, i, None, TreeMode::Tree)
+            .ascendancies
+            .len()
+            > 1
+    });
     let mut stages = Vec::new();
-    for stage in 0..STAGES.min(guide.specs.len()) {
+    for stage in (0..STAGES.min(guide.specs.len())).chain(bloodline) {
         for mode in [TreeMode::Tree, TreeMode::New, TreeMode::Character] {
             stages.push(tree_stage(&layout, &guide, stage, Some(&character), mode));
         }
