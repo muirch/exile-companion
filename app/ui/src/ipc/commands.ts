@@ -16,6 +16,7 @@ import type {
   BuildSummary,
   CampaignState,
   BindError,
+  CharacterList,
   ChatProvider,
   ChatSummary,
   ChatView,
@@ -27,6 +28,7 @@ import type {
   OpenedChat,
   PobInfo,
   PobSync,
+  Profile,
   RouteView,
   SavedExchange,
   Settings,
@@ -227,6 +229,26 @@ export const pasteBuild = async (): Promise<BuildSummary> => {
   const code = await readText();
   return invoke('import_build_code', { code });
 };
+
+export const getProfile = (): Promise<Profile> =>
+  isTauri() ? invoke('get_profile') : Promise.resolve(mock.profileMock());
+
+/** Follows the guide whose PoB code, build link or page is in the clipboard. */
+export const followGuideFromClipboard = async (): Promise<Profile> => {
+  if (!isTauri()) return mock.profileMock();
+  const text = await readText();
+  return invoke('follow_guide', { text });
+};
+
+export const forgetGuide = (): Promise<Profile> =>
+  isTauri() ? invoke('forget_guide') : Promise.resolve({ ...mock.profileMock(), guide: null });
+
+export const listCharacters = (account: string): Promise<CharacterList> =>
+  isTauri() ? invoke('list_characters', { account }) : Promise.resolve(mock.charactersMock(account));
+
+/** With no name, the last imported character again. */
+export const importCharacter = (account: string | null, character: string | null): Promise<Profile> =>
+  isTauri() ? invoke('import_character', { account, character }) : Promise.resolve(mock.profileMock());
 
 export const clearBuild = (): Promise<void> => {
   if (isTauri()) return invoke('clear_build');

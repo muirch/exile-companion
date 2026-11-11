@@ -3,6 +3,11 @@ import { useEffect, useState } from 'react';
 import {
   clearBuild,
   closeSettings,
+  followGuideFromClipboard,
+  forgetGuide,
+  getProfile,
+  importCharacter,
+  listCharacters,
   connectAgent,
   copyAssistantConfig,
   forgetApiKey,
@@ -31,9 +36,13 @@ import {
   stopSource,
   updateSettings,
 } from '../ipc/commands';
+import { isTauri } from '../ipc/env';
+import { onGuideChanged } from '../ipc/events';
 import type {
   AgentView,
   AssistantView,
+  BuildSummary,
+  CharacterList,
   Bandit,
   ChatConfig,
   ChatProvider,
@@ -43,6 +52,7 @@ import type {
   PobInfo,
   PobSync,
   PresetStage,
+  Profile,
 } from '../ipc/types';
 import {
   Button,
@@ -503,25 +513,225 @@ function muleText(m: Mule): string {
   return `${m.class}: ${parts.join(', ')}`;
 }
 
+export function buildLine(b: BuildSummary): string {
+  return [[b.class_name, b.ascend_class_name].filter(Boolean).join(' '), b.main_skill]
+    .filter(Boolean)
+    .join(', ');
+}
+
+function useProfile(): [Profile | null, (p: Profile) => void] {
+  const build = useAppStore((s) => s.build);
+  const [profile, setProfile] = useState<Profile | null>(null);
+  // The build changes after an import, from the app or the assistant.
+  useEffect(() => {
+    if (build !== undefined) void getProfile().then(setProfile);
+  }, [build]);
+  useEffect(() => {
+    if (!isTauri()) return;
+    const off = onGuideChanged(() => void getProfile().then(setProfile));
+    return () => void off.then((f) => f());
+  }, []);
+  return [profile, setProfile];
+}
+
+function GuideRows({
+  profile,
+  onProfile,
+}: {
+  profile: Profile | null;
+  onProfile: (p: Profile) => void;
+}): React.JSX.Element {
+  const [busy, setBusy] = useState(false);
+  const [error, setError] = useState<string | null>(null);
+  const guide = profile?.guide;
+  return (
+    <>
+      <Row label="Guide">
+        <span
+          className="min-w-0 flex-1 truncate text-[13px] text-value"
+          title={guide?.source ?? ''}
+        >
+          {guide ? buildLine(guide.summary) : 'None'}
+        </span>
+      </Row>
+      <Row label="">
+        <Button
+          disabled={busy}
+          onClick={async () => {
+            setBusy(true);
+            setError(null);
+            try {
+              onProfile(await followGuideFromClipboard());
+            } catch (e) {
+              setError(String(e));
+            } finally {
+              setBusy(false);
+            }
+          }}
+        >
+          {busy ? 'Loading…' : 'Paste guide link'}
+        </Button>
+        {guide && (
+          <ConfirmButton
+            label="Forget"
+            confirm="Click again to forget"
+            onConfirm={() => void forgetGuide().then(onProfile)}
+          />
+        )}
+      </Row>
+      {error && (
+        <Row label="">
+          <span role="alert" className="min-w-0 flex-1 font-body text-[12px] text-corrupted">
+            {error}
+          </span>
+        </Row>
+      )}
+      <Note>
+        The guide's PoB, from a pobb.in or poe.ninja link, a PoB code or a guide page. The route's
+        gems and the assistant's advice follow it.
+      </Note>
+    </>
+  );
+}
+
+function characterLine(profile: Profile | null): string {
+  const c = profile?.character;
+  if (!c) return 'None';
+  const who = [c.ascend_class_name ?? c.class_name, c.level ? `level ${c.level}` : null]
+    .filter(Boolean)
+    .join(', ');
+  return profile?.link ? `${profile.link.character}, ${who}` : buildLine(c);
+}
+
+function AccountRows({
+  profile,
+  onProfile,
+}: {
+  profile: Profile | null;
+  onProfile: (p: Profile) => void;
+}): React.JSX.Element {
+  const [account, setAccount] = useState(profile?.link?.account ?? '');
+  const [list, setList] = useState<CharacterList | null>(null);
+  const [pick, setPick] = useState('');
+  const [busy, setBusy] = useState<'find' | 'import' | null>(null);
+  const [error, setError] = useState<string | null>(null);
+  const run = async (what: 'find' | 'import', f: () => Promise<void>): Promise<void> => {
+    setBusy(what);
+    setError(null);
+    try {
+      await f();
+    } catch (e) {
+      setError(String(e));
+    } finally {
+      setBusy(null);
+    }
+  };
+  return (
+    <>
+      <Row label="Account">
+        <TextField
+          value={account}
+          placeholder="Name#1234"
+          aria-label="pathofexile.com account"
+          className="min-w-0 flex-1"
+          onChange={(e) => setAccount(e.target.value)}
+        />
+        <Button
+          disabled={!account.trim() || busy !== null}
+          onClick={() =>
+            void run('find', async () => {
+              const found = await listCharacters(account);
+              setList(found);
+              setAccount(found.account);
+              setPick(
+                found.characters.find((c) => c.name === found.playing)?.name ??
+                  found.characters[0]?.name ??
+                  '',
+              );
+            })
+          }
+        >
+          {busy === 'find' ? 'Looking…' : 'Find characters'}
+        </Button>
+      </Row>
+      {list && list.characters.length > 0 && (
+        <Row label="">
+          <Select
+            value={pick}
+            label="Character"
+            className="min-w-0 flex-1"
+            options={list.characters.map((c) => ({
+              value: c.name,
+              label: `${c.name}, level ${c.level} ${c.class} (${c.league})`,
+            }))}
+            onChange={setPick}
+          />
+          <Button
+            disabled={!pick || busy !== null}
+            onClick={() =>
+              void run('import', async () => {
+                onProfile(await importCharacter(list.account, pick));
+                setList(null);
+              })
+            }
+          >
+            {busy === 'import' ? 'Importing…' : 'Import'}
+          </Button>
+        </Row>
+      )}
+      {error && (
+        <Row label="">
+          <span role="alert" className="min-w-0 flex-1 font-body text-[12px] text-corrupted">
+            {error}
+          </span>
+        </Row>
+      )}
+      <Note>
+        Reads your character from your pathofexile.com profile the way Path of Building's import does.
+        The profile's characters have to be public.
+      </Note>
+    </>
+  );
+}
+
 function BuildSection(): React.JSX.Element {
   const build = useAppStore((s) => s.build);
   const setBuild = useAppStore((s) => s.setBuild);
+  const [profile, setProfile] = useProfile();
   const [busy, setBusy] = useState(false);
+  const [refreshing, setRefreshing] = useState(false);
+  const [fromSite, setFromSite] = useState(false);
   const [error, setError] = useState<string | null>(null);
-  const summary = build
-    ? [
-        [build.class_name, build.ascend_class_name].filter(Boolean).join(' '),
-        build.active_spec_title,
-        build.main_skill,
-      ]
-        .filter(Boolean)
-        .join(', ')
-    : 'None';
   return (
     <Section title="Path of Building">
-      <Row label="Build">
-        <span className="min-w-0 flex-1 truncate text-[13px] text-value">{summary}</span>
+      <GuideRows profile={profile} onProfile={setProfile} />
+      <Row label="Character">
+        <span className="min-w-0 flex-1 truncate text-[13px] text-value">{characterLine(profile)}</span>
       </Row>
+      <Row label="">
+        {profile?.link && (
+          <Button
+            disabled={refreshing}
+            onClick={async () => {
+              setRefreshing(true);
+              setError(null);
+              try {
+                setProfile(await importCharacter(null, null));
+              } catch (e) {
+                setError(String(e));
+              } finally {
+                setRefreshing(false);
+              }
+            }}
+          >
+            {refreshing ? 'Refreshing…' : 'Refresh'}
+          </Button>
+        )}
+        <Button aria-expanded={fromSite} onClick={() => setFromSite(!fromSite)}>
+          From pathofexile.com
+        </Button>
+      </Row>
+      {fromSite && <AccountRows profile={profile} onProfile={setProfile} />}
       <Row label="">
         <Button
           onClick={async () => {

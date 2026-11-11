@@ -2,6 +2,7 @@
 // commands/events whose Rust side lives in `app/desktop` (regenerate the generated/ dir with
 // `pnpm gen:bindings`).
 
+import type { BuildSummary } from './generated/BuildSummary';
 import type { PresetStage } from './generated/PresetStage';
 import type { SpeedMultiplier } from './generated/SpeedMultiplier';
 
@@ -22,6 +23,41 @@ export type { Step } from './generated/Step';
 export type { RouteView } from './generated/RouteView';
 
 export type SourceMode = 'idle' | 'live' | 'replay';
+
+/** The followed guide (mirrors `runtime::GuideView`). */
+export interface GuideView {
+  summary: BuildSummary;
+  source: string | null;
+}
+
+/** A character remembered from pathofexile.com (mirrors `exile_core::character::CharacterLink`). */
+export interface CharacterLink {
+  account: string;
+  character: string;
+  realm: string;
+  imported: string;
+}
+
+/** The guide and the player's own build (mirrors `profile::Profile`). */
+export interface Profile {
+  guide: GuideView | null;
+  character: BuildSummary | null;
+  link: CharacterLink | null;
+}
+
+export interface CharacterEntry {
+  name: string;
+  class: string;
+  level: number;
+  league: string;
+}
+
+/** Mirrors `profile::CharacterList`. */
+export interface CharacterList {
+  account: string;
+  characters: CharacterEntry[];
+  playing: string | null;
+}
 
 /** Persisted user settings (mirrors `exile_companion::settings::Settings`). */
 export interface Settings {

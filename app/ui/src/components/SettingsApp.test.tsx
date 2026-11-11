@@ -3,6 +3,7 @@ import userEvent from '@testing-library/user-event';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 
 import * as commands from '../ipc/commands';
+import type { BuildSummary, Profile } from '../ipc/types';
 import { useAppStore } from '../store/useAppStore';
 import { SettingsApp, presetName } from './SettingsApp';
 
@@ -206,6 +207,64 @@ describe('SettingsApp', () => {
     await userEvent.click(alira);
     expect(alira).toHaveAttribute('aria-pressed', 'true');
     expect(commands.updateSettings).toHaveBeenCalledWith({ bandit: 'alira' });
+  });
+
+  describe('guide and character', () => {
+    const summary: BuildSummary = {
+      class_name: 'Templar',
+      ascend_class_name: 'Guardian',
+      level: 14,
+      active_spec_title: null,
+      main_skill: 'Dominating Blow',
+      spec_count: 1,
+      gem_count: 3,
+      presets: [],
+      not_in_campaign: [],
+      mules: [],
+    };
+    const profile: Profile = {
+      guide: { summary, source: 'https://pobb.in/x' },
+      character: { ...summary, ascend_class_name: null, main_skill: 'Sunder' },
+      link: { account: 'Exile#1234', character: 'RealOne', realm: 'pc', imported: '2026-11-12T18:00:00Z' },
+    };
+
+    it('follows a guide from the clipboard and forgets it with two clicks', async () => {
+      vi.mocked(commands.followGuideFromClipboard).mockResolvedValue(profile);
+      vi.mocked(commands.forgetGuide).mockResolvedValue({ ...profile, guide: null });
+      render(<SettingsApp />);
+      await userEvent.click(screen.getByRole('button', { name: 'Paste guide link' }));
+      expect(await screen.findByText('Templar Guardian, Dominating Blow')).toBeInTheDocument();
+      expect(screen.getByText('RealOne, Templar, level 14')).toBeInTheDocument();
+      await userEvent.click(screen.getByRole('button', { name: 'Forget' }));
+      expect(commands.forgetGuide).not.toHaveBeenCalled();
+    });
+
+    it('finds the account characters and imports the one being played', async () => {
+      vi.mocked(commands.listCharacters).mockResolvedValue({
+        account: 'Exile#1234',
+        characters: [
+          { name: 'MuleGuy', class: 'Ranger', level: 4, league: 'Standard' },
+          { name: 'RealOne', class: 'Templar', level: 14, league: 'Standard' },
+        ],
+        playing: 'RealOne',
+      });
+      vi.mocked(commands.importCharacter).mockResolvedValue(profile);
+      render(<SettingsApp />);
+      await userEvent.click(screen.getByRole('button', { name: 'From pathofexile.com' }));
+      await userEvent.type(screen.getByRole('textbox', { name: 'pathofexile.com account' }), 'Exile-1234');
+      await userEvent.click(screen.getByRole('button', { name: 'Find characters' }));
+      expect(commands.listCharacters).toHaveBeenCalledWith('Exile-1234');
+      await userEvent.click(await screen.findByRole('button', { name: 'Import' }));
+      expect(commands.importCharacter).toHaveBeenCalledWith('Exile#1234', 'RealOne');
+    });
+
+    it('refreshes an imported character with one click', async () => {
+      vi.mocked(commands.getProfile).mockResolvedValue(profile);
+      vi.mocked(commands.importCharacter).mockResolvedValue(profile);
+      render(<SettingsApp />);
+      await userEvent.click(await screen.findByRole('button', { name: 'Refresh' }));
+      expect(commands.importCharacter).toHaveBeenCalledWith(null, null);
+    });
   });
 
   it('switches the overlay to compact and sets the fade time', async () => {
