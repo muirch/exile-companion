@@ -188,6 +188,23 @@ fn build_path(app: &AppHandle) -> Option<std::path::PathBuf> {
         .map(|d| d.join("build.xml"))
 }
 
+/// The build's gear is the followed guide's, so an item check compares with that, not with what
+/// the character wears.
+pub fn build_has_guide_gear(app: &AppHandle) -> bool {
+    let Some(path) = build_path(app) else {
+        return false;
+    };
+    let (Some(dir), Ok(build)) = (path.parent(), std::fs::read(&path)) else {
+        return false;
+    };
+    match exile_core::followed_guide::GuideStore::new(dir).get() {
+        Ok(Some((_, guide))) => {
+            exile_core::followed_guide::has_guide_gear(&build, guide.as_bytes())
+        }
+        _ => false,
+    }
+}
+
 /// Loads the build saved by the last import, so gem steps survive a restart.
 pub fn restore_build(app: &AppHandle) {
     let Some(path) = build_path(app).filter(|p| p.exists()) else {

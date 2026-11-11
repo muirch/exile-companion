@@ -31,7 +31,7 @@ describe('gear numbers', () => {
 
 describe('ItemCard', () => {
   it('shows the verdict, the slot and what it replaces', () => {
-    render(<ItemCard compact={false} card={{ kind: 'gear', name: 'Death Song, Iron Ring', card: GEAR, needsLevel: null }} />);
+    render(<ItemCard compact={false} card={{ kind: 'gear', name: 'Death Song, Iron Ring', card: GEAR, needsLevel: null, guideGear: false }} />);
     expect(screen.getByRole('heading', { name: 'Death Song, Iron Ring' })).toBeInTheDocument();
     expect(screen.getByText('Ring 1 · instead of Iron Ring')).toBeInTheDocument();
     expect(screen.getByText('Upgrade')).toBeInTheDocument();
@@ -39,12 +39,22 @@ describe('ItemCard', () => {
   });
 
   it('says when PoB could not count all of the item', () => {
-    render(<ItemCard compact card={{ kind: 'gear', name: 'Ring', card: { ...GEAR, partly: true }, needsLevel: null }} />);
+    render(<ItemCard compact card={{ kind: 'gear', name: 'Ring', card: { ...GEAR, partly: true }, needsLevel: null, guideGear: false }} />);
     expect(screen.getByText("Path of Building can't count all of it.")).toBeInTheDocument();
   });
 
+  it("says when the numbers compare with the guide's gear", () => {
+    render(<ItemCard compact={false} card={{ kind: 'gear', name: 'Ring', card: GEAR, needsLevel: null, guideGear: true }} />);
+    expect(screen.getByText(/Compared with your guide's gear/)).toBeInTheDocument();
+  });
+
+  it('says nothing about the guide when the build is the character', () => {
+    render(<ItemCard compact={false} card={{ kind: 'gear', name: 'Ring', card: GEAR, needsLevel: null, guideGear: false }} />);
+    expect(screen.queryByText(/guide's gear/)).toBeNull();
+  });
+
   it('says an upgrade waits for a level and will be reminded', () => {
-    render(<ItemCard compact card={{ kind: 'gear', name: 'Ring', card: GEAR, needsLevel: 24 }} />);
+    render(<ItemCard compact card={{ kind: 'gear', name: 'Ring', card: GEAR, needsLevel: 24, guideGear: false }} />);
     expect(screen.getByText("Needs level 24. You'll get a reminder then.")).toBeInTheDocument();
   });
 
@@ -52,7 +62,7 @@ describe('ItemCard', () => {
     render(
       <ItemCard
         compact
-        card={{ kind: 'gear', name: 'Ring', card: { ...GEAR, verdict: 'downgrade' }, needsLevel: 24 }}
+        card={{ kind: 'gear', name: 'Ring', card: { ...GEAR, verdict: 'downgrade' }, needsLevel: 24, guideGear: false }}
       />,
     );
     expect(screen.getByText('Needs level 24.')).toBeInTheDocument();

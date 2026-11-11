@@ -40,7 +40,15 @@ export function resistLine(c: GearCard): string {
     .join(' · ');
 }
 
-function Gear({ card, needsLevel }: { card: GearCard; needsLevel: number | null }): React.JSX.Element {
+function Gear({
+  card,
+  needsLevel,
+  guideGear,
+}: {
+  card: GearCard;
+  needsLevel: number | null;
+  guideGear: boolean;
+}): React.JSX.Element {
   const numbers = gearNumbers(card);
   const resists = resistLine(card);
   const worth = card.verdict === 'upgrade' || card.verdict === 'mixed';
@@ -57,6 +65,12 @@ function Gear({ card, needsLevel }: { card: GearCard; needsLevel: number | null 
       {card.partly && (
         <p className="font-body text-[13px] leading-snug text-plain italic">
           Path of Building can't count all of it.
+        </p>
+      )}
+      {guideGear && (
+        <p className="font-body text-[13px] leading-snug text-plain italic">
+          Compared with your guide's gear. Import your character into Path of Building to compare
+          with what you wear.
         </p>
       )}
     </>
@@ -170,7 +184,7 @@ function Body({ card }: { card: Card }): React.JSX.Element {
     case 'gem':
       return <Gem card={card} />;
     case 'gear':
-      return <Gear card={card.card} needsLevel={card.needsLevel} />;
+      return <Gear card={card.card} needsLevel={card.needsLevel} guideGear={card.guideGear} />;
     case 'ready':
       return <Ready card={card} />;
     case 'kitava':

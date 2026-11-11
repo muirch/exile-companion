@@ -26,6 +26,8 @@ pub enum ItemCard {
         card: GearCard,
         /// The character's level is below the item's, so it is remembered for the level-up.
         needs_level: Option<u32>,
+        /// The build wears the guide's gear, so the numbers compare with that.
+        guide_gear: bool,
     },
     /// A level-up made gems of the build or remembered upgrades usable.
     Ready(UsableNow),
@@ -261,6 +263,7 @@ async fn show(app: &AppHandle, item: &CopiedItem, text: String) {
                     name: name.clone(),
                     card,
                     needs_level,
+                    guide_gear: crate::runtime::build_has_guide_gear(app),
                 },
             );
         }

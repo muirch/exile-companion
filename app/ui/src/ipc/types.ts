@@ -123,7 +123,7 @@ export interface GemRow {
 export type ItemCard =
   | { kind: 'measuring'; name: string }
   | ({ kind: 'gem' } & GemCard)
-  | { kind: 'gear'; name: string; card: GearCard; needsLevel: number | null }
+  | { kind: 'gear'; name: string; card: GearCard; needsLevel: number | null; guideGear: boolean }
   | { kind: 'missing'; name: string; message: string }
   | { kind: 'ready'; level: number; gems: string[]; items: { name: string; slot: string; level: number }[] }
   | { kind: 'kitava'; penalty: number; short: { element: string; after: number }[] }
