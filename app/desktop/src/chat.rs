@@ -11,7 +11,7 @@ use exile_assistant::{
 };
 use serde::Serialize;
 use tauri::async_runtime::JoinHandle;
-use tauri::{AppHandle, Emitter, Manager, PhysicalPosition};
+use tauri::{AppHandle, Emitter, LogicalSize, Manager, PhysicalPosition};
 
 use crate::settings;
 
@@ -516,19 +516,37 @@ pub async fn new_chat(app: &AppHandle) {
     *state.chat.lock().unwrap_or_else(|e| e.into_inner()) = None;
 }
 
-/// Right of the screen center, clear of the overlay at the bottom and the play field around the
-/// character, unless the player moved it.
+// The window's size in tauri.conf.json, at 1080p.
+const CHAT_SIZE: (f64, f64) = (420.0, 560.0);
+const CHAT_MIN_SIZE: (f64, f64) = (340.0, 320.0);
+
+/// PoE scales its UI with the monitor height, and the overlay does the same, so the chat follows:
+/// 100% at 1080p.
+fn screen_zoom(logical_height: f64) -> f64 {
+    (logical_height / 1080.0).clamp(0.75, 2.0)
+}
+
+/// Scaled to the monitor, right of the screen center, clear of the overlay at the bottom and the
+/// play field around the character, unless the player moved it.
 fn place(app: &AppHandle, window: &tauri::WebviewWindow) {
     let monitor = app
         .get_webview_window("overlay")
         .and_then(|w| w.current_monitor().ok().flatten())
         .or_else(|| window.current_monitor().ok().flatten());
-    let (Some(m), Ok(size)) = (monitor, window.outer_size()) else {
+    let Some(m) = monitor else {
         return;
     };
     let (mp, ms) = (m.position(), m.size());
-    let max_x = (ms.width as i32 - size.width as i32).max(0);
-    let max_y = (ms.height as i32 - size.height as i32).max(0);
+    let zoom = screen_zoom(ms.height as f64 / m.scale_factor());
+    let _ = window.set_zoom(zoom);
+    let _ = window.set_min_size(Some(LogicalSize::new(
+        CHAT_MIN_SIZE.0 * zoom,
+        CHAT_MIN_SIZE.1 * zoom,
+    )));
+    let _ = window.set_size(LogicalSize::new(CHAT_SIZE.0 * zoom, CHAT_SIZE.1 * zoom));
+    let px = |v: f64| (v * zoom * m.scale_factor()) as i32;
+    let max_x = (ms.width as i32 - px(CHAT_SIZE.0)).max(0);
+    let max_y = (ms.height as i32 - px(CHAT_SIZE.1)).max(0);
     let (x, y) = match settings::load(app).ok().and_then(|s| s.chat_anchor) {
         Some((fx, fy)) => (
             (fx * ms.width as f64) as i32,
@@ -687,6 +705,14 @@ mod tests {
             add_to_answer(&mut answer, &e);
         }
         assert_eq!(answer, "Checking.\n\nHelp Alira.");
+    }
+
+    #[test]
+    fn the_chat_scales_with_the_monitor_like_the_game() {
+        assert_eq!(screen_zoom(1080.0), 1.0);
+        assert!((screen_zoom(1440.0) - 4.0 / 3.0).abs() < 1e-9);
+        assert_eq!(screen_zoom(2160.0), 2.0);
+        assert_eq!(screen_zoom(720.0), 0.75);
     }
 
     #[test]
