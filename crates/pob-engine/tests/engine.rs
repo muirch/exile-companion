@@ -492,6 +492,40 @@ fn guide_stages_name_the_spectres_and_the_guardians_gear() {
     assert!(caustic["guardian"].is_null(), "{caustic}");
 }
 
+// PoB's own sample answer from the character API, cut into the three responses the character-window
+// endpoints give.
+#[test]
+fn imports_a_character_the_way_pob_does() {
+    let Some(pob) = pob_dir() else { return };
+    let sample = pob.join("spec/System/SampleCharacter.json");
+    let Ok(text) = std::fs::read_to_string(&sample) else {
+        eprintln!("{} is missing, skipping", sample.display());
+        return;
+    };
+    let mut character: Value = serde_json::from_str::<Value>(&text).unwrap()["character"].take();
+    let equipment = character["equipment"].take();
+    let mut passives = character["passives"].take();
+    passives["items"] = character["jewels"].take();
+    for key in ["inventory", "metadata"] {
+        character.as_object_mut().unwrap().remove(key);
+    }
+    let mut e = engine(&pob);
+    let out = e
+        .call(
+            "import_character",
+            json!({ "character": character, "passives": passives, "items": { "items": equipment } }),
+            SLOW,
+        )
+        .unwrap();
+    let xml = out["xml"].as_str().unwrap();
+    let build = exile_pob::parse_xml(xml.as_bytes()).unwrap();
+    assert_eq!(build.class_name.as_deref(), Some("Templar"));
+    assert_eq!(build.ascend_class_name.as_deref(), Some("Hierophant"));
+    assert_eq!(build.level, Some(99));
+    assert!(!build.skill_sets.is_empty() && !build.skill_sets[0].groups.is_empty());
+    assert!(!exile_pob::item_names(xml.as_bytes()).unwrap().is_empty());
+}
+
 #[test]
 fn reports_pob_errors_and_keeps_serving() {
     let Some(pob) = pob_dir() else { return };
