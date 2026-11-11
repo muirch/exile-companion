@@ -3,6 +3,7 @@ import { useEffect, useLayoutEffect, useRef, useState } from 'react';
 import { fitOverlay, lockOverlay } from '../ipc/commands';
 import { isTauri } from '../ipc/env';
 import { onItemCard } from '../ipc/events';
+import { itemCardMock } from '../ipc/mock';
 import type { ItemCard as Card } from '../ipc/types';
 import { holdLabel, shortcutLabel } from './HotkeySection';
 import { useAppStore } from '../store/useAppStore';
@@ -71,7 +72,7 @@ function StartupNotice(): React.JSX.Element {
 
 // The last copied item, until it has been on screen for a while. Measuring stays until the answer.
 export function useItemCard(): Card | null {
-  const [card, setCard] = useState<Card | null>(null);
+  const [card, setCard] = useState<Card | null>(() => (isTauri() ? null : itemCardMock()));
   useEffect(() => {
     if (!isTauri()) return;
     const off = onItemCard(setCard);
