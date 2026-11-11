@@ -47,6 +47,7 @@ describe('chat log', () => {
   it('names tools the way a player would', () => {
     expect(toolLabel('compare_item')).toBe('Comparing the item');
     expect(toolLabel('what_next')).toBe('Checking what comes next');
+    expect(toolLabel('guide_notes')).toBe("Reading the author's notes");
     expect(toolLabel('something_new')).toBe('Thinking');
     expect(toolLabel(null)).toBe('Thinking');
   });
