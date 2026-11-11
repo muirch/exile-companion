@@ -5,6 +5,7 @@
 mod anthropic;
 mod card;
 mod config;
+pub mod engine_error;
 mod gear;
 pub mod history;
 mod http;

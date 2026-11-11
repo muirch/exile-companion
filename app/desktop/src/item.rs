@@ -54,6 +54,19 @@ fn emit(app: &AppHandle, card: &ItemCard) {
 
 static CHECKING: AtomicBool = AtomicBool::new(false);
 
+/// Clears CHECKING however the check ends, so the key can't stay dead.
+struct Checking;
+
+impl Drop for Checking {
+    fn drop(&mut self) {
+        CHECKING.store(false, Ordering::SeqCst);
+    }
+}
+
+/// Longer than a slow compare on a big build, short enough that a hung PoB doesn't keep the
+/// "Measuring" card up for minutes.
+const COMPARE_LIMIT: Duration = Duration::from_secs(60);
+
 /// Upgrades checked before the character could wear them. Kept until they come due or the app
 /// quits.
 static REMEMBERED: Mutex<Vec<Remembered>> = Mutex::new(Vec::new());
@@ -134,18 +147,37 @@ pub fn check(app: &AppHandle) {
     }
     let app = app.clone();
     tauri::async_runtime::spawn(async move {
-        if let Some(text) = copy_item_text(&app).await {
-            if let Some(item) = item_check::parse(&text) {
-                show(&app, &item, text).await;
+        let _checking = Checking;
+        match copy_item_text(&app).await {
+            Copied::Item(text) => {
+                if let Some(item) = item_check::parse(&text) {
+                    show(&app, &item, text).await;
+                }
             }
+            Copied::Unreadable => emit(
+                &app,
+                &ItemCard::Missing {
+                    name: "Item check".into(),
+                    message: "The game copied text that Exile Companion can't read as an item."
+                        .into(),
+                },
+            ),
+            Copied::Nothing => {}
         }
-        CHECKING.store(false, Ordering::SeqCst);
     });
+}
+
+enum Copied {
+    Item(String),
+    /// The clipboard changed, but not to an item's text. A new league can change the format.
+    Unreadable,
+    /// Nothing under the cursor, most likely.
+    Nothing,
 }
 
 /// Ctrl+C in the game, then wait for the item text. An item already on the clipboard is cleared
 /// first, so an old copy isn't taken for the new one.
-async fn copy_item_text(app: &AppHandle) -> Option<String> {
+async fn copy_item_text(app: &AppHandle) -> Copied {
     #[cfg(any(windows, target_os = "linux"))]
     {
         use tauri_plugin_clipboard_manager::ClipboardExt;
@@ -157,29 +189,41 @@ async fn copy_item_text(app: &AppHandle) -> Option<String> {
         }
         // Waits for the shortcut's keys on Linux, so off the async threads.
         let _ = tauri::async_runtime::spawn_blocking(crate::hotkeys::copy_item).await;
+        let baseline = if had_item {
+            String::new()
+        } else {
+            before.clone()
+        };
         let mut waited = Duration::ZERO;
-        let mut found = None;
+        let mut copied = Copied::Nothing;
         while waited < POLL_LIMIT {
             tokio::time::sleep(POLL).await;
             waited += POLL;
             let now = clipboard.read_text().ok().unwrap_or_default();
             if item_check::parse(&now).is_some() {
-                found = Some(now);
+                copied = Copied::Item(now);
                 break;
+            }
+            if !now.trim().is_empty() && now != baseline {
+                copied = Copied::Unreadable;
             }
         }
         if !had_item {
             let _ = clipboard.write_text(before);
         }
-        if found.is_none() {
-            log::info!("item check: no item text on the clipboard after Ctrl+C");
+        match &copied {
+            Copied::Nothing => log::info!("item check: no item text on the clipboard after Ctrl+C"),
+            Copied::Unreadable => {
+                log::warn!("item check: the clipboard changed to text that isn't an item")
+            }
+            Copied::Item(_) => {}
         }
-        found
+        copied
     }
     #[cfg(not(any(windows, target_os = "linux")))]
     {
         let _ = app;
-        None
+        Copied::Nothing
     }
 }
 
@@ -227,12 +271,21 @@ async fn show(app: &AppHandle, item: &CopiedItem, text: String) {
             return;
         }
     };
-    let out = server
-        .call("compare_item", serde_json::json!({ "text": text }))
-        .await;
+    let call = server.call("compare_item", serde_json::json!({ "text": text }));
+    let Ok(out) = tokio::time::timeout(COMPARE_LIMIT, call).await else {
+        log::warn!("compare_item: no answer in {COMPARE_LIMIT:?}");
+        emit(
+            app,
+            &missing("Path of Building took too long to answer. Try again in a moment."),
+        );
+        return;
+    };
     if out.is_error {
         log::warn!("compare_item: {}", out.text);
-        emit(app, &missing(&out.text));
+        emit(
+            app,
+            &missing(&exile_assistant::engine_error::for_player(&out.text)),
+        );
         return;
     }
     let card = serde_json::from_str::<serde_json::Value>(&out.text)

@@ -12,7 +12,8 @@ async fn tool(app: &AppHandle, name: &str, input: Value) -> Result<Value, String
         .map_err(|e| e.player_message(exile_assistant::Provider::Anthropic))?;
     let out = server.call(name, input).await;
     if out.is_error {
-        return Err(out.text);
+        log::warn!("{name}: {}", out.text);
+        return Err(exile_assistant::engine_error::for_player(&out.text));
     }
     serde_json::from_str(&out.text)
         .map_err(|e| format!("The tools answered something unreadable ({e})."))
@@ -49,8 +50,9 @@ pub struct CharacterList {
     pub playing: Option<String>,
 }
 
-#[derive(Debug, Clone, serde::Serialize, serde::Deserialize)]
-#[serde(rename_all = "camelCase")]
+// Defaults, so one odd character in the account's answer doesn't make the whole list unreadable.
+#[derive(Debug, Clone, Default, serde::Serialize, serde::Deserialize)]
+#[serde(rename_all = "camelCase", default)]
 pub struct CharacterEntry {
     pub name: String,
     pub class: String,
