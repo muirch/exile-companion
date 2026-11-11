@@ -43,7 +43,7 @@ overlay overlay-unlocked "view=unlocked&edge=7"
 overlay overlay-compact "view=locked&edge=1&compact"
 overlay overlay-compact-boss "view=locked&edge=9&compact"
 overlay notice "view=notice"
-stage menu "window=menu" 236 366
+stage menu "window=menu" 236 399
 shot menu "file://$OUT/.stage-menu.html" 560 420
 for c in nokey empty answered history saved; do
   stage "chat-$c" "window=chat&chat=$c" 420 560
@@ -52,6 +52,11 @@ done
 for g in gems:window=gems gems-early:window=gems\&set=0 gems-hover:window=gems\&hover gems-notes:window=gems\&notes; do
   stage "${g%%:*}" "${g#*:}" 340 540
   shot "${g%%:*}" "file://$OUT/.stage-${g%%:*}.html" 440 580
+done
+for t in tree:window=tree tree-new:window=tree\&mode=new tree-character:window=tree\&mode=character\&hover \
+  tree-nochar:window=tree\&mode=character\&nochar; do
+  stage "${t%%:*}" "${t#*:}" 632 540
+  shot "${t%%:*}" "file://$OUT/.stage-${t%%:*}.html" 700 580
 done
 shot settings "$URL/?window=settings" 560 2300
 
@@ -67,7 +72,10 @@ ffmpeg -loglevel error -y -i chat-nokey.png -i chat-empty.png -i chat-answered.p
   -filter_complex "[0][1][2][3][4]hstack=5" chat.png
 ffmpeg -loglevel error -y -i gems.png -i gems-early.png -i gems-hover.png -i gems-notes.png \
   -filter_complex "[0][1][2][3]hstack=4" gems-both.png
+ffmpeg -loglevel error -y -i tree.png -i tree-new.png -i tree-character.png -i tree-nochar.png \
+  -filter_complex "[0][1]hstack=2[r1];[2][3]hstack=2[r2];[r1][r2]vstack=2" tree-all.png
 rm -f .stage-*.html
 echo "$OUT/overview.png"
 echo "$OUT/chat.png"
 echo "$OUT/gems-both.png"
+echo "$OUT/tree-all.png"
