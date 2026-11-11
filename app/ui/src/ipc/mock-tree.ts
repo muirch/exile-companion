@@ -16,7 +16,7 @@ export const treeLayoutMock = (): TreeLayout => DATA.layout;
 
 export function treeStageMock(stage: number | null): TreeStage {
   const stages = DATA.stages.length / MODES.length;
-  const at = Math.min(stage ?? 2, stages - 1);
+  const at = Math.min(stage ?? Number(params.get('stage') ?? 2), stages - 1);
   const noCharacter = params.has('nochar');
   const shownMode = noCharacter && mode === 'character' ? 'tree' : mode;
   const found = DATA.stages[at * MODES.length + MODES.indexOf(shownMode)];

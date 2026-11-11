@@ -53,7 +53,7 @@ export interface Links {
 }
 
 /** Mirrors `exile_core::tree`: PoB's passive tree and what a guide's stage marks on it. */
-export type NodeKind = 'normal' | 'notable' | 'keystone' | 'jewel' | 'mastery';
+export type NodeKind = 'normal' | 'notable' | 'keystone' | 'jewel' | 'mastery' | 'ascendancyStart';
 
 export interface TreeNode {
   id: number;
@@ -62,6 +62,10 @@ export interface TreeNode {
   kind: NodeKind;
   name: string;
   stats: string[];
+  /** The ascendancy or bloodline the node belongs to. Missing on the main tree. */
+  ascendancy?: string;
+  /** A mastery's effects to pick from. */
+  mastery?: { effect: number; stats: string[] }[];
 }
 
 export interface TreeEdge {
@@ -101,7 +105,10 @@ export interface TreeStage {
   extra: number;
   addedNames: string[];
   ascendancy: { name: string; mark: Mark }[];
-  nodes: { id: number; mark: Mark; since: number | null }[];
+  /** The ascendancies to draw. */
+  ascendancies: string[];
+  /** `effect` is the picked mastery effect. */
+  nodes: { id: number; mark: Mark; since: number | null; effect: number | null }[];
   /** `edge` indexes `TreeLayout.edges`. */
   edges: { edge: number; mark: Mark }[];
   focus: Bounds | null;

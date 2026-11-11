@@ -24,9 +24,9 @@ iframe{position:absolute;left:50%;bottom:0;transform:translateX(-50%);width:$3px
 EOF
 }
 
-shot() { # name page width height
+shot() { # name page width height [virtual ms]
   google-chrome --headless=new --disable-gpu --hide-scrollbars --force-prefers-reduced-motion \
-    --window-size="$3,$4" --virtual-time-budget=2500 --screenshot="$OUT/$1.png" "$2" 2>/dev/null
+    --window-size="$3,$4" --virtual-time-budget="${5:-2500}" --screenshot="$OUT/$1.png" "$2" 2>/dev/null
 }
 
 overlay() { # name query
@@ -53,10 +53,13 @@ for g in gems:window=gems gems-early:window=gems\&set=0 gems-hover:window=gems\&
   stage "${g%%:*}" "${g#*:}" 340 540
   shot "${g%%:*}" "file://$OUT/.stage-${g%%:*}.html" 440 580
 done
+# The first load of the tree's data and fonts is slow on the dev server, so warm them up once.
+shot tree-warmup "$URL/?window=tree" 632 540 6000
 for t in tree:window=tree tree-new:window=tree\&mode=new tree-character:window=tree\&mode=character\&hover \
-  tree-nochar:window=tree\&mode=character\&nochar; do
+  tree-nochar:window=tree\&mode=character\&nochar tree-mastery:window=tree\&stage=4\&hover=mastery; do
   stage "${t%%:*}" "${t#*:}" 632 540
-  shot "${t%%:*}" "file://$OUT/.stage-${t%%:*}.html" 700 580
+  # The tree's data loads late, and Chrome hides text until its font is in.
+  shot "${t%%:*}" "file://$OUT/.stage-${t%%:*}.html" 700 580 6000
 done
 shot settings "$URL/?window=settings" 560 2300
 
@@ -73,8 +76,9 @@ ffmpeg -loglevel error -y -i chat-nokey.png -i chat-empty.png -i chat-answered.p
 ffmpeg -loglevel error -y -i gems.png -i gems-early.png -i gems-hover.png -i gems-notes.png \
   -filter_complex "[0][1][2][3]hstack=4" gems-both.png
 ffmpeg -loglevel error -y -i tree.png -i tree-new.png -i tree-character.png -i tree-nochar.png \
-  -filter_complex "[0][1]hstack=2[r1];[2][3]hstack=2[r2];[r1][r2]vstack=2" tree-all.png
-rm -f .stage-*.html
+  -i tree-mastery.png -filter_complex "[0][1][2]hstack=3[r1];[3][4]hstack=2,pad=iw*3/2:ih[r2];[r1][r2]vstack=2" \
+  tree-all.png
+rm -f .stage-*.html tree-warmup.png
 echo "$OUT/overview.png"
 echo "$OUT/chat.png"
 echo "$OUT/gems-both.png"
