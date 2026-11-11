@@ -133,7 +133,8 @@ function Legend({ stage }: { stage: TreeStage }): React.JSX.Element {
 function mockHover(layout: TreeLayout, stage: TreeStage): Hover | null {
   const kind = new URLSearchParams(window.location.search).get('hover');
   if (isTauri() || kind === null) return null;
-  const want = (n: TreeNode | undefined): boolean => (kind === 'mastery' ? n?.kind === 'mastery' : n?.kind === 'notable' && !n.ascendancy);
+  const want = (n: TreeNode | undefined): boolean =>
+    kind === 'mastery' ? n?.kind === 'mastery' : n?.kind === 'notable' && (kind === 'ascendancy') === Boolean(n.ascendancy);
   const marked = stage.nodes.find((m) => (kind === 'mastery' || m.mark === (stage.mode === 'tree' ? 'taken' : 'added')) && want(layout.nodes.find((n) => n.id === m.id)));
   const node = layout.nodes.find((n) => n.id === marked?.id);
   return node ? { node } : null;
@@ -141,9 +142,23 @@ function mockHover(layout: TreeLayout, stage: TreeStage): Hover | null {
 
 interface Hover {
   node: TreeNode;
-  /** Where an ascendancy node sits on screen. Main tree nodes follow the view. */
-  at?: { x: number; y: number };
 }
+
+// Small bloodlines would fill the map with huge nodes, so no map zooms in further than this.
+const INSET_MAX_SCALE = 0.12;
+
+/** The view an ascendancy's corner map is drawn with. */
+function insetView(nodes: TreeNode[]): View | null {
+  const b = bounds(nodes);
+  if (!b) return null;
+  const v = fit(b, INSET, INSET, 160);
+  if (v.scale <= INSET_MAX_SCALE) return v;
+  const scale = INSET_MAX_SCALE;
+  return { x: (b.minX + b.maxX) / 2 - INSET / 2 / scale, y: (b.minY + b.maxY) / 2 - INSET / 2 / scale, scale };
+}
+
+/** The corner map of the `i`th ascendancy, stacked up from the bottom left of a box `h` tall. */
+const insetAt = (i: number, h: number): { left: number; top: number } => ({ left: 0, top: h - (i + 1) * INSET - i * 4 });
 
 /** A node the stage marks, filled when taken, ringed when added, slashed when extra. */
 function MarkedNode({
@@ -236,18 +251,15 @@ function AscendancyMap({
 }): React.JSX.Element | null {
   const nodes = useMemo(() => layout.nodes.filter((n) => n.ascendancy === name), [layout, name]);
   const paths = useMemo(() => edgePaths(layout, byId, edgeMarks, (n) => n.ascendancy === name), [layout, byId, edgeMarks, name]);
-  const b = bounds(nodes);
-  if (!b) return null;
-  const v = fit(b, INSET, INSET, 160);
+  const v = insetView(nodes);
+  if (!v) return null;
   const px = (x: number): number => x / v.scale;
   const onMove = (e: React.PointerEvent<HTMLDivElement>): void => {
     e.stopPropagation();
     const r = e.currentTarget.getBoundingClientRect();
     const n = nodeAt(nodes, v, e.clientX - r.left, e.clientY - r.top);
     if (!n) return onHover(null);
-    if (n.id === hover?.node.id) return;
-    const s = toScreen(v, n.x, n.y);
-    onHover({ node: n, at: { x: left + s.x, y: top + s.y } });
+    if (n.id !== hover?.node.id) onHover({ node: n });
   };
   return (
     <div
@@ -278,7 +290,9 @@ function AscendancyMap({
           />
         )}
       </svg>
-      <span className="pointer-events-none absolute top-1 left-1.5 font-caps text-[11px] text-label">{name}</span>
+      <span className="pointer-events-none absolute top-1 left-1.5 flex flex-col font-caps text-[11px] leading-tight text-label">
+        {layout.ascendancyNames[name] ?? name}
+      </span>
     </div>
   );
 }
@@ -421,7 +435,7 @@ function TreeCanvas({ layout, stage }: { layout: TreeLayout; stage: TreeStage })
     }
     const n = nodeAt(hoverable, view, p.x, p.y);
     if (!n) setHover(null);
-    else if (n.id !== hover?.node.id || hover.at) setHover({ node: n });
+    else if (n.id !== hover?.node.id) setHover({ node: n });
   };
 
   const labels = useMemo(() => {
@@ -448,7 +462,17 @@ function TreeCanvas({ layout, stage }: { layout: TreeLayout; stage: TreeStage })
   const px = (v: number): number => (view ? v / view.scale : v);
   const viewBox = view ? `${view.x} ${view.y} ${size.w / view.scale} ${size.h / view.scale}` : '0 0 1 1';
   const hovered = hover ? marks.get(hover.node.id) : undefined;
-  const hoverAt = hover && (hover.at ?? (view ? toScreen(view, hover.node.x, hover.node.y) : null));
+  const hoverAt = ((): { x: number; y: number } | null => {
+    if (!hover) return null;
+    const asc = hover.node.ascendancy;
+    if (!asc) return view ? toScreen(view, hover.node.x, hover.node.y) : null;
+    const v = insetView(layout.nodes.filter((n) => n.ascendancy === asc));
+    const i = stage.ascendancies.indexOf(asc);
+    if (!v || i < 0) return null;
+    const corner = insetAt(i, size.h);
+    const s = toScreen(v, hover.node.x, hover.node.y);
+    return { x: corner.left + s.x, y: corner.top + s.y };
+  })();
 
   return (
     <div
@@ -499,8 +523,8 @@ function TreeCanvas({ layout, stage }: { layout: TreeLayout; stage: TreeStage })
           {l.text}
         </span>
       ))}
-      {size.h > INSET &&
-        stage.ascendancies.map((name, i) => (
+      {stage.ascendancies.map((name, i) =>
+        insetAt(i, size.h).top < 0 ? null : (
           <AscendancyMap
             key={name}
             name={name}
@@ -508,12 +532,12 @@ function TreeCanvas({ layout, stage }: { layout: TreeLayout; stage: TreeStage })
             byId={byId}
             marks={marks}
             edgeMarks={edgeMarks}
-            left={i * (INSET + 4)}
-            top={size.h - INSET}
+            {...insetAt(i, size.h)}
             hover={hover}
             onHover={setHover}
           />
-        ))}
+        ),
+      )}
       {hover && hoverAt && (
         <NodeCard hover={hover} stage={stage} mark={hovered?.mark} since={hovered?.since} effect={hovered?.effect} at={hoverAt} box={size} />
       )}
