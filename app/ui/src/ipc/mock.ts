@@ -12,6 +12,8 @@ import type {
   BuildSummary,
   CampaignState,
   ChatEvent,
+  ChatSummary,
+  OpenedChat,
   NextCard,
   TurnOver,
   LocationKind,
@@ -357,10 +359,48 @@ export function chatStopMock(): void {
   if (running) overChat({ stop: 'stopped', message: null, usage: null, dollars: null, model: null });
 }
 
+const HOUR = 3600;
+const nowSecs = (): number => Math.floor(Date.now() / 1000);
+
+export function chatHistoryMock(): ChatSummary[] {
+  const now = nowSecs();
+  return [
+    { id: 'chat-3', title: 'Which bandit should I help?', updated: now - 600, model: 'anthropic/claude-sonnet-5.5', questions: 2, dollars: 0.034 },
+    { id: 'chat-2', title: 'Is this helmet an upgrade?', updated: now - 26 * HOUR, model: 'anthropic/claude-sonnet-5.5', questions: 5, dollars: 0.112 },
+    { id: 'chat-1', title: 'Why is my damage low in act 4?', updated: now - 5 * 24 * HOUR, model: 'Haiku 5.5', questions: 3, dollars: 0.004 },
+  ];
+}
+
+export function openedChatMock(id: string): OpenedChat {
+  const summary = chatHistoryMock().find((c) => c.id === id) ?? chatHistoryMock()[1];
+  return {
+    id: summary.id,
+    title: summary.title,
+    exchanges: [
+      {
+        question: summary.title,
+        answer: MOCK_ANSWER,
+        stop: 'done',
+        message: null,
+        dollars: 0.0191,
+        model: summary.model,
+      },
+    ],
+    warmth: id === 'chat-3' ? { kind: 'warm' } : { kind: 'cold', tokens: 21400, dollars: null },
+    blocked: id === 'chat-1' ? 'This chat was with Anthropic, which keeps the conversation in another shape. Switch to it in the settings to go on with this chat.' : null,
+  };
+}
+
 const chatQuery = (): string | null =>
   typeof window === 'undefined' ? null : new URLSearchParams(window.location.search).get('chat');
 
 export const chatHasKeyMock = (): boolean => chatQuery() !== 'nokey';
+
+/** The history page the browser opens on, picked with ?chat=history or ?chat=saved. */
+export const chatPageMock = (): 'history' | 'saved' | null => {
+  const q = chatQuery();
+  return q === 'history' || q === 'saved' ? q : null;
+};
 
 const PASTED_ITEM = `Item Class: Body Armours
 Rarity: Rare

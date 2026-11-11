@@ -1,20 +1,34 @@
 import { useCallback, useEffect, useLayoutEffect, useRef, useState } from 'react';
 
-import { chatNew, chatSend, chatStop, closeChat, getChat, openSettings } from '../ipc/commands';
+import {
+  chatDelete,
+  chatHistory,
+  chatNew,
+  chatOpenSaved,
+  chatResume,
+  chatSend,
+  chatStop,
+  closeChat,
+  getChat,
+  openSettings,
+} from '../ipc/commands';
 import { isTauri } from '../ipc/env';
 import { onChatEvent, onChatOpened, onChatOver, onSettingsChanged } from '../ipc/events';
-import { chatSeedMock } from '../ipc/mock';
-import type { ChatView } from '../ipc/types';
-import { Button, TextArea } from '../kit';
+import { chatHistoryMock, chatPageMock, chatSeedMock, openedChatMock } from '../ipc/mock';
+import type { ChatSummary, ChatView, OpenedChat } from '../ipc/types';
+import { Button, ConfirmButton, ListButton, TextArea } from '../kit';
 import {
   applyEvent,
   ask,
+  coldText,
   costLabel,
   finish,
+  fromSaved,
   isWorking,
   overText,
   splitAnswer,
   toolLabel,
+  whenLabel,
   type Block,
   type Exchange,
 } from './chatLog';
@@ -158,6 +172,106 @@ function AskPrompt({ view, onAsk }: { view: ChatView; onAsk: (q: string) => void
   );
 }
 
+type Page =
+  | { kind: 'chat' }
+  | { kind: 'history'; chats: ChatSummary[] | null }
+  | { kind: 'saved'; chat: OpenedChat; error: string | null };
+
+const SEP = { '--tint': 'var(--color-currency)' } as React.CSSProperties;
+
+function History({
+  chats,
+  onOpen,
+}: {
+  chats: ChatSummary[] | null;
+  onOpen: (id: string) => void;
+}): React.JSX.Element {
+  if (!chats) return <div />;
+  return (
+    <div className="flex flex-col gap-2">
+      <h2 className="font-caps text-[13px] text-label">Past chats</h2>
+      {chats.length === 0 ? (
+        <p className="font-body text-[13px] text-label italic">
+          No saved chats yet. A chat is kept here after its first answer.
+        </p>
+      ) : (
+        <ul className="flex flex-col">
+          {chats.map((c) => (
+            <li key={c.id}>
+              <ListButton onClick={() => onOpen(c.id)}>
+                <span className="w-full truncate font-caps text-[14px] text-value">{c.title || 'Untitled chat'}</span>
+                <span className="w-full truncate font-body text-[11px] text-label">
+                  {[
+                    whenLabel(c.updated),
+                    c.model,
+                    `${c.questions} ${c.questions === 1 ? 'question' : 'questions'}`,
+                    costLabel(c.dollars),
+                  ]
+                    .filter(Boolean)
+                    .join(' · ')}
+                </span>
+              </ListButton>
+            </li>
+          ))}
+        </ul>
+      )}
+      <p className="font-body text-[12px] leading-snug text-label italic">
+        Chats are kept on this PC only.
+      </p>
+    </div>
+  );
+}
+
+function Saved({
+  chat,
+  error,
+  onBack,
+  onResume,
+  onDelete,
+}: {
+  chat: OpenedChat;
+  error: string | null;
+  onBack: () => void;
+  onResume: () => void;
+  onDelete: () => void;
+}): React.JSX.Element {
+  const cold = coldText(chat.warmth);
+  return (
+    <div className="flex flex-col">
+      <div className="flex flex-col gap-2">
+        <div className="flex items-center gap-2">
+          <Button onClick={onBack}>All chats</Button>
+          <h2 className="min-w-0 truncate font-caps text-[13px] text-label" title={chat.title}>
+            {chat.title}
+          </h2>
+        </div>
+        {chat.blocked ? (
+          <p className="font-body text-[12px] leading-snug text-label">{chat.blocked}</p>
+        ) : (
+          cold && <p className="font-body text-[12px] leading-snug text-plain">{cold}</p>
+        )}
+        <div className="flex items-center gap-2">
+          {!chat.blocked && (
+            <Button onClick={onResume}>{cold ? 'Continue anyway' : 'Continue'}</Button>
+          )}
+          <ConfirmButton label="Delete" confirm="Click again to delete" onConfirm={onDelete} />
+        </div>
+        {error && (
+          <p role="alert" className="font-body text-[12px] text-corrupted">
+            {error}
+          </p>
+        )}
+      </div>
+      {fromSaved(chat.exchanges).map((e, i) => (
+        <div key={i}>
+          <div className="tooltip-sep my-4" style={SEP} />
+          <ExchangeView exchange={e} />
+        </div>
+      ))}
+    </div>
+  );
+}
+
 export function ChatApp(): React.JSX.Element {
   const [view, setView] = useState<ChatView | null>(null);
   const [log, setLog] = useState<Exchange[]>(() => (isTauri() ? [] : chatSeedMock()));
@@ -169,6 +283,22 @@ export function ChatApp(): React.JSX.Element {
   const ready = !!view?.available && !view.missing;
 
   const [reload, setReload] = useState(0);
+  const [page, setPage] = useState<Page>(() => {
+    const start = isTauri() ? null : chatPageMock();
+    if (start === 'history') return { kind: 'history', chats: chatHistoryMock() };
+    if (start === 'saved') return { kind: 'saved', chat: openedChatMock('chat-2'), error: null };
+    return { kind: 'chat' };
+  });
+  const inChat = page.kind === 'chat';
+
+  const showHistory = useCallback(() => {
+    setPage({ kind: 'history', chats: null });
+    void chatHistory().then((chats) => setPage({ kind: 'history', chats }));
+  }, []);
+
+  const openSaved = useCallback((id: string) => {
+    void chatOpenSaved(id).then((chat) => setPage({ kind: 'saved', chat, error: null }));
+  }, []);
 
   const refresh = useCallback(() => {
     void getChat().then(setView);
@@ -203,9 +333,33 @@ export function ChatApp(): React.JSX.Element {
     if (el && stuck.current) el.scrollTop = el.scrollHeight;
   });
 
+  const resume = (id: string): void => {
+    chatResume(id)
+      .then((saved) => {
+        setLog(fromSaved(saved));
+        setPage({ kind: 'chat' });
+        stuck.current = true;
+        input.current?.focus();
+      })
+      .catch((e: unknown) =>
+        setPage((p) => (p.kind === 'saved' ? { ...p, error: String(e) } : p)),
+      );
+  };
+
+  const remove = (id: string): void => {
+    chatDelete(id)
+      .then(() => {
+        if (log.length && page.kind === 'saved' && page.chat.id === id) setLog([]);
+        showHistory();
+      })
+      .catch((e: unknown) =>
+        setPage((p) => (p.kind === 'saved' ? { ...p, error: String(e) } : p)),
+      );
+  };
+
   const send = (question: string): void => {
     const q = question.trim();
-    if (!q || working || !ready) return;
+    if (!q || working || !ready || !inChat) return;
     stuck.current = true;
     setLog((l) => ask(l, q));
     setDraft('');
@@ -235,10 +389,18 @@ export function ChatApp(): React.JSX.Element {
         )}
         <Button
           className="ml-auto shrink-0 cursor-default"
-          disabled={log.length === 0}
+          aria-pressed={!inChat}
+          onClick={() => (inChat ? showHistory() : setPage({ kind: 'chat' }))}
+        >
+          History
+        </Button>
+        <Button
+          className="shrink-0 cursor-default"
+          disabled={inChat && log.length === 0}
           onClick={() => {
             void chatNew();
             setLog([]);
+            setPage({ kind: 'chat' });
             input.current?.focus();
           }}
         >
@@ -263,12 +425,22 @@ export function ChatApp(): React.JSX.Element {
         }}
       >
         <main className="flex flex-col px-4 py-4" aria-live="polite">
-          {log.length === 0 ? (
+          {page.kind === 'history' ? (
+            <History chats={page.chats} onOpen={openSaved} />
+          ) : page.kind === 'saved' ? (
+            <Saved
+              chat={page.chat}
+              error={page.error}
+              onBack={showHistory}
+              onResume={() => resume(page.chat.id)}
+              onDelete={() => remove(page.chat.id)}
+            />
+          ) : log.length === 0 ? (
             <Empty view={view} reload={reload} onAsk={send} />
           ) : (
             log.map((e, i) => (
               <div key={i}>
-                {i > 0 && <div className="tooltip-sep my-4" style={{ '--tint': 'var(--color-currency)' } as React.CSSProperties} />}
+                {i > 0 && <div className="tooltip-sep my-4" style={SEP} />}
                 <ExchangeView exchange={e} />
               </div>
             ))
@@ -281,8 +453,8 @@ export function ChatApp(): React.JSX.Element {
             ref={input}
             value={draft}
             maxRows={6}
-            disabled={!ready}
-            placeholder={ready ? 'Ask the assistant' : ''}
+            disabled={!ready || !inChat}
+            placeholder={ready && inChat ? 'Ask the assistant' : ''}
             aria-label="Question for the assistant"
             className="flex-1"
             onChange={(e) => setDraft(e.target.value)}
@@ -298,7 +470,7 @@ export function ChatApp(): React.JSX.Element {
               Stop
             </Button>
           ) : (
-            <Button className="h-[31px]" disabled={!ready || !draft.trim()} onClick={() => send(draft)}>
+            <Button className="h-[31px]" disabled={!ready || !inChat || !draft.trim()} onClick={() => send(draft)}>
               Ask
             </Button>
           )}

@@ -17,15 +17,18 @@ import type {
   CampaignState,
   BindError,
   ChatProvider,
+  ChatSummary,
   ChatView,
   GemOverride,
   GemRow,
   HotkeySettings,
   NextCard,
   NextObjective,
+  OpenedChat,
   PobInfo,
   PobSync,
   RouteView,
+  SavedExchange,
   Settings,
   SourceStatus,
   SpeedMultiplier,
@@ -146,6 +149,21 @@ export const chatNew = (): Promise<void> =>
   isTauri() ? invoke('chat_new') : Promise.resolve(mock.chatStopMock());
 
 export const openChat = (): Promise<void> => (isTauri() ? invoke('open_chat') : Promise.resolve());
+
+export const chatHistory = (): Promise<ChatSummary[]> =>
+  isTauri() ? invoke('chat_history') : Promise.resolve(mock.chatHistoryMock());
+
+export const chatOpenSaved = (id: string): Promise<OpenedChat> =>
+  isTauri() ? invoke('chat_open_saved', { id }) : Promise.resolve(mock.openedChatMock(id));
+
+/** Makes a saved chat the current one and returns what it said so far. */
+export const chatResume = (id: string): Promise<SavedExchange[]> =>
+  isTauri()
+    ? invoke('chat_resume', { id })
+    : Promise.resolve(mock.openedChatMock(id).exchanges);
+
+export const chatDelete = (id: string): Promise<void> =>
+  isTauri() ? invoke('chat_delete', { id }) : Promise.resolve();
 
 export const closeChat = (): Promise<void> => (isTauri() ? invoke('close_chat') : Promise.resolve());
 
