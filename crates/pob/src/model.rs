@@ -102,6 +102,8 @@ pub struct TreeSpec {
     pub ascend_class_id: Option<u8>,
     /// Allocated passive node ids (parsed from the `nodes` attribute).
     pub nodes: Vec<u32>,
+    /// The effect picked on each allocated mastery, as (mastery node id, effect id).
+    pub mastery_effects: Vec<(u32, u32)>,
 }
 
 /// A named group of socket groups. `activeSkillSet` selects one by [`SkillSet::id`].

@@ -225,7 +225,20 @@ fn read_spec(e: &BytesStart<'_>) -> TreeSpec {
         class_id: attr_u8(e, "classId"),
         ascend_class_id: attr_u8(e, "ascendClassId"),
         nodes: attr_string(e, "nodes").map(parse_nodes).unwrap_or_default(),
+        mastery_effects: attr_string(e, "masteryEffects")
+            .map(|s| parse_mastery_effects(&s))
+            .unwrap_or_default(),
     }
+}
+
+/// PoB writes them as "{node,effect},{node,effect}".
+fn parse_mastery_effects(s: &str) -> Vec<(u32, u32)> {
+    s.split('}')
+        .filter_map(|pair| {
+            let (node, effect) = pair.trim_start_matches([',', '{', ' ']).split_once(',')?;
+            Some((node.trim().parse().ok()?, effect.trim().parse().ok()?))
+        })
+        .collect()
 }
 
 fn read_skillset(e: &BytesStart<'_>) -> SkillSet {
@@ -344,7 +357,7 @@ mod tests {
   </Build>
   <Tree activeSpec="2">
     <Spec title="Leaguestart" treeVersion="3_25" classId="3" nodes="1,2,3"/>
-    <Spec title="Level 68 (Endgame)" treeVersion="3_25" classId="3" ascendClassId="1" nodes="10, 20 ,30,">
+    <Spec title="Level 68 (Endgame)" treeVersion="3_25" classId="3" ascendClassId="1" nodes="10, 20 ,30," masteryEffects="{38595,9755},{ 4119, 48385 }">
       <URL>https://www.pathofexile.com/passive-skill-tree/xyz</URL>
     </Spec>
   </Tree>
@@ -408,6 +421,8 @@ mod tests {
         // Trailing/interior spaces and a trailing comma in `nodes` are tolerated.
         assert_eq!(sel.nodes, vec![10, 20, 30]);
         assert_eq!(b.specs[0].nodes, vec![1, 2, 3]);
+        assert_eq!(sel.mastery_effects, vec![(38595, 9755), (4119, 48385)]);
+        assert!(b.specs[0].mastery_effects.is_empty());
     }
 
     #[test]
