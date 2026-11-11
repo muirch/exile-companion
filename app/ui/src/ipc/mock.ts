@@ -13,6 +13,7 @@ import type {
   CampaignState,
   ChatEvent,
   ChatSummary,
+  ItemCard,
   OpenedChat,
   NextCard,
   TurnOver,
@@ -391,6 +392,27 @@ export function openedChatMock(id: string): OpenedChat {
   };
 }
 
+/** The item card the browser overlay opens with, picked with ?card=gear. */
+export function itemCardMock(): ItemCard | null {
+  if (typeof window === 'undefined') return null;
+  if (new URLSearchParams(window.location.search).get('card') !== 'gear') return null;
+  return {
+    kind: 'gear',
+    name: 'Storm Loop, Ruby Ring',
+    needsLevel: null,
+    card: {
+      slot: 'Ring 1',
+      replaces: 'Iron Ring',
+      verdict: 'upgrade',
+      dpsPct: 6.1,
+      ehpPct: 3.4,
+      life: 24,
+      resists: [{ element: 'Fire', change: 18, after: 75 }],
+      partly: false,
+    },
+  };
+}
+
 const chatQuery = (): string | null =>
   typeof window === 'undefined' ? null : new URLSearchParams(window.location.search).get('chat');
 
@@ -412,6 +434,25 @@ Leather Belt
 
 /** What the chat window shows on load in the browser, picked with ?chat=. */
 export function chatSeedMock(): Exchange[] {
+  if (chatQuery() === 'readme') {
+    return [
+      {
+        question: 'Which passive should I take next?',
+        answer: MOCK_ANSWER,
+        tool: null,
+        note: null,
+        over: { stop: 'done', message: null, usage: null, dollars: 0.0191, model: 'Sonnet 5.5' },
+      },
+      {
+        question: 'Which bandit should I help?',
+        answer:
+          "Help Alira.\n\nYour guide's notes say she covers the resistances you need before Kitava.",
+        tool: null,
+        note: null,
+        over: { stop: 'done', message: null, usage: null, dollars: 0.0064, model: 'Sonnet 5.5' },
+      },
+    ];
+  }
   if (chatQuery() !== 'answered') return [];
   return [
     {
