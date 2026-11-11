@@ -434,7 +434,8 @@ fn compares_the_build_with_a_guide() {
     );
 }
 
-// A guide with a spectre group, the way PoB saves the monster picked for Raise Spectre.
+// A guide with a minion group, the way PoB saves the monster picked for Raise Spectre and the
+// item set picked for Animate Guardian.
 fn guide_with_minions() -> String {
     GUIDE.replacen(
         "\t</Build>",
@@ -446,13 +447,14 @@ fn guide_with_minions() -> String {
         "\t\t\t<Skill slot=\"Gloves\" enabled=\"true\">\
          <Gem nameSpec=\"Raise Spectre\" skillId=\"RaiseSpectre\" gemId=\"Metadata/Items/Gems/SkillGemRaiseSpectre\" level=\"20\" quality=\"0\" enabled=\"true\" skillMinion=\"Metadata/Monsters/BloodChieftain/MonkeyChiefBloodEnrage\"/>\
          <Gem nameSpec=\"Minion Life Support\" skillId=\"SupportMinionLife\" gemId=\"Metadata/Items/Gems/SupportGemMinionLife\" level=\"20\" quality=\"0\" enabled=\"true\"/>\
+         <Gem nameSpec=\"Animate Guardian\" skillId=\"AnimateGuardian\" gemId=\"Metadata/Items/Gems/SkillGemAnimateGuardian\" level=\"20\" quality=\"0\" enabled=\"true\" skillMinionItemSet=\"1\"/>\
          </Skill>\n\t\t</SkillSet>",
         1,
     )
 }
 
 #[test]
-fn guide_stages_name_the_spectres() {
+fn guide_stages_name_the_spectres_and_the_guardians_gear() {
     let Some(pob) = pob_dir() else { return };
     let mut e = engine(&pob);
     e.call("load_build", json!({ "xml": FIXTURE }), SLOW)
@@ -472,12 +474,22 @@ fn guide_stages_name_the_spectres() {
         .find(|s| s["skill"] == "Raise Spectre")
         .unwrap_or_else(|| panic!("{skills:?}"));
     assert_eq!(spectre["spectres"], json!(["Carnage Chieftain"]));
-    assert_eq!(spectre["supports"], json!(["Minion Life"]));
+    assert_eq!(
+        spectre["supports"],
+        json!(["Animate Guardian", "Minion Life"])
+    );
+    assert_eq!(
+        spectre["guardian"]["gear"]["Weapon 1"],
+        "Death Song, Short Bow"
+    );
+    assert!(spectre["guardian"]["item_set"].is_string(), "{spectre}");
+    assert!(spectre["guardian"]["gear"]["Amulet"].is_null(), "{spectre}");
     let caustic = skills
         .iter()
         .find(|s| s["skill"] == "Caustic Arrow")
         .unwrap();
     assert!(caustic["spectres"].is_null(), "{caustic}");
+    assert!(caustic["guardian"].is_null(), "{caustic}");
 }
 
 #[test]
