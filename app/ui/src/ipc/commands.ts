@@ -237,6 +237,10 @@ export const getLinks = (set: number | null): Promise<Links | null> =>
 
 export const closeGems = (): Promise<void> => (isTauri() ? invoke('close_gems') : Promise.resolve());
 
+/** The author's notes in the PoB the route's gems come from. */
+export const getNotes = (): Promise<string | null> =>
+  isTauri() ? invoke('get_notes') : Promise.resolve(mock.notesMock());
+
 export const getProfile = (): Promise<Profile> =>
   isTauri() ? invoke('get_profile') : Promise.resolve(mock.profileMock());
 

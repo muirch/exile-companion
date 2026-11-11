@@ -5,12 +5,15 @@ import { beforeEach, describe, expect, it, vi } from 'vitest';
 import * as commands from '../ipc/commands';
 import { linksMock } from '../ipc/mock';
 import type { LinkGem } from '../ipc/types';
-import { GemsApp, bySlot, connectors, gemLevel } from './GemsApp';
+import { GemsApp, bySlot, connectors, gemLevel, noteBlocks } from './GemsApp';
 
 vi.mock('../ipc/commands', () => ({
   getLinks: vi.fn((set: number | null) => Promise.resolve(links(set))),
+  getNotes: vi.fn(() => Promise.resolve(notes)),
   closeGems: vi.fn(() => Promise.resolve()),
 }));
+
+let notes: string | null = '- Act 2 -\n\nFor our Bandit we Help Alira.';
 
 let links: (set: number | null) => ReturnType<typeof linksMock> | null = linksMock;
 
@@ -26,6 +29,7 @@ const gem = (name: string, support: boolean): LinkGem => ({
 
 beforeEach(() => {
   links = linksMock;
+  notes = '- Act 2 -\n\nFor our Bandit we Help Alira.';
   vi.clearAllMocks();
 });
 
@@ -45,6 +49,15 @@ describe('gem links', () => {
       ['Helmet', 1],
       ['Gloves', 1],
     ]);
+  });
+
+  it('reads "- Act 1 -" lines in the notes as headings', () => {
+    expect(noteBlocks('- Act 1 -\n\nMule first.\nThen go.\n\n\n- Act 2 -')).toEqual([
+      { heading: true, text: 'Act 1' },
+      { heading: false, text: 'Mule first.\nThen go.' },
+      { heading: true, text: 'Act 2' },
+    ]);
+    expect(noteBlocks('Use -1 to -5 charges')).toEqual([{ heading: false, text: 'Use -1 to -5 charges' }]);
   });
 
   it('says level and quality as PoB sets them', () => {
@@ -79,6 +92,21 @@ describe('GemsApp', () => {
     expect(commands.getLinks).toHaveBeenLastCalledWith(0);
     await userEvent.keyboard('{Escape}');
     expect(commands.closeGems).toHaveBeenCalled();
+  });
+
+  it("shows the author's notes on their own tab", async () => {
+    render(<GemsApp />);
+    await userEvent.click(await screen.findByRole('button', { name: 'Notes' }));
+    expect(screen.getByRole('heading', { name: 'Act 2' })).toBeInTheDocument();
+    expect(screen.getByText('For our Bandit we Help Alira.')).toBeInTheDocument();
+    expect(screen.queryByRole('combobox', { name: 'Stage' })).toBeNull();
+  });
+
+  it('says when the author wrote no notes', async () => {
+    notes = null;
+    render(<GemsApp />);
+    await userEvent.click(await screen.findByRole('button', { name: 'Notes' }));
+    expect(screen.getByText("The build's author wrote no notes.")).toBeInTheDocument();
   });
 
   it('says what to do without a build', async () => {
