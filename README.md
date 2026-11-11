@@ -113,7 +113,7 @@ EXILE_POB_DIR=$PWD/.pob cargo test -p exile-pob-engine
 
 Windows installers come from the manual Release workflow. On Linux, `pnpm tauri build --no-bundle` builds the app to run from `target/release`.
 
-The campaign data pack is committed. When a league changes the campaign, regenerate it from GGG's patch CDN with `npm ci && npm run regen` in `tools/data-extractor` (see its [README](tools/data-extractor/README.md)).
+The campaign data pack is committed. For a new league, run the "Update game data" workflow in Actions. It regenerates the data from GGG's patch CDN and the route from exile-leveling, tests them and opens a pull request (see the extractor's [README](tools/data-extractor/README.md)).
 
 ### How it's built
 

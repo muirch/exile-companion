@@ -29,6 +29,8 @@ npm run regen          # fetch, transform, and write ../../crates/data/data/*.js
 
 Then review the `crates/data/data/*.json` diff and commit it. For a new league, update `patch` in `config.json`. The current version is listed at <https://raw.githubusercontent.com/poe-tool-dev/latest-patch-version/main/latest.txt>.
 
+For a new league it's easier to run the "Update game data" workflow from the repo's Actions tab. It sets the game patch, the exile-leveling commit and the Path of Building release the engine tests use (each to the latest unless you give one), regenerates the data and the route, runs the data, route and engine tests and opens a pull request with the diff. `tools/update-data.sh` does the same locally. Right after a patch goes out, GGG's CDN may not have it yet, then run it again later. The workflow needs "Allow GitHub Actions to create and approve pull requests" turned on in the repo's Actions settings.
+
 ## Versioning
 
 - `config.json` `patch`: the pinned game version the facts come from. This changes every league.
