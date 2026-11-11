@@ -30,6 +30,8 @@ sed -i "s/\"patch\": \"[^\"]*\"/\"patch\": \"$PATCH\"/" "$CONFIG"
 sed -i "s/^const COMMIT = '[0-9a-f]*';/const COMMIT = '$ROUTE_COMMIT';/" "$ROUTES"
 sed -i "s/^TAG=\${POB_TAG:-.*}\$/TAG=\${POB_TAG:-$POB_TAG}/; s/^TREE=\${POB_TREE:-.*}\$/TREE=\${POB_TREE:-$TREE}/" "$POB"
 
+# The extractor goes on with old tables when the download fails, so start without them.
+rm -rf tools/data-extractor/tables
 (cd tools/data-extractor && npm ci --no-audit --no-fund && npm run regen && npm run routes)
 
 {
