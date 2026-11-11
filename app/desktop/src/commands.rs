@@ -217,6 +217,42 @@ pub async fn chat_delete(app: AppHandle, id: String) -> Result<(), String> {
 }
 
 #[tauri::command]
+pub fn get_profile(app: AppHandle) -> crate::profile::Profile {
+    crate::profile::profile(&app)
+}
+
+/// Follows the guide in the text: a PoB code, a build link or a guide page.
+#[tauri::command]
+pub async fn follow_guide(app: AppHandle, text: String) -> Result<crate::profile::Profile, String> {
+    crate::profile::follow_guide(&app, text).await?;
+    Ok(crate::profile::profile(&app))
+}
+
+#[tauri::command]
+pub async fn forget_guide(app: AppHandle) -> Result<crate::profile::Profile, String> {
+    crate::profile::forget_guide(&app).await?;
+    Ok(crate::profile::profile(&app))
+}
+
+#[tauri::command]
+pub async fn list_characters(
+    app: AppHandle,
+    account: String,
+) -> Result<crate::profile::CharacterList, String> {
+    crate::profile::list_characters(&app, account).await
+}
+
+#[tauri::command]
+pub async fn import_character(
+    app: AppHandle,
+    account: Option<String>,
+    character: Option<String>,
+) -> Result<crate::profile::Profile, String> {
+    crate::profile::import_character(&app, account, character).await?;
+    Ok(crate::profile::profile(&app))
+}
+
+#[tauri::command]
 pub fn open_chat(app: AppHandle) {
     crate::chat::open(&app);
 }

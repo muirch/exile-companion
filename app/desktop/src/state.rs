@@ -53,6 +53,8 @@ pub struct AppState {
     pub state_tx: watch::Sender<CampaignState>,
     /// The currently-imported Path of Building build (guarded, import commands mutate it).
     pub build: Mutex<BuildState>,
+    /// The followed guide's build. The route's gems come from it when there is one.
+    pub guide: Mutex<Option<exile_pob::PobBuild>>,
     /// Whether the overlay is in interactive ("grabbed") mode.
     pub grabbed: AtomicBool,
     /// The game, or one of our own windows, is in front.
@@ -80,6 +82,7 @@ impl AppState {
             run: Mutex::new(RunState::default()),
             state_tx,
             build: Mutex::new(BuildState::new()),
+            guide: Mutex::new(None),
             // Global shortcuts don't fire on Wayland, so off Windows the controls stay reachable.
             grabbed: AtomicBool::new(!cfg!(windows)),
             game_focused: AtomicBool::new(!cfg!(windows)),
