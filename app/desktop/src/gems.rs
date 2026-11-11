@@ -1,6 +1,7 @@
 //! The gems window: the build's links for the character's stage, shown with the quick menu while
 //! the menu key is held, like a game overlay layer. It goes when neither of them has the focus.
 
+use std::sync::OnceLock;
 use std::time::Duration;
 
 use tauri::{AppHandle, Emitter, LogicalSize, Manager, PhysicalPosition};
@@ -9,10 +10,14 @@ use crate::settings;
 use crate::state::AppState;
 
 pub const GEMS_LABEL: &str = "gems";
-// The window's size in tauri.conf.json, at 1080p.
+// The window's sizes in tauri.conf.json, at 1080p.
 const SIZE: (f64, f64) = (340.0, 540.0);
+const MIN_SIZE: (f64, f64) = (300.0, 320.0);
 
-/// Scaled to the monitor like the overlay, on the left unless the player moved it.
+static SIZED: OnceLock<()> = OnceLock::new();
+
+/// Scaled to the monitor like the overlay the first time, then the size the player gave it, on
+/// the left unless the player moved it.
 fn place(app: &AppHandle, window: &tauri::WebviewWindow) {
     let Some(m) = app
         .get_webview_window("overlay")
@@ -22,11 +27,19 @@ fn place(app: &AppHandle, window: &tauri::WebviewWindow) {
     };
     let (mp, ms) = (m.position(), m.size());
     let zoom = crate::chat::screen_zoom(ms.height as f64 / m.scale_factor());
-    let _ = window.set_zoom(zoom);
-    let _ = window.set_size(LogicalSize::new(SIZE.0 * zoom, SIZE.1 * zoom));
-    let px = |v: f64| (v * zoom * m.scale_factor()) as i32;
-    let max_x = (ms.width as i32 - px(SIZE.0)).max(0);
-    let max_y = (ms.height as i32 - px(SIZE.1)).max(0);
+    let scaled = |(w, h): (f64, f64)| LogicalSize::new(w * zoom, h * zoom);
+    let (width, height) = if SIZED.set(()).is_ok() {
+        let _ = window.set_zoom(zoom);
+        let _ = window.set_min_size(Some(scaled(MIN_SIZE)));
+        let _ = window.set_size(scaled(SIZE));
+        let px = |v: f64| (v * zoom * m.scale_factor()) as i32;
+        (px(SIZE.0), px(SIZE.1))
+    } else {
+        let size = window.outer_size().unwrap_or_default();
+        (size.width as i32, size.height as i32)
+    };
+    let max_x = (ms.width as i32 - width).max(0);
+    let max_y = (ms.height as i32 - height).max(0);
     let (x, y) = match settings::load(app).ok().and_then(|s| s.gems_anchor) {
         Some((fx, fy)) => (
             (fx * ms.width as f64) as i32,
@@ -94,6 +107,11 @@ pub fn close_layer_if_unfocused(app: &AppHandle) {
             });
         }
     });
+}
+
+/// The notes the author wrote in the PoB the route's gems come from.
+pub fn notes(app: &AppHandle) -> Option<String> {
+    crate::runtime::plan_source(app)?.notes
 }
 
 /// The links of skill set `set`, or of the one the character's level is at.

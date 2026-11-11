@@ -168,6 +168,7 @@ pub fn run() {
             commands::get_profile,
             commands::get_links,
             commands::close_gems,
+            commands::get_notes,
             commands::follow_guide,
             commands::forget_guide,
             commands::list_characters,
