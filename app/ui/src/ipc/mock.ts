@@ -22,6 +22,8 @@ import type {
   RouteView,
   SpeedMultiplier,
   CharacterList,
+  GemColor,
+  Links,
   Profile,
 } from './types';
 import type { Exchange } from '../components/chatLog';
@@ -265,6 +267,63 @@ export function setMockSpeed(speed: SpeedMultiplier): void {
 export function importBuildMock(): BuildSummary {
   useAppStore.getState().setBuild(MOCK_BUILD);
   return MOCK_BUILD;
+}
+
+const MOCK_SETS = ['Level 1-12', 'Level 12-22', 'Level 22-31'];
+
+function mockGem(name: string, color: GemColor, support: boolean, get: string | null) {
+  return { name, color, support, level: support ? 3 : 8, quality: 0, requiredLevel: support ? 8 : 1, get };
+}
+
+export function linksMock(set: number | null): Links {
+  return {
+    sets: MOCK_SETS,
+    set: set ?? 1,
+    groups: [
+      {
+        slot: 'Body Armour',
+        label: null,
+        gems: [
+          mockGem('Sunder', 'red', false, 'Sold by Nessa in act 1'),
+          mockGem('Chance to Bleed Support', 'red', true, 'Sold by Nessa in act 1'),
+          mockGem('Melee Physical Damage Support', 'red', true, 'Quest reward from Tarkleigh in act 1'),
+          mockGem('Ruthless Support', 'red', true, 'Sold by Nessa in act 1'),
+        ],
+      },
+      {
+        slot: 'Body Armour',
+        label: null,
+        gems: [
+          mockGem('Raise Spectre', 'blue', false, 'Sold by Lilly Roth in act 6'),
+          mockGem('Meat Shield Support', 'red', true, 'Sold by Lilly Roth in act 6'),
+          mockGem('Animate Guardian', 'red', false, 'Sold by Lilly Roth in act 6'),
+          mockGem('Minion Life Support', 'blue', true, 'Sold by Lilly Roth in act 6'),
+        ],
+      },
+      {
+        slot: 'Boots',
+        label: null,
+        gems: [
+          mockGem('Leap Slam', 'red', false, 'Quest reward from Tarkleigh in act 1'),
+          mockGem('Faster Attacks Support', 'green', true, 'Sold by Nessa in act 1'),
+          mockGem('Momentum Support', 'green', true, 'From the Ranger mule'),
+        ],
+      },
+      {
+        slot: 'Helmet',
+        label: null,
+        gems: [
+          mockGem('Precision', 'green', false, 'Sold by Nessa in act 1'),
+          mockGem('Herald of Ash', 'red', false, 'Quest reward from Greust in act 2'),
+        ],
+      },
+      {
+        slot: 'Gloves',
+        label: null,
+        gems: [mockGem('Vulnerability', 'blue', false, 'Quest reward from Clarissa in act 3')],
+      },
+    ],
+  };
 }
 
 export function profileMock(): Profile {

@@ -23,6 +23,7 @@ import type {
   GemOverride,
   GemRow,
   HotkeySettings,
+  Links,
   NextCard,
   NextObjective,
   OpenedChat,
@@ -229,6 +230,12 @@ export const pasteBuild = async (): Promise<BuildSummary> => {
   const code = await readText();
   return invoke('import_build_code', { code });
 };
+
+/** The links of skill set `set`, or of the one the character's level is at. */
+export const getLinks = (set: number | null): Promise<Links | null> =>
+  isTauri() ? invoke('get_links', { set }) : Promise.resolve(mock.linksMock(set));
+
+export const closeGems = (): Promise<void> => (isTauri() ? invoke('close_gems') : Promise.resolve());
 
 export const getProfile = (): Promise<Profile> =>
   isTauri() ? invoke('get_profile') : Promise.resolve(mock.profileMock());
