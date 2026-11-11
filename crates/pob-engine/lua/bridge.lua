@@ -1167,7 +1167,26 @@ local function groupSpectres(g)
 	end
 end
 
-local function setSkills(groups)
+-- The gear PoB puts on a group's Animate Guardian: the item set its gem names, in the slots a
+-- guardian wears.
+local function groupGuardian(ref, g)
+	for _, gem in ipairs(g.gemList or {}) do
+		if gem.enabled ~= false and gem.skillId == "AnimateGuardian" then
+			local id = gem.skillMinionItemSet or ref.itemsTab.itemSetOrderList[1]
+			local set = id and ref.itemsTab.itemSets[id]
+			if not set then
+				return
+			end
+			local all, gear = setGear(ref, set), {}
+			for _, slotName in ipairs(GUARDIAN_SLOTS) do
+				gear[slotName] = all[slotName]
+			end
+			return { item_set = set.title or ("Set " .. id), gear = gear }
+		end
+	end
+end
+
+local function setSkills(ref, groups)
 	local skills = {}
 	for _, g in ipairs(groups or {}) do
 		local active = activeGemOf(g)
@@ -1179,7 +1198,13 @@ local function setSkills(groups)
 				end
 			end
 			table.sort(gems)
-			skills[#skills + 1] = { skill = active, slot = g.slot, supports = gems, spectres = groupSpectres(g) }
+			skills[#skills + 1] = {
+				skill = active,
+				slot = g.slot,
+				supports = gems,
+				spectres = groupSpectres(g),
+				guardian = groupGuardian(ref, g),
+			}
 		end
 	end
 	return skills
@@ -1222,7 +1247,7 @@ function bridge.guide_stages(params)
 	local skillSets = {}
 	for _, id in ipairs(ref.skillsTab.skillSetOrderList) do
 		local set = ref.skillsTab.skillSets[id]
-		skillSets[#skillSets + 1] = { id = id, title = set and set.title or ("Set " .. id), skills = setSkills(skillSetGroups(ref, id)) }
+		skillSets[#skillSets + 1] = { id = id, title = set and set.title or ("Set " .. id), skills = setSkills(ref, skillSetGroups(ref, id)) }
 	end
 	return {
 		reference = params.reference or #references,
@@ -1270,8 +1295,8 @@ function bridge.guide_stage_diff(params)
 		end
 	end
 
-	local fromSkills = setSkills(skillSetGroups(ref, tonumber(from.skill_set) or ref.skillsTab.activeSkillSetId))
-	local toSkills = setSkills(skillSetGroups(ref, tonumber(to.skill_set) or ref.skillsTab.activeSkillSetId))
+	local fromSkills = setSkills(ref, skillSetGroups(ref, tonumber(from.skill_set) or ref.skillsTab.activeSkillSetId))
+	local toSkills = setSkills(ref, skillSetGroups(ref, tonumber(to.skill_set) or ref.skillsTab.activeSkillSetId))
 	local before = {}
 	for _, sk in ipairs(fromSkills) do before[sk.skill] = sk end
 	local skills = {}
