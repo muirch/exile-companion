@@ -312,7 +312,7 @@ mod tests {
                 Dialect::Anthropic => {
                     anthropic::body(Model::Sonnet, Effort::Medium, setup, messages)
                 }
-                Dialect::OpenAi => openai::body("m", None, false, setup, messages),
+                Dialect::OpenAi => openai::body("m", None, false, None, setup, messages),
             }
         }
 

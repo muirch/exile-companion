@@ -20,6 +20,7 @@ pub struct OpenAi {
     model: String,
     effort: Option<Effort>,
     openrouter: bool,
+    session: Option<String>,
 }
 
 impl OpenAi {
@@ -31,7 +32,14 @@ impl OpenAi {
             model: model.trim().to_string(),
             effort: Some(effort),
             openrouter: true,
+            session: None,
         }
+    }
+
+    /// OpenRouter keeps a session's requests on one provider, so its prompt cache gets hits.
+    pub fn with_session(mut self, id: &str) -> Self {
+        self.session = Some(id.to_string());
+        self
     }
 
     /// A local server often needs no key. `effort` goes out as reasoning_effort, which Ollama
@@ -50,6 +58,7 @@ impl OpenAi {
             model: model.trim().to_string(),
             effort,
             openrouter: false,
+            session: None,
         }
     }
 }
@@ -68,6 +77,7 @@ pub fn body(
     model: &str,
     effort: Option<Effort>,
     openrouter: bool,
+    session: Option<&str>,
     setup: &Setup<'_>,
     messages: &[Value],
 ) -> Value {
@@ -88,6 +98,14 @@ pub fn body(
         if let Some(e) = effort {
             b["reasoning"] = json!({ "effort": e.as_str() });
         }
+        // Claude caches only when asked, the others on their own. One top-level breakpoint
+        // moves along with the messages. 1h for the same reason as in anthropic.rs.
+        if model.starts_with("anthropic/") {
+            b["cache_control"] = json!({ "type": "ephemeral", "ttl": "1h" });
+        }
+        if let Some(id) = session {
+            b["session_id"] = json!(id);
+        }
     } else {
         // OpenAI's servers only send usage when asked. OpenRouter always does.
         b["stream_options"] = json!({ "include_usage": true });
@@ -104,7 +122,14 @@ impl Llm for OpenAi {
     }
 
     fn body(&self, setup: &Setup<'_>, messages: &[Value]) -> Value {
-        body(&self.model, self.effort, self.openrouter, setup, messages)
+        body(
+            &self.model,
+            self.effort,
+            self.openrouter,
+            self.session.as_deref(),
+            setup,
+            messages,
+        )
     }
 
     fn send(&self, body: Value) -> mpsc::Receiver<Result<Value, ChatError>> {
@@ -194,15 +219,17 @@ impl crate::turn::Assembler for Assembler {
         }
         if let Some(u) = event.get("usage").filter(|u| u.is_object()) {
             let prompt = u["prompt_tokens"].as_u64().unwrap_or(0);
-            let cached = u
-                .pointer("/prompt_tokens_details/cached_tokens")
-                .and_then(Value::as_u64)
-                .unwrap_or(0);
+            let detail = |name: &str| {
+                u.pointer(&format!("/prompt_tokens_details/{name}"))
+                    .and_then(Value::as_u64)
+                    .unwrap_or(0)
+            };
+            let (cached, written) = (detail("cached_tokens"), detail("cache_write_tokens"));
             self.usage = Usage {
-                input_tokens: prompt.saturating_sub(cached),
+                input_tokens: prompt.saturating_sub(cached + written),
                 output_tokens: u["completion_tokens"].as_u64().unwrap_or(0),
                 cache_read_tokens: cached,
-                cache_write_tokens: 0,
+                cache_write_tokens: written,
                 cost: u["cost"].as_f64(),
             };
         }
@@ -433,7 +460,7 @@ mod tests {
             tools: &tools,
         };
         let msgs = [json!({"role": "user", "content": "hi"})];
-        let b = body("vendor/model", Some(Effort::Low), true, &setup, &msgs);
+        let b = body("vendor/model", Some(Effort::Low), true, None, &setup, &msgs);
         assert_eq!(
             b["messages"][0],
             json!({"role": "system", "content": "sys"})
@@ -441,12 +468,59 @@ mod tests {
         assert_eq!(b["messages"][1]["content"], "hi");
         assert_eq!(b["tools"][0]["function"]["name"], "player_status");
         assert_eq!(b["reasoning"]["effort"], "low");
-        let local = body("qwen", None, false, &setup, &msgs);
+        assert!(b.get("cache_control").is_none());
+        assert!(b.get("session_id").is_none());
+        let local = body("qwen", None, false, Some("s1"), &setup, &msgs);
+        assert!(local.get("session_id").is_none());
+        assert!(local.get("cache_control").is_none());
         assert!(local.get("reasoning").is_none());
         assert!(local.get("reasoning_effort").is_none());
         assert_eq!(local["stream_options"]["include_usage"], true);
-        let ollama = body("qwen", Some(Effort::Low), false, &setup, &msgs);
+        let ollama = body("qwen", Some(Effort::Low), false, None, &setup, &msgs);
         assert_eq!(ollama["reasoning_effort"], "low");
+    }
+
+    #[test]
+    fn asks_openrouter_to_cache_claude_and_keep_the_session() {
+        let setup = Setup {
+            system: "sys",
+            tools: &[],
+        };
+        let claude = body(
+            "anthropic/claude-sonnet-5.5",
+            Some(Effort::Low),
+            true,
+            Some("chat-1"),
+            &setup,
+            &[],
+        );
+        assert_eq!(
+            claude["cache_control"],
+            json!({"type": "ephemeral", "ttl": "1h"})
+        );
+        assert_eq!(claude["session_id"], "chat-1");
+        let deepseek = body(
+            "deepseek/deepseek-v4.1-flash-1017",
+            Some(Effort::Low),
+            true,
+            Some("chat-1"),
+            &setup,
+            &[],
+        );
+        assert!(deepseek.get("cache_control").is_none());
+        assert_eq!(deepseek["session_id"], "chat-1");
+    }
+
+    #[test]
+    fn counts_cache_writes_apart_from_input() {
+        let (_, reply) = run(&[
+            json!({"choices":[{"delta":{"content":"Hi."},"finish_reason":"stop"}],"usage":{"prompt_tokens":7000,"completion_tokens":10,"prompt_tokens_details":{"cached_tokens":0,"cache_write_tokens":6500},"cost":0.027}}),
+            json!({"done": true}),
+        ]);
+        let usage = reply.unwrap().usage;
+        assert_eq!(usage.input_tokens, 500);
+        assert_eq!(usage.cache_write_tokens, 6500);
+        assert_eq!(usage.cache_read_tokens, 0);
     }
 
     #[test]
