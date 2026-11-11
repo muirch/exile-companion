@@ -30,6 +30,7 @@ export interface Settings {
   routeEdge: number;
   textScale: number;
   leagueStart: boolean;
+  bandit: Bandit;
   gemHints: GemHints;
   compact: boolean;
   /** Seconds without a route change before the overlay fades out; 0 keeps it shown. */
@@ -169,6 +170,9 @@ export interface PobInfo {
   path: string;
   version: string | null;
 }
+
+/** What the player does with the act 2 bandits (mirrors `exile_core::route::Bandit`). */
+export type Bandit = 'killAll' | 'alira' | 'kraityn' | 'oak';
 
 /** Which gem steps the route shows (mirrors `exile_core::gemplan::GemHints`). */
 export type GemHints = 'off' | 'rewards' | 'rewardsAndVendors';

@@ -199,6 +199,15 @@ describe('SettingsApp', () => {
     expect(commands.updateSettings).toHaveBeenCalledWith({ gemHints: 'rewards' });
   });
 
+  it('saves the bandit choice the act 2 route follows', async () => {
+    render(<SettingsApp />);
+    expect(screen.getByRole('button', { name: 'Kill all' })).toHaveAttribute('aria-pressed', 'true');
+    const alira = screen.getByRole('button', { name: 'Alira' });
+    await userEvent.click(alira);
+    expect(alira).toHaveAttribute('aria-pressed', 'true');
+    expect(commands.updateSettings).toHaveBeenCalledWith({ bandit: 'alira' });
+  });
+
   it('switches the overlay to compact and sets the fade time', async () => {
     render(<SettingsApp />);
     await userEvent.click(screen.getByRole('button', { name: 'Compact' }));

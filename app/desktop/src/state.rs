@@ -59,7 +59,7 @@ pub struct AppState {
     pub game_focused: AtomicBool,
     /// The game itself is in front.
     pub game_foreground: AtomicBool,
-    pub route: Arc<Route>,
+    route: Mutex<Arc<Route>>,
     pub anchor: Mutex<(f64, f64)>,
     pub tracker: Mutex<RouteTracker>,
     pub route_enabled: AtomicBool,
@@ -84,11 +84,19 @@ impl AppState {
             grabbed: AtomicBool::new(!cfg!(windows)),
             game_focused: AtomicBool::new(!cfg!(windows)),
             game_foreground: AtomicBool::new(false),
-            route,
+            route: Mutex::new(route),
             anchor: Mutex::new(crate::overlay::DEFAULT_ANCHOR),
             tracker: Mutex::new(RouteTracker::at(route_edge)),
             route_enabled: AtomicBool::new(route_enabled),
         }
+    }
+
+    pub fn route(&self) -> Arc<Route> {
+        self.route.lock().unwrap_or_else(|e| e.into_inner()).clone()
+    }
+
+    pub fn set_route(&self, route: Arc<Route>) {
+        *self.route.lock().unwrap_or_else(|e| e.into_inner()) = route;
     }
 
     /// A clone of the latest campaign state.

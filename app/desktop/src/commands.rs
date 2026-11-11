@@ -502,7 +502,11 @@ pub fn get_settings(app: AppHandle) -> Result<Settings, String> {
 
 #[tauri::command]
 pub fn save_settings(app: AppHandle, settings: Settings) -> Result<(), String> {
+    let old = settings::load(&app).unwrap_or_default();
     settings::save(&app, &settings)?;
+    if (old.league_start, old.bandit) != (settings.league_start, settings.bandit) {
+        crate::runtime::reload_route(&app, &settings);
+    }
     // The overlay and settings windows each hold their own copy of the display settings.
     let _ = app.emit("settings://changed", &settings);
     crate::runtime::emit_route(&app);
