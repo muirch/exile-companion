@@ -26,6 +26,20 @@ export function Button({
   );
 }
 
+/** A full-width row to pick from a list, like a quick menu row. */
+export function ListButton({
+  className = '',
+  ...props
+}: ButtonHTMLAttributes<HTMLButtonElement>): React.JSX.Element {
+  return (
+    <button
+      type="button"
+      className={`-mx-2 flex w-[calc(100%+16px)] flex-col items-start gap-0.5 px-2 py-1.5 text-left hover:bg-white/6 focus-visible:bg-white/6 focus-visible:outline-none ${className}`}
+      {...props}
+    />
+  );
+}
+
 // Drops progress, the build or the game log: the first click arms it, the second does it.
 // A second click right after the first is a double click or a bouncing mouse button, not a
 // confirmation.
