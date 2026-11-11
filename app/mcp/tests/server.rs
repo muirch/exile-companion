@@ -393,6 +393,13 @@ fn knows_where_the_player_is_and_the_guide_they_follow() {
     assert!(s["guide"]["mules"].is_array(), "{s}");
     // The build is the guide now, so it isn't listed twice.
     assert_eq!(s["build"]["same_outline_as_guide"], true, "{s}");
+    assert!(
+        s["build"]["note"]
+            .as_str()
+            .unwrap()
+            .contains("import_character"),
+        "{s}"
+    );
 
     let (text, is_error) = c.tool("what_next", json!({}));
     assert!(!is_error, "{text}");
