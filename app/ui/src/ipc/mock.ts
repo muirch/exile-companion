@@ -392,10 +392,19 @@ export function openedChatMock(id: string): OpenedChat {
   };
 }
 
-/** The item card the browser overlay opens with, picked with ?card=gear. */
+/** The item card the browser overlay opens with, picked with ?card=gear or ?card=levelup. */
 export function itemCardMock(): ItemCard | null {
   if (typeof window === 'undefined') return null;
-  if (new URLSearchParams(window.location.search).get('card') !== 'gear') return null;
+  const card = new URLSearchParams(window.location.search).get('card');
+  if (card === 'levelup') {
+    return {
+      kind: 'ready',
+      level: 12,
+      gems: ['Sunder', 'Chance to Bleed Support'],
+      items: [{ name: 'Doom Band, Sapphire Ring', slot: 'Ring 2', level: 12 }],
+    };
+  }
+  if (card !== 'gear') return null;
   return {
     kind: 'gear',
     name: 'Storm Loop, Ruby Ring',
