@@ -51,6 +51,11 @@ impl Model {
 
     /// Dollars per million tokens of input, output and cache reads. Haiku's are for prompts up
     /// to 100k tokens, which a chat stays under.
+    /// Dollars per million tokens written to the hour-long cache, twice the input price.
+    pub fn cache_write_price(self) -> f64 {
+        self.prices()[0] * 2.0
+    }
+
     fn prices(self) -> [f64; 3] {
         match self {
             Model::Haiku => [0.1, 0.5, 0.01],
@@ -154,7 +159,7 @@ impl Usage {
     /// A refusal served by a fallback model bills at that model's.
     pub fn priced(mut self, model: Model) -> Usage {
         let [input, output, read] = model.prices();
-        let write = input * 2.0;
+        let write = model.cache_write_price();
         self.cost = Some(
             (self.input_tokens as f64 * input
                 + self.output_tokens as f64 * output
