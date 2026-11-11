@@ -16,6 +16,8 @@ pub struct GemInfo {
     pub name: String,
     pub required_level: u32,
     pub is_support: bool,
+    /// "strength", "dexterity", "intelligence" or "none": the gem's colour.
+    pub primary_attribute: String,
 }
 
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
@@ -51,6 +53,8 @@ struct RawGem {
     name: String,
     required_level: u32,
     is_support: bool,
+    #[serde(default)]
+    primary_attribute: String,
 }
 
 #[derive(Deserialize)]
@@ -89,6 +93,7 @@ impl GemTable {
                     name: g.name,
                     required_level: g.required_level,
                     is_support: g.is_support,
+                    primary_attribute: g.primary_attribute,
                 };
                 (info.id.clone(), info)
             })

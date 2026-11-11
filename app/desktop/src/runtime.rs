@@ -449,14 +449,7 @@ pub fn gem_rows(app: &AppHandle) -> Vec<GemRow> {
         let place = plan
             .as_ref()
             .and_then(|p| p.steps.iter().find(|s| s.name == name))
-            .map(|s| match s.action {
-                exile_core::gemplan::GemAction::Take => {
-                    format!("Quest reward from {} in act {}", s.npc, s.act)
-                }
-                exile_core::gemplan::GemAction::Buy => {
-                    format!("Sold by {} in act {}", s.npc, s.act)
-                }
-            });
+            .map(|s| s.place());
         rows.push(GemRow {
             over: overrides.get(&name).copied(),
             name,
