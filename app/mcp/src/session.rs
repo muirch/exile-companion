@@ -338,6 +338,14 @@ impl Session {
         }
     }
 
+    /// The guide author's notes, or with `find` only the paragraphs that have every word of it.
+    pub fn guide_notes(&self, guide: Option<String>, find: Option<&str>) -> Result<Value, String> {
+        let (guide, _) = self.guide_or_followed(guide)?;
+        let xml = self.to_xml(&guide)?;
+        let build = exile_pob::parse_xml(xml.as_bytes()).map_err(|e| e.to_string())?;
+        Ok(notes_answer(build.notes.as_deref(), find))
+    }
+
     /// What a new conversation needs first: where the player is in the game, the guide they
     /// follow and which build the tools read. Nothing here starts Path of Building.
     pub fn status(&self) -> Value {
@@ -514,6 +522,33 @@ impl Session {
     }
 }
 
+fn notes_answer(notes: Option<&str>, find: Option<&str>) -> Value {
+    let Some(notes) = notes else {
+        return json!({ "notes": null, "missing": "The guide's Path of Building has no notes." });
+    };
+    let words: Vec<String> = find
+        .unwrap_or_default()
+        .split_whitespace()
+        .map(str::to_lowercase)
+        .collect();
+    if words.is_empty() {
+        return json!({ "notes": notes });
+    }
+    let paragraphs: Vec<&str> = notes
+        .split("\n\n")
+        .map(str::trim)
+        .filter(|p| {
+            let p = p.to_lowercase();
+            !p.is_empty() && words.iter().all(|w| p.contains(w.as_str()))
+        })
+        .collect();
+    if paragraphs.is_empty() {
+        json!({ "found": [], "missing": format!("No paragraph of the notes has all of: {}.", words.join(", ")), "notes_chars": notes.len() })
+    } else {
+        json!({ "found": paragraphs })
+    }
+}
+
 /// Class, level and the stage names of a build, read without Path of Building, with the mules its
 /// class needs and the gems the campaign never gives it.
 fn build_outline(xml: &str) -> Value {
@@ -528,6 +563,9 @@ fn build_outline(xml: &str) -> Value {
         "trees": b.specs.iter().map(|s| &s.title).collect::<Vec<_>>(),
         "skill_sets": b.skill_sets.iter().map(|s| &s.title).collect::<Vec<_>>(),
     });
+    if b.notes.is_some() {
+        v["has_notes"] = json!(true);
+    }
     let gems = exile_core::gems::GemTable::from_json_bytes(
         exile_data::GEMS_JSON,
         exile_data::GEM_SOURCES_JSON,
@@ -561,4 +599,34 @@ fn fetch(url: &str) -> Result<String, String> {
         .call()
         .and_then(|mut r| r.body_mut().read_to_string())
         .map_err(|e| format!("Couldn't download the build from {url}: {e}"))
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    const NOTES: &str = "Act 1\n\nMule Frost Blades with a Ranger.\n\nAct 2\nHelp Alira.";
+
+    #[test]
+    fn notes_come_whole_or_by_paragraph() {
+        assert_eq!(notes_answer(Some(NOTES), None)["notes"], NOTES);
+        assert_eq!(notes_answer(Some(NOTES), Some("  "))["notes"], NOTES);
+        assert_eq!(
+            notes_answer(Some(NOTES), Some("act alira"))["found"],
+            json!(["Act 2\nHelp Alira."])
+        );
+        let none = notes_answer(Some(NOTES), Some("spectre"));
+        assert_eq!(none["found"], json!([]));
+        assert!(none["missing"].as_str().unwrap().contains("spectre"));
+        assert!(notes_answer(None, None)["missing"].is_string());
+    }
+
+    #[test]
+    fn outline_says_when_there_are_notes() {
+        let with =
+            "<PathOfBuilding><Build className=\"Templar\"/><Notes>Hi</Notes></PathOfBuilding>";
+        let without = "<PathOfBuilding><Build className=\"Templar\"/></PathOfBuilding>";
+        assert_eq!(build_outline(with)["has_notes"], true);
+        assert!(build_outline(without)["has_notes"].is_null());
+    }
 }
