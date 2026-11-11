@@ -28,7 +28,7 @@ These are estimates for a typical question that takes one or two tool calls. Eve
 | DeepSeek V4.1 Flash on OpenRouter | about $0.001 | about $0.02 to $0.04 |
 | Sonnet 5.5 | about $0.015 to $0.035 | about $0.30 to $0.75 |
 
-The first question after an hour without one costs a little more, since the provider caches the assistant's instructions for an hour.
+The first question after an hour without one costs a little more, since the provider caches the assistant's instructions for an hour. The same goes for Claude models on OpenRouter.
 
 ## Local models
 
