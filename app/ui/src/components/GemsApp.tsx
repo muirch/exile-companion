@@ -26,16 +26,29 @@ export function gemLevel(gem: LinkGem): string | null {
   return parts.length ? parts.join(', ') : null;
 }
 
-/** Link groups by item slot, in the order the build first names each slot. */
-export function bySlot(groups: LinkGroup[]): { slot: string | null; groups: LinkGroup[] }[] {
-  const out: { slot: string | null; groups: LinkGroup[] }[] = [];
+export type Block =
+  | { kind: 'heading'; text: string }
+  | { kind: 'groups'; slot: string | null; groups: LinkGroup[] };
+
+/**
+ * The groups in the build's own order, which is the order to socket them in. A label without gems
+ * heads the next part, and groups one after another in the same slot share its name.
+ */
+export function blocks(groups: LinkGroup[]): Block[] {
+  const out: Block[] = [];
   for (const g of groups) {
-    const at = out.find((s) => s.slot === g.slot && g.slot !== null);
-    if (at) at.groups.push(g);
-    else out.push({ slot: g.slot, groups: [g] });
+    if (g.gems.length === 0) {
+      if (g.label) out.push({ kind: 'heading', text: g.label });
+      continue;
+    }
+    const last = out.at(-1);
+    if (last?.kind === 'groups' && last.slot !== null && last.slot === g.slot) last.groups.push(g);
+    else out.push({ kind: 'groups', slot: g.slot, groups: [g] });
   }
   return out;
 }
+
+const SEP = { '--tint': 'var(--color-currency)' } as React.CSSProperties;
 
 /**
  * The line drawing of a group the way build sites show it: each skill starts a branch, and the
@@ -155,7 +168,9 @@ function GemCard({ gem, top }: { gem: LinkGem; top: number }): React.JSX.Element
     >
       <p className={`font-caps text-[15px] leading-snug ${COLOR[gem.color]}`}>{gem.name}</p>
       <p className="font-caps text-[13px] text-label">
-        {[gem.support ? 'Support gem' : 'Skill gem', level].filter(Boolean).join(' · ')}
+        {[gem.granted ? 'Granted skill' : gem.support ? 'Support gem' : 'Skill gem', level]
+          .filter(Boolean)
+          .join(' · ')}
       </p>
       {gem.requiredLevel != null && gem.requiredLevel > 1 && (
         <p className="font-caps text-[13px] text-plain">Needs level {gem.requiredLevel}</p>
@@ -300,17 +315,31 @@ export function GemsApp(): React.JSX.Element {
             {links.groups.length === 0 && (
               <p className="font-body text-[13px] text-label italic">No gems in this stage.</p>
             )}
-            {bySlot(links.groups).map((s, si) => (
-              <section key={si} className="flex flex-col" aria-label={s.slot ?? 'No slot'}>
-                {si > 0 && (
-                  <div className="tooltip-sep my-2.5" style={{ '--tint': 'var(--color-currency)' } as React.CSSProperties} />
-                )}
-                <p className="font-body text-[11px] text-label">{s.slot ?? 'No slot'}</p>
-                {s.groups.map((g, gi) => {
+            {blocks(links.groups).map((b, bi, all) => {
+              const prev = all[bi - 1];
+              // Slots and headings get a separator. Groups without a slot only a gap.
+              const sep = bi > 0 && (b.kind === 'heading' || b.slot !== null || (prev.kind === 'groups' && prev.slot !== null));
+              if (b.kind === 'heading') {
+                return (
+                  <div key={bi}>
+                    {sep && <div className="tooltip-sep my-2.5" style={SEP} />}
+                    <h2 className="font-caps text-[13px] text-value">{b.text}</h2>
+                  </div>
+                );
+              }
+              return (
+              <section
+                key={bi}
+                className={`flex flex-col ${bi > 0 && !sep ? 'mt-2' : ''}`}
+                aria-label={b.slot ?? b.groups[0].gems[0]?.name}
+              >
+                {sep && <div className="tooltip-sep my-2.5" style={SEP} />}
+                {b.slot && <p className="font-body text-[11px] text-label">{b.slot}</p>}
+                {b.groups.map((g, gi) => {
                   const lines = connectors(g.gems);
                   return (
                     <ul key={gi} className={`flex flex-col ${gi > 0 ? 'mt-1.5' : ''}`}>
-                      {g.label && <li className="font-body text-[11px] text-label italic">{g.label}</li>}
+                      {g.label && <li className="font-body text-[12px] leading-snug text-plain italic">{g.label}</li>}
                       {g.gems.map((gem, i) => (
                         <GemLine
                           key={`${gem.name}-${i}`}
@@ -324,7 +353,8 @@ export function GemsApp(): React.JSX.Element {
                   );
                 })}
               </section>
-            ))}
+              );
+            })}
             {hover && <GemCard gem={hover.gem} top={hover.top} />}
           </div>
         </>

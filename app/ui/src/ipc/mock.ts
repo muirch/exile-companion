@@ -282,11 +282,43 @@ export function notesMock(): string {
 
 const MOCK_SETS = ['Level 1-12', 'Level 12-22', 'Level 22-31'];
 
-function mockGem(name: string, color: GemColor, support: boolean, get: string | null) {
-  return { name, color, support, level: support ? 3 : 8, quality: 0, requiredLevel: support ? 8 : 1, get };
+function mockGem(name: string, color: GemColor, support: boolean, get: string | null, granted = false) {
+  return { name, color, support, granted, level: support ? 3 : 8, quality: 0, requiredLevel: support ? 8 : 1, get };
+}
+
+const heading = (label: string) => ({ slot: null, label, gems: [] });
+const group = (label: string | null, gems: ReturnType<typeof mockGem>[]) => ({ slot: null, label, gems });
+
+// The first stage the way guides write it: no slots, a mule note, and labels that head each swap.
+function earlyLinks(): Links {
+  return {
+    sets: MOCK_SETS,
+    set: 0,
+    groups: [
+      group('GET THESE GEMS FROM RANGER MULE', [
+        mockGem('Frost Blades', 'green', false, 'From the Ranger mule'),
+        mockGem('Momentum Support', 'green', true, 'From the Ranger mule'),
+      ]),
+      group(null, [
+        mockGem('Frost Blades', 'green', false, 'From the Ranger mule'),
+        mockGem('Ancestral Call Support', 'red', true, 'Sold by Nessa in act 1'),
+      ]),
+      heading('Level 4'),
+      group(null, [mockGem('Frostblink', 'blue', false, 'Sold by Nessa in act 1')]),
+      group(null, [mockGem('Summon Holy Relic', 'red', false, 'Quest reward from Tarkleigh in act 1')]),
+      heading('- Sunder Swap -'),
+      group(null, [
+        mockGem('Sunder', 'red', false, 'Sold by Nessa in act 1'),
+        mockGem('Ruthless Support', 'red', true, 'Sold by Nessa in act 1'),
+        mockGem('Chance to Bleed Support', 'red', true, 'Sold by Nessa in act 1'),
+      ]),
+    ],
+  };
 }
 
 export function linksMock(set: number | null): Links {
+  const asked = typeof window === 'undefined' ? null : new URLSearchParams(window.location.search).get('set');
+  if ((set ?? (asked === null ? 1 : Number(asked))) === 0) return earlyLinks();
   return {
     sets: MOCK_SETS,
     set: set ?? 1,
@@ -332,6 +364,13 @@ export function linksMock(set: number | null): Links {
         slot: 'Gloves',
         label: null,
         gems: [mockGem('Vulnerability', 'blue', false, 'Quest reward from Clarissa in act 3')],
+      },
+      {
+        slot: null,
+        label: null,
+        gems: [
+          mockGem('Summon Sentinel of Radiance', 'white', false, 'From the passive tree or the ascendancy', true),
+        ],
       },
     ],
   };

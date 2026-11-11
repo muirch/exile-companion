@@ -49,7 +49,7 @@ for c in nokey empty answered history saved; do
   stage "chat-$c" "window=chat&chat=$c" 420 560
   shot "chat-$c" "file://$OUT/.stage-chat-$c.html" 560 600
 done
-for g in gems:window=gems gems-hover:window=gems\&hover gems-notes:window=gems\&notes; do
+for g in gems:window=gems gems-early:window=gems\&set=0 gems-hover:window=gems\&hover gems-notes:window=gems\&notes; do
   stage "${g%%:*}" "${g#*:}" 340 540
   shot "${g%%:*}" "file://$OUT/.stage-${g%%:*}.html" 440 580
 done
@@ -65,8 +65,8 @@ ffmpeg -loglevel error -y \
 ffmpeg -loglevel error -y -i chat-nokey.png -i chat-empty.png -i chat-answered.png \
   -i chat-history.png -i chat-saved.png \
   -filter_complex "[0][1][2][3][4]hstack=5" chat.png
-ffmpeg -loglevel error -y -i gems.png -i gems-hover.png -i gems-notes.png \
-  -filter_complex "[0][1][2]hstack=3" gems-both.png
+ffmpeg -loglevel error -y -i gems.png -i gems-early.png -i gems-hover.png -i gems-notes.png \
+  -filter_complex "[0][1][2][3]hstack=4" gems-both.png
 rm -f .stage-*.html
 echo "$OUT/overview.png"
 echo "$OUT/chat.png"
