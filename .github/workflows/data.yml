@@ -1,0 +1,80 @@
+name: Update game data
+
+on:
+  workflow_dispatch:
+    inputs:
+      patch:
+        description: Game patch, e.g. 3.30.0.1. Empty takes the latest.
+        required: false
+        default: ''
+      route_commit:
+        description: exile-leveling commit. Empty takes the latest on main.
+        required: false
+        default: ''
+      pob_tag:
+        description: Path of Building release for the engine tests, e.g. v2.68.0. Empty takes the latest.
+        required: false
+        default: ''
+
+permissions:
+  contents: write
+  pull-requests: write
+
+env:
+  CARGO_TERM_COLOR: always
+
+jobs:
+  update:
+    name: Regenerate and open a pull request
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v7.0.0
+
+      - uses: dtolnay/rust-toolchain@stable
+
+      - uses: Swatinem/rust-cache@v2.9.1
+        with:
+          workspaces: '. -> target'
+
+      - uses: actions/setup-node@v7.0.0
+        with:
+          node-version: 22
+
+      - name: Point at the new versions and regenerate
+        id: update
+        run: tools/update-data.sh
+        env:
+          GH_TOKEN: ${{ github.token }}
+          PATCH: ${{ inputs.patch }}
+          ROUTE_COMMIT: ${{ inputs.route_commit }}
+          POB_TAG: ${{ inputs.pob_tag }}
+          SUMMARY: ${{ runner.temp }}/summary.md
+
+      - name: Fetch Path of Building for the engine tests
+        run: tools/fetch-pob.sh .pob
+
+      # A pull request opened with this workflow's token doesn't start CI, so the checks run here.
+      - name: Test the data, the route and the engine on the new versions
+        run: cargo test -p exile-core -p exile-data -p exile-pob -p exile-pob-engine -p exile-companion-mcp
+        env:
+          EXILE_POB_DIR: ${{ github.workspace }}/.pob
+
+      - name: Open a pull request
+        env:
+          GH_TOKEN: ${{ github.token }}
+          PATCH: ${{ steps.update.outputs.patch }}
+        run: |
+          # Every regen stamps the time, and the manifest's checksums follow it.
+          if git diff --quiet -I '"generated_at":' -I '"sha256":'; then
+            echo "Nothing changed for patch $PATCH." | tee -a "$GITHUB_STEP_SUMMARY"
+            exit 0
+          fi
+          branch="data/$PATCH-$(date -u +%Y%m%d-%H%M)"
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git switch -c "$branch"
+          git add tools/data-extractor/config.json tools/data-extractor/src/routes.ts tools/fetch-pob.sh crates/data/data
+          git commit -q -m "chore(data): game data for $PATCH"
+          git push -q origin "$branch"
+          gh pr create --head "$branch" --title "Game data for $PATCH" --body-file "$RUNNER_TEMP/summary.md"
+          cat "$RUNNER_TEMP/summary.md" >> "$GITHUB_STEP_SUMMARY"
