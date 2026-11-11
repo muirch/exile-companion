@@ -83,7 +83,7 @@ pub fn run() {
             let data = runtime::load_data_pack()?;
             carry_over_old_install(app.handle());
             let saved = settings::load(app.handle()).unwrap_or_default();
-            let route = runtime::load_route(&data, saved.league_start);
+            let route = runtime::load_route(&data, saved.league_start, saved.bandit);
             app.manage(AppState::new(
                 data,
                 runtime::load_gems(),

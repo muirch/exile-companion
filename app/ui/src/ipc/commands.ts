@@ -248,6 +248,7 @@ export const getSettings = (): Promise<Settings> =>
         lastLogPath: null,
         routeEdge: 0,
         leagueStart: true,
+        bandit: 'killAll',
         textScale: 1,
         gemHints: 'rewardsAndVendors',
         compact: useAppStore.getState().ui.compact,

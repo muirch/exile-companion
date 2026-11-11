@@ -34,6 +34,7 @@ import {
 import type {
   AgentView,
   AssistantView,
+  Bandit,
   ChatConfig,
   ChatProvider,
   ChatView,
@@ -134,6 +135,34 @@ function DisplaySection(): React.JSX.Element {
   );
 }
 
+const BANDITS: { value: Bandit; label: string }[] = [
+  { value: 'killAll', label: 'Kill all' },
+  { value: 'alira', label: 'Alira' },
+  { value: 'kraityn', label: 'Kraityn' },
+  { value: 'oak', label: 'Oak' },
+];
+
+function BanditRow(): React.JSX.Element {
+  const [bandit, setBandit] = useState<Bandit>('killAll');
+  useEffect(() => {
+    void getSettings().then((s) => {
+      if (s?.bandit) setBandit(s.bandit);
+    });
+  }, []);
+  return (
+    <Row label="Bandits">
+      <Choice
+        value={bandit}
+        options={BANDITS}
+        onChange={(v) => {
+          setBandit(v);
+          void updateSettings({ bandit: v });
+        }}
+      />
+    </Row>
+  );
+}
+
 function RouteSection(): React.JSX.Element {
   const enabled = useAppStore((s) => s.routeEnabled);
   const route = useAppStore((s) => s.route);
@@ -162,6 +191,7 @@ function RouteSection(): React.JSX.Element {
           onConfirm={() => void routeReset()}
         />
       </Row>
+      <BanditRow />
       <Note>
         The route is exile-leveling's (MIT), the speedrun route by HeartofPhos and contributors.
       </Note>

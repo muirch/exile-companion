@@ -16,7 +16,7 @@ A companion app for Path of Exile that sits over the game. I'm building it for m
 
 The first thing it does is the campaign. Exile Companion sits over the game and looks like one of its item tooltips. The header is the area you're in, the body is what to do there, and the last line is the way out. Bosses, quests, waypoints and trials use the game's own text colours, so you can read a step in one glance between fights.
 
-It follows you on its own. The game writes every area it loads to its `Client.txt` log, and Exile Companion reads that log to know where you are, including the Act 6-10 towns that share names with Act 1-5. Your level tells repeat visits apart. The route is the speedrunning route from [exile-leveling](https://github.com/HeartofPhos/exile-leveling), and you can step through it by hand when you go off it.
+It follows you on its own. The game writes every area it loads to its `Client.txt` log, and Exile Companion reads that log to know where you are, including the Act 6-10 towns that share names with Act 1-5. Your level tells repeat visits apart. The route is the speedrunning route from [exile-leveling](https://github.com/HeartofPhos/exile-leveling), and you can step through it by hand when you go off it. Pick what you do with the act 2 bandits in the settings, and the route follows that choice.
 
 Import your Path of Building build, from a file, a PoB code or a pobb.in or poe.ninja link, and the route also says which gem to take from each quest and what to buy from which vendor, at the point the build needs it.
 

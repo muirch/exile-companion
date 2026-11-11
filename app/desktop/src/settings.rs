@@ -24,8 +24,8 @@ pub struct Settings {
     pub item_check_enabled: bool,
     /// Off by default: it types into the game's search field.
     pub vendor_search_enabled: bool,
-    /// Read once at startup: the edges differ between the two route variants.
     pub league_start: bool,
+    pub bandit: exile_core::route::Bandit,
     pub gem_hints: exile_core::gemplan::GemHints,
     /// Route only, without the header band and properties line.
     pub compact: bool,
@@ -63,6 +63,7 @@ impl Default for Settings {
             item_check_enabled: false,
             vendor_search_enabled: false,
             league_start: true,
+            bandit: Default::default(),
             gem_hints: Default::default(),
             compact: true,
             fade_after: 0,

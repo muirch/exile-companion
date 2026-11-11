@@ -5,7 +5,6 @@
 //! runs a small poller that emits `replay://progress`. Stopping aborts the task(s) and, for replay,
 //! cancels via `ReplayControl`.
 
-use std::collections::HashSet;
 use std::sync::{Arc, Mutex, MutexGuard};
 use std::time::Duration;
 
@@ -17,7 +16,7 @@ use exile_core::gems::GemTable;
 use exile_core::guidance::GuidanceEngine;
 use exile_core::locale::LocalePack;
 use exile_core::pipeline::{prime_from_history, run_pipeline};
-use exile_core::route::{parse_route, Route, RouteTracker, RouteView};
+use exile_core::route::{parse_route, route_defines, Bandit, Route, RouteTracker, RouteView};
 use exile_core::source::{
     EventSource, LineStream, LiveTail, ReplayControl, ReplaySource, SpeedMultiplier,
 };
@@ -46,11 +45,8 @@ pub fn load_data_pack() -> Result<Arc<DataPack>, DataError> {
     Ok(Arc::new(pack))
 }
 
-pub fn load_route(data: &DataPack, league_start: bool) -> Arc<Route> {
-    let mut defines = HashSet::new();
-    if league_start {
-        defines.insert("LEAGUE_START".to_string());
-    }
+pub fn load_route(data: &DataPack, league_start: bool, bandit: Bandit) -> Arc<Route> {
+    let defines = route_defines(league_start, bandit);
     let source = exile_data::ROUTE_ACTS.join("\n");
     let (route, warnings) = parse_route(&source, &data.zones, &data.quests, &defines);
     for w in warnings {
@@ -71,7 +67,7 @@ pub fn current_route_view(app: &AppHandle) -> Option<RouteView> {
 fn bare_route_view(app: &AppHandle) -> Option<RouteView> {
     let app_state = app.state::<AppState>();
     let edge = lock(&app_state.tracker).active();
-    app_state.route.view(edge)
+    app_state.route().view(edge)
 }
 
 pub(crate) fn current_gem_plan(app: &AppHandle) -> Option<exile_core::gemplan::GemPlan> {
@@ -110,6 +106,19 @@ pub fn load_gems() -> Arc<GemTable> {
     }
 }
 
+/// Swaps in the route variant for these settings and keeps the player's place in it.
+pub fn reload_route(app: &AppHandle, settings: &settings::Settings) {
+    let app_state = app.state::<AppState>();
+    let route = load_route(&app_state.data, settings.league_start, settings.bandit);
+    {
+        let mut tracker = lock(&app_state.tracker);
+        let edge = app_state.route().edge_in(tracker.active(), &route);
+        *tracker = RouteTracker::at(edge);
+        app_state.set_route(route);
+    }
+    save_route_edge(app);
+}
+
 pub fn emit_route(app: &AppHandle) {
     let _ = app.emit("route://view", current_route_view(app));
 }
@@ -138,7 +147,7 @@ pub fn move_route(app: &AppHandle, mv: RouteMove) -> Option<RouteView> {
         let app_state = app.state::<AppState>();
         let mut tracker = lock(&app_state.tracker);
         match mv {
-            RouteMove::Next => tracker.next(&app_state.route),
+            RouteMove::Next => tracker.next(&app_state.route()),
             RouteMove::Prev => tracker.prev(),
             RouteMove::Reset => tracker.reset(),
         }
@@ -152,7 +161,7 @@ fn follow_route(app: &AppHandle, area_id: &str, level: u32) {
     let advanced = {
         let app_state = app.state::<AppState>();
         let mut tracker = lock(&app_state.tracker);
-        tracker.on_area(&app_state.route, area_id, (level > 0).then_some(level))
+        tracker.on_area(&app_state.route(), area_id, (level > 0).then_some(level))
     };
     if advanced {
         save_route_edge(app);
@@ -582,7 +591,7 @@ pub fn start_live(app: AppHandle, path: String) -> Result<CampaignState, String>
     let _ = app.emit("campaign://state-updated", &primed);
     if let Some(area_id) = &primed.area_id {
         let level = (primed.level > 0).then_some(primed.level);
-        lock(&state.tracker).on_area(&state.route, area_id, level);
+        lock(&state.tracker).on_area(&state.route(), area_id, level);
         save_route_edge(&app);
     }
     emit_route(&app);
