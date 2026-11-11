@@ -24,6 +24,32 @@ export type { RouteView } from './generated/RouteView';
 
 export type SourceMode = 'idle' | 'live' | 'replay';
 
+/** Mirrors `exile_core::links`: a skill set's socket groups as build sites draw them. */
+export type GemColor = 'red' | 'green' | 'blue' | 'white';
+
+export interface LinkGem {
+  name: string;
+  color: GemColor;
+  support: boolean;
+  level: number | null;
+  quality: number | null;
+  requiredLevel: number | null;
+  /** "Quest reward from Tarkleigh in act 1", a mule, or not in the campaign. */
+  get: string | null;
+}
+
+export interface LinkGroup {
+  slot: string | null;
+  label: string | null;
+  gems: LinkGem[];
+}
+
+export interface Links {
+  sets: string[];
+  set: number;
+  groups: LinkGroup[];
+}
+
 /** The followed guide (mirrors `runtime::GuideView`). */
 export interface GuideView {
   summary: BuildSummary;

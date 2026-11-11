@@ -91,3 +91,5 @@ export const onChatOver = (cb: (over: TurnOver) => void): Promise<UnlistenFn> =>
 
 export const onChatOpened = (cb: () => void): Promise<UnlistenFn> =>
   listen('chat://opened', () => cb());
+
+export const onGemsOpened = (cb: () => void): Promise<UnlistenFn> => listen('gems://opened', () => cb());
