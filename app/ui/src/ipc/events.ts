@@ -43,6 +43,8 @@ export const onOverlayGrab = (cb: (grabbed: boolean) => void): Promise<UnlistenF
 export const onBuildUpdated = (cb: (build: BuildSummary | null) => void): Promise<UnlistenFn> =>
   listen<BuildSummary | null>(BUILD_UPDATED, (e) => cb(e.payload));
 
+export const onGuideChanged = (cb: () => void): Promise<UnlistenFn> => listen('guide://changed', () => cb());
+
 export const onGuidance = (cb: (objective: NextObjective) => void): Promise<UnlistenFn> =>
   listen<NextObjective>(GUIDANCE_NEXT, (e) => cb(e.payload));
 

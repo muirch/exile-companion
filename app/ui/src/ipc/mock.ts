@@ -21,6 +21,8 @@ import type {
   NextObjective,
   RouteView,
   SpeedMultiplier,
+  CharacterList,
+  Profile,
 } from './types';
 import type { Exchange } from '../components/chatLog';
 import { useAppStore } from '../store/useAppStore';
@@ -263,6 +265,28 @@ export function setMockSpeed(speed: SpeedMultiplier): void {
 export function importBuildMock(): BuildSummary {
   useAppStore.getState().setBuild(MOCK_BUILD);
   return MOCK_BUILD;
+}
+
+export function profileMock(): Profile {
+  return {
+    guide: {
+      summary: { ...MOCK_BUILD, class_name: 'Templar', ascend_class_name: 'Guardian', main_skill: 'Dominating Blow' },
+      source: 'https://pobb.in/0nLwM9-uN2-b',
+    },
+    character: { ...MOCK_BUILD, class_name: 'Templar', ascend_class_name: null, level: 14, main_skill: 'Sunder' },
+    link: { account: 'Exile#1234', character: 'RealOne', realm: 'pc', imported: '2026-11-12T18:00:00Z' },
+  };
+}
+
+export function charactersMock(account: string): CharacterList {
+  return {
+    account,
+    characters: [
+      { name: 'RealOne', class: 'Templar', level: 14, league: 'Standard' },
+      { name: 'MuleGuy', class: 'Ranger', level: 4, league: 'Standard' },
+    ],
+    playing: 'RealOne',
+  };
 }
 
 export function clearBuildMock(): void {
