@@ -228,6 +228,11 @@ pub fn close_gems(app: AppHandle) {
 }
 
 #[tauri::command]
+pub fn get_notes(app: AppHandle) -> Option<String> {
+    crate::gems::notes(&app)
+}
+
+#[tauri::command]
 pub fn get_profile(app: AppHandle) -> crate::profile::Profile {
     crate::profile::profile(&app)
 }
