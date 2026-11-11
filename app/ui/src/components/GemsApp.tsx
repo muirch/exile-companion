@@ -49,16 +49,65 @@ export function connectors(gems: LinkGem[]): (string | null)[] {
   });
 }
 
-/** The notes in paragraphs. A line like "- Act 1 -" is how authors head a part. */
-export function noteBlocks(notes: string): { heading: boolean; text: string }[] {
-  return notes
-    .split(/\n\s*\n/)
-    .map((p) => p.trim())
-    .filter(Boolean)
-    .map((p) => {
-      const heading = /^-+\s*[^\n]+?\s*-+$/.test(p);
-      return { heading, text: heading ? p.replace(/^-+\s*|\s*-+$/g, '') : p };
-    });
+export interface NoteSpan {
+  text: string;
+  /** Null is the window's own text colour. */
+  color: string | null;
+}
+
+// PoB's ^0 to ^9 come from its graphics engine. ^7 is its normal text, so it's ours too.
+const DIGIT_COLORS = ['#000000', '#ff0000', '#00ff00', '#0000ff', '#ffff00', '#ff00ff', '#00ffff', null, '#b3b3b3', '#666666'];
+
+/** A colour too dark for the black ground falls back to the normal text. */
+function readable(hex: string | null): string | null {
+  if (!hex) return null;
+  const [r, g, b] = [1, 3, 5].map((i) => parseInt(hex.slice(i, i + 2), 16) / 255);
+  return 0.2126 * r + 0.7152 * g + 0.0722 * b < 0.2 ? null : hex;
+}
+
+/**
+ * The notes as PoB draws them: its colour codes carry on until the next one, and the author's
+ * line breaks stay. Any run of blank lines is one paragraph break.
+ */
+export function parseNotes(raw: string): NoteSpan[][][] {
+  const lines: NoteSpan[][] = [[]];
+  let color: string | null = null;
+  let text = '';
+  const flush = (): void => {
+    if (text) lines[lines.length - 1].push({ text, color: readable(color) });
+    text = '';
+  };
+  for (let i = 0; i < raw.length; i++) {
+    const ch = raw[i];
+    const hex = raw.slice(i + 2, i + 8);
+    if (ch === '^' && /[0-9]/.test(raw[i + 1] ?? '')) {
+      flush();
+      color = DIGIT_COLORS[Number(raw[i + 1])];
+      i += 1;
+    } else if (ch === '^' && raw[i + 1] === 'x' && /^[0-9a-fA-F]{6}$/.test(hex)) {
+      flush();
+      color = `#${hex.toLowerCase()}`;
+      i += 7;
+    } else if (ch === '\n') {
+      flush();
+      lines.push([]);
+    } else {
+      text += ch;
+    }
+  }
+  flush();
+  const paragraphs: NoteSpan[][][] = [];
+  let current: NoteSpan[][] = [];
+  for (const line of lines) {
+    if (line.every((s) => !s.text.trim())) {
+      if (current.length) paragraphs.push(current);
+      current = [];
+    } else {
+      current.push(line);
+    }
+  }
+  if (current.length) paragraphs.push(current);
+  return paragraphs;
 }
 
 function Notes({ notes }: { notes: string | null | undefined }): React.JSX.Element {
@@ -68,17 +117,24 @@ function Notes({ notes }: { notes: string | null | undefined }): React.JSX.Eleme
   }
   return (
     <div className="flex flex-col gap-2 select-text">
-      {noteBlocks(notes).map((b, i) =>
-        b.heading ? (
-          <h2 key={i} className={`font-caps text-[14px] text-value ${i > 0 ? 'mt-2' : ''}`}>
-            {b.text}
-          </h2>
-        ) : (
-          <p key={i} className="font-body text-[13px] leading-snug whitespace-pre-line text-plain">
-            {b.text}
-          </p>
-        ),
-      )}
+      {parseNotes(notes).map((paragraph, pi) => (
+        <p key={pi} className="font-body text-[13px] leading-snug whitespace-pre-wrap text-plain">
+          {paragraph.map((line, li) => (
+            <span key={li}>
+              {li > 0 && <br />}
+              {line.map((s, si) =>
+                s.color ? (
+                  <span key={si} style={{ color: s.color }}>
+                    {s.text}
+                  </span>
+                ) : (
+                  s.text
+                ),
+              )}
+            </span>
+          ))}
+        </p>
+      ))}
     </div>
   );
 }
