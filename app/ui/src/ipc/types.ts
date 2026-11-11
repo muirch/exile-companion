@@ -116,6 +116,14 @@ export interface TreeStage {
   focus: Bounds | null;
 }
 
+/** Mirrors `settings::TreePrefs`. */
+export interface TreePrefs {
+  /** Ascendancies and bloodlines folded to a bar, by id. */
+  folded: string[];
+  /** The list of keystones, ascendancy notables and masteries next to the tree. */
+  list: boolean;
+}
+
 /** The followed guide (mirrors `runtime::GuideView`). */
 export interface GuideView {
   summary: BuildSummary;

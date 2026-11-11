@@ -1,9 +1,9 @@
 import { useCallback, useEffect, useLayoutEffect, useMemo, useRef, useState } from 'react';
 
-import { closeTree, getTreeLayout, getTreeStage, setTreeMode } from '../ipc/commands';
+import { closeTree, getTreeLayout, getTreePrefs, getTreeStage, setTreeMode, setTreePrefs } from '../ipc/commands';
 import { isTauri } from '../ipc/env';
 import { onTreeOpened } from '../ipc/events';
-import type { Mark, NodeKind, TreeLayout, TreeMode, TreeNode, TreeStage } from '../ipc/types';
+import type { Mark, NodeKind, TreeLayout, TreeMode, TreeNode, TreePrefs, TreeStage } from '../ipc/types';
 import { Button, Choice, Select } from '../kit';
 import { Brand } from './Tooltip';
 import {
@@ -157,8 +157,18 @@ function insetView(nodes: TreeNode[]): View | null {
   return { x: (b.minX + b.maxX) / 2 - INSET / 2 / scale, y: (b.minY + b.maxY) / 2 - INSET / 2 / scale, scale };
 }
 
-/** The corner map of the `i`th ascendancy, stacked up from the bottom left of a box `h` tall. */
-const insetAt = (i: number, h: number): { left: number; top: number } => ({ left: 0, top: h - (i + 1) * INSET - i * 4 });
+const FOLDED = 24;
+
+/** The corner maps stacked up from the bottom left of a box `h` tall, a folded one as a bar. */
+function insetBoxes(names: string[], folded: string[], h: number): { left: number; top: number; height: number }[] {
+  let bottom = h;
+  return names.map((name) => {
+    const height = folded.includes(name) ? FOLDED : INSET;
+    const box = { left: 0, top: bottom - height, height };
+    bottom -= height + 4;
+    return box;
+  });
+}
 
 /** A node the stage marks, filled when taken, ringed when added, slashed when extra. */
 function MarkedNode({
@@ -236,6 +246,8 @@ function AscendancyMap({
   edgeMarks,
   left,
   top,
+  folded,
+  onFold,
   hover,
   onHover,
 }: {
@@ -246,6 +258,8 @@ function AscendancyMap({
   edgeMarks: Map<number, Mark>;
   left: number;
   top: number;
+  folded: boolean;
+  onFold: () => void;
   hover: Hover | null;
   onHover: (h: Hover | null) => void;
 }): React.JSX.Element | null {
@@ -253,6 +267,34 @@ function AscendancyMap({
   const paths = useMemo(() => edgePaths(layout, byId, edgeMarks, (n) => n.ascendancy === name), [layout, byId, edgeMarks, name]);
   const v = insetView(nodes);
   if (!v) return null;
+  const title = layout.ascendancyNames[name] ?? name;
+  const fold = (
+    <Button
+      className={`grid size-5 shrink-0 cursor-default place-items-center p-0 ${folded ? '' : 'absolute top-0.5 right-0.5'}`}
+      aria-label={`${folded ? 'Unfold' : 'Fold'} ${title}`}
+      aria-expanded={!folded}
+      onClick={onFold}
+    >
+      <svg viewBox="0 0 10 10" className="size-2.5" aria-hidden="true">
+        <path d={folded ? 'M1 5h8M5 1v8' : 'M1 5h8'} fill="none" stroke="currentColor" strokeWidth="1.4" />
+      </svg>
+    </Button>
+  );
+  if (folded) {
+    return (
+      // Folded, it covers only as much of the tree as its name needs.
+      <div
+        data-testid={`ascendancy-${name}`}
+        className="absolute flex cursor-default items-center gap-1.5 border border-edge bg-[#050505] pr-px pl-1.5"
+        style={{ left, top, maxWidth: INSET, height: FOLDED }}
+        onPointerDown={(e) => e.stopPropagation()}
+        onPointerMove={(e) => e.stopPropagation()}
+      >
+        <span className="truncate font-caps text-[11px] text-label">{title}</span>
+        {fold}
+      </div>
+    );
+  }
   const px = (x: number): number => x / v.scale;
   const onMove = (e: React.PointerEvent<HTMLDivElement>): void => {
     e.stopPropagation();
@@ -290,9 +332,8 @@ function AscendancyMap({
           />
         )}
       </svg>
-      <span className="pointer-events-none absolute top-1 left-1.5 flex flex-col font-caps text-[11px] leading-tight text-label">
-        {layout.ascendancyNames[name] ?? name}
-      </span>
+      <span className="pointer-events-none absolute top-1 left-1.5 font-caps text-[11px] leading-tight text-label">{title}</span>
+      {fold}
     </div>
   );
 }
@@ -342,7 +383,96 @@ function NodeCard({
   );
 }
 
-function TreeCanvas({ layout, stage }: { layout: TreeLayout; stage: TreeStage }): React.JSX.Element {
+
+const LIST_WIDTH = 220;
+
+type Row = { m: TreeStage['nodes'][number]; n: TreeNode };
+
+function ListSection({ title, children }: { title: string; children: React.ReactNode }): React.JSX.Element {
+  return (
+    <section className="mt-1 first:mt-0">
+      <h2 className="py-1 font-caps text-[11px] text-label">{title}</h2>
+      <ul className="flex flex-col gap-2">{children}</ul>
+    </section>
+  );
+}
+
+/**
+ * What the stage takes besides small passives, in groups the way poe.ninja lists a build: the
+ * ascendancy notables and keystones with their stats, then the masteries with the picked effects.
+ */
+function BuildList({ layout, stage }: { layout: TreeLayout; stage: TreeStage }): React.JSX.Element {
+  const byId = new Map(layout.nodes.map((n) => [n.id, n]));
+  const rows: Row[] = stage.nodes.flatMap((m) => {
+    const n = byId.get(m.id);
+    return n ? [{ m, n }] : [];
+  });
+  const big = rows.filter(({ n }) => n.kind === 'keystone' || (n.ascendancy && n.kind === 'notable'));
+  // Ascendancy notables first, in the order the guide takes them, then the keystones.
+  const major = [...big.filter((r) => r.n.ascendancy), ...big.filter((r) => !r.n.ascendancy)];
+  const masteries = new Map<string, Row[]>();
+  for (const r of rows.filter(({ n }) => n.kind === 'mastery')) masteries.set(r.n.name, [...(masteries.get(r.n.name) ?? []), r]);
+  const swatch = (m: Row['m']): React.ReactNode => stage.mode !== 'tree' && m.mark !== 'taken' && <Swatch mark={m.mark} />;
+  return (
+    <aside
+      aria-label="Keystones, ascendancy and masteries"
+      className="chat-scroll absolute top-0 right-0 bottom-8 overflow-y-auto border-l border-edge bg-[#050505] px-3 py-1"
+      style={{ width: LIST_WIDTH }}
+      onPointerDown={(e) => e.stopPropagation()}
+      onPointerMove={(e) => e.stopPropagation()}
+      onWheel={(e) => e.stopPropagation()}
+    >
+      {major.length > 0 && (
+        <ListSection title="Ascendancy & keystones">
+          {major.map(({ m, n }) => (
+            <li key={n.id} data-list-node={n.id}>
+              <p className="flex items-baseline gap-1 font-caps text-[13px] leading-snug text-value">
+                {swatch(m)}
+                {n.name}
+                <span className="ml-auto font-caps text-[11px] text-label">
+                  {n.ascendancy ? (layout.ascendancyNames[n.ascendancy] ?? n.ascendancy) : 'Keystone'}
+                </span>
+              </p>
+              <p className="font-body text-[12px] leading-snug whitespace-pre-line text-magic">{n.stats.join('\n')}</p>
+            </li>
+          ))}
+        </ListSection>
+      )}
+      <ListSection title="Masteries">
+        {masteries.size === 0 && <li className="font-body text-[12px] text-label italic">None at this stage.</li>}
+        {[...masteries].map(([name, picks]) => (
+          <li key={name} data-list-mastery={name}>
+            <p className="flex items-baseline gap-1 font-caps text-[13px] leading-snug text-value">
+              {name}
+              {picks.length > 1 && <span className="font-body text-[11px] text-label">×{picks.length}</span>}
+            </p>
+            {picks.map(({ m, n }) => {
+              const effect = n.mastery?.find((e) => e.effect === m.effect);
+              return (
+                <p key={n.id} className="flex items-baseline gap-1 font-body text-[12px] leading-snug text-plain">
+                  {swatch(m)}
+                  {effect ? <span className="whitespace-pre-line">{effect.stats.join('\n')}</span> : <span className="text-label italic">No effect picked</span>}
+                </p>
+              );
+            })}
+          </li>
+        ))}
+      </ListSection>
+    </aside>
+  );
+}
+
+function TreeCanvas({
+  layout,
+  stage,
+  prefs,
+  onPrefs,
+}: {
+  layout: TreeLayout;
+  stage: TreeStage;
+  prefs: TreePrefs;
+  onPrefs: (p: TreePrefs) => void;
+}): React.JSX.Element {
   const box = useRef<HTMLDivElement>(null);
   const [size, setSize] = useState({ w: 0, h: 0 });
   // Until the player moves the tree it stays fitted, also when the window is resized.
@@ -374,7 +504,9 @@ function TreeCanvas({ layout, stage }: { layout: TreeLayout; stage: TreeStage })
     return () => ro.disconnect();
   }, []);
 
-  const fitted = useMemo(() => (focus && size.w > 0 ? fit(focus, size.w, size.h) : null), [focus, size]);
+  // The mastery list covers the right side, so the tree fits into what's left of the box.
+  const treeW = Math.max(0, size.w - (prefs.list ? LIST_WIDTH : 0));
+  const fitted = useMemo(() => (focus && treeW > 0 ? fit(focus, treeW, size.h) : null), [focus, treeW, size.h]);
   const view = moved ?? fitted;
   const setView = (v: View | null): void => {
     setMoved(v);
@@ -453,23 +585,28 @@ function TreeCanvas({ layout, stage }: { layout: TreeLayout; stage: TreeStage })
     const rank = (l: (typeof wanted)[number]): number => (l.mark === 'added' ? 0 : 2) + (l.kind === 'keystone' ? 0 : 1);
     const placed = placeLabels(
       [0, 1, 2, 3].flatMap((r) => wanted.filter((l) => rank(l) === r)),
-      size.w,
+      treeW,
       size.h,
     );
     return placed;
-  }, [view, stage, byId, size]);
+  }, [view, stage, byId, treeW, size.h]);
 
   const px = (v: number): number => (view ? v / view.scale : v);
   const viewBox = view ? `${view.x} ${view.y} ${size.w / view.scale} ${size.h / view.scale}` : '0 0 1 1';
   const hovered = hover ? marks.get(hover.node.id) : undefined;
+  const boxes = insetBoxes(stage.ascendancies, prefs.folded, size.h);
+  const fold = (name: string): void => {
+    const folded = prefs.folded.includes(name) ? prefs.folded.filter((f) => f !== name) : [...prefs.folded, name];
+    onPrefs({ ...prefs, folded });
+    setHover(null);
+  };
   const hoverAt = ((): { x: number; y: number } | null => {
     if (!hover) return null;
     const asc = hover.node.ascendancy;
     if (!asc) return view ? toScreen(view, hover.node.x, hover.node.y) : null;
     const v = insetView(layout.nodes.filter((n) => n.ascendancy === asc));
-    const i = stage.ascendancies.indexOf(asc);
-    if (!v || i < 0) return null;
-    const corner = insetAt(i, size.h);
+    const corner = boxes[stage.ascendancies.indexOf(asc)];
+    if (!v || !corner || prefs.folded.includes(asc)) return null;
     const s = toScreen(v, hover.node.x, hover.node.y);
     return { x: corner.left + s.x, y: corner.top + s.y };
   })();
@@ -524,7 +661,7 @@ function TreeCanvas({ layout, stage }: { layout: TreeLayout; stage: TreeStage })
         </span>
       ))}
       {stage.ascendancies.map((name, i) =>
-        insetAt(i, size.h).top < 0 ? null : (
+        boxes[i].top < 0 ? null : (
           <AscendancyMap
             key={name}
             name={name}
@@ -532,7 +669,10 @@ function TreeCanvas({ layout, stage }: { layout: TreeLayout; stage: TreeStage })
             byId={byId}
             marks={marks}
             edgeMarks={edgeMarks}
-            {...insetAt(i, size.h)}
+            left={boxes[i].left}
+            top={boxes[i].top}
+            folded={prefs.folded.includes(name)}
+            onFold={() => fold(name)}
             hover={hover}
             onHover={setHover}
           />
@@ -541,10 +681,12 @@ function TreeCanvas({ layout, stage }: { layout: TreeLayout; stage: TreeStage })
       {hover && hoverAt && (
         <NodeCard hover={hover} stage={stage} mark={hovered?.mark} since={hovered?.since} effect={hovered?.effect} at={hoverAt} box={size} />
       )}
-      <div className="absolute right-0 bottom-0 flex gap-1">
-        <Button onClick={() => setView(null)} onPointerDown={(e) => e.stopPropagation()}>
-          Fit
+      {prefs.list && <BuildList layout={layout} stage={stage} />}
+      <div className="absolute right-0 bottom-0 flex gap-1" onPointerDown={(e) => e.stopPropagation()}>
+        <Button aria-pressed={prefs.list} onClick={() => onPrefs({ ...prefs, list: !prefs.list })}>
+          List
         </Button>
+        <Button onClick={() => setView(null)}>Fit</Button>
       </div>
     </div>
   );
@@ -554,6 +696,7 @@ export function TreeApp(): React.JSX.Element {
   const [stage, setStage] = useState<TreeStage | null | undefined>(undefined);
   const [layout, setLayout] = useState<{ version: string | null; layout: TreeLayout } | null>(null);
   const [error, setError] = useState<string | null>(null);
+  const [prefs, setPrefs] = useState<TreePrefs>({ folded: [], list: false });
 
   const load = useCallback((at: number | null) => {
     getTreeStage(at)
@@ -569,6 +712,7 @@ export function TreeApp(): React.JSX.Element {
 
   useEffect(() => {
     load(null);
+    void getTreePrefs().then(setPrefs);
     const off = isTauri() ? onTreeOpened(() => load(null)) : null;
     const onKey = (e: KeyboardEvent): void => {
       if (e.key === 'Escape') void closeTree();
@@ -587,6 +731,11 @@ export function TreeApp(): React.JSX.Element {
       .then((l) => setLayout({ version, layout: l }))
       .catch((e: unknown) => setError(String(e)));
   }, [stage, version, layout]);
+
+  const changePrefs = (p: TreePrefs): void => {
+    setPrefs(p);
+    void setTreePrefs(p);
+  };
 
   const pickMode = (mode: TreeMode): void => {
     void setTreeMode(mode).then(() => load(stage?.stage ?? null));
@@ -640,7 +789,13 @@ export function TreeApp(): React.JSX.Element {
           </p>
           {layout?.version === version ? (
             // A new stage or mode opens on its own part of the tree.
-            <TreeCanvas key={`${stage.stage}:${stage.mode}`} layout={layout.layout} stage={stage} />
+            <TreeCanvas
+              key={`${stage.stage}:${stage.mode}`}
+              layout={layout.layout}
+              stage={stage}
+              prefs={prefs}
+              onPrefs={changePrefs}
+            />
           ) : (
             <div className="flex-1" />
           )}
