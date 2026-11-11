@@ -163,6 +163,24 @@ impl GemTable {
 
     /// Every place `class` can get the gem, in campaign order. An empty class list means anyone,
     /// like Siosa and Lilly Roth selling every gem.
+    /// Quests whose reward this class picks from a list of gems.
+    pub fn reward_quests(&self, class: &str) -> Vec<String> {
+        let mut quests: Vec<String> = self
+            .sources
+            .iter()
+            // Rewards also list books, flasks and armour, which aren't in the gem table.
+            .filter(|s| {
+                s.kind == GemSourceKind::QuestReward
+                    && self.gems.contains_key(&s.gem_id)
+                    && (s.classes.is_empty() || s.classes.iter().any(|c| c == class))
+            })
+            .map(|s| s.quest_id.clone())
+            .collect();
+        quests.sort();
+        quests.dedup();
+        quests
+    }
+
     pub fn sources_for<'a>(
         &'a self,
         gem_id: &'a str,

@@ -157,6 +157,8 @@ pub struct GemPlan {
     /// Names of the build's gems the campaign won't give this class: no quest or vendor has them,
     /// or every reward that has them went to another gem.
     pub not_in_campaign: Vec<String>,
+    /// Quests with gem rewards for this class where the build takes none, so any will do.
+    pub free_rewards: Vec<String>,
 }
 
 impl GemPlan {
@@ -377,10 +379,20 @@ pub fn plan_with_overrides(
     });
     let mules = mules_for(&wanted, &steps, class, gems);
     not_in_campaign.retain(|name| !mules.iter().any(|m| m.carries(name)));
+    let free_rewards = gems
+        .reward_quests(class)
+        .into_iter()
+        .filter(|q| {
+            !steps
+                .iter()
+                .any(|s| &s.quest_id == q && s.action == GemAction::Take)
+        })
+        .collect();
     GemPlan {
         steps,
         mules,
         not_in_campaign,
+        free_rewards,
     }
 }
 
@@ -478,28 +490,59 @@ pub fn annotate(view: &mut RouteView, plan: &GemPlan, hints: GemHints) {
                     .filter(|g| hints.shows(g.action))
                     .map(gem_step),
             );
+            if hints.shows(GemAction::Take) && plan.free_rewards.contains(quest) {
+                out.push(text_step("Take any reward, your build uses none of them"));
+            }
+            // The mule does its part in this town, so it's said here again.
+            if quest == MULE_QUEST && hints != GemHints::Off {
+                out.extend(plan.mules.iter().map(mule_town_step));
+            }
         }
     }
     view.here = out;
 }
 
-/// "Mule first: a Shadow kills Hillock, takes Cobra Lash, buys Momentum from Nessa and stashes
-/// them"
+fn text_step(text: &str) -> Step {
+    Step {
+        parts: vec![Part::Text { text: text.into() }],
+        sub_steps: Vec::new(),
+        edge: None,
+    }
+}
+
+/// "Mule first: a Shadow kills Hillock, takes Cobra Lash from Tarkleigh, buys Momentum from Nessa
+/// and stashes them"
 fn mule_step(m: &Mule) -> Step {
-    let mut parts = vec![Part::Text {
-        text: format!("Mule first: a {} kills Hillock", m.class),
-    }];
+    mule_parts(
+        format!("Mule first: a {} kills Hillock", m.class),
+        m,
+        [", takes ", ", buys ", " and stashes"],
+    )
+}
+
+/// "On the Shadow mule, take Cobra Lash from Tarkleigh, buy Momentum from Nessa and stash them"
+fn mule_town_step(m: &Mule) -> Step {
+    mule_parts(
+        format!("On the {} mule", m.class),
+        m,
+        [", take ", ", buy ", " and stash"],
+    )
+}
+
+fn mule_parts(lead: String, m: &Mule, [take, buy, stash]: [&str; 3]) -> Step {
+    let mut parts = vec![Part::Text { text: lead }];
     if let Some(g) = &m.take {
-        parts.push(Part::Text {
-            text: ", takes ".into(),
-        });
+        parts.push(Part::Text { text: take.into() });
         parts.push(Part::RewardQuest {
             item: g.name.clone(),
+        });
+        parts.push(Part::Text {
+            text: format!(" from {}", g.npc),
         });
     }
     for (i, g) in m.buy.iter().enumerate() {
         parts.push(Part::Text {
-            text: if i == 0 { ", buys " } else { ", " }.into(),
+            text: if i == 0 { buy } else { ", " }.into(),
         });
         parts.push(Part::RewardVendor {
             item: g.name.clone(),
@@ -513,12 +556,7 @@ fn mule_step(m: &Mule) -> Step {
     }
     let count = m.take.iter().count() + m.buy.len();
     parts.push(Part::Text {
-        text: if count == 1 {
-            " and stashes it"
-        } else {
-            " and stashes them"
-        }
-        .into(),
+        text: format!("{stash} {}", if count == 1 { "it" } else { "them" }),
     });
     Step {
         parts,
@@ -933,7 +971,7 @@ mod tests {
         assert_eq!(
             lines,
             [
-                "Mule first: a Shadow kills Hillock, takes Cobra Lash, buys Momentum from Nessa and stashes them",
+                "Mule first: a Shadow kills Hillock, takes Cobra Lash from Tarkleigh, buys Momentum from Nessa and stashes them",
                 "Kill Hillock",
             ]
         );
@@ -943,6 +981,65 @@ mod tests {
         assert_eq!(later.here.len(), 1);
         let mut off = view_with(vec![first]);
         off.edge = 0;
+        annotate(&mut off, &p, GemHints::Off);
+        assert_eq!(off.here.len(), 1);
+    }
+
+    #[test]
+    fn the_mule_is_said_again_where_it_hands_in_its_quest() {
+        let p = mule_plan("Witch", "level 12", &["C", "M"]);
+        let hand_in = Step {
+            parts: vec![
+                Part::Text {
+                    text: "Hand in ".into(),
+                },
+                Part::Quest {
+                    id: MULE_QUEST.into(),
+                    name: "Enemy at the Gate".into(),
+                },
+            ],
+            sub_steps: Vec::new(),
+            edge: None,
+        };
+        let mut view = view_with(vec![hand_in]);
+        annotate(&mut view, &p, GemHints::Rewards);
+        let lines: Vec<String> = view.here.iter().map(text_of).collect();
+        assert!(
+            lines.contains(
+                &"On the Shadow mule, take Cobra Lash from Tarkleigh, buy Momentum from Nessa and stash them"
+                    .to_string()
+            ),
+            "{lines:?}"
+        );
+    }
+
+    #[test]
+    fn a_quest_whose_rewards_the_build_skips_says_any_will_do() {
+        // A Shadow picks Cobra Lash or Nightblade for the first quest, and this build wants neither.
+        let p = mule_plan("Shadow", "level 12", &["M"]);
+        assert_eq!(p.free_rewards, [MULE_QUEST]);
+        assert!(mule_plan("Shadow", "level 12", &["C", "M"])
+            .free_rewards
+            .is_empty());
+        // A Witch has no gem to pick there at all.
+        assert!(mule_plan("Witch", "level 12", &["M"])
+            .free_rewards
+            .is_empty());
+        let hand_in = Step {
+            parts: vec![Part::Quest {
+                id: MULE_QUEST.into(),
+                name: "Enemy at the Gate".into(),
+            }],
+            sub_steps: Vec::new(),
+            edge: None,
+        };
+        let mut view = view_with(vec![hand_in.clone()]);
+        annotate(&mut view, &p, GemHints::RewardsAndVendors);
+        assert!(view
+            .here
+            .iter()
+            .any(|s| text_of(s) == "Take any reward, your build uses none of them"));
+        let mut off = view_with(vec![hand_in]);
         annotate(&mut off, &p, GemHints::Off);
         assert_eq!(off.here.len(), 1);
     }
