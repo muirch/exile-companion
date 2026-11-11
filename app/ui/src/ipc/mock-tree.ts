@@ -6,7 +6,6 @@ import type { TreeLayout, TreeMode, TreeStage } from './types';
 import MOCK_TREE from './mock-tree.json';
 
 const DATA = MOCK_TREE as unknown as { layout: TreeLayout; stages: TreeStage[] };
-const MODES: TreeMode[] = ['tree', 'new', 'character'];
 const params = new URLSearchParams(window.location.search);
 
 let mode: TreeMode = (params.get('mode') as TreeMode | null) ?? 'tree';
@@ -15,11 +14,12 @@ let shown = false;
 export const treeLayoutMock = (): TreeLayout => DATA.layout;
 
 export function treeStageMock(stage: number | null): TreeStage {
-  const stages = DATA.stages.length / MODES.length;
-  const at = Math.min(stage ?? Number(params.get('stage') ?? 2), stages - 1);
+  const at = stage ?? Number(params.get('stage') ?? 2);
   const noCharacter = params.has('nochar');
   const shownMode = noCharacter && mode === 'character' ? 'tree' : mode;
-  const found = DATA.stages[at * MODES.length + MODES.indexOf(shownMode)];
+  const ofMode = DATA.stages.filter((s) => s.mode === shownMode);
+  // The mock has a few stages only. Another one shows the nearest it has.
+  const found = ofMode.find((s) => s.stage === at) ?? ofMode.filter((s) => s.stage <= at).at(-1) ?? ofMode[0];
   return { ...found, canCompare: !noCharacter };
 }
 

@@ -79,6 +79,8 @@ export interface TreeEdge {
 export interface TreeLayout {
   nodes: TreeNode[];
   edges: TreeEdge[];
+  /** The name the game shows for an ascendancy or bloodline id, "Farrul" is "Farrul Bloodline". */
+  ascendancyNames: Record<string, string>;
 }
 
 export type TreeMode = 'tree' | 'new' | 'character';
@@ -105,7 +107,7 @@ export interface TreeStage {
   extra: number;
   addedNames: string[];
   ascendancy: { name: string; mark: Mark }[];
-  /** The ascendancies to draw. */
+  /** The ascendancies to draw: the guide's own, then a bloodline the stage takes. */
   ascendancies: string[];
   /** `effect` is the picked mastery effect. */
   nodes: { id: number; mark: Mark; since: number | null; effect: number | null }[];

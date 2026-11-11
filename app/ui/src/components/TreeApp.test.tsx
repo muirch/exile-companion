@@ -36,13 +36,17 @@ const LAYOUT: TreeLayout = {
     },
     { id: 30, x: -8000, y: 8918, kind: 'notable', name: 'Radiant Crusade', stats: ['Summon a Sentinel'], ascendancy: 'Guardian' },
     { id: 31, x: -8000, y: 9000, kind: 'ascendancyStart', name: 'Guardian', stats: [], ascendancy: 'Guardian' },
+    { id: 60, x: -1000, y: 13000, kind: 'ascendancyStart', name: 'Farrul Bloodline', stats: [], ascendancy: 'Farrul' },
+    { id: 61, x: -1000, y: 12918, kind: 'notable', name: 'Huntleader', stats: ['Warcries have 20% increased Area'], ascendancy: 'Farrul' },
   ],
   edges: [
     { a: 10, b: 11, arc: 162, clockwise: true },
     { a: 11, b: 20, arc: null, clockwise: false },
     { a: 13, b: 10, arc: null, clockwise: false },
     { a: 30, b: 31, arc: null, clockwise: true },
+    { a: 60, b: 61, arc: null, clockwise: true },
   ],
+  ascendancyNames: { Guardian: 'Guardian', Farrul: 'Farrul Bloodline' },
 };
 
 let mode: TreeMode = 'tree';
@@ -59,7 +63,7 @@ function stageFor(stage: number): TreeStage {
     points: 3,
     notables: 1,
     focus: { minX: 0, minY: -162, maxX: 1000, maxY: 82 },
-    ascendancies: ['Guardian'],
+    ascendancies: stage === 0 ? [] : ['Guardian', 'Farrul'],
   };
   if (shown === 'tree') {
     return {
@@ -69,7 +73,7 @@ function stageFor(stage: number): TreeStage {
       addedNames: [],
       ascendancy: [{ name: 'Radiant Crusade', mark: 'taken' }],
       nodes: [
-        ...[10, 11, 20, 30].map((id) => ({ id, mark: 'taken' as const, since: id === 10 ? 0 : 1, effect: null })),
+        ...[10, 11, 20, 30, 60, 61].map((id) => ({ id, mark: 'taken' as const, since: id === 10 ? 0 : 1, effect: null })),
         { id: 12, mark: 'taken', since: 1, effect: 4119 },
       ],
       edges: [
@@ -125,6 +129,7 @@ beforeEach(() => {
   mode = 'tree';
   canCompare = true;
   vi.clearAllMocks();
+  vi.mocked(commands.getTreeStage).mockImplementation((stage) => Promise.resolve(stageFor(stage ?? 1)));
 });
 
 const marks = (): Record<string, string | null> =>
@@ -223,6 +228,27 @@ describe('TreeApp', () => {
     const card = await screen.findByRole('tooltip');
     expect(card).toHaveTextContent('Radiant Crusade');
     expect(card).toHaveTextContent('Notable · To take');
+  });
+
+  it('draws a bloodline next to the ascendancy under the name the game uses', async () => {
+    render(<TreeApp />);
+    await screen.findByTestId('tree');
+    const bloodline = screen.getByTestId('ascendancy-Farrul');
+    expect(bloodline).toHaveTextContent('Farrul Bloodline');
+    expect(bloodline.querySelector('[data-node="61"]')).toHaveAttribute('data-mark', 'taken');
+    // The bloodline stacks above the ascendancy.
+    const ascendancy = screen.getByTestId('ascendancy-Guardian');
+    expect(parseFloat(bloodline.style.top)).toBeLessThan(parseFloat(ascendancy.style.top));
+  });
+
+  it('draws no ascendancy before the stage takes a point there', async () => {
+    vi.mocked(commands.getTreeStage).mockImplementation(() =>
+      Promise.resolve({ ...stageFor(0), nodes: stageFor(0).nodes.filter((n) => n.id < 30) }),
+    );
+    render(<TreeApp />);
+    await screen.findByTestId('tree');
+    expect(screen.queryByTestId('ascendancy-Guardian')).toBeNull();
+    expect(screen.queryByTestId('ascendancy-Farrul')).toBeNull();
   });
 
   it('opens a card with the node and the stage that takes it', async () => {
