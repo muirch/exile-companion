@@ -1,10 +1,10 @@
 import { useCallback, useEffect, useRef, useState } from 'react';
 
-import { closeGems, getLinks } from '../ipc/commands';
+import { closeGems, getLinks, getNotes } from '../ipc/commands';
 import { isTauri } from '../ipc/env';
 import { onGemsOpened } from '../ipc/events';
 import type { GemColor, LinkGem, LinkGroup, Links } from '../ipc/types';
-import { Button, Select } from '../kit';
+import { Button, Choice, Select } from '../kit';
 import { Brand } from './Tooltip';
 
 const COLOR: Record<GemColor, string> = {
@@ -48,6 +48,45 @@ export function connectors(gems: LinkGem[]): (string | null)[] {
     return !next || !next.support ? '└' : '├';
   });
 }
+
+/** The notes in paragraphs. A line like "- Act 1 -" is how authors head a part. */
+export function noteBlocks(notes: string): { heading: boolean; text: string }[] {
+  return notes
+    .split(/\n\s*\n/)
+    .map((p) => p.trim())
+    .filter(Boolean)
+    .map((p) => {
+      const heading = /^-+\s*[^\n]+?\s*-+$/.test(p);
+      return { heading, text: heading ? p.replace(/^-+\s*|\s*-+$/g, '') : p };
+    });
+}
+
+function Notes({ notes }: { notes: string | null | undefined }): React.JSX.Element {
+  if (notes === undefined) return <div />;
+  if (!notes) {
+    return <p className="font-body text-[13px] text-label italic">The build's author wrote no notes.</p>;
+  }
+  return (
+    <div className="flex flex-col gap-2 select-text">
+      {noteBlocks(notes).map((b, i) =>
+        b.heading ? (
+          <h2 key={i} className={`font-caps text-[14px] text-value ${i > 0 ? 'mt-2' : ''}`}>
+            {b.text}
+          </h2>
+        ) : (
+          <p key={i} className="font-body text-[13px] leading-snug whitespace-pre-line text-plain">
+            {b.text}
+          </p>
+        ),
+      )}
+    </div>
+  );
+}
+
+const TABS = [
+  { value: 'gems' as const, label: 'Gems' },
+  { value: 'notes' as const, label: 'Notes' },
+];
 
 function GemCard({ gem, top }: { gem: LinkGem; top: number }): React.JSX.Element {
   const level = gemLevel(gem);
@@ -109,15 +148,21 @@ function GemLine({
 export function GemsApp(): React.JSX.Element {
   const [links, setLinks] = useState<Links | null>(null);
   const [hover, setHover] = useState<{ gem: LinkGem; top: number } | null>(null);
+  const [tab, setTab] = useState<'gems' | 'notes'>(() =>
+    !isTauri() && new URLSearchParams(window.location.search).has('notes') ? 'notes' : 'gems',
+  );
+  const [notes, setNotes] = useState<string | null | undefined>(undefined);
   const body = useRef<HTMLDivElement>(null);
 
   const load = useCallback((set: number | null) => {
     setHover(null);
     void getLinks(set).then(setLinks);
+    void getNotes().then(setNotes);
   }, []);
 
   useEffect(() => {
     void getLinks(null).then(setLinks);
+    void getNotes().then(setNotes);
     const off = isTauri() ? onGemsOpened(() => load(null)) : null;
     const onKey = (e: KeyboardEvent): void => {
       if (e.key === 'Escape') void closeGems();
@@ -171,10 +216,19 @@ export function GemsApp(): React.JSX.Element {
           </svg>
         </Button>
       </header>
+      {links && (
+        <div className="flex shrink-0 gap-2 px-3 pt-3">
+          <Choice value={tab} options={TABS} onChange={setTab} />
+        </div>
+      )}
       {!links ? (
         <p className="px-4 py-4 font-body text-[13px] text-label italic">
           Follow a guide or import your build in the settings to see its gems here.
         </p>
+      ) : tab === 'notes' ? (
+        <div className="chat-scroll min-h-0 flex-1 overflow-y-auto px-3 py-3">
+          <Notes notes={notes} />
+        </div>
       ) : (
         <>
           <div className="shrink-0 px-3 pt-3">

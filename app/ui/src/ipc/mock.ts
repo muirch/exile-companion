@@ -269,6 +269,17 @@ export function importBuildMock(): BuildSummary {
   return MOCK_BUILD;
 }
 
+export function notesMock(): string {
+  return [
+    '- Leveling Section -',
+    '- Act 1 -',
+    "You'll need to mule for a Momentum and Frost Blades using Ranger. Check vendors for links and belts before dumping in stash.",
+    'For level 1-12 we use Frost Blades linked to Ancestral Call for clear. When we need single target we use Spectral Throw linked to Momentum and Added Fire Damage.',
+    '- Act 2 -',
+    'Pick up Herald of Ash after The Chamber of Sins.\nFor our Bandit we Help Alira. This solves our pre-Kitava resistances.',
+  ].join('\n\n');
+}
+
 const MOCK_SETS = ['Level 1-12', 'Level 12-22', 'Level 22-31'];
 
 function mockGem(name: string, color: GemColor, support: boolean, get: string | null) {
