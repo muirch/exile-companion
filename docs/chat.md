@@ -38,11 +38,17 @@ I tried a 7.5B model on an RTX 5080. It answered in 3 to 9 seconds, but it got m
 
 ## Using the chat
 
-Enter asks, Shift+Enter starts a new line. Esc closes the window and gives the keyboard back to the game, and an answer that is still coming goes on. The first line of an answer is the point, and Details opens the rest. Stop ends an answer, New chat starts over. A conversation lasts until New chat or until you quit the app, and switching the provider starts a new one.
+Enter asks, Shift+Enter starts a new line. Esc closes the window and gives the keyboard back to the game, and an answer that is still coming goes on. The first line of an answer is the point, and Details opens the rest. Stop ends an answer, New chat starts over. Switching between Anthropic and the other providers starts a new conversation, since they keep it in different shapes.
+
+## History
+
+Every chat is saved after each answer, as a JSON file in the `chats` folder of the app's data folder (`%APPDATA%\com.exilecompanion.app\chats` on Windows). History in the chat window lists them with the date, the model, the number of questions and what they cost. Open one to read it, Continue to ask more in it, or Delete it with two clicks.
+
+Going on with an old chat can cost more than a new one. The provider caches the conversation for an hour after its last question. After that, the next question sends the whole chat again at full price once, so a long chat from yesterday costs a few cents extra on Sonnet. The window warns before you continue a chat that has gone cold and says how big it is. A chat from Anthropic can't go on with OpenRouter or another server, and the other way round.
 
 ## What leaves your PC
 
-Your question goes to the provider you picked, together with the assistant's instructions and what its tools read for that question. That is your build's gear, gems, passives and stats, where you are in the campaign, the guide you follow and wiki text. Nothing goes anywhere while you don't ask.
+Your question goes to the provider you picked, together with the assistant's instructions and what its tools read for that question. That is your build's gear, gems, passives and stats, where you are in the campaign, the guide you follow and wiki text. Nothing goes anywhere while you don't ask. Saved chats stay on your PC.
 
 ## When something goes wrong
 
