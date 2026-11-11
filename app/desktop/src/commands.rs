@@ -237,7 +237,7 @@ pub fn get_tree_layout(
     app: AppHandle,
     version: Option<String>,
 ) -> Result<std::sync::Arc<exile_core::tree::TreeLayout>, String> {
-    crate::tree::layout(&app, version.as_deref())
+    crate::tree::guarded(|| crate::tree::layout(&app, version.as_deref()))
 }
 
 /// Stage `stage` of the guide's tree, or the one the character's level is at.
@@ -246,7 +246,7 @@ pub fn get_tree_stage(
     app: AppHandle,
     stage: Option<usize>,
 ) -> Result<Option<exile_core::tree::TreeStage>, String> {
-    crate::tree::stage(&app, stage)
+    crate::tree::guarded(|| crate::tree::stage(&app, stage))
 }
 
 #[tauri::command]

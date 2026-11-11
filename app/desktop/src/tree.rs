@@ -114,10 +114,34 @@ pub fn layout(app: &AppHandle, version: Option<&str>) -> Result<Arc<TreeLayout>,
         return Ok(l.clone());
     }
     let src = std::fs::read_to_string(&file).map_err(|e| format!("{}: {e}", file.display()))?;
-    let l = Arc::new(TreeLayout::from_lua(&src).map_err(|e| e.to_string())?);
+    // A new league can change the tree data's shape before Exile Companion is updated for it.
+    let l = Arc::new(TreeLayout::from_lua(&src).map_err(|e| {
+        log::error!("passive tree {}: {e}", file.display());
+        let version = file
+            .parent()
+            .and_then(|d| d.file_name())
+            .map(|v| v.to_string_lossy().replace('_', "."))
+            .unwrap_or_default();
+        format!(
+            "This version of Exile Companion can't read Path of Building's {version} passive tree. \
+             The rest of the app works, and an update of Exile Companion will fix it."
+        )
+    })?);
     log::info!("passive tree {} read", file.display());
     cache.insert(file, l.clone());
     Ok(l)
+}
+
+/// Runs `f`, and turns a panic in it into an error the window can show. The tree commands run on
+/// the main thread, where a panic on data a new league brings would take the whole app down.
+pub fn guarded<T>(f: impl FnOnce() -> Result<T, String>) -> Result<T, String> {
+    std::panic::catch_unwind(std::panic::AssertUnwindSafe(f)).unwrap_or_else(|_| {
+        Err(
+            "The passive tree hit something this version of Exile Companion doesn't know. \
+             The rest of the app works. The log has the details."
+                .to_string(),
+        )
+    })
 }
 
 /// Stage `stage` of the guide, or the one the character's level is at, in the saved mode.
@@ -149,4 +173,14 @@ pub fn stage(app: &AppHandle, stage: Option<usize>) -> Result<Option<TreeStage>,
         character.as_ref(),
         mode,
     )))
+}
+
+#[cfg(test)]
+mod tests {
+    #[test]
+    fn a_panic_becomes_an_error_the_window_shows() {
+        let out: Result<(), String> = super::guarded(|| panic!("index out of bounds"));
+        assert!(out.unwrap_err().contains("doesn't know"));
+        assert_eq!(super::guarded(|| Ok(3)), Ok(3));
+    }
 }
