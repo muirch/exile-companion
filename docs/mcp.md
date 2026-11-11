@@ -58,7 +58,7 @@ The guide and its PoB are kept in `guide.json` and `guide.xml` next to `build.xm
 
 ## What the agent can do with it
 
-Compare your build with a guide's PoB, stage by stage, and say what to change first, measured on your build. Advice sticks to what the guide takes unless you ask to explore. Read the build as PoB's sidebar shows it, with its gear, gems, tree and Configuration. Check defences and max hits. Measure what each gem and notable is worth, compare a copied item against your gear, try changes together (nodes, items, gems, config options, mod lines, level) without touching your build, export the build as a PoB code. Find current-league guides for a class or ascendancy, most watched first, with their PoB links. Search and read the wiki and its item and mod tables.
+Walk a guide's stages with the spectres each skill set raises and the gear its Animate Guardian wears. Compare your build with a guide's PoB, stage by stage, and say what to change first, measured on your build. Advice sticks to what the guide takes unless you ask to explore. Read the build as PoB's sidebar shows it, with its gear, gems, tree and Configuration. Check defences and max hits. Measure what each gem and notable is worth, compare a copied item against your gear, try changes together (nodes, items, gems, config options, mod lines, level) without touching your build, export the build as a PoB code. Find current-league guides for a class or ascendancy, most watched first, with their PoB links. Search and read the wiki and its item and mod tables.
 
 ## Keeping changes
 

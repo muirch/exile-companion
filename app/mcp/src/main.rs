@@ -571,7 +571,7 @@ impl Companion {
     }
 
     #[tool(
-        description = "A guide's stages as its author saved them: each passive tree in order with its points and the ascendancy notables it adds, and ascendancy_order as one group per tree (the lab order when the guide has a tree per lab; within a group the order is unknown), each item set's gear, each skill set's skills. Guides often have fewer item sets than trees, then an early tree comes with late gear. Works without the player's build."
+        description = "A guide's stages as its author saved them: each passive tree in order with its points and the ascendancy notables it adds, and ascendancy_order as one group per tree (the lab order when the guide has a tree per lab; within a group the order is unknown), each item set's gear, each skill set's skills. A skill lists the spectres its Raise Spectre gems are set to, and guardian is the gear PoB puts on its Animate Guardian (from the item set the gem names, the first set when the author didn't pick one, so check for item sets named after the guardian). Spectres that only buff in PoB, like the Perfect spirits, and campaign spectres often aren't there, guide_notes may name them. Guides often have fewer item sets than trees, then an early tree comes with late gear. Works without the player's build."
     )]
     async fn guide_stages(
         &self,
