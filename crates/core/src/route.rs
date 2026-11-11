@@ -100,9 +100,8 @@ pub struct Route {
     pub sections: Vec<Section>,
     /// Area id per edge. `edges[0]` is where the character spawns.
     pub edges: Vec<String>,
-    /// Monster level the player is heading into at each edge: the area's own level, or for towns
-    /// the next combat area's. Tells the many visits to one town apart.
-    pub edge_levels: Vec<Option<u32>>,
+    /// Whether each edge is a town. Trips to town don't move the tracker.
+    pub edge_towns: Vec<bool>,
 }
 
 /// What the player does with the act 2 bandits. The route's steps and quests depend on it.
@@ -172,7 +171,7 @@ pub fn parse_route(
     let mut route = Route {
         sections: Vec::new(),
         edges: vec![START_AREA.to_string()],
-        edge_levels: Vec::new(),
+        edge_towns: Vec::new(),
     };
     let mut conditions: Vec<bool> = Vec::new();
     let mut prev_area: Option<String> = None;
@@ -252,7 +251,11 @@ pub fn parse_route(
     if !conditions.is_empty() {
         p.warn("missing #endif");
     }
-    route.edge_levels = edge_levels(&route.edges, zones);
+    route.edge_towns = route
+        .edges
+        .iter()
+        .map(|id| zones.by_id(id).is_some_and(|z| z.is_town))
+        .collect();
     (route, p.warnings)
 }
 
@@ -479,27 +482,6 @@ impl Parser<'_> {
     }
 }
 
-fn edge_levels(edges: &[String], zones: &ZoneTable) -> Vec<Option<u32>> {
-    let own: Vec<Option<u32>> = edges
-        .iter()
-        .map(|id| {
-            zones
-                .by_id(id)
-                .filter(|z| !z.is_town)
-                .map(|z| z.area_level.max(0) as u32)
-        })
-        .collect();
-    let mut out = vec![None; edges.len()];
-    let mut ahead = None;
-    for i in (0..edges.len()).rev() {
-        if own[i].is_some() {
-            ahead = own[i];
-        }
-        out[i] = own[i].or(ahead);
-    }
-    out
-}
-
 fn is_move(part: &Part) -> bool {
     matches!(
         part,
@@ -665,7 +647,9 @@ impl Route {
 }
 
 // Players run a few levels over the zone. Past this the nearest visit is probably the wrong one.
-const LEVEL_SLACK: u32 = 5;
+/// How far ahead within an act an area may be found and jumped to. Further on, the area is more
+/// likely a later visit than steps the player did without the log seeing them.
+const JUMP_AHEAD: usize = 6;
 
 #[derive(Debug, Clone, Default)]
 pub struct RouteTracker {
@@ -682,55 +666,35 @@ impl RouteTracker {
     }
 
     /// Feed the area id from a `Generating level .. area "<id>"` line. The expected next area
-    /// steps forward. Any other area on the route snaps to its nearest edge, so a character that
-    /// is further along (or went back to town) lands on the right steps. Areas off the route
-    /// (hideouts, maps) leave the position alone.
-    pub fn on_area_generated(&mut self, route: &Route, area_id: &str) -> bool {
-        self.on_area(route, area_id, None)
-    }
-
-    /// Like [`Self::on_area_generated`], but when the nearest match is far from the character's
-    /// level it picks the visit whose level fits instead. A level 90 character standing in
-    /// Lioneye's Watch belongs at the last act 1 town visit, not the first.
-    pub fn on_area(&mut self, route: &Route, area_id: &str, char_level: Option<u32>) -> bool {
-        let level_gap = |i: usize| match (route.edge_levels.get(i).copied().flatten(), char_level) {
-            (Some(edge), Some(ch)) => edge.abs_diff(ch),
-            _ => 0,
-        };
-        let fits = |i: usize| {
-            route.edges.get(i).is_some_and(|e| e == area_id) && level_gap(i) <= LEVEL_SLACK
-        };
-        if fits(self.active + 1) {
+    /// steps forward. Towns, hideouts and areas behind leave the position alone, since players
+    /// go to town and relog mid-zone all the time. The Twilight Strand starts a new character
+    /// over, and an area a few steps ahead in the same act jumps there.
+    pub fn on_area(&mut self, route: &Route, area_id: &str) -> bool {
+        let is = |i: usize| route.edges.get(i).is_some_and(|e| e == area_id);
+        if is(self.active + 1) {
             self.active += 1;
             return true;
         }
-        if fits(self.active) {
+        if is(self.active) {
             return false;
         }
-        let candidates: Vec<usize> = route
-            .edges
-            .iter()
-            .enumerate()
-            .filter(|(_, e)| *e == area_id)
-            .map(|(i, _)| i)
-            .collect();
-        let nearest = candidates
-            .iter()
-            .copied()
-            .min_by_key(|&i| (i.abs_diff(self.active), i < self.active));
-        let pick = match nearest {
-            Some(i) if level_gap(i) > LEVEL_SLACK => candidates
-                .iter()
-                .copied()
-                .min_by_key(|&c| (level_gap(c), c.abs_diff(self.active))),
-            other => other,
-        };
-        match pick {
-            Some(i) if i != self.active => {
+        if area_id == START_AREA {
+            let moved = self.active != 0;
+            self.active = 0;
+            return moved;
+        }
+        let section = route.locate_edge(self.active).map(|(s, _)| s);
+        let ahead = (self.active + 2..=self.active + JUMP_AHEAD).find(|&i| {
+            is(i)
+                && !route.edge_towns.get(i).copied().unwrap_or(false)
+                && route.locate_edge(i).map(|(s, _)| s) == section
+        });
+        match ahead {
+            Some(i) => {
                 self.active = i;
                 true
             }
-            _ => false,
+            None => false,
         }
     }
 
@@ -859,41 +823,57 @@ Find and kill {kill|Hillock}
     #[test]
     fn tracker_steps_forward_on_the_expected_area() {
         let (route, _) = parse(ROUTE, &[]);
+        assert_eq!(route.edge_towns, [false, true, false, false, true]);
         let mut t = RouteTracker::default();
-        assert!(t.on_area_generated(&route, "1_1_town"));
-        assert!(t.on_area_generated(&route, "1_1_2"));
+        assert!(t.on_area(&route, "1_1_town"));
+        assert!(t.on_area(&route, "1_1_2"));
         assert_eq!(t.active(), 2);
-        assert!(!t.on_area_generated(&route, "1_1_2"));
+        assert!(!t.on_area(&route, "1_1_2"));
     }
 
     #[test]
-    fn tracker_snaps_to_the_nearest_matching_area() {
+    fn town_trips_hideouts_and_areas_behind_leave_it_alone() {
         let (route, _) = parse(ROUTE, &[]);
-        let mut t = RouteTracker::default();
-        assert!(t.on_area_generated(&route, "1_1_2a"));
-        assert_eq!(t.active(), 3);
-        // a trip to town picks the closer town edge, and coming back restores the zone
-        assert!(t.on_area_generated(&route, "1_1_town"));
-        assert_eq!(t.active(), 4);
-        assert!(t.on_area_generated(&route, "1_1_2a"));
-        assert_eq!(t.active(), 3);
-        assert!(!t.on_area_generated(&route, "HideoutFelled"));
+        let mut t = RouteTracker::at(2);
+        // a portal to town in the middle of The Coast, then back
+        assert!(!t.on_area(&route, "1_1_town"));
+        assert!(!t.on_area(&route, "1_1_2"));
+        assert_eq!(t.active(), 2);
+        assert!(!t.on_area(&route, "HideoutFelled"));
+        let mut t = RouteTracker::at(3);
+        assert!(!t.on_area(&route, "1_1_2"));
         assert_eq!(t.active(), 3);
     }
 
     #[test]
-    fn character_level_picks_between_town_visits() {
+    fn the_twilight_strand_starts_over() {
         let (route, _) = parse(ROUTE, &[]);
-        assert_eq!(
-            route.edge_levels,
-            [Some(1), Some(2), Some(2), Some(3), None]
-        );
+        let mut t = RouteTracker::at(3);
+        assert!(t.on_area(&route, "1_1_1"));
+        assert_eq!(t.active(), 0);
+        assert!(!t.on_area(&route, "1_1_1"));
+    }
+
+    #[test]
+    fn an_area_a_few_steps_ahead_jumps_there() {
+        let (route, _) = parse(ROUTE, &[]);
         let mut t = RouteTracker::default();
-        assert!(t.on_area(&route, "1_1_town", Some(2)));
-        assert_eq!(t.active(), 1);
-        let mut t = RouteTracker::at(0);
-        assert!(t.on_area(&route, "1_1_town", Some(40)));
-        assert_eq!(t.active(), 4);
+        assert!(t.on_area(&route, "1_1_2a"));
+        assert_eq!(t.active(), 3);
+    }
+
+    #[test]
+    fn a_jump_ahead_stays_within_the_act() {
+        let src = "#section Act 1
+Find and kill {kill|Hillock}
+➞ {enter|1_1_town}
+#section Act 2
+➞ {enter|1_1_2}
+";
+        let (route, _) = parse(src, &[]);
+        let mut t = RouteTracker::default();
+        assert!(!t.on_area(&route, "1_1_2"));
+        assert_eq!(t.active(), 0);
     }
 
     #[test]

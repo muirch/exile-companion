@@ -165,7 +165,7 @@ fn tracker_walks_the_bundled_route_end_to_end() {
             "no view for edge {i}"
         );
         assert!(
-            tracker.on_area_generated(&route, area),
+            tracker.on_area(&route, area),
             "stuck before edge {i} ({area})"
         );
     }
@@ -173,7 +173,7 @@ fn tracker_walks_the_bundled_route_end_to_end() {
 }
 
 #[test]
-fn high_level_character_in_act1_town_gets_the_last_act1_visit() {
+fn going_to_town_or_relogging_in_act_1_never_moves_back() {
     use exile_core::route::{parse_route, route_defines, Bandit, RouteTracker};
 
     let pack = committed_pack();
@@ -182,19 +182,27 @@ fn high_level_character_in_act1_town_gets_the_last_act1_visit() {
         &source,
         &pack.zones,
         &pack.quests,
-        &route_defines(false, Bandit::KillAll),
+        &route_defines(true, Bandit::KillAll),
     );
-    let town_visits: Vec<usize> = (0..route.edges.len())
-        .filter(|&i| route.edges[i] == "1_1_town")
-        .collect();
-
-    let mut fresh = RouteTracker::default();
-    fresh.on_area(&route, "1_1_town", Some(2));
-    assert_eq!(fresh.active(), town_visits[0]);
-
-    let mut done = RouteTracker::default();
-    done.on_area(&route, "1_1_town", Some(90));
-    assert_eq!(Some(&done.active()), town_visits.last());
+    let act2 = route
+        .edges
+        .iter()
+        .position(|e| e.starts_with("1_2_"))
+        .unwrap();
+    let mut tracker = RouteTracker::default();
+    for (i, area) in route.edges.iter().enumerate().take(act2).skip(1) {
+        tracker.on_area(&route, area);
+        if area != "1_1_town" && route.edges.get(i + 1).is_some_and(|n| n != "1_1_town") {
+            // a portal to town and back, as players do to sell or relog
+            assert!(
+                !tracker.on_area(&route, "1_1_town"),
+                "moved on a town trip at edge {i}"
+            );
+            assert_eq!(tracker.active(), i);
+            tracker.on_area(&route, area);
+            assert_eq!(tracker.active(), i);
+        }
+    }
 }
 
 fn bundled_route(bandit: exile_core::route::Bandit) -> exile_core::route::Route {

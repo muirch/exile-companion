@@ -157,11 +157,11 @@ pub fn move_route(app: &AppHandle, mv: RouteMove) -> Option<RouteView> {
     current_route_view(app)
 }
 
-fn follow_route(app: &AppHandle, area_id: &str, level: u32) {
+fn follow_route(app: &AppHandle, area_id: &str) {
     let advanced = {
         let app_state = app.state::<AppState>();
         let mut tracker = lock(&app_state.tracker);
-        tracker.on_area(&app_state.route(), area_id, (level > 0).then_some(level))
+        tracker.on_area(&app_state.route(), area_id)
     };
     if advanced {
         save_route_edge(app);
@@ -546,7 +546,7 @@ fn spawn_pipeline(app: AppHandle, stream: LineStream, machine: CampaignMachine) 
             }
             if delta.zone_changed {
                 if let Some(area_id) = &st.area_id {
-                    follow_route(&cb_app, area_id, st.level);
+                    follow_route(&cb_app, area_id);
                     if let Some(penalty) = exile_core::kitava::penalty_after(area_id) {
                         crate::item::kitava(&cb_app, penalty);
                     }
@@ -607,8 +607,7 @@ pub fn start_live(app: AppHandle, path: String) -> Result<CampaignState, String>
     state.state_tx.send_replace(primed.clone());
     let _ = app.emit("campaign://state-updated", &primed);
     if let Some(area_id) = &primed.area_id {
-        let level = (primed.level > 0).then_some(primed.level);
-        lock(&state.tracker).on_area(&state.route(), area_id, level);
+        lock(&state.tracker).on_area(&state.route(), area_id);
         save_route_edge(&app);
     }
     emit_route(&app);
