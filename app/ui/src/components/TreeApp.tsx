@@ -376,7 +376,15 @@ function NodeCard({
       <p className="font-caps text-[15px] leading-snug text-value">{node.name}</p>
       <p className="font-caps text-[13px] text-label">{kind}</p>
       {stats.length > 0 && (
-        <p className="mt-1 font-body text-[13px] leading-snug whitespace-pre-line text-plain">{stats.join('\n')}</p>
+        <p className="mt-1 font-body text-[13px] leading-snug whitespace-pre-line text-magic">{stats.join('\n')}</p>
+      )}
+      {node.reminder?.map((text) => (
+        <p key={text} className="font-body text-[12px] leading-snug text-label">
+          {text}
+        </p>
+      ))}
+      {node.flavour && node.flavour.length > 0 && (
+        <p className="mt-1 font-body text-[13px] leading-snug whitespace-pre-line text-unique italic">{node.flavour.join('\n')}</p>
       )}
       {where && <p className="mt-1 font-body text-[13px] leading-snug text-plain italic">{where}</p>}
     </div>

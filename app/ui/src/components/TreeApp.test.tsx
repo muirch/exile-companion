@@ -25,7 +25,16 @@ const LAYOUT: TreeLayout = {
     { id: 10, x: 0, y: -162, kind: 'normal', name: 'Strength', stats: ['+10 to Strength'] },
     { id: 11, x: 162, y: 0, kind: 'notable', name: 'Heart of Oak', stats: ['+20 to maximum Life', '5% increased Armour'] },
     { id: 13, x: 0, y: 82, kind: 'jewel', name: 'Jewel Socket', stats: [] },
-    { id: 20, x: 1000, y: 0, kind: 'keystone', name: 'Iron Reflexes', stats: ['Converts all Evasion Rating to Armour'] },
+    {
+      id: 20,
+      x: 1000,
+      y: 0,
+      kind: 'keystone',
+      name: 'Iron Reflexes',
+      stats: ['Converts all Evasion Rating to Armour'],
+      reminder: ['(Armour reduces Physical Damage)'],
+      flavour: ['Steel yourself.'],
+    },
     {
       id: 12,
       x: 400,
@@ -202,6 +211,16 @@ describe('TreeApp', () => {
     expect(screen.getByText(/since Level 1-12/)).toBeInTheDocument();
     expect(screen.getByText('1 refunded')).toBeInTheDocument();
     expect(screen.getByText('Refunded at this stage')).toBeInTheDocument();
+  });
+
+  it("colours a node's card as the game does", async () => {
+    render(<TreeApp />);
+    await screen.findByTestId('tree');
+    hoverNode(20);
+    const card = await screen.findByRole('tooltip');
+    expect(within(card).getByText('Converts all Evasion Rating to Armour')).toHaveClass('text-magic');
+    expect(within(card).getByText('(Armour reduces Physical Damage)')).toHaveClass('text-label');
+    expect(within(card).getByText('Steel yourself.')).toHaveClass('text-unique', 'italic');
   });
 
   it('shows the picked mastery effect on its card', async () => {
