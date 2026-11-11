@@ -46,6 +46,10 @@ The server can also be pointed at files directly:
 exile-companion-mcp --pob <Path of Building folder> --build <build.xml> --log <Client.txt> --engine <exile-pob-engine>
 ```
 
+## Your character and your guide
+
+The assistant works with two builds. Your character is your own build in Exile Companion: ask the agent to import it from your pathofexile.com profile (your account name with its #1234, and a public profile), and to refresh it after level-ups or new gear. Your guide is the PoB you follow. Item checks, defences and questions like "why do I die in act 4?" use your character, and what to change next is the difference to your guide.
+
 ## Leveling with a guide
 
 Ask the agent to help you pick a build. It asks how you like to play, offers a few current-league guides with a Path of Building link and lets you choose. With your OK it makes the guide your build in Exile Companion, so the overlay lists the guide's gems along the campaign route, and it remembers the guide for later chats. It reads where you are from the game's log (character, level, act and area), so "what do I take next?" needs no explaining and takes one call: where you are, what your build still lacks against your guide's stage, the next passives the guide takes, and whether your level has reached the guide's next stage. When you move on to that stage, it notes that too. Undo takes the guide back as your build, and you can ask it to stop following the guide.

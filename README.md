@@ -30,7 +30,7 @@ The overlay shows only while the game is in front, and clicks go through it.
 
 Download the setup file from the [dev release](https://github.com/muirch/exile-companion/releases/tag/dev) and run it. A newer build installs over the old one. Builds aren't signed yet, so Windows SmartScreen may ask you to confirm. On Linux, build it from source. The overlay needs X11 or XWayland, which is how the game runs under Proton.
 
-Start it before or after the game. It finds `Client.txt` in the usual Steam and standalone install folders, or you pick the file in the settings. Import your build in the settings, from a file, a PoB code or a pobb.in or poe.ninja link.
+Start it before or after the game. It finds `Client.txt` in the usual Steam and standalone install folders, or you pick the file in the settings. In the settings, paste the guide you follow (a pobb.in or poe.ninja link, a PoB code or a guide page) and import your character from your pathofexile.com profile, which has to be public, or from a PoB file. The route's gems come from the guide, the item check and the assistant's numbers from your character.
 
 ## Keys
 
