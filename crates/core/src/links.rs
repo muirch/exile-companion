@@ -34,6 +34,8 @@ pub struct LinkGem {
     pub name: String,
     pub color: GemColor,
     pub support: bool,
+    /// The passive tree or an item gives the skill, not a gem.
+    pub granted: bool,
     /// As the build sets them in PoB.
     pub level: Option<u32>,
     pub quality: Option<u32>,
@@ -46,6 +48,8 @@ pub struct LinkGem {
 #[serde(rename_all = "camelCase")]
 pub struct LinkGroup {
     pub slot: Option<String>,
+    /// The author's note on the group. A group with a label and no gems is how authors head the
+    /// next part of a stage, such as "- Sunder Swap -".
     pub label: Option<String>,
     pub gems: Vec<LinkGem>,
 }
@@ -99,6 +103,19 @@ fn get(name: &str, plan: Option<&GemPlan>) -> Option<String> {
         .then(|| "Not in the campaign".to_string())
 }
 
+/// Where a skill no gem gives comes from. PoB writes "Tree:<node>" for the passive tree and the
+/// ascendancy, and "Item:<id>:<name>" for an item.
+fn granted_by(source: &str) -> String {
+    match source.split_once(':') {
+        Some(("Tree", _)) => "From the passive tree or the ascendancy".into(),
+        Some(("Item", rest)) => match rest.split_once(':') {
+            Some((_, name)) if !name.trim().is_empty() => format!("From {}", name.trim()),
+            _ => "From an item".into(),
+        },
+        _ => "Not from a gem".into(),
+    }
+}
+
 pub fn links(build: &PobBuild, set: usize, gems: &GemTable, plan: Option<&GemPlan>) -> Links {
     let sets = set_titles(build);
     let set = set.min(sets.len().saturating_sub(1));
@@ -108,7 +125,7 @@ pub fn links(build: &PobBuild, set: usize, gems: &GemTable, plan: Option<&GemPla
         .map(|s| s.groups.as_slice())
         .unwrap_or_default()
         .iter()
-        .filter(|g| g.enabled && g.source.is_none())
+        .filter(|g| g.enabled)
         .map(|g| LinkGroup {
             slot: g.slot.clone(),
             label: g.label.clone().filter(|l| !l.trim().is_empty()),
@@ -121,9 +138,15 @@ pub fn links(build: &PobBuild, set: usize, gems: &GemTable, plan: Option<&GemPla
                     let name = info
                         .map(|i| i.name.clone())
                         .or_else(|| gem.name_spec.clone())?;
+                    // Skills an item or the tree grant are white, as build sites draw them.
+                    let granted = g.source.as_deref().map(granted_by);
                     Some(LinkGem {
-                        get: get(&name, plan),
-                        color: GemColor::of(info.map_or("", |i| i.primary_attribute.as_str())),
+                        granted: granted.is_some(),
+                        get: granted.clone().or_else(|| get(&name, plan)),
+                        color: match granted {
+                            Some(_) => GemColor::White,
+                            None => GemColor::of(info.map_or("", |i| i.primary_attribute.as_str())),
+                        },
                         support: gem.is_support,
                         level: gem.level,
                         quality: gem.quality,
@@ -133,7 +156,7 @@ pub fn links(build: &PobBuild, set: usize, gems: &GemTable, plan: Option<&GemPla
                 })
                 .collect(),
         })
-        .filter(|g: &LinkGroup| !g.gems.is_empty())
+        .filter(|g: &LinkGroup| !g.gems.is_empty() || g.label.is_some())
         .collect();
     Links { sets, set, groups }
 }
@@ -181,10 +204,19 @@ mod tests {
             skill_sets: vec![
                 set(
                     "Level 1-12",
-                    vec![group(
-                        "Gloves",
-                        vec![gem("SkillGemPrecision", "Precision", false)],
-                    )],
+                    vec![
+                        group("Gloves", vec![gem("SkillGemPrecision", "Precision", false)]),
+                        SkillGroup {
+                            slot: None,
+                            label: Some("- Sunder Swap -".into()),
+                            ..group("", Vec::new())
+                        },
+                        SkillGroup {
+                            slot: None,
+                            label: Some("  ".into()),
+                            ..group("", Vec::new())
+                        },
+                    ],
                 ),
                 set(
                     "Level 12-22",
@@ -205,6 +237,45 @@ mod tests {
             ],
             ..PobBuild::default()
         }
+    }
+
+    #[test]
+    fn skills_the_tree_or_an_item_grant_are_white_with_their_source() {
+        let table = GemTable::from_json_bytes(GEMS.as_bytes(), b"{}").unwrap();
+        let granted = |source: &str, name: &str| SkillGroup {
+            enabled: true,
+            slot: None,
+            source: Some(source.into()),
+            label: None,
+            main_active_skill: Some(1),
+            gems: vec![Gem {
+                gem_id: None,
+                ..gem("x", name, false)
+            }],
+        };
+        let b = PobBuild {
+            skill_sets: vec![SkillSet {
+                title: Some("Midgame".into()),
+                groups: vec![
+                    granted("Tree:4494", "Summon Sentinel of Radiance"),
+                    granted("Item:7:Leer Cast, Festival Mask", "Intimidating Cry"),
+                ],
+                ..SkillSet::default()
+            }],
+            ..PobBuild::default()
+        };
+        let l = links(&b, 0, &table, None);
+        let sentinel = &l.groups[0].gems[0];
+        assert_eq!(sentinel.color, GemColor::White);
+        assert!(sentinel.granted);
+        assert_eq!(
+            sentinel.get.as_deref(),
+            Some("From the passive tree or the ascendancy")
+        );
+        assert_eq!(
+            l.groups[1].gems[0].get.as_deref(),
+            Some("From Leer Cast, Festival Mask")
+        );
     }
 
     #[test]
@@ -233,6 +304,11 @@ mod tests {
         assert_eq!(l.sets, ["Level 1-12", "Level 12-22"]);
         assert_eq!(l.set, 1);
         assert_eq!(l.groups.len(), 1, "a disabled group is left out");
+        // A label without gems heads the next part, an empty one is dropped.
+        let first = links(&build(), 0, &table, None);
+        assert_eq!(first.groups.len(), 2);
+        assert!(first.groups[1].gems.is_empty());
+        assert_eq!(first.groups[1].label.as_deref(), Some("- Sunder Swap -"));
         let body = &l.groups[0];
         assert_eq!(body.slot.as_deref(), Some("Body Armour"));
         assert_eq!(body.gems[0].name, "Sunder");
