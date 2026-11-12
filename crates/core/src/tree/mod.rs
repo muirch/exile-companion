@@ -530,7 +530,7 @@ pub fn tree_stage(
             .map(|i| items::anointed(layout, guide, guide.item_set_for(i)))
             .unwrap_or_default(),
         TreeMode::Character => character
-            .map(|c| items::anointed(layout, c, items::active_set(c)))
+            .map(|c| items::anointed(layout, c, crate::gear::active_set(c)))
             .unwrap_or_default(),
     };
     let before: HashSet<u32> = before_spec
