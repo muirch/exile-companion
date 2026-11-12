@@ -87,7 +87,8 @@ function state(
     deaths,
     session_started: true,
     area_id: zoneId,
-    log_unrecognised: false,
+    // ?logchanged: the patch reworded the zone lines.
+    log_unrecognised: typeof window !== 'undefined' && new URLSearchParams(window.location.search).has('logchanged'),
   };
 }
 
