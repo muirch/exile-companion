@@ -94,7 +94,10 @@ function withItems(s: TreeStage): TreeStage {
             },
           },
         ];
-  return { ...s, nodes, jewels };
+  // ?near=tattoo opens zoomed in on the tattooed node.
+  const t = tattooOn == null ? undefined : byId.get(tattooOn);
+  const focus = params.get('near') === 'tattoo' && t ? { minX: t.x - 150, minY: t.y - 150, maxX: t.x + 150, maxY: t.y + 150 } : s.focus;
+  return { ...s, nodes, jewels, focus };
 }
 
 export function setTreeModeMock(m: TreeMode): void {
