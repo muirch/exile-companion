@@ -33,6 +33,11 @@ pub struct PobBuild {
     /// The author's notes as PoB keeps them, colour codes and all (see [`crate::plain_notes`]).
     /// `None` when the build has none.
     pub notes: Option<String>,
+    /// Every item in the build, worn or not, in document order.
+    pub items: Vec<Item>,
+    pub item_sets: Vec<ItemSet>,
+    /// `Items/@activeItemSet`, an [`ItemSet::id`].
+    pub active_item_set: Option<u32>,
 }
 
 impl Default for PobBuild {
@@ -48,11 +53,26 @@ impl Default for PobBuild {
             specs: Vec::new(),
             skill_sets: Vec::new(),
             notes: None,
+            items: Vec::new(),
+            item_sets: Vec::new(),
+            active_item_set: None,
         }
     }
 }
 
 impl PobBuild {
+    pub fn item(&self, id: u32) -> Option<&Item> {
+        self.items.iter().find(|i| i.id == id)
+    }
+
+    /// The gear set for a tree stage: the one with the same title, as guides name them.
+    pub fn item_set_for(&self, spec: usize) -> Option<&ItemSet> {
+        let title = self.specs.get(spec)?.title.as_deref()?.trim();
+        self.item_sets
+            .iter()
+            .find(|s| s.title.as_deref().map(str::trim) == Some(title))
+    }
+
     /// The currently-selected spec (`activeSpec`), falling back to the first spec.
     pub fn selected_spec(&self) -> Option<&TreeSpec> {
         self.specs
@@ -104,6 +124,34 @@ pub struct TreeSpec {
     pub nodes: Vec<u32>,
     /// The effect picked on each allocated mastery, as (mastery node id, effect id).
     pub mastery_effects: Vec<(u32, u32)>,
+    /// Jewels in the tree's sockets, as (socket node id, item id).
+    pub sockets: Vec<(u32, u32)>,
+    /// Nodes replaced by a tattoo.
+    pub overrides: Vec<NodeOverride>,
+}
+
+/// A tattoo on a node: the name the game shows and the stats it gives instead of the node's.
+#[derive(Debug, Clone, Default, PartialEq, Eq)]
+pub struct NodeOverride {
+    pub node: u32,
+    pub name: String,
+    pub stats: Vec<String>,
+}
+
+/// An item as PoB keeps it: its text in PoB's item format (see [`crate::item::ItemText`]).
+#[derive(Debug, Clone, Default, PartialEq, Eq)]
+pub struct Item {
+    pub id: u32,
+    pub text: String,
+}
+
+/// What a gear set wears. Empty slots are left out.
+#[derive(Debug, Clone, Default, PartialEq, Eq)]
+pub struct ItemSet {
+    pub id: Option<u32>,
+    pub title: Option<String>,
+    /// (slot name, item id), "Weapon 1", "Ring 2", "Flask 1".
+    pub slots: Vec<(String, u32)>,
 }
 
 /// A named group of socket groups. `activeSkillSet` selects one by [`SkillSet::id`].
