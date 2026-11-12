@@ -90,6 +90,43 @@ export type TreeMode = 'tree' | 'new' | 'character';
 /** Added is new at the stage or still to take, Extra refunded or taken beyond the guide. */
 export type Mark = 'taken' | 'added' | 'extra';
 
+/** Mirrors `exile_core::gear::ItemView`: a build's item as the game's tooltip shows it. */
+export interface ItemView {
+  rarity: 'normal' | 'magic' | 'rare' | 'unique' | 'relic';
+  name: string;
+  base: string | null;
+  quality: number | null;
+  sockets: string | null;
+  levelReq: number | null;
+  radius: string | null;
+  corrupted: boolean;
+  mods: { text: string; kind: 'enchant' | 'implicit' | 'explicit' | 'crafted' | 'fractured' }[];
+}
+
+/** Mirrors `exile_core::tree::NodeMark`. */
+export interface NodeMark {
+  id: number;
+  mark: Mark;
+  since: number | null;
+  /** The picked mastery effect. */
+  effect: number | null;
+  /** Taken by the amulet's anoint, not with a point. */
+  anointed: boolean;
+  tattoo: { name: string; stats: string[] } | null;
+}
+
+/** Mirrors `exile_core::tree::JewelMark`. */
+export interface JewelMark {
+  socket: number;
+  item: ItemView;
+  /** The node the area is around: the socket, or Impossible Escape's keystone. */
+  centre: number;
+  /** In tree units, null without an area. */
+  radius: number | null;
+  /** Nodes in the area need no path. */
+  withoutPath: boolean;
+}
+
 export interface Bounds {
   minX: number;
   minY: number;
@@ -113,7 +150,7 @@ export interface TreeStage {
   /** The ascendancies to draw: the guide's own, then a bloodline the stage takes. */
   ascendancies: string[];
   /** `effect` is the picked mastery effect. */
-  nodes: { id: number; mark: Mark; since: number | null; effect: number | null }[];
+  nodes: NodeMark[];
   /** `edge` indexes `TreeLayout.edges`. */
   edges: { edge: number; mark: Mark }[];
   focus: Bounds | null;
@@ -125,6 +162,7 @@ export interface TreeStage {
   missing: number;
   /** Their notables and keystones, named from the character's tree. */
   missingNames: string[];
+  jewels: JewelMark[];
 }
 
 /** Mirrors `settings::TreePrefs`. */

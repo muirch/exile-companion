@@ -3,8 +3,9 @@ import { useCallback, useEffect, useLayoutEffect, useMemo, useRef, useState } fr
 import { closeTree, getTreeLayout, getTreePrefs, getTreeStage, setTreeMode, setTreePrefs } from '../ipc/commands';
 import { isTauri } from '../ipc/env';
 import { onTreeOpened } from '../ipc/events';
-import type { Mark, NodeKind, TreeLayout, TreeMode, TreeNode, TreePrefs, TreeStage } from '../ipc/types';
+import type { JewelMark, Mark, NodeKind, NodeMark, TreeLayout, TreeMode, TreeNode, TreePrefs, TreeStage } from '../ipc/types';
 import { Button, Choice, Select } from '../kit';
+import { ItemText, RARITY_COLOR } from './ItemText';
 import { Brand } from './Tooltip';
 import {
   applyPending,
@@ -153,7 +154,15 @@ function Legend({ stage }: { stage: TreeStage }): React.JSX.Element {
 function mockHover(layout: TreeLayout, stage: TreeStage): Hover | null {
   const kind = new URLSearchParams(window.location.search).get('hover');
   if (isTauri() || kind === null) return null;
-  const want = (n: TreeNode | undefined): boolean =>
+  // ?hover=jewel, anoint or tattoo goes with ?items.
+  const item = { jewel: stage.jewels[0]?.socket, anoint: stage.nodes.find((m) => m.anointed)?.id, tattoo: stage.nodes.find((m) => m.tattoo)?.id }[
+    kind as 'jewel' | 'anoint' | 'tattoo'
+  ];
+  if (item != null) {
+    const node = layout.nodes.find((n) => n.id === item);
+    return node ? { node } : null;
+  }
+  const want =(n: TreeNode | undefined): boolean =>
     kind === 'mastery' ? n?.kind === 'mastery' : n?.kind === 'notable' && (kind === 'ascendancy') === Boolean(n.ascendancy);
   const marked = stage.nodes.find((m) => (kind === 'mastery' || m.mark === (stage.mode === 'tree' ? 'taken' : 'added')) && want(layout.nodes.find((n) => n.id === m.id)));
   const node = layout.nodes.find((n) => n.id === marked?.id);
@@ -231,6 +240,42 @@ function edgePaths(layout: TreeLayout, byId: Map<number, TreeNode>, edgeMarks: M
     if (a && b && keep(a)) out[edgeMarks.get(i) ?? 'off'] += edgePath(a, b, e);
   });
   return out;
+}
+
+/** The area each jewel reaches, in its rarity's colour. Dashed when nodes in it need no path. */
+function JewelAreas({
+  jewels,
+  byId,
+  px,
+}: {
+  jewels: JewelMark[];
+  byId: Map<number, TreeNode>;
+  px: (v: number) => number;
+}): React.JSX.Element {
+  return (
+    <>
+      {jewels.map((j) => {
+        const c = byId.get(j.centre);
+        if (!c || j.radius == null) return null;
+        const color = RARITY_COLOR[j.item.rarity];
+        return (
+          <circle
+            key={j.socket}
+            data-testid={`jewel-area-${j.socket}`}
+            cx={c.x}
+            cy={c.y}
+            r={j.radius}
+            fill={color}
+            fillOpacity={0.05}
+            stroke={color}
+            strokeOpacity={0.55}
+            strokeWidth={px(1.5)}
+            strokeDasharray={j.withoutPath ? `${px(6)} ${px(4)}` : undefined}
+          />
+        );
+      })}
+    </>
+  );
 }
 
 function Edges({ paths, px }: { paths: Record<Mark | 'off', string>; px: (v: number) => number }): React.JSX.Element {
@@ -361,26 +406,29 @@ function AscendancyMap({
 function NodeCard({
   hover,
   stage,
-  mark,
-  since,
-  effect,
+  m,
   at,
   box,
 }: {
   hover: Hover;
   stage: TreeStage;
-  mark: Mark | undefined;
-  since: number | null | undefined;
-  effect: number | null | undefined;
+  m: NodeMark | undefined;
   at: { x: number; y: number };
   box: { w: number; h: number };
 }): React.JSX.Element {
   const { node } = hover;
-  const stats = node.mastery?.find((m) => m.effect === effect)?.stats ?? node.stats;
+  const mark = m?.mark;
+  const since = m?.since;
+  const tattoo = m?.tattoo;
+  const jewel = stage.jewels.find((j) => j.socket === node.id);
+  const stats = tattoo?.stats ?? node.mastery?.find((e) => e.effect === m?.effect)?.stats ?? node.stats;
   const r = 10;
   const left = at.x + r + CARD_WIDTH > box.w ? Math.max(0, at.x - r - CARD_WIDTH) : at.x + r;
   const below = at.y < box.h / 2;
-  const kind = [KIND[node.kind], mark && stage.mode !== 'tree' && mark !== 'taken' ? markName(stage.mode, mark) : null]
+  const kind = [
+    tattoo ? `Tattoo on ${node.name}` : KIND[node.kind],
+    mark && stage.mode !== 'tree' && mark !== 'taken' ? markName(stage.mode, mark) : null,
+  ]
     .filter(Boolean)
     .join(' · ');
   let where: string | null = null;
@@ -393,8 +441,13 @@ function NodeCard({
       className="pointer-events-none absolute z-10 flex flex-col gap-0.5 border border-edge bg-[#0a0a0a] px-3 py-2"
       style={{ left, width: CARD_WIDTH, ...(below ? { top: at.y + r } : { bottom: box.h - at.y + r }) }}
     >
-      <p className="font-caps text-[15px] leading-snug text-value">{node.name}</p>
+      <p className="font-caps text-[15px] leading-snug text-value">{tattoo?.name ?? node.name}</p>
       <p className="font-caps text-[13px] text-label">{kind}</p>
+      {jewel && (
+        <div className="mt-1">
+          <ItemText item={jewel.item} />
+        </div>
+      )}
       {stats.length > 0 && (
         <p className="mt-1 font-body text-[13px] leading-snug whitespace-pre-line text-magic">{stats.join('\n')}</p>
       )}
@@ -406,7 +459,8 @@ function NodeCard({
       {node.flavour && node.flavour.length > 0 && (
         <p className="mt-1 font-body text-[13px] leading-snug whitespace-pre-line text-unique italic">{node.flavour.join('\n')}</p>
       )}
-      {where && <p className="mt-1 font-body text-[13px] leading-snug text-plain italic">{where}</p>}
+      {m?.anointed && <p className="mt-1 font-body text-[13px] leading-snug text-plain italic">Anointed on the amulet, no point needed.</p>}
+      {where && !m?.anointed && <p className="mt-1 font-body text-[13px] leading-snug text-plain italic">{where}</p>}
     </div>
   );
 }
@@ -715,6 +769,7 @@ function TreeCanvas({
       >
         {view && (
           <svg className="absolute inset-0" width={layerW} height={layerH} viewBox={viewBox} data-testid="tree">
+            <JewelAreas jewels={stage.jewels} byId={byId} px={px} />
             <Edges paths={paths} px={px} />
             <path d={offNodes} fill={OFF_NODE} stroke={OFF_RING} strokeWidth={px(1)} />
             {offJewels.map((n) => (
@@ -771,7 +826,7 @@ function TreeCanvas({
         ),
       )}
       {hover && hoverAt && (
-        <NodeCard hover={hover} stage={stage} mark={hovered?.mark} since={hovered?.since} effect={hovered?.effect} at={hoverAt} box={size} />
+        <NodeCard hover={hover} stage={stage} m={hovered} at={hoverAt} box={size} />
       )}
       {prefs.list && <BuildList layout={layout} stage={stage} />}
       <div className="absolute right-0 bottom-0 flex gap-1" onPointerDown={(e) => e.stopPropagation()}>

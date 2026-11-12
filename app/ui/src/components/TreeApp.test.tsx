@@ -3,7 +3,7 @@ import userEvent from '@testing-library/user-event';
 import { afterAll, beforeAll, beforeEach, describe, expect, it, vi } from 'vitest';
 
 import * as commands from '../ipc/commands';
-import type { TreeLayout, TreeMode, TreePrefs, TreeStage } from '../ipc/types';
+import type { Mark, NodeMark, TreeLayout, TreeMode, TreePrefs, TreeStage } from '../ipc/types';
 import { TreeApp, markName, versionNote } from './TreeApp';
 
 vi.mock('../ipc/commands', () => ({
@@ -65,6 +65,15 @@ const LAYOUT: TreeLayout = {
 let mode: TreeMode = 'tree';
 let canCompare = true;
 
+const nm = (id: number, mark: Mark, since: number, effect: number | null = null): NodeMark => ({
+  id,
+  mark,
+  since,
+  effect,
+  anointed: false,
+  tattoo: null,
+});
+
 function stageFor(stage: number): TreeStage {
   const shown: TreeMode = mode === 'character' && !canCompare ? 'tree' : mode;
   const base = {
@@ -81,6 +90,7 @@ function stageFor(stage: number): TreeStage {
     characterVersion: null,
     missing: 0,
     missingNames: [],
+    jewels: [],
   };
   if (shown === 'tree') {
     return {
@@ -89,10 +99,7 @@ function stageFor(stage: number): TreeStage {
       extra: 0,
       addedNames: [],
       ascendancy: [{ name: 'Radiant Crusade', mark: 'taken' }],
-      nodes: [
-        ...[10, 11, 20, 30, 60, 61].map((id) => ({ id, mark: 'taken' as const, since: id === 10 ? 0 : 1, effect: null })),
-        { id: 12, mark: 'taken', since: 1, effect: 4119 },
-      ],
+      nodes: [...[10, 11, 20, 30, 60, 61].map((id) => nm(id, 'taken', id === 10 ? 0 : 1)), nm(12, 'taken', 1, 4119)],
       edges: [
         { edge: 0, mark: 'taken' },
         { edge: 1, mark: 'taken' },
@@ -105,13 +112,7 @@ function stageFor(stage: number): TreeStage {
     extra: 1,
     addedNames: ['Heart of Oak', 'Iron Reflexes'],
     ascendancy: [{ name: 'Radiant Crusade', mark: 'added' }],
-    nodes: [
-      { id: 10, mark: 'taken', since: 0, effect: null },
-      { id: 11, mark: 'added', since: 1, effect: null },
-      { id: 13, mark: 'extra', since: 0, effect: null },
-      { id: 20, mark: 'added', since: 1, effect: null },
-      { id: 30, mark: 'added', since: 1, effect: null },
-    ],
+    nodes: [nm(10, 'taken', 0), nm(11, 'added', 1), nm(13, 'extra', 0), nm(20, 'added', 1), nm(30, 'added', 1)],
     edges: [
       { edge: 0, mark: 'added' },
       { edge: 1, mark: 'added' },
@@ -163,13 +164,16 @@ const marks = (): Record<string, string | null> =>
 // starts left of and above it.
 function nodeOnScreen(id: number): { x: number; y: number } {
   const svg = screen.getByTestId('tree');
-  const node = svg.querySelector(`[data-node="${id}"] circle`)!;
+  const shape = svg.querySelector(`[data-node="${id}"]`)!.firstElementChild!;
+  const n = (a: string): number => Number(shape.getAttribute(a));
+  // A jewel socket is a rotated square.
+  const [cx, cy] = shape.tagName === 'rect' ? [n('x') + n('width') / 2, n('y') + n('height') / 2] : [n('cx'), n('cy')];
   const [vx, vy, vw] = svg.getAttribute('viewBox')!.split(' ').map(Number);
   const scale = Number(svg.getAttribute('width')) / vw;
   const layer = screen.getByTestId('tree-layer');
   return {
-    x: (Number(node.getAttribute('cx')) - vx) * scale + parseFloat(layer.style.left),
-    y: (Number(node.getAttribute('cy')) - vy) * scale + parseFloat(layer.style.top),
+    x: (cx - vx) * scale + parseFloat(layer.style.left),
+    y: (cy - vy) * scale + parseFloat(layer.style.top),
   };
 }
 
@@ -373,6 +377,56 @@ describe('TreeApp', () => {
       fireEvent.pointerMove(tree, { clientX: 2, clientY: 2 });
     });
     expect(screen.queryByRole('tooltip')).toBeNull();
+  });
+
+  it('shows jewels with their area, anoints and tattoos', async () => {
+    const base = stageFor(1);
+    vi.mocked(commands.getTreeStage).mockResolvedValue({
+      ...base,
+      nodes: [
+        ...base.nodes.map((m) => (m.id === 11 ? { ...m, anointed: true } : m.id === 10 ? { ...m, tattoo: { name: 'Tattoo of the Kitava Shaman', stats: ['Attacks have 5% chance to cause Bleeding'] } } : m)),
+        nm(13, 'taken', 1),
+      ],
+      jewels: [
+        {
+          socket: 13,
+          centre: 20,
+          radius: 960,
+          withoutPath: true,
+          item: {
+            rarity: 'unique',
+            name: 'Impossible Escape',
+            base: 'Viridian Jewel',
+            quality: null,
+            sockets: null,
+            levelReq: null,
+            radius: 'Small',
+            corrupted: true,
+            mods: [{ text: 'Passive Skills in radius of Iron Reflexes can be allocated without being connected to your tree', kind: 'explicit' }],
+          },
+        },
+      ],
+    });
+    render(<TreeApp />);
+    await screen.findByTestId('tree');
+    const area = screen.getByTestId('jewel-area-13');
+    expect(area).toHaveAttribute('r', '960');
+    expect(area).toHaveAttribute('stroke-dasharray');
+
+    hoverNode(13);
+    const jewel = await screen.findByRole('tooltip');
+    expect(within(jewel).getByText('Impossible Escape')).toHaveClass('text-unique');
+    expect(jewel).toHaveTextContent('Viridian Jewel');
+    expect(jewel).toHaveTextContent('Corrupted');
+
+    hoverNode(11);
+    expect(await screen.findByRole('tooltip')).toHaveTextContent('Anointed on the amulet, no point needed.');
+
+    hoverNode(10);
+    const tattoo = await screen.findByRole('tooltip');
+    expect(tattoo).toHaveTextContent('Tattoo of the Kitava Shaman');
+    expect(tattoo).toHaveTextContent('Tattoo on Strength');
+    expect(tattoo).toHaveTextContent('Attacks have 5% chance to cause Bleeding');
   });
 
   it('loads another stage from the select and closes on Esc', async () => {

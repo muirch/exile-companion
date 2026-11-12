@@ -52,6 +52,8 @@
   --color-corrupted: #e0443a;
   --color-crafted: #b4b4ff;
   --color-normal: #c8c8c8;
+  --color-rare: #ffff77;
+  --color-fractured: #a29162;
   /* Gem colours by attribute, as the game colours sockets. */
   --color-gem-red: #d9534a;
   --color-gem-green: #7cc35a;
