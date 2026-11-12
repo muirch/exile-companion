@@ -117,6 +117,14 @@ export interface TreeStage {
   /** `edge` indexes `TreeLayout.edges`. */
   edges: { edge: number; mark: Mark }[];
   focus: Bounds | null;
+  /** The newest tree in PoB when the stage is for an older one, "3_30". */
+  latest: string | null;
+  /** The compared character's tree version when it isn't the stage's. */
+  characterVersion: string | null;
+  /** Nodes of the stage or the compared tree the stage's tree data doesn't have. */
+  missing: number;
+  /** Their notables and keystones, named from the character's tree. */
+  missingNames: string[];
 }
 
 /** Mirrors `settings::TreePrefs`. */
