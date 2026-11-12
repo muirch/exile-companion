@@ -50,7 +50,7 @@ pub fn write_link(build_dir: &Path, link: &CharacterLink) -> std::io::Result<()>
 }
 
 /// What a refresh changed in the build: level, passive points and the items that weren't there.
-#[derive(Debug, Clone, PartialEq, Eq, Serialize)]
+#[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]
 #[serde(rename_all = "camelCase")]
 pub struct Refreshed {
     /// None on the first import, when there was nothing to compare with.
