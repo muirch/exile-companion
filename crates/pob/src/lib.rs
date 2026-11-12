@@ -13,6 +13,7 @@
 
 pub mod decode;
 pub mod error;
+pub mod item;
 pub mod items;
 pub mod link;
 pub mod model;
@@ -22,9 +23,10 @@ use std::path::Path;
 
 pub use decode::decode_import_code;
 pub use error::PobError;
+pub use item::{ItemText, ModKind, ModLine};
 pub use items::item_names;
 pub use link::code_url;
-pub use model::{Gem, PobBuild, SkillGroup, SkillSet, TreeSpec};
+pub use model::{Gem, Item, ItemSet, NodeOverride, PobBuild, SkillGroup, SkillSet, TreeSpec};
 pub use parse::{parse_xml, plain_notes};
 
 /// Import a build from a PoB code (as pasted): decode base64+zlib, then parse the XML.

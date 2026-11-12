@@ -1,16 +1,16 @@
 //! Parse Path of Building XML into a [`PobBuild`].
 //!
 //! A streaming quick-xml walk. Children are matched BY NAME (document order is not guaranteed) and
-//! every attribute is optional. We only read the elements we care about (`Build`, `Tree`/`Spec`,
-//! `Skills`/`SkillSet`/`Skill`/`Gem`, `Notes`) and ignore the rest (`Calcs`, `PlayerStat`, `URL`,
-//! `Sockets`, ...). Both `<Skill>`-directly-under-`<Skills>` (legacy) and the newer `<SkillSet>`
-//! grouping are handled.
+//! every attribute is optional. We only read the elements we care about (`Build`, `Tree`/`Spec`
+//! with its `Sockets` and `Overrides`, `Skills`/`SkillSet`/`Skill`/`Gem`, `Items`/`Item`/`ItemSet`,
+//! `Notes`) and ignore the rest (`Calcs`, `PlayerStat`, `URL`, ...). Both
+//! `<Skill>`-directly-under-`<Skills>` (legacy) and the newer `<SkillSet>` grouping are handled.
 
 use quick_xml::events::{BytesStart, Event};
 use quick_xml::reader::Reader;
 
 use crate::error::PobError;
-use crate::model::{Gem, PobBuild, SkillGroup, SkillSet, TreeSpec};
+use crate::model::{Gem, Item, ItemSet, NodeOverride, PobBuild, SkillGroup, SkillSet, TreeSpec};
 
 /// Parse PoB XML bytes into a build. Errors only on malformed XML or a non-PoB root.
 pub fn parse_xml(xml: &[u8]) -> Result<PobBuild, PobError> {
@@ -38,15 +38,15 @@ pub fn parse_xml(xml: &[u8]) -> Result<PobBuild, PobError> {
                 p.open(&e, true);
             }
             Event::End(e) => p.close(local_name(e.name().as_ref())),
-            Event::Text(t) if p.notes.is_some() => {
+            Event::Text(t) if p.text_target().is_some() => {
                 let text = t.xml10_content().map_err(quick_xml::Error::from)?;
-                p.note(&text);
+                p.text(&text);
             }
-            Event::CData(t) if p.notes.is_some() => {
+            Event::CData(t) if p.text_target().is_some() => {
                 let text = t.decode().map_err(quick_xml::Error::from)?;
-                p.note(&text);
+                p.text(&text);
             }
-            Event::GeneralRef(r) if p.notes.is_some() => {
+            Event::GeneralRef(r) if p.text_target().is_some() => {
                 let c = match r.resolve_char_ref()? {
                     Some(c) => Some(c),
                     None => match r.as_ref() {
@@ -59,7 +59,7 @@ pub fn parse_xml(xml: &[u8]) -> Result<PobBuild, PobError> {
                     },
                 };
                 if let Some(c) = c {
-                    p.note(c.encode_utf8(&mut [0; 4]));
+                    p.text(c.encode_utf8(&mut [0; 4]));
                 }
             }
             Event::Eof => break,
@@ -91,6 +91,11 @@ struct Parser {
     legacy: SkillSet,
     /// Text of `<Notes>` while inside it.
     notes: Option<String>,
+    cur_item: Option<Item>,
+    cur_item_set: Option<ItemSet>,
+    cur_override: Option<NodeOverride>,
+    /// The text of a tattoo override, split into stats when it closes.
+    override_text: String,
 }
 
 impl Parser {
@@ -130,13 +135,89 @@ impl Parser {
                 }
             }
             "Notes" if !empty => self.notes = Some(String::new()),
+            "Items" => self.build.active_item_set = attr_u32(e, "activeItemSet"),
+            "Item" if !empty => {
+                self.cur_item = attr_u32(e, "id").map(|id| Item {
+                    id,
+                    text: String::new(),
+                });
+            }
+            "ItemSet" => {
+                let set = ItemSet {
+                    id: attr_u32(e, "id"),
+                    title: attr_string(e, "title"),
+                    slots: Vec::new(),
+                };
+                if empty {
+                    self.build.item_sets.push(set);
+                } else {
+                    self.cur_item_set = Some(set);
+                }
+            }
+            "Slot" => {
+                if let (Some(set), Some(name), Some(id)) = (
+                    self.cur_item_set.as_mut(),
+                    attr_string(e, "name"),
+                    attr_u32(e, "itemId").filter(|id| *id != 0),
+                ) {
+                    set.slots.push((name, id));
+                }
+            }
+            "Socket" => {
+                if let (Some(spec), Some(node), Some(item)) = (
+                    self.cur_spec.as_mut(),
+                    attr_u32(e, "nodeId"),
+                    attr_u32(e, "itemId").filter(|id| *id != 0),
+                ) {
+                    spec.sockets.push((node, item));
+                }
+            }
+            "Override" if self.cur_spec.is_some() => {
+                let tattoo = NodeOverride {
+                    node: attr_u32(e, "nodeId").unwrap_or_default(),
+                    name: attr_string(e, "dn").unwrap_or_default(),
+                    stats: Vec::new(),
+                };
+                self.override_text.clear();
+                if empty {
+                    self.push_override(tattoo);
+                } else {
+                    self.cur_override = Some(tattoo);
+                }
+            }
             _ => {}
         }
     }
 
-    fn note(&mut self, text: &str) {
+    /// Where text goes right now, if anywhere.
+    fn text_target(&mut self) -> Option<&mut String> {
         if let Some(notes) = self.notes.as_mut() {
-            notes.push_str(text);
+            return Some(notes);
+        }
+        if let Some(item) = self.cur_item.as_mut() {
+            return Some(&mut item.text);
+        }
+        self.cur_override
+            .is_some()
+            .then_some(&mut self.override_text)
+    }
+
+    fn text(&mut self, text: &str) {
+        if let Some(target) = self.text_target() {
+            target.push_str(text);
+        }
+    }
+
+    fn push_override(&mut self, mut tattoo: NodeOverride) {
+        tattoo.stats = self
+            .override_text
+            .lines()
+            .map(str::trim)
+            .filter(|l| !l.is_empty())
+            .map(String::from)
+            .collect();
+        if let Some(spec) = self.cur_spec.as_mut() {
+            spec.overrides.push(tattoo);
         }
     }
 
@@ -155,6 +236,22 @@ impl Parser {
             "Skill" => {
                 if let Some(group) = self.cur_group.take() {
                     self.push_group(group);
+                }
+            }
+            "Item" => {
+                if let Some(mut item) = self.cur_item.take() {
+                    item.text = item.text.replace('\r', "").trim().to_string();
+                    self.build.items.push(item);
+                }
+            }
+            "ItemSet" => {
+                if let Some(set) = self.cur_item_set.take() {
+                    self.build.item_sets.push(set);
+                }
+            }
+            "Override" => {
+                if let Some(tattoo) = self.cur_override.take() {
+                    self.push_override(tattoo);
                 }
             }
             "Notes" => {
@@ -228,6 +325,8 @@ fn read_spec(e: &BytesStart<'_>) -> TreeSpec {
         mastery_effects: attr_string(e, "masteryEffects")
             .map(|s| parse_mastery_effects(&s))
             .unwrap_or_default(),
+        sockets: Vec::new(),
+        overrides: Vec::new(),
     }
 }
 
@@ -491,6 +590,52 @@ mod tests {
         let xml =
             r#"<PathOfBuilding><Build className="Witch" ascendClassName="None"/></PathOfBuilding>"#;
         assert_eq!(parse(xml).ascend_class_name, None);
+    }
+
+    #[test]
+    fn reads_items_gear_sets_jewels_and_tattoos() {
+        let xml = r#"<PathOfBuilding>
+<Tree activeSpec="1"><Spec title="Midgame" nodes="1,2">
+  <Sockets><Socket itemId="7" nodeId="26725"/><Socket itemId="0" nodeId="7960"/></Sockets>
+  <Overrides>
+    <Override dn="Tattoo of the Kitava Shaman" nodeId="60472">
+      Attacks have 5% chance to cause Bleeding
+    </Override>
+  </Overrides>
+</Spec></Tree>
+<Items activeItemSet="21">
+  <Item id="7">
+    Rarity: RARE
+New Item
+Ghastly Eye Jewel
+Implicits: 0
+Minions deal 18% increased Damage if you&apos;ve used a Minion Skill Recently
+    <ModRange id="1" range="0.5"/>
+  </Item>
+  <ItemSet title="Midgame" id="21">
+    <Slot itemId="7" name="Weapon 1"/>
+    <Slot itemId="0" name="Helmet"/>
+  </ItemSet>
+</Items>
+</PathOfBuilding>"#;
+        let b = parse(xml);
+        let spec = &b.specs[0];
+        assert_eq!(spec.sockets, vec![(26725, 7)]);
+        assert_eq!(spec.overrides.len(), 1);
+        assert_eq!(spec.overrides[0].node, 60472);
+        assert_eq!(spec.overrides[0].name, "Tattoo of the Kitava Shaman");
+        assert_eq!(
+            spec.overrides[0].stats,
+            vec!["Attacks have 5% chance to cause Bleeding"]
+        );
+        assert_eq!(b.active_item_set, Some(21));
+        assert_eq!(b.item_sets[0].slots, vec![("Weapon 1".to_string(), 7)]);
+        let item = b.item(7).unwrap();
+        assert!(item.text.starts_with("Rarity: RARE\nNew Item"));
+        assert!(item
+            .text
+            .ends_with("if you've used a Minion Skill Recently"));
+        assert_eq!(b.item_set_for(0).and_then(|s| s.id), Some(21));
     }
 
     #[test]
