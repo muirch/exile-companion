@@ -1,6 +1,7 @@
 //! The passive tree drawn from PoB's own tree data, and what a guide's stage marks on it: the
 //! stage's tree, what it adds to the previous stage, or how it differs from the character's tree.
 
+mod items;
 mod lua;
 
 use std::collections::{BTreeMap, HashMap, HashSet};
@@ -13,6 +14,7 @@ use serde_json::Value;
 
 use crate::resolve::stage_for_level;
 
+pub use items::{jewel_radius, JewelMark, Tattoo};
 pub use lua::LuaError;
 
 #[derive(Debug, thiserror::Error)]
@@ -391,6 +393,9 @@ pub struct NodeMark {
     /// The effect picked on a mastery: the stage's, or for a node only the other tree has, that
     /// tree's.
     pub effect: Option<u32>,
+    /// Taken by an anoint on the amulet, not with a point.
+    pub anointed: bool,
+    pub tattoo: Option<Tattoo>,
 }
 
 #[derive(Debug, Clone, PartialEq, Serialize)]
@@ -452,6 +457,8 @@ pub struct TreeStage {
     pub missing_names: Vec<String>,
     #[serde(skip)]
     pub missing_ids: Vec<u32>,
+    /// The stage's jewels in their sockets.
+    pub jewels: Vec<JewelMark>,
 }
 
 pub fn stage_titles(build: &PobBuild) -> Vec<String> {
@@ -495,8 +502,15 @@ pub fn tree_stage(
 ) -> TreeStage {
     let stage = stage.min(guide.specs.len().saturating_sub(1));
     let spec = guide.specs.get(stage);
+    let now_anointed = items::anointed(layout, guide, guide.item_set_for(stage));
     let now: HashSet<u32> = spec
-        .map(|s| s.nodes.iter().copied().collect())
+        .map(|s| {
+            s.nodes
+                .iter()
+                .copied()
+                .chain(now_anointed.iter().copied())
+                .collect()
+        })
         .unwrap_or_default();
     let my_spec = character.and_then(PobBuild::selected_spec);
     let mine: Option<HashSet<u32>> = my_spec.map(|s| s.nodes.iter().copied().collect());
@@ -509,9 +523,32 @@ pub fn tree_stage(
         TreeMode::New => stage.checked_sub(1).and_then(|i| guide.specs.get(i)),
         TreeMode::Character => my_spec,
     };
+    let before_anointed = match mode {
+        TreeMode::Tree => now_anointed.clone(),
+        TreeMode::New => stage
+            .checked_sub(1)
+            .map(|i| items::anointed(layout, guide, guide.item_set_for(i)))
+            .unwrap_or_default(),
+        TreeMode::Character => character
+            .map(|c| items::anointed(layout, c, items::active_set(c)))
+            .unwrap_or_default(),
+    };
     let before: HashSet<u32> = before_spec
-        .map(|s| s.nodes.iter().copied().collect())
+        .map(|s| {
+            s.nodes
+                .iter()
+                .copied()
+                .chain(before_anointed.iter().copied())
+                .collect()
+        })
         .unwrap_or_default();
+    let anointed = |id: u32| {
+        if now.contains(&id) {
+            now_anointed.contains(&id)
+        } else {
+            before_anointed.contains(&id)
+        }
+    };
     let effect = |id: u32| {
         let pick = |s: Option<&exile_pob::TreeSpec>| {
             s?.mastery_effects
@@ -546,6 +583,8 @@ pub fn tree_stage(
             effect: (n.kind == NodeKind::Mastery)
                 .then(|| effect(n.id))
                 .flatten(),
+            anointed: anointed(n.id),
+            tattoo: items::tattoo(spec, n.id).or_else(|| items::tattoo(before_spec, n.id)),
         });
         if let Some(asc) = &n.ascendancy {
             if !ascendancies.contains(asc) {
@@ -562,7 +601,7 @@ pub fn tree_stage(
             }
             continue;
         }
-        if mark != Mark::Extra {
+        if mark != Mark::Extra && !anointed(n.id) {
             points += 1;
             notables += usize::from(n.kind == NodeKind::Notable);
         }
@@ -629,6 +668,7 @@ pub fn tree_stage(
         missing: missing_ids.len(),
         missing_names: Vec::new(),
         missing_ids,
+        jewels: items::jewels(layout, guide, spec),
     }
 }
 
@@ -950,6 +990,64 @@ mod tests {
         let s = tree_stage(&layout(), &guide(), 1, Some(&same), TreeMode::Character);
         assert_eq!(s.character_version, None);
         assert_eq!(s.missing, 0);
+    }
+
+    #[test]
+    fn marks_anoints_tattoos_and_jewel_areas() {
+        let mut g = guide();
+        g.specs[0].sockets = vec![(13, 1)];
+        g.specs[0].overrides = vec![exile_pob::NodeOverride {
+            node: 10,
+            name: "Tattoo of the Kitava Shaman".into(),
+            stats: vec!["Attacks have 5% chance to cause Bleeding".into()],
+        }];
+        g.items = vec![
+            exile_pob::Item {
+                id: 1,
+                text: "Rarity: UNIQUE\nImpossible Escape\nViridian Jewel\nRadius: Small\nImplicits: 0\nPassive Skills in radius of Iron Reflexes can be allocated without being connected to your tree".into(),
+            },
+            exile_pob::Item {
+                id: 2,
+                text: "Rarity: RARE\nGale Pendant\nOnyx Amulet\nImplicits: 1\n{crafted}Allocates Heart".into(),
+            },
+        ];
+        g.item_sets = vec![exile_pob::ItemSet {
+            id: Some(3),
+            title: Some("Level 1-12".into()),
+            slots: vec![("Amulet".into(), 2)],
+        }];
+
+        let s = tree_stage(&layout(), &g, 0, None, TreeMode::Tree);
+        let heart = s.nodes.iter().find(|n| n.id == 11).unwrap();
+        assert!(heart.anointed);
+        assert_eq!(heart.mark, Mark::Taken);
+        // Strength and the socket, not the anointed Heart.
+        assert_eq!(s.points, 2);
+        let tattooed = s.nodes.iter().find(|n| n.id == 10).unwrap();
+        assert_eq!(
+            tattooed.tattoo.as_ref().map(|t| t.name.as_str()),
+            Some("Tattoo of the Kitava Shaman")
+        );
+        assert_eq!(s.jewels.len(), 1);
+        let jewel = &s.jewels[0];
+        assert_eq!(jewel.item.name, "Impossible Escape");
+        assert_eq!((jewel.socket, jewel.centre), (13, 20));
+        assert_eq!(jewel.radius, Some(960.));
+        assert!(jewel.without_path);
+
+        // The next stage takes Heart with a point instead.
+        let s = tree_stage(&layout(), &g, 1, None, TreeMode::New);
+        let heart = s.nodes.iter().find(|n| n.id == 11).unwrap();
+        assert!(!heart.anointed);
+        assert_eq!(heart.mark, Mark::Taken);
+    }
+
+    #[test]
+    fn jewel_radii_grew_in_3_16() {
+        assert_eq!(jewel_radius("Large", Some("3_29")), Some(1800.));
+        assert_eq!(jewel_radius("Large", Some("3_15")), Some(1500.));
+        assert_eq!(jewel_radius("Large", None), Some(1800.));
+        assert_eq!(jewel_radius("Variable", Some("3_29")), None);
     }
 
     #[test]
