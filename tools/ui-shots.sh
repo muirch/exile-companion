@@ -61,7 +61,19 @@ for t in tree:window=tree tree-new:window=tree\&mode=new tree-character:window=t
   tree-bloodline:window=tree\&stage=11 tree-list:window=tree\&stage=11\&list \
   tree-folded:window=tree\&stage=11\&folded=Guardian; do
   stage "${t%%:*}" "${t#*:}" 632 540
-  shot "${t%%:*}" "file://$OUT/.stage-${t%%:*}.html" 700 580 8000
+  # Headless Chrome sometimes shoots before the big mock tree has loaded, and an empty window
+  # compresses smaller than a drawn one. Keep the biggest of a few tries, stop at a full tree.
+  best=0
+  for _ in 1 2 3 4; do
+    shot try "file://$OUT/.stage-${t%%:*}.html" 700 580 15000
+    size=$(stat -c %s "$OUT/try.png")
+    if [ "$size" -gt "$best" ]; then
+      best=$size
+      mv "$OUT/try.png" "$OUT/${t%%:*}.png"
+    fi
+    [ "$best" -gt 120000 ] && break
+  done
+  rm -f "$OUT/try.png"
 done
 shot settings "$URL/?window=settings" 560 2300
 
