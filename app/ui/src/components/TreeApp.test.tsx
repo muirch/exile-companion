@@ -1,4 +1,4 @@
-import { act, fireEvent, render, screen, within } from '@testing-library/react';
+import { act, fireEvent, render, screen, waitFor, within } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import { afterAll, beforeAll, beforeEach, describe, expect, it, vi } from 'vitest';
 
@@ -155,16 +155,27 @@ const marks = (): Record<string, string | null> =>
   );
 
 // Moves the pointer onto a node of the main tree, from where the fitted view put it.
-function hoverNode(id: number): void {
+// Where a node of the main tree is in the box: the layer is drawn past the box's edges, so it
+// starts left of and above it.
+function nodeOnScreen(id: number): { x: number; y: number } {
   const svg = screen.getByTestId('tree');
   const node = svg.querySelector(`[data-node="${id}"] circle`)!;
   const [vx, vy, vw] = svg.getAttribute('viewBox')!.split(' ').map(Number);
-  const scale = 600 / vw;
+  const scale = Number(svg.getAttribute('width')) / vw;
+  const layer = screen.getByTestId('tree-layer');
+  return {
+    x: (Number(node.getAttribute('cx')) - vx) * scale + parseFloat(layer.style.left),
+    y: (Number(node.getAttribute('cy')) - vy) * scale + parseFloat(layer.style.top),
+  };
+}
+
+// How much of the tree the drawn layer spans, in tree units. Zooming in makes it smaller.
+const viewWidth = (): number => Number(screen.getByTestId('tree').getAttribute('viewBox')!.split(' ')[2]);
+
+function hoverNode(id: number): void {
+  const at = nodeOnScreen(id);
   act(() => {
-    fireEvent.pointerMove(screen.getByTestId('tree-box'), {
-      clientX: (Number(node.getAttribute('cx')) - vx) * scale,
-      clientY: (Number(node.getAttribute('cy')) - vy) * scale,
-    });
+    fireEvent.pointerMove(screen.getByTestId('tree-box'), { clientX: at.x, clientY: at.y });
   });
 }
 
@@ -308,6 +319,40 @@ describe('TreeApp', () => {
     expect(within(list).getByText('Converts all Evasion Rating to Armour')).toHaveClass('text-magic');
     expect(within(list).getByText('Life Mastery')).toBeInTheDocument();
     expect(within(list).getByText('Regenerate 1% of Life per second')).toBeInTheDocument();
+  });
+
+  it('moves the drawn tree while dragging and draws it once at the end', async () => {
+    render(<TreeApp />);
+    await screen.findByTestId('tree');
+    const box = screen.getByTestId('tree-box');
+    const layer = screen.getByTestId('tree-layer');
+    const before = nodeOnScreen(11);
+    const viewBox = screen.getByTestId('tree').getAttribute('viewBox');
+    fireEvent.pointerDown(box, { clientX: 100, clientY: 100 });
+    fireEvent.pointerMove(box, { clientX: 140, clientY: 90 });
+    // Nothing is drawn again while the pointer moves, the layer just follows it.
+    expect(layer.style.transform).toContain('translate(40px, -10px)');
+    expect(screen.getByTestId('tree').getAttribute('viewBox')).toBe(viewBox);
+    act(() => {
+      fireEvent.pointerUp(box);
+    });
+    expect(layer.style.transform).toBe('');
+    const after = nodeOnScreen(11);
+    expect(after.x - before.x).toBeCloseTo(40);
+    expect(after.y - before.y).toBeCloseTo(-10);
+  });
+
+  it('zooms with a transform first and draws the zoom a moment later', async () => {
+    render(<TreeApp />);
+    await screen.findByTestId('tree');
+    const box = screen.getByTestId('tree-box');
+    const layer = screen.getByTestId('tree-layer');
+    const before = viewWidth();
+    fireEvent.wheel(box, { deltaY: -200, clientX: 300, clientY: 200 });
+    expect(layer.style.transform).toContain('scale(');
+    expect(viewWidth()).toBe(before);
+    await waitFor(() => expect(layer.style.transform).toBe(''));
+    expect(viewWidth()).toBeLessThan(before);
   });
 
   it('opens a card with the node and the stage that takes it', async () => {

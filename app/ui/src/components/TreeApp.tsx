@@ -7,16 +7,22 @@ import type { Mark, NodeKind, TreeLayout, TreeMode, TreeNode, TreePrefs, TreeSta
 import { Button, Choice, Select } from '../kit';
 import { Brand } from './Tooltip';
 import {
+  applyPending,
   bounds,
   circlesPath,
+  clampFactor,
   edgePath,
   fit,
   nodeAt,
+  outrunsOverscan,
+  overscan,
   panBy,
+  pendingTransform,
   placeLabels,
   RADIUS,
   toScreen,
   zoomAt,
+  type Pending,
   type View,
 } from './treeView';
 
@@ -487,6 +493,10 @@ function TreeCanvas({
   const [moved, setMoved] = useState<View | null>(null);
   const [hover, setHover] = useState<Hover | null>(() => mockHover(layout, stage));
   const drag = useRef<{ x: number; y: number; moved: boolean } | null>(null);
+  const layer = useRef<HTMLDivElement>(null);
+  // A drag or zoom in progress, shown by moving the drawn layer. It's drawn for real at the end.
+  const pending = useRef<Pending | null>(null);
+  const zoomTimer = useRef<ReturnType<typeof setTimeout> | undefined>(undefined);
 
   const byId = useMemo(() => new Map(layout.nodes.map((n) => [n.id, n])), [layout]);
   const marks = useMemo(() => new Map(stage.nodes.map((n) => [n.id, n])), [stage]);
@@ -520,6 +530,34 @@ function TreeCanvas({
     setMoved(v);
     setHover(null);
   };
+  const pad = overscan(size.w, size.h);
+  // Pointer events can come between a commit and the render that draws it, so they read this.
+  const latest = useRef(view);
+  latest.current = view;
+
+  // The new view is drawn by now, so the layer can drop the transform that stood in for it.
+  useLayoutEffect(() => {
+    if (layer.current && !pending.current) layer.current.style.transform = '';
+  }, [view]);
+
+  useEffect(() => () => clearTimeout(zoomTimer.current), []);
+
+  const show = (p: Pending): void => {
+    pending.current = p;
+    if (layer.current) layer.current.style.transform = pendingTransform(p, pad);
+    setHover(null);
+    if (outrunsOverscan(p, size.w, size.h, pad)) commit();
+  };
+
+  function commit(): void {
+    clearTimeout(zoomTimer.current);
+    const p = pending.current;
+    pending.current = null;
+    if (!p || !latest.current) return;
+    const next = applyPending(latest.current, p);
+    latest.current = next;
+    setView(next);
+  }
 
   useEffect(() => {
     if (!view) return;
@@ -556,12 +594,25 @@ function TreeCanvas({
   const onWheel = (e: React.WheelEvent): void => {
     if (!view) return;
     const p = point(e);
-    setView(zoomAt(view, Math.pow(1.0015, -e.deltaY), p.x, p.y));
+    const was = pending.current;
+    // A zoom keeps its pivot, so moving the pointer between wheel turns starts a new one.
+    if (was && (was.dx || was.dy || Math.hypot(was.px - p.x, was.py - p.y) > 2)) commit();
+    const base = latest.current ?? view;
+    const k = clampFactor(base, (pending.current?.k ?? 1) * Math.pow(1.0015, -e.deltaY));
+    show({ dx: 0, dy: 0, k, px: p.x, py: p.y });
+    clearTimeout(zoomTimer.current);
+    zoomTimer.current = setTimeout(commit, 150);
   };
 
   const onPointerDown = (e: React.PointerEvent): void => {
+    if (pending.current) commit();
     drag.current = { ...point(e), moved: false };
     e.currentTarget.setPointerCapture?.(e.pointerId);
+  };
+
+  const onPointerUp = (): void => {
+    if (drag.current?.moved) commit();
+    drag.current = null;
   };
 
   const onPointerMove = (e: React.PointerEvent): void => {
@@ -569,10 +620,16 @@ function TreeCanvas({
     const p = point(e);
     const d = drag.current;
     if (d && (d.moved || Math.hypot(p.x - d.x, p.y - d.y) > 3)) {
-      setView(panBy(view, p.x - d.x, p.y - d.y));
-      drag.current = { ...p, moved: true };
+      d.moved = true;
+      show({ dx: p.x - d.x, dy: p.y - d.y, k: 1, px: 0, py: 0 });
+      // Drawn again past the overscan, so the drag goes on from here.
+      if (!pending.current) {
+        d.x = p.x;
+        d.y = p.y;
+      }
       return;
     }
+    if (pending.current) return;
     const n = nodeAt(hoverable, view, p.x, p.y);
     if (!n) setHover(null);
     else if (n.id !== hover?.node.id) setHover({ node: n });
@@ -587,20 +644,26 @@ function TreeCanvas({
       )
       .map(({ m, n }) => {
         const s = toScreen(view, n!.x, n!.y);
-        return { id: m.id, text: n!.name, x: s.x, y: s.y, r: RADIUS[n!.kind] * view.scale, mark: m.mark, kind: n!.kind };
+        const at = { x: s.x + pad, y: s.y + pad };
+        return { id: m.id, text: n!.name, ...at, r: RADIUS[n!.kind] * view.scale, mark: m.mark, kind: n!.kind };
       });
     // What's still to take and keystones win the room first.
     const rank = (l: (typeof wanted)[number]): number => (l.mark === 'added' ? 0 : 2) + (l.kind === 'keystone' ? 0 : 1);
+    // Placed over the overscan too, so labels come along with a drag.
     const placed = placeLabels(
       [0, 1, 2, 3].flatMap((r) => wanted.filter((l) => rank(l) === r)),
-      treeW,
-      size.h,
+      treeW + 2 * pad,
+      size.h + 2 * pad,
     );
     return placed;
-  }, [view, stage, byId, treeW, size.h]);
+  }, [view, stage, byId, treeW, size.h, pad]);
 
   const px = (v: number): number => (view ? v / view.scale : v);
-  const viewBox = view ? `${view.x} ${view.y} ${size.w / view.scale} ${size.h / view.scale}` : '0 0 1 1';
+  const layerW = size.w + 2 * pad;
+  const layerH = size.h + 2 * pad;
+  const viewBox = view
+    ? `${view.x - pad / view.scale} ${view.y - pad / view.scale} ${layerW / view.scale} ${layerH / view.scale}`
+    : '0 0 1 1';
   const hovered = hover ? marks.get(hover.node.id) : undefined;
   const boxes = insetBoxes(stage.ascendancies, prefs.folded, size.h);
   const fold = (name: string): void => {
@@ -627,47 +690,54 @@ function TreeCanvas({
       onWheel={onWheel}
       onPointerDown={onPointerDown}
       onPointerMove={onPointerMove}
-      onPointerUp={() => (drag.current = null)}
+      onPointerUp={onPointerUp}
       onPointerLeave={() => !drag.current && setHover(null)}
     >
-      {view && (
-        <svg className="absolute inset-0" width={size.w} height={size.h} viewBox={viewBox} data-testid="tree">
-          <Edges paths={paths} px={px} />
-          <path d={offNodes} fill={OFF_NODE} stroke={OFF_RING} strokeWidth={px(1)} />
-          {offJewels.map((n) => (
-            <rect
-              key={n.id}
-              x={n.x - RADIUS.jewel}
-              y={n.y - RADIUS.jewel}
-              width={RADIUS.jewel * 2}
-              height={RADIUS.jewel * 2}
-              transform={`rotate(45 ${n.x} ${n.y})`}
-              fill={OFF_NODE}
-              stroke={OFF_RING}
-              strokeWidth={px(1)}
-            />
-          ))}
-          {stage.nodes.map((m) => {
-            const n = byId.get(m.id);
-            return n && !n.ascendancy ? <MarkedNode key={m.id} n={n} mark={m.mark} px={px} /> : null;
-          })}
-          {hover && !hover.node.ascendancy && (
-            <circle cx={hover.node.x} cy={hover.node.y} r={RADIUS[hover.node.kind] + px(5)} fill="none" stroke="var(--color-value)" strokeWidth={px(1)} />
-          )}
-        </svg>
-      )}
-      {labels.map((l) => (
-        <span
-          key={l.id}
-          aria-hidden="true"
-          className={`tree-label pointer-events-none absolute font-caps text-[12px] leading-none whitespace-nowrap ${
-            l.mark === 'added' ? 'text-quest' : 'text-plain'
-          }`}
-          style={{ top: l.y - 6, ...(l.anchor === 'start' ? { left: l.tx } : { right: size.w - l.tx }) }}
-        >
-          {l.text}
-        </span>
-      ))}
+      <div
+        ref={layer}
+        data-testid="tree-layer"
+        className="pointer-events-none absolute origin-top-left will-change-transform"
+        style={{ left: -pad, top: -pad, width: layerW, height: layerH }}
+      >
+        {view && (
+          <svg className="absolute inset-0" width={layerW} height={layerH} viewBox={viewBox} data-testid="tree">
+            <Edges paths={paths} px={px} />
+            <path d={offNodes} fill={OFF_NODE} stroke={OFF_RING} strokeWidth={px(1)} />
+            {offJewels.map((n) => (
+              <rect
+                key={n.id}
+                x={n.x - RADIUS.jewel}
+                y={n.y - RADIUS.jewel}
+                width={RADIUS.jewel * 2}
+                height={RADIUS.jewel * 2}
+                transform={`rotate(45 ${n.x} ${n.y})`}
+                fill={OFF_NODE}
+                stroke={OFF_RING}
+                strokeWidth={px(1)}
+              />
+            ))}
+            {stage.nodes.map((m) => {
+              const n = byId.get(m.id);
+              return n && !n.ascendancy ? <MarkedNode key={m.id} n={n} mark={m.mark} px={px} /> : null;
+            })}
+            {hover && !hover.node.ascendancy && (
+              <circle cx={hover.node.x} cy={hover.node.y} r={RADIUS[hover.node.kind] + px(5)} fill="none" stroke="var(--color-value)" strokeWidth={px(1)} />
+            )}
+          </svg>
+        )}
+        {labels.map((l) => (
+          <span
+            key={l.id}
+            aria-hidden="true"
+            className={`tree-label pointer-events-none absolute font-caps text-[12px] leading-none whitespace-nowrap ${
+              l.mark === 'added' ? 'text-quest' : 'text-plain'
+            }`}
+            style={{ top: l.y - 6, ...(l.anchor === 'start' ? { left: l.tx } : { right: layerW - l.tx }) }}
+          >
+            {l.text}
+          </span>
+        ))}
+      </div>
       {stage.ascendancies.map((name, i) =>
         boxes[i].top < 0 ? null : (
           <AscendancyMap

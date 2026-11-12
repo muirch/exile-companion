@@ -1,7 +1,19 @@
 import { describe, expect, it } from 'vitest';
 
 import type { TreeNode } from '../ipc/types';
-import { bounds, edgePath, fit, nodeAt, panBy, placeLabels, toScreen, zoomAt } from './treeView';
+import {
+  applyPending,
+  bounds,
+  edgePath,
+  fit,
+  nodeAt,
+  outrunsOverscan,
+  panBy,
+  pendingTransform,
+  placeLabels,
+  toScreen,
+  zoomAt,
+} from './treeView';
 
 const node = (id: number, x: number, y: number, kind: TreeNode['kind'] = 'normal'): TreeNode => ({
   id,
@@ -67,6 +79,41 @@ describe('tree view', () => {
       [1, 'start'],
       [3, 'end'],
     ]);
+  });
+
+  it('lands where the transform showed it, after a drag or a zoom', () => {
+    const v = { x: -500, y: -300, scale: 0.1 };
+    const tree = { x: 400, y: 200 };
+    const before = toScreen(v, tree.x, tree.y);
+    // The CSS transform moves a box point s to d + o + k (s - o), with o the pivot.
+    const shown = (p: { dx: number; dy: number; k: number; px: number; py: number }) => ({
+      x: p.dx + p.px + p.k * (before.x - p.px),
+      y: p.dy + p.py + p.k * (before.y - p.py),
+    });
+    for (const p of [
+      { dx: 37, dy: -12, k: 1, px: 0, py: 0 },
+      { dx: 0, dy: 0, k: 1.6, px: 120, py: 80 },
+      { dx: 0, dy: 0, k: 0.5, px: 300, py: 10 },
+    ]) {
+      const after = toScreen(applyPending(v, p), tree.x, tree.y);
+      expect(after.x).toBeCloseTo(shown(p).x);
+      expect(after.y).toBeCloseTo(shown(p).y);
+    }
+  });
+
+  it('builds the transform around the pivot on the overscanned layer', () => {
+    expect(pendingTransform({ dx: 5, dy: 6, k: 2, px: 10, py: 20 }, 100)).toBe(
+      'translate(5px, 6px) translate(110px, 120px) scale(2) translate(-110px, -120px)',
+    );
+  });
+
+  it('draws again before a drag or a zoom out runs past what is drawn ahead', () => {
+    const pad = 600;
+    expect(outrunsOverscan({ dx: 300, dy: 0, k: 1, px: 0, py: 0 }, 600, 400, pad)).toBe(false);
+    expect(outrunsOverscan({ dx: 400, dy: 0, k: 1, px: 0, py: 0 }, 600, 400, pad)).toBe(true);
+    expect(outrunsOverscan({ dx: 0, dy: 0, k: 0.8, px: 0, py: 0 }, 600, 400, pad)).toBe(false);
+    expect(outrunsOverscan({ dx: 0, dy: 0, k: 0.4, px: 0, py: 0 }, 600, 400, pad)).toBe(true);
+    expect(outrunsOverscan({ dx: 0, dy: 0, k: 3, px: 0, py: 0 }, 600, 400, pad)).toBe(false);
   });
 
   it('bounds the whole tree when nothing is marked', () => {

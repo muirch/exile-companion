@@ -56,6 +56,50 @@ export function zoomAt(v: View, factor: number, px: number, py: number): View {
   return { x: tx - px / scale, y: ty - py / scale, scale };
 }
 
+/**
+ * A pan or zoom the tree shows by moving what's already drawn with a CSS transform, so a drag
+ * costs no drawing. `dx`, `dy` move it, `k` scales it around (`px`, `py`) in the box.
+ */
+export interface Pending {
+  dx: number;
+  dy: number;
+  k: number;
+  px: number;
+  py: number;
+}
+
+/**
+ * How far past each edge of a `w` by `h` box the tree is drawn, in screen pixels. A drag or a
+ * zoom out shows that part at once, so the player never sees empty ground while moving.
+ */
+export const overscan = (w: number, h: number): number => Math.max(w, h);
+
+/** The part of a zoom by `k` the view can still take, so the transform stops where the zoom will. */
+export function clampFactor(v: View, k: number): number {
+  return clampScale(v.scale * k) / v.scale;
+}
+
+/** The CSS transform for `p`, on a layer that starts `pad` pixels left of and above the box. */
+export function pendingTransform(p: Pending, pad: number): string {
+  const ox = p.px + pad;
+  const oy = p.py + pad;
+  return `translate(${p.dx}px, ${p.dy}px) translate(${ox}px, ${oy}px) scale(${p.k}) translate(${-ox}px, ${-oy}px)`;
+}
+
+/** Where the view lands once `p` is drawn for real. */
+export function applyPending(v: View, p: Pending): View {
+  const zoomed = p.k === 1 ? v : zoomAt(v, p.k, p.px, p.py);
+  return p.dx || p.dy ? panBy(zoomed, p.dx, p.dy) : zoomed;
+}
+
+/** Whether `p` is close to showing the edge of what's drawn ahead, so it's time to draw again. */
+export function outrunsOverscan(p: Pending, w: number, h: number, pad: number): boolean {
+  if (Math.abs(p.dx) > pad * 0.6 || Math.abs(p.dy) > pad * 0.6) return true;
+  // Zoomed out by k, the box shows 1 / k as much of the layer, most of it on the far side of
+  // the pointer at worst.
+  return p.k < 1 && Math.max(w, h) * (1 / p.k - 1) > pad * 0.9;
+}
+
 export function panBy(v: View, dx: number, dy: number): View {
   return { ...v, x: v.x - dx / v.scale, y: v.y - dy / v.scale };
 }
