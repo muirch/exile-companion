@@ -50,6 +50,8 @@ export interface Links {
   sets: string[];
   set: number;
   groups: LinkGroup[];
+  /** The items the stage wears, in slot order. */
+  gear: { slot: string; item: ItemView }[];
 }
 
 /** Mirrors `exile_core::tree`: PoB's passive tree and what a guide's stage marks on it. */

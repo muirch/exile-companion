@@ -1,10 +1,11 @@
-import { useCallback, useEffect, useRef, useState } from 'react';
+import { useCallback, useEffect, useLayoutEffect, useRef, useState } from 'react';
 
 import { closeGems, getLinks, getNotes } from '../ipc/commands';
 import { isTauri } from '../ipc/env';
 import { onGemsOpened } from '../ipc/events';
 import type { GemColor, LinkGem, LinkGroup, Links } from '../ipc/types';
 import { Button, Choice, Select } from '../kit';
+import { ItemText, itemTitle, RARITY } from './ItemText';
 import { Brand } from './Tooltip';
 
 const COLOR: Record<GemColor, string> = {
@@ -152,10 +153,85 @@ function Notes({ notes }: { notes: string | null | undefined }): React.JSX.Eleme
   );
 }
 
-const TABS = [
-  { value: 'gems' as const, label: 'Gems' },
-  { value: 'notes' as const, label: 'Notes' },
+type Tab = 'gems' | 'items' | 'notes';
+
+const TABS: { value: Tab; label: string }[] = [
+  { value: 'gems', label: 'Gems' },
+  { value: 'items', label: 'Items' },
+  { value: 'notes', label: 'Notes' },
 ];
+
+const GEAR_CARD_ID = 'gear-card';
+
+
+/** The stage's gear by slot. Hovering or focusing one opens the item as the game shows it. */
+function GearList({ gear }: { gear: Links['gear'] }): React.JSX.Element {
+  const box = useRef<HTMLDivElement>(null);
+  const card = useRef<HTMLDivElement>(null);
+  const [shown, setShown] = useState<{ i: number; el: HTMLElement } | null>(null);
+
+  // Under the row, or above it when the card would run past the window's bottom. Placed after
+  // layout, since an item's card is as tall as its mods.
+  useLayoutEffect(() => {
+    const b = box.current;
+    const c = card.current;
+    if (!shown || !b || !c) return;
+    const line = shown.el.getBoundingClientRect();
+    const top = line.top - b.getBoundingClientRect().top + b.scrollTop;
+    const below = top + line.height + 4;
+    const fits = below + c.offsetHeight <= b.scrollTop + b.clientHeight;
+    c.style.top = `${fits ? below : Math.max(b.scrollTop, top - c.offsetHeight - 4)}px`;
+  }, [shown]);
+
+  useEffect(() => {
+    if (!isTauri() && new URLSearchParams(window.location.search).has('hover')) {
+      box.current?.querySelector<HTMLElement>('[role="button"]')?.focus();
+    }
+  }, []);
+
+  const show = (i: number | null, el: HTMLElement | null): void => setShown(i === null || !el ? null : { i, el });
+  return (
+    <div ref={box} className="chat-scroll relative min-h-0 flex-1 overflow-y-auto px-3 py-3">
+      {gear.length === 0 ? (
+        <p className="font-body text-[13px] text-label italic">The guide has no gear for this stage.</p>
+      ) : (
+        <ul className="flex flex-col gap-2">
+          {gear.map((g, i) => {
+            const { name, base } = itemTitle(g.item);
+            return (
+              <li key={`${g.slot}-${i}`} className="flex flex-col">
+                <span className="font-body text-[11px] text-label">{g.slot}</span>
+                <span
+                  role="button"
+                  tabIndex={0}
+                  aria-describedby={shown?.i === i ? GEAR_CARD_ID : undefined}
+                  className={`min-w-0 cursor-default truncate font-caps text-[14px] hover:bg-white/6 focus-visible:bg-white/6 focus-visible:outline-none ${RARITY[g.item.rarity]}`}
+                  onMouseEnter={(e) => show(i, e.currentTarget)}
+                  onMouseLeave={() => show(null, null)}
+                  onFocus={(e) => show(i, e.currentTarget)}
+                  onBlur={() => show(null, null)}
+                >
+                  {name}
+                  {base && <span className="text-[13px]">, {base}</span>}
+                </span>
+              </li>
+            );
+          })}
+        </ul>
+      )}
+      {shown && gear[shown.i] && (
+        <div
+          ref={card}
+          id={GEAR_CARD_ID}
+          role="tooltip"
+          className="pointer-events-none absolute right-3 left-3 z-10 border border-edge bg-[#050505] px-3 py-2"
+        >
+          <ItemText item={gear[shown.i].item} />
+        </div>
+      )}
+    </div>
+  );
+}
 
 function GemCard({ gem, top }: { gem: LinkGem; top: number }): React.JSX.Element {
   const level = gemLevel(gem);
@@ -219,9 +295,10 @@ function GemLine({
 export function GemsApp(): React.JSX.Element {
   const [links, setLinks] = useState<Links | null>(null);
   const [hover, setHover] = useState<{ gem: LinkGem; top: number } | null>(null);
-  const [tab, setTab] = useState<'gems' | 'notes'>(() =>
-    !isTauri() && new URLSearchParams(window.location.search).has('notes') ? 'notes' : 'gems',
-  );
+  const [tab, setTab] = useState<Tab>(() => {
+    const q = isTauri() ? null : new URLSearchParams(window.location.search);
+    return q?.has('notes') ? 'notes' : q?.has('items') ? 'items' : 'gems';
+  });
   const [notes, setNotes] = useState<string | null | undefined>(undefined);
   const body = useRef<HTMLDivElement>(null);
 
@@ -311,52 +388,56 @@ export function GemsApp(): React.JSX.Element {
               onChange={(v) => load(Number(v))}
             />
           </div>
-          <div ref={body} className="chat-scroll relative min-h-0 flex-1 overflow-y-auto px-3 py-3">
-            {links.groups.length === 0 && (
-              <p className="font-body text-[13px] text-label italic">No gems in this stage.</p>
-            )}
-            {blocks(links.groups).map((b, bi, all) => {
-              const prev = all[bi - 1];
-              // Slots and headings get a separator. Groups without a slot only a gap.
-              const sep = bi > 0 && (b.kind === 'heading' || b.slot !== null || (prev.kind === 'groups' && prev.slot !== null));
-              if (b.kind === 'heading') {
-                return (
-                  <div key={bi}>
-                    {sep && <div className="tooltip-sep my-2.5" style={SEP} />}
-                    <h2 className="font-caps text-[13px] text-value">{b.text}</h2>
-                  </div>
-                );
-              }
-              return (
-              <section
-                key={bi}
-                className={`lazy-row flex flex-col [contain-intrinsic-size:auto_90px] ${bi > 0 && !sep ? 'mt-2' : ''}`}
-                aria-label={b.slot ?? b.groups[0].gems[0]?.name}
-              >
-                {sep && <div className="tooltip-sep my-2.5" style={SEP} />}
-                {b.slot && <p className="font-body text-[11px] text-label">{b.slot}</p>}
-                {b.groups.map((g, gi) => {
-                  const lines = connectors(g.gems);
+          {tab === 'items' ? (
+            <GearList gear={links.gear} />
+          ) : (
+            <div ref={body} className="chat-scroll relative min-h-0 flex-1 overflow-y-auto px-3 py-3">
+              {links.groups.length === 0 && (
+                <p className="font-body text-[13px] text-label italic">No gems in this stage.</p>
+              )}
+              {blocks(links.groups).map((b, bi, all) => {
+                const prev = all[bi - 1];
+                // Slots and headings get a separator. Groups without a slot only a gap.
+                const sep = bi > 0 && (b.kind === 'heading' || b.slot !== null || (prev.kind === 'groups' && prev.slot !== null));
+                if (b.kind === 'heading') {
                   return (
-                    <ul key={gi} className={`flex flex-col ${gi > 0 ? 'mt-1.5' : ''}`}>
-                      {g.label && <li className="font-body text-[12px] leading-snug text-plain italic">{g.label}</li>}
-                      {g.gems.map((gem, i) => (
-                        <GemLine
-                          key={`${gem.name}-${i}`}
-                          gem={gem}
-                          connector={lines[i]}
-                          shown={hover?.gem === gem}
-                          onHover={onHover}
-                        />
-                      ))}
-                    </ul>
+                    <div key={bi}>
+                      {sep && <div className="tooltip-sep my-2.5" style={SEP} />}
+                      <h2 className="font-caps text-[13px] text-value">{b.text}</h2>
+                    </div>
                   );
-                })}
-              </section>
-              );
-            })}
-            {hover && <GemCard gem={hover.gem} top={hover.top} />}
-          </div>
+                }
+                return (
+                <section
+                  key={bi}
+                  className={`lazy-row flex flex-col [contain-intrinsic-size:auto_90px] ${bi > 0 && !sep ? 'mt-2' : ''}`}
+                  aria-label={b.slot ?? b.groups[0].gems[0]?.name}
+                >
+                  {sep && <div className="tooltip-sep my-2.5" style={SEP} />}
+                  {b.slot && <p className="font-body text-[11px] text-label">{b.slot}</p>}
+                  {b.groups.map((g, gi) => {
+                    const lines = connectors(g.gems);
+                    return (
+                      <ul key={gi} className={`flex flex-col ${gi > 0 ? 'mt-1.5' : ''}`}>
+                        {g.label && <li className="font-body text-[12px] leading-snug text-plain italic">{g.label}</li>}
+                        {g.gems.map((gem, i) => (
+                          <GemLine
+                            key={`${gem.name}-${i}`}
+                            gem={gem}
+                            connector={lines[i]}
+                            shown={hover?.gem === gem}
+                            onHover={onHover}
+                          />
+                        ))}
+                      </ul>
+                    );
+                  })}
+                </section>
+                );
+              })}
+              {hover && <GemCard gem={hover.gem} top={hover.top} />}
+            </div>
+          )}
         </>
       )}
     </div>

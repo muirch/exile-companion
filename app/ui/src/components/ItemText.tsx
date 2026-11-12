@@ -25,8 +25,15 @@ const TONE: Record<ItemView['mods'][number]['kind'], string> = {
   fractured: 'text-fractured',
 };
 
+/** "Judgement Staff" for a rare the author left as PoB's "New Item", the name and base otherwise. */
+export function itemTitle(item: ItemView): { name: string; base: string | null } {
+  if (item.name === 'New Item' && item.base) return { name: item.base, base: null };
+  return { name: item.name, base: item.base };
+}
+
 /** An item the way the game's tooltip reads: name in its rarity colour, base, then the mods. */
 export function ItemText({ item }: { item: ItemView }): React.JSX.Element {
+  const { name, base } = itemTitle(item);
   const implicits = item.mods.filter((m) => m.kind === 'implicit' || m.kind === 'enchant');
   const rest = item.mods.filter((m) => m.kind !== 'implicit' && m.kind !== 'enchant');
   const facts = [
@@ -37,8 +44,8 @@ export function ItemText({ item }: { item: ItemView }): React.JSX.Element {
   ].filter(Boolean);
   return (
     <div className="flex flex-col gap-0.5" data-testid="item-text">
-      <p className={`font-caps text-[15px] leading-snug ${RARITY[item.rarity]}`}>{item.name}</p>
-      {item.base && <p className={`font-caps text-[13px] leading-snug ${RARITY[item.rarity]}`}>{item.base}</p>}
+      <p className={`font-caps text-[15px] leading-snug ${RARITY[item.rarity]}`}>{name}</p>
+      {base && <p className={`font-caps text-[13px] leading-snug ${RARITY[item.rarity]}`}>{base}</p>}
       {facts.length > 0 && <p className="font-body text-[12px] text-label">{facts.join(' · ')}</p>}
       {[implicits, rest].map(
         (mods, i) =>

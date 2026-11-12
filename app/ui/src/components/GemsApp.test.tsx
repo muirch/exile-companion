@@ -153,6 +153,32 @@ describe('GemsApp', () => {
     expect(screen.queryByRole('combobox', { name: 'Stage' })).toBeNull();
   });
 
+  it("shows the stage's gear on its tab, each item as the game shows it", async () => {
+    render(<GemsApp />);
+    await userEvent.click(await screen.findByRole('button', { name: 'Items' }));
+    expect(screen.getByRole('combobox', { name: 'Stage' })).toBeInTheDocument();
+    // PoB's "New Item" placeholder gives way to the base.
+    const staff = screen.getByRole('button', { name: 'Judgement Staff' });
+    expect(staff).toHaveClass('text-rare');
+    expect(screen.getByRole('button', { name: 'Bonemeld, Marble Amulet' })).toHaveClass('text-unique');
+    await userEvent.hover(staff);
+    const card = screen.getByRole('tooltip');
+    expect(card).not.toHaveTextContent('New Item');
+    expect(within(card).getByText('(25-27)% increased Critical Strike Chance')).toHaveClass('text-crafted');
+    expect(within(card).getByText('130% increased Physical Damage')).toHaveClass('text-magic');
+    expect(card).toHaveTextContent('Sockets B-B-B-B-B-B');
+    await userEvent.unhover(staff);
+    expect(screen.queryByRole('tooltip')).toBeNull();
+  });
+
+  it('says when the guide has no gear for the stage', async () => {
+    render(<GemsApp />);
+    await userEvent.click(await screen.findByRole('button', { name: 'Items' }));
+    await userEvent.click(screen.getByRole('combobox', { name: 'Stage' }));
+    await userEvent.click(screen.getByRole('option', { name: 'Level 1-12' }));
+    expect(await screen.findByText('The guide has no gear for this stage.')).toBeInTheDocument();
+  });
+
   it('says when the author wrote no notes', async () => {
     notes = null;
     render(<GemsApp />);

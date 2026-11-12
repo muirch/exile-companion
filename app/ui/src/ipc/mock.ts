@@ -296,6 +296,7 @@ function earlyLinks(): Links {
   return {
     sets: MOCK_SETS,
     set: 0,
+    gear: [],
     groups: [
       group('GET THESE GEMS FROM RANGER MULE', [
         mockGem('Frost Blades', 'green', false, 'From the Ranger mule'),
@@ -318,12 +319,74 @@ function earlyLinks(): Links {
   };
 }
 
+// From the Guardian guide's later gear sets.
+const MOCK_GEAR: Links['gear'] = [
+  {
+    slot: 'Weapon 1',
+    item: {
+      rarity: 'rare',
+      name: 'New Item',
+      base: 'Judgement Staff',
+      quality: 20,
+      sockets: 'B-B-B-B-B-B',
+      levelReq: 68,
+      radius: null,
+      corrupted: false,
+      mods: [
+        { text: '+25% Chance to Block Attack Damage', kind: 'implicit' },
+        { text: '130% increased Physical Damage', kind: 'explicit' },
+        { text: 'Adds 122 to 234 Fire Damage', kind: 'explicit' },
+        { text: '15% increased Attack Speed', kind: 'explicit' },
+        { text: '(25-27)% increased Critical Strike Chance', kind: 'crafted' },
+      ],
+    },
+  },
+  {
+    slot: 'Amulet',
+    item: {
+      rarity: 'unique',
+      name: 'Bonemeld',
+      base: 'Marble Amulet',
+      quality: null,
+      sockets: null,
+      levelReq: 74,
+      radius: null,
+      corrupted: false,
+      mods: [
+        { text: 'Allocates Death Attunement', kind: 'crafted' },
+        { text: 'Regenerate (1.2-1.6)% of Life per second', kind: 'implicit' },
+        { text: '+(10-20) to all Attributes', kind: 'explicit' },
+        { text: '+(1-2) to Level of all Minion Skill Gems', kind: 'explicit' },
+        { text: 'Minions gain added Resistances equal to 50% of your Resistances', kind: 'explicit' },
+      ],
+    },
+  },
+  {
+    slot: 'Flask 1',
+    item: {
+      rarity: 'magic',
+      name: 'Seething Divine Life Flask of Staunching',
+      base: null,
+      quality: 20,
+      sockets: null,
+      levelReq: null,
+      radius: null,
+      corrupted: false,
+      mods: [
+        { text: 'Instant Recovery when on Low Life', kind: 'explicit' },
+        { text: 'Grants Immunity to Bleeding for 6 seconds if used while Bleeding', kind: 'explicit' },
+      ],
+    },
+  },
+];
+
 export function linksMock(set: number | null): Links {
   const asked = typeof window === 'undefined' ? null : new URLSearchParams(window.location.search).get('set');
   if ((set ?? (asked === null ? 1 : Number(asked))) === 0) return earlyLinks();
   return {
     sets: MOCK_SETS,
     set: set ?? 1,
+    gear: MOCK_GEAR,
     groups: [
       {
         slot: 'Body Armour',
