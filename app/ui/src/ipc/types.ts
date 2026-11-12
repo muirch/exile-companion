@@ -309,13 +309,32 @@ export interface GemRow {
   over: GemOverride | null;
 }
 
+/** Mirrors `exile_core::character::Refreshed`: what refreshing the character changed. */
+export interface Refreshed {
+  /** Null on the first import. */
+  levelBefore: number | null;
+  level: number | null;
+  pointsBefore: number;
+  points: number;
+  newItems: string[];
+}
+
 /** Payload of `item://card`, mirrors `item::ItemCard`. */
 export type ItemCard =
   | { kind: 'measuring'; name: string }
   | ({ kind: 'gem' } & GemCard)
   | { kind: 'gear'; name: string; card: GearCard; needsLevel: number | null; guideGear: boolean }
   | { kind: 'missing'; name: string; message: string }
-  | { kind: 'ready'; level: number; gems: string[]; items: { name: string; slot: string; level: number }[] }
+  | { kind: 'refreshing'; name: string }
+  | { kind: 'refreshed'; name: string; refreshed: Refreshed }
+  | {
+      kind: 'ready';
+      level: number;
+      gems: string[];
+      items: { name: string; slot: string; level: number }[];
+      /** The imported character's level, said once every five levels it falls behind. */
+      stale: number | null;
+    }
   | { kind: 'kitava'; penalty: number; short: { element: string; after: number }[] }
   | { kind: 'next'; act: number; card: NextCard };
 

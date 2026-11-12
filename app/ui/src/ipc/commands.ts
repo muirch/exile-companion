@@ -292,6 +292,10 @@ export const listCharacters = (account: string): Promise<CharacterList> =>
 export const importCharacter = (account: string | null, character: string | null): Promise<Profile> =>
   isTauri() ? invoke('import_character', { account, character }) : Promise.resolve(mock.profileMock());
 
+/** Reads the imported character again. The overlay shows what changed on its card. */
+export const refreshCharacter = (): Promise<void> =>
+  isTauri() ? invoke('refresh_character') : Promise.resolve();
+
 export const clearBuild = (): Promise<void> => {
   if (isTauri()) return invoke('clear_build');
   mock.clearBuildMock();

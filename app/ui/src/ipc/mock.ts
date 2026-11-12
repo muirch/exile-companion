@@ -600,6 +600,21 @@ export function itemCardMock(): ItemCard | null {
       level: 12,
       gems: ['Sunder', 'Chance to Bleed Support'],
       items: [{ name: 'Doom Band, Sapphire Ring', slot: 'Ring 2', level: 12 }],
+      stale: null,
+    };
+  }
+  if (card === 'stale') return { kind: 'ready', level: 19, gems: [], items: [], stale: 14 };
+  if (card === 'refreshed') {
+    return {
+      kind: 'refreshed',
+      name: 'RealOne',
+      refreshed: {
+        levelBefore: 14,
+        level: 22,
+        pointsBefore: 16,
+        points: 24,
+        newItems: ['Glyph Coil, Leather Belt', 'Doom Band, Sapphire Ring', 'Seething Divine Life Flask', 'Iron Ring'],
+      },
     };
   }
   if (card !== 'gear') return null;

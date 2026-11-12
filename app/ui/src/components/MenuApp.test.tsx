@@ -60,4 +60,15 @@ describe('MenuApp', () => {
     await userEvent.keyboard('{ArrowUp}{ArrowUp}');
     expect(screen.getByRole('menuitem', { name: 'Quit Exile Companion' })).toHaveFocus();
   });
+
+  it('refreshes the imported character, and has no row without one', async () => {
+    const { unmount } = render(<MenuApp />);
+    expect(screen.queryByRole('menuitem', { name: /Refresh character/ })).toBeNull();
+    unmount();
+    vi.mocked(commands.getProfile).mockResolvedValue({ guide: null, character: null, link: { account: 'A#1', character: 'RealOne', realm: 'pc', imported: '' } });
+    render(<MenuApp />);
+    await userEvent.click(await screen.findByRole('menuitem', { name: /Refresh character/ }));
+    expect(screen.getByText('RealOne')).toBeInTheDocument();
+    expect(commands.refreshCharacter).toHaveBeenCalled();
+  });
 });

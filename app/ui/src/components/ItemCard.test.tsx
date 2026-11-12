@@ -2,7 +2,7 @@ import { render, screen } from '@testing-library/react';
 import { describe, expect, it } from 'vitest';
 
 import type { GearCard } from '../ipc/types';
-import { ItemCard, gearNumbers, resistLine } from './ItemCard';
+import { ItemCard, gearNumbers, refreshLine, resistLine } from './ItemCard';
 
 const GEAR: GearCard = {
   slot: 'Ring 1',
@@ -77,6 +77,7 @@ describe('ItemCard', () => {
           level: 16,
           gems: ['Herald of Ash', 'Onslaught'],
           items: [{ name: 'Death Song, Short Bow', slot: 'Weapon 1', level: 16 }],
+          stale: null,
         }}
       />,
     );
@@ -84,6 +85,32 @@ describe('ItemCard', () => {
     expect(screen.getByText('Usable now')).toBeInTheDocument();
     expect(screen.getByText('Herald of Ash · Onslaught')).toBeInTheDocument();
     expect(screen.getByText('Weapon 1')).toBeInTheDocument();
+  });
+
+  it('says on a level-up that the imported character is old', () => {
+    render(<ItemCard compact={false} card={{ kind: 'ready', level: 19, gems: [], items: [], stale: 14 }} />);
+    expect(screen.queryByText('Usable now')).toBeNull();
+    expect(screen.getByText(/Your build is from level 14/)).toBeInTheDocument();
+  });
+
+  it('says what refreshing the character changed', () => {
+    render(
+      <ItemCard
+        compact
+        card={{
+          kind: 'refreshed',
+          name: 'RealOne',
+          refreshed: { levelBefore: 14, level: 22, pointsBefore: 16, points: 24, newItems: ['A', 'B', 'C', 'D', 'E'] },
+        }}
+      />,
+    );
+    expect(screen.getByText('Character refreshed')).toBeInTheDocument();
+    expect(screen.getByText('Level 14 → 22 · 8 more passive points')).toBeInTheDocument();
+    expect(screen.getByText('New: A · B · C and 2 more')).toBeInTheDocument();
+    expect(refreshLine({ levelBefore: null, level: 22, pointsBefore: 0, points: 24, newItems: [] })).toBe('Imported at level 22');
+    expect(refreshLine({ levelBefore: 22, level: 22, pointsBefore: 24, points: 23, newItems: [] })).toBe(
+      'Still level 22 · 1 fewer passive point',
+    );
   });
 
   it('warns about resistances below the cap after Kitava', () => {
