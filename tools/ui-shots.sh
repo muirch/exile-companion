@@ -43,7 +43,7 @@ overlay overlay-unlocked "view=unlocked&edge=7"
 overlay overlay-compact "view=locked&edge=1&compact"
 overlay overlay-compact-boss "view=locked&edge=9&compact"
 overlay notice "view=notice"
-stage menu "window=menu" 236 399
+stage menu "window=menu" 236 432
 shot menu "file://$OUT/.stage-menu.html" 560 420
 for c in nokey empty answered history saved; do
   stage "chat-$c" "window=chat&chat=$c" 420 560

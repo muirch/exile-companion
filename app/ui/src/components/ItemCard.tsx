@@ -117,6 +117,38 @@ function Ready({ card }: { card: Extract<Card, { kind: 'ready' }> }): React.JSX.
           <span className="block text-[13px] text-plain">{i.slot}</span>
         </p>
       ))}
+      {card.stale != null && (
+        <p className="font-body text-[13px] leading-snug text-plain italic">
+          Your build is from level {card.stale}. Refresh character in the menu reads it again.
+        </p>
+      )}
+    </>
+  );
+}
+
+const MAX_NEW_ITEMS = 3;
+
+/** "Level 14 → 22 · 8 more passive points", or the level alone on the first import. */
+export function refreshLine(r: Extract<Card, { kind: 'refreshed' }>['refreshed']): string {
+  if (r.levelBefore == null) return r.level != null ? `Imported at level ${r.level}` : 'Imported';
+  const parts = [r.level === r.levelBefore ? `Still level ${r.level ?? '?'}` : `Level ${r.levelBefore} → ${r.level ?? '?'}`];
+  const points = r.points - r.pointsBefore;
+  if (points !== 0) parts.push(`${points > 0 ? `${points} more` : `${-points} fewer`} passive point${Math.abs(points) === 1 ? '' : 's'}`);
+  return parts.join(' · ');
+}
+
+function Refreshed({ card }: { card: Extract<Card, { kind: 'refreshed' }> }): React.JSX.Element {
+  const items = card.refreshed.newItems;
+  const more = items.length - MAX_NEW_ITEMS;
+  return (
+    <>
+      <p className="text-[15px] leading-snug text-value">{refreshLine(card.refreshed)}</p>
+      {items.length > 0 && (
+        <p className="text-[13px] leading-snug text-plain">
+          New: {items.slice(0, MAX_NEW_ITEMS).join(' · ')}
+          {more > 0 && ` and ${more} more`}
+        </p>
+      )}
     </>
   );
 }
@@ -161,7 +193,9 @@ function title(card: Card): string {
 
 function subtitle(card: Card): string | null {
   if (card.kind === 'gem') return 'Gem';
-  if (card.kind === 'ready') return 'Usable now';
+  if (card.kind === 'ready') return card.gems.length || card.items.length ? 'Usable now' : null;
+  if (card.kind === 'refreshing') return 'Refreshing character';
+  if (card.kind === 'refreshed') return 'Character refreshed';
   if (card.kind === 'kitava') return `Resistances ${card.penalty}% after him`;
   if (card.kind === 'next') return card.card.stage ? `Next for ${card.card.stage}` : "What's next";
   if (card.kind === 'gear') {
@@ -179,6 +213,15 @@ function Body({ card }: { card: Card }): React.JSX.Element {
           Measuring with Path of Building…
         </p>
       );
+    case 'refreshing':
+      return (
+        <p role="status" className="flex items-center justify-center gap-2 text-[13px] text-plain">
+          <span className="chat-pulse" aria-hidden="true" />
+          Reading it from pathofexile.com…
+        </p>
+      );
+    case 'refreshed':
+      return <Refreshed card={card} />;
     case 'missing':
       return <p className="font-body text-[13px] leading-snug text-plain italic">{card.message}</p>;
     case 'gem':

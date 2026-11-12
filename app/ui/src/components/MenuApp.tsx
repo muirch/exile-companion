@@ -2,10 +2,12 @@ import { useEffect, useRef, useState } from 'react';
 
 import {
   closeMenu,
+  getProfile,
   getTreeShown,
   openChat,
   openSettings,
   quitApp,
+  refreshCharacter,
   routeNext,
   routePrev,
   setRouteEnabled,
@@ -87,12 +89,14 @@ export function MenuApp(): React.JSX.Element {
   const compact = useAppStore((s) => s.ui.compact);
   const keys = useAppStore((s) => s.hotkeys);
   const [treeShown, setTreeShownState] = useState(false);
+  const [character, setCharacter] = useState<string | null>(null);
   const panel = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
     const opened = (): void => {
       panel.current?.querySelector<HTMLButtonElement>('[data-first]')?.focus();
       void getTreeShown().then((on) => setTreeShownState(Boolean(on)));
+      void getProfile().then((p) => setCharacter(p?.link?.character ?? null));
     };
     opened();
     if (!isTauri()) return;
@@ -150,6 +154,9 @@ export function MenuApp(): React.JSX.Element {
       <Row label="Next step" hint={shortcutLabel(keys.routeNext)} onClick={() => void routeNext()} />
       <TooltipSep tint={TINT} />
       <Row label="Ask the assistant" hint={shortcutLabel(keys.openChat)} onClick={() => void openChat()} />
+      {character && (
+        <Row label="Refresh character" hint={character} onClick={() => void refreshCharacter()} />
+      )}
       <Row label="Settings" onClick={() => void openSettings()} />
       <Row
         label="Move overlay"

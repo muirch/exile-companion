@@ -79,7 +79,7 @@ export function useItemCard(): Card | null {
     return () => void off.then((f) => f());
   }, []);
   useEffect(() => {
-    if (!card || card.kind === 'measuring') return;
+    if (!card || card.kind === 'measuring' || card.kind === 'refreshing') return;
     const t = setTimeout(() => setCard(null), ITEM_CARD_MS);
     return () => clearTimeout(t);
   }, [card]);
