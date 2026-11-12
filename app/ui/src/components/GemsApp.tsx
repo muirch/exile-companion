@@ -330,7 +330,7 @@ export function GemsApp(): React.JSX.Element {
               return (
               <section
                 key={bi}
-                className={`flex flex-col ${bi > 0 && !sep ? 'mt-2' : ''}`}
+                className={`lazy-row flex flex-col [contain-intrinsic-size:auto_90px] ${bi > 0 && !sep ? 'mt-2' : ''}`}
                 aria-label={b.slot ?? b.groups[0].gems[0]?.name}
               >
                 {sep && <div className="tooltip-sep my-2.5" style={SEP} />}

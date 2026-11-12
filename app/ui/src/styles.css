@@ -112,6 +112,14 @@ html[data-window='chat'] #root::after {
   border: 1px solid var(--color-edge);
   pointer-events: none;
 }
+/* Long lists skip layout and paint of rows off screen. The browser draws a row in the same frame
+   it scrolls into view, so a fast scroll never shows the empty rows of a virtual list. The size
+   is a guess until a row has been drawn once, then the row's own. Rows clip what overflows them,
+   so a row with a dropdown or a card that leaves the row can't use it. */
+.lazy-row {
+  content-visibility: auto;
+  contain-intrinsic-size: auto 120px;
+}
 html[data-window='tree'] #root {
   display: block;
 }
