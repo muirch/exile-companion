@@ -2,6 +2,7 @@
 //! takes a couple of seconds and half a gigabyte, and restarted once if it died.
 
 use std::path::PathBuf;
+use std::sync::{Mutex, MutexGuard};
 use std::time::Duration;
 
 use exile_core::build_history::{BuildHistory, HistoryError};
@@ -40,6 +41,19 @@ pub struct Session {
     has_build: bool,
     /// The build file as the running engine read it, to notice an import made in the app since.
     disk_xml: Option<String>,
+}
+
+/// A panic inside a session call can leave the engine half way through a change, so the next call
+/// starts a fresh one instead of trusting it.
+pub fn lock(session: &Mutex<Session>) -> MutexGuard<'_, Session> {
+    session.lock().unwrap_or_else(|poisoned| {
+        session.clear_poison();
+        let mut s = poisoned.into_inner();
+        s.engine = None;
+        s.references_loaded = 0;
+        s.has_build = false;
+        s
+    })
 }
 
 impl Session {
@@ -728,5 +742,31 @@ mod tests {
         let without = "<PathOfBuilding><Build className=\"Templar\"/></PathOfBuilding>";
         assert_eq!(build_outline(with)["has_notes"], true);
         assert!(build_outline(without)["has_notes"].is_null());
+    }
+
+    #[test]
+    fn a_panic_mid_call_drops_the_engine_state() {
+        let guides = std::sync::Arc::new(exile_guides::Guides::new("test", None));
+        let opts = Options {
+            engine: None,
+            pob: None,
+            build: None,
+            log: None,
+        };
+        let session = std::sync::Arc::new(Mutex::new(Session::new(opts, guides)));
+        let held = session.clone();
+        let _ = std::thread::spawn(move || {
+            let mut s = held.lock().unwrap();
+            s.references_loaded = 2;
+            s.has_build = true;
+            panic!("mid call");
+        })
+        .join();
+        assert!(session.is_poisoned());
+        let s = lock(&session);
+        assert_eq!(s.references_loaded, 0);
+        assert!(!s.has_build);
+        drop(s);
+        assert!(!session.is_poisoned());
     }
 }

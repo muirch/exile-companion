@@ -11,7 +11,7 @@ mod progress;
 mod session;
 
 use std::path::PathBuf;
-use std::sync::{Arc, Mutex, PoisonError};
+use std::sync::{Arc, Mutex};
 
 use exile_wiki::{CargoQuery, Wiki};
 use rmcp::handler::server::wrapper::Parameters;
@@ -289,14 +289,9 @@ pub struct Companion {
 impl Companion {
     async fn pob_value(&self, method: &'static str, params: Value) -> Result<Value, String> {
         let session = self.session.clone();
-        tokio::task::spawn_blocking(move || {
-            session
-                .lock()
-                .unwrap_or_else(PoisonError::into_inner)
-                .call(method, params)
-        })
-        .await
-        .unwrap_or_else(|e| Err(e.to_string()))
+        tokio::task::spawn_blocking(move || session::lock(&session).call(method, params))
+            .await
+            .unwrap_or_else(|e| Err(e.to_string()))
     }
 
     async fn pob(&self, method: &'static str, params: Value) -> CallToolResult {
@@ -338,14 +333,9 @@ impl Companion {
     )]
     async fn player_status(&self) -> Result<CallToolResult, McpError> {
         let session = self.session.clone();
-        let r = tokio::task::spawn_blocking(move || {
-            Ok(session
-                .lock()
-                .unwrap_or_else(PoisonError::into_inner)
-                .status())
-        })
-        .await
-        .unwrap_or_else(|e| Err(e.to_string()));
+        let r = tokio::task::spawn_blocking(move || Ok(session::lock(&session).status()))
+            .await
+            .unwrap_or_else(|e| Err(e.to_string()));
         Ok(json_result(r))
     }
 
@@ -354,14 +344,9 @@ impl Companion {
     )]
     async fn what_next(&self) -> Result<CallToolResult, McpError> {
         let session = self.session.clone();
-        let r = tokio::task::spawn_blocking(move || {
-            session
-                .lock()
-                .unwrap_or_else(PoisonError::into_inner)
-                .what_next()
-        })
-        .await
-        .unwrap_or_else(|e| Err(e.to_string()));
+        let r = tokio::task::spawn_blocking(move || session::lock(&session).what_next())
+            .await
+            .unwrap_or_else(|e| Err(e.to_string()));
         Ok(json_result(r))
     }
 
@@ -379,10 +364,7 @@ impl Companion {
                 item_set: p.item_set,
                 skill_set: p.skill_set,
             };
-            session
-                .lock()
-                .unwrap_or_else(PoisonError::into_inner)
-                .follow(p.guide.as_deref(), stage)
+            session::lock(&session).follow(p.guide.as_deref(), stage)
         })
         .await
         .unwrap_or_else(|e| Err(e.to_string()));
@@ -392,14 +374,9 @@ impl Companion {
     #[tool(description = "The player stops following their guide.")]
     async fn forget_guide(&self) -> Result<CallToolResult, McpError> {
         let session = self.session.clone();
-        let r = tokio::task::spawn_blocking(move || {
-            session
-                .lock()
-                .unwrap_or_else(PoisonError::into_inner)
-                .forget_guide()
-        })
-        .await
-        .unwrap_or_else(|e| Err(e.to_string()));
+        let r = tokio::task::spawn_blocking(move || session::lock(&session).forget_guide())
+            .await
+            .unwrap_or_else(|e| Err(e.to_string()));
         Ok(json_result(r))
     }
 
@@ -412,10 +389,7 @@ impl Companion {
     ) -> Result<CallToolResult, McpError> {
         let session = self.session.clone();
         let r = tokio::task::spawn_blocking(move || {
-            session
-                .lock()
-                .unwrap_or_else(PoisonError::into_inner)
-                .characters(p.account.as_deref())
+            session::lock(&session).characters(p.account.as_deref())
         })
         .await
         .unwrap_or_else(|e| Err(e.to_string()));
@@ -450,10 +424,7 @@ impl Companion {
     ) -> Result<CallToolResult, McpError> {
         let session = self.session.clone();
         let r = tokio::task::spawn_blocking(move || {
-            session
-                .lock()
-                .unwrap_or_else(PoisonError::into_inner)
-                .replace_build(&p.build, &p.reason)
+            session::lock(&session).replace_build(&p.build, &p.reason)
         })
         .await
         .unwrap_or_else(|e| Err(e.to_string()));
@@ -463,14 +434,9 @@ impl Companion {
     #[tool(description = "Stops using a build from load_build and goes back to the player's own.")]
     async fn back_to_my_build(&self) -> Result<CallToolResult, McpError> {
         let session = self.session.clone();
-        let r = tokio::task::spawn_blocking(move || {
-            session
-                .lock()
-                .unwrap_or_else(PoisonError::into_inner)
-                .back_to_mine()
-        })
-        .await
-        .unwrap_or_else(|e| Err(e.to_string()));
+        let r = tokio::task::spawn_blocking(move || session::lock(&session).back_to_mine())
+            .await
+            .unwrap_or_else(|e| Err(e.to_string()));
         Ok(json_result(r))
     }
 
@@ -526,7 +492,7 @@ impl Companion {
     ) -> Result<CallToolResult, McpError> {
         let session = self.session.clone();
         let r = tokio::task::spawn_blocking(move || {
-            let mut s = session.lock().unwrap_or_else(PoisonError::into_inner);
+            let mut s = session::lock(&session);
             let mut params = json!({ "limit": p.limit.unwrap_or(10) });
             if let Some(points) = p.max_points {
                 params["max_points"] = json!(points);
@@ -553,7 +519,7 @@ impl Companion {
     ) -> Result<CallToolResult, McpError> {
         let session = self.session.clone();
         let r = tokio::task::spawn_blocking(move || {
-            let mut s = session.lock().unwrap_or_else(PoisonError::into_inner);
+            let mut s = session::lock(&session);
             let (guide, followed) = s.guide_or_followed(p.guide)?;
             let reference = s.reference(&guide)?;
             let given = p.tree.is_some() || p.item_set.is_some() || p.skill_set.is_some();
@@ -603,10 +569,7 @@ impl Companion {
     ) -> Result<CallToolResult, McpError> {
         let session = self.session.clone();
         let r = tokio::task::spawn_blocking(move || {
-            session
-                .lock()
-                .unwrap_or_else(PoisonError::into_inner)
-                .apply(json!(p.changes), &p.reason)
+            session::lock(&session).apply(json!(p.changes), &p.reason)
         })
         .await
         .unwrap_or_else(|e| Err(e.to_string()));
@@ -618,14 +581,9 @@ impl Companion {
     )]
     async fn build_history(&self) -> Result<CallToolResult, McpError> {
         let session = self.session.clone();
-        let r = tokio::task::spawn_blocking(move || {
-            session
-                .lock()
-                .unwrap_or_else(PoisonError::into_inner)
-                .history()
-        })
-        .await
-        .unwrap_or_else(|e| Err(e.to_string()));
+        let r = tokio::task::spawn_blocking(move || session::lock(&session).history())
+            .await
+            .unwrap_or_else(|e| Err(e.to_string()));
         Ok(json_result(r))
     }
 
@@ -634,14 +592,9 @@ impl Companion {
     )]
     async fn undo_change(&self) -> Result<CallToolResult, McpError> {
         let session = self.session.clone();
-        let r = tokio::task::spawn_blocking(move || {
-            session
-                .lock()
-                .unwrap_or_else(PoisonError::into_inner)
-                .undo()
-        })
-        .await
-        .unwrap_or_else(|e| Err(e.to_string()));
+        let r = tokio::task::spawn_blocking(move || session::lock(&session).undo())
+            .await
+            .unwrap_or_else(|e| Err(e.to_string()));
         Ok(json_result(r))
     }
 
@@ -662,14 +615,9 @@ impl Companion {
         Parameters(p): Parameters<LoadParams>,
     ) -> Result<CallToolResult, McpError> {
         let session = self.session.clone();
-        let r = tokio::task::spawn_blocking(move || {
-            session
-                .lock()
-                .unwrap_or_else(PoisonError::into_inner)
-                .load(&p.build)
-        })
-        .await
-        .unwrap_or_else(|e| Err(e.to_string()));
+        let r = tokio::task::spawn_blocking(move || session::lock(&session).load(&p.build))
+            .await
+            .unwrap_or_else(|e| Err(e.to_string()));
         Ok(json_result(r))
     }
 
@@ -682,7 +630,7 @@ impl Companion {
     ) -> Result<CallToolResult, McpError> {
         let session = self.session.clone();
         let r = tokio::task::spawn_blocking(move || {
-            let mut s = session.lock().unwrap_or_else(PoisonError::into_inner);
+            let mut s = session::lock(&session);
             let (guide, _) = s.guide_or_followed(p.guide)?;
             let reference = s.reference(&guide)?;
             s.call_any("guide_stages", json!({ "reference": reference }))
@@ -720,7 +668,7 @@ impl Companion {
     ) -> Result<CallToolResult, McpError> {
         let session = self.session.clone();
         let r = tokio::task::spawn_blocking(move || {
-            let mut s = session.lock().unwrap_or_else(PoisonError::into_inner);
+            let mut s = session::lock(&session);
             let (guide, _) = s.guide_or_followed(p.guide)?;
             let reference = s.reference(&guide)?;
             let stage = |st: &Stage| json!({ "tree": st.tree, "item_set": st.item_set, "skill_set": st.skill_set });
