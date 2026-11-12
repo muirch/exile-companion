@@ -439,7 +439,7 @@ function BuildList({ layout, stage }: { layout: TreeLayout; stage: TreeStage }):
       {major.length > 0 && (
         <ListSection title="Ascendancy & keystones">
           {major.map(({ m, n }) => (
-            <li key={n.id} data-list-node={n.id}>
+            <li key={n.id} data-list-node={n.id} className="lazy-row [contain-intrinsic-size:auto_70px]">
               <p className="flex items-baseline gap-1 font-caps text-[13px] leading-snug text-value">
                 {swatch(m)}
                 {n.name}
@@ -455,7 +455,7 @@ function BuildList({ layout, stage }: { layout: TreeLayout; stage: TreeStage }):
       <ListSection title="Masteries">
         {masteries.size === 0 && <li className="font-body text-[12px] text-label italic">None at this stage.</li>}
         {[...masteries].map(([name, picks]) => (
-          <li key={name} data-list-mastery={name}>
+          <li key={name} data-list-mastery={name} className="lazy-row [contain-intrinsic-size:auto_50px]">
             <p className="flex items-baseline gap-1 font-caps text-[13px] leading-snug text-value">
               {name}
               {picks.length > 1 && <span className="font-body text-[11px] text-label">×{picks.length}</span>}

@@ -83,7 +83,8 @@ function ExchangeView({ exchange }: { exchange: Exchange }): React.JSX.Element {
   const problem = over && overText(over);
   const meta = over && [over.model, costLabel(over.dollars)].filter(Boolean).join(' · ');
   return (
-    <article className="flex flex-col gap-2">
+    // The room around it keeps the focus outline of Details clear of the row's paint containment.
+    <article className="lazy-row -mx-1 flex flex-col gap-2 px-1">
       <p className="line-clamp-3 font-body text-[13px] whitespace-pre-line text-label" title={exchange.question}>
         {exchange.question}
       </p>
@@ -197,7 +198,7 @@ function History({
       ) : (
         <ul className="flex flex-col">
           {chats.map((c) => (
-            <li key={c.id}>
+            <li key={c.id} className="lazy-row [contain-intrinsic-size:auto_44px]">
               <ListButton onClick={() => onOpen(c.id)}>
                 <span className="w-full truncate font-caps text-[14px] text-value">{c.title || 'Untitled chat'}</span>
                 <span className="w-full truncate font-body text-[11px] text-label">
