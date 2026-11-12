@@ -316,6 +316,11 @@ pub async fn import_character(
 }
 
 #[tauri::command]
+pub fn refresh_character(app: AppHandle) {
+    crate::item::refresh_character(&app);
+}
+
+#[tauri::command]
 pub fn open_chat(app: AppHandle) {
     crate::chat::open(&app);
 }

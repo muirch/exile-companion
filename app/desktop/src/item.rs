@@ -41,6 +41,15 @@ pub enum ItemCard {
         penalty: i32,
         short: Vec<exile_assistant::kitava::Short>,
     },
+    /// The player asked to refresh their character from pathofexile.com.
+    Refreshing {
+        name: String,
+    },
+    /// What the refresh changed.
+    Refreshed {
+        name: String,
+        refreshed: exile_core::character::Refreshed,
+    },
     /// Why there is nothing to show, in the player's words.
     Missing {
         name: String,
@@ -129,10 +138,44 @@ pub fn kitava(app: &AppHandle, penalty: i32) {
 /// Called when the log says the character went from level `from` to `to`.
 pub fn level_up(app: &AppHandle, from: u32, to: u32) {
     let plan = crate::runtime::current_gem_plan(app);
+    // Only a character from pathofexile.com can be refreshed, a guide made the build can't.
+    let imported = crate::runtime::current_character(app)
+        .and_then(|_| crate::runtime::current_character_summary(app))
+        .and_then(|s| s.level);
     let mut list = REMEMBERED.lock().unwrap_or_else(|e| e.into_inner());
-    if let Some(now) = level_up::usable_now(plan.as_ref(), &mut list, from, to) {
+    if let Some(now) = level_up::usable_now(plan.as_ref(), &mut list, from, to, imported) {
         emit(app, &ItemCard::Ready(now));
     }
+}
+
+/// The quick menu's Refresh character: reads the character again and says what changed.
+pub fn refresh_character(app: &AppHandle) {
+    let Some(link) = crate::runtime::current_character(app) else {
+        emit(
+            app,
+            &ItemCard::Missing {
+                name: "Refresh character".into(),
+                message: "Import your character from pathofexile.com in the settings first.".into(),
+            },
+        );
+        return;
+    };
+    let app = app.clone();
+    tauri::async_runtime::spawn(async move {
+        let name = link.character;
+        emit(&app, &ItemCard::Refreshing { name: name.clone() });
+        let card = match crate::profile::import_character(&app, None, None).await {
+            Ok(out) => match serde_json::from_value(out["refreshed"].clone()) {
+                Ok(refreshed) => ItemCard::Refreshed { name, refreshed },
+                Err(e) => ItemCard::Missing {
+                    name,
+                    message: format!("Refreshed, but the tools said something unreadable ({e})."),
+                },
+            },
+            Err(message) => ItemCard::Missing { name, message },
+        };
+        emit(&app, &card);
+    });
 }
 
 /// The game puts the text on the clipboard within a few frames.

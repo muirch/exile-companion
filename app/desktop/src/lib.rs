@@ -185,6 +185,7 @@ pub fn run() {
             commands::forget_guide,
             commands::list_characters,
             commands::import_character,
+            commands::refresh_character,
             commands::chat_history,
             commands::chat_open_saved,
             commands::chat_resume,
