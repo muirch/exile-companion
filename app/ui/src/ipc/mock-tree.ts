@@ -21,7 +21,16 @@ export function treeStageMock(stage: number | null): TreeStage {
   const ofMode = DATA.stages.filter((s) => s.mode === shownMode);
   // The mock has a few stages only. Another one shows the nearest it has.
   const found = ofMode.find((s) => s.stage === at) ?? ofMode.filter((s) => s.stage <= at).at(-1) ?? ofMode[0];
-  return { ...found, canCompare: !noCharacter };
+  // ?newer: Path of Building got the next league's tree and the character was imported on it.
+  const newer = params.has('newer');
+  const compared = newer && shownMode === 'character';
+  const versions: Pick<TreeStage, 'latest' | 'characterVersion' | 'missing' | 'missingNames'> = {
+    latest: newer ? '3_30' : null,
+    characterVersion: compared ? '3_30' : null,
+    missing: compared ? 3 : 0,
+    missingNames: compared ? ['Divine Guidance'] : [],
+  };
+  return { ...found, ...versions, canCompare: !noCharacter };
 }
 
 export function setTreeModeMock(m: TreeMode): void {

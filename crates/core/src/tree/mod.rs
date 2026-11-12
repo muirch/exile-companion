@@ -48,6 +48,11 @@ pub fn tree_file(pob_src: &Path, version: Option<&str>) -> Result<PathBuf, TreeE
     }
 }
 
+/// The newest tree Path of Building has, "3_30".
+pub fn latest_version(pob_src: &Path) -> Result<String, TreeError> {
+    newest_version(&pob_src.join("TreeData"))
+}
+
 fn newest_version(root: &Path) -> Result<String, TreeError> {
     let read = std::fs::read_dir(root).map_err(|source| TreeError::Read {
         path: root.to_path_buf(),
@@ -130,6 +135,9 @@ pub struct TreeLayout {
     pub ascendancy_names: BTreeMap<String, String>,
     #[serde(skip)]
     index: HashMap<u32, usize>,
+    /// Every node id the tree data has, also the ones not drawn (class starts, cluster parts).
+    #[serde(skip)]
+    known: HashSet<u32>,
 }
 
 #[derive(Deserialize)]
@@ -336,11 +344,13 @@ impl TreeLayout {
             .chain(&raw.alternate_ascendancies)
             .map(|a| (a.id.clone(), a.name.clone()))
             .collect();
+        let known = raw.nodes.keys().filter_map(|k| k.parse().ok()).collect();
         Ok(Self {
             nodes,
             edges,
             ascendancy_names,
             index,
+            known,
         })
     }
 
@@ -432,6 +442,16 @@ pub struct TreeStage {
     pub edges: Vec<EdgeMark>,
     /// What the marked nodes cover. None when nothing is marked.
     pub focus: Option<Bounds>,
+    /// The newest tree Path of Building has when the stage is for an older one. Set by the app.
+    pub latest: Option<String>,
+    /// The compared character's tree version when it isn't the stage's, "3_30".
+    pub character_version: Option<String>,
+    /// Nodes of the stage or the compared tree this tree data doesn't have, named from the
+    /// character's tree when it has them. Cluster jewel nodes don't count.
+    pub missing: usize,
+    pub missing_names: Vec<String>,
+    #[serde(skip)]
+    pub missing_ids: Vec<u32>,
 }
 
 pub fn stage_titles(build: &PobBuild) -> Vec<String> {
@@ -578,10 +598,20 @@ pub fn tree_stage(
         .collect();
     ascendancy.sort_by_key(|(since, _)| since.unwrap_or(usize::MAX));
     ascendancies.sort_by_key(|a| Some(a) != guide.ascend_class_name.as_ref());
+    let version = spec.and_then(|s| s.tree_version.clone());
+    let character_version = my_spec
+        .and_then(|s| s.tree_version.clone())
+        .filter(|v| Some(v) != version.as_ref());
+    let mut missing_ids: Vec<u32> = now
+        .union(&before)
+        .copied()
+        .filter(|id| *id < CLUSTER_NODES && !layout.known.contains(id))
+        .collect();
+    missing_ids.sort_unstable();
     TreeStage {
         stages: stage_titles(guide),
         stage,
-        version: spec.and_then(|s| s.tree_version.clone()),
+        version,
         mode,
         can_compare: mine.is_some(),
         points,
@@ -594,6 +624,27 @@ pub fn tree_stage(
         nodes,
         edges,
         focus,
+        latest: None,
+        character_version,
+        missing: missing_ids.len(),
+        missing_names: Vec::new(),
+        missing_ids,
+    }
+}
+
+/// PoB numbers the nodes it builds for cluster jewels from here up.
+const CLUSTER_NODES: u32 = 0x10000;
+
+impl TreeStage {
+    /// Names the missing nodes from another version's tree, the character's.
+    pub fn name_missing(&mut self, other: &TreeLayout) {
+        self.missing_names = self
+            .missing_ids
+            .iter()
+            .filter_map(|id| other.node(*id))
+            .filter(|n| !matches!(n.kind, NodeKind::Normal | NodeKind::Mastery))
+            .map(|n| n.name.clone())
+            .collect();
     }
 }
 
@@ -881,6 +932,24 @@ mod tests {
                 (30, Mark::Added)
             ]
         );
+    }
+
+    #[test]
+    fn a_character_on_a_newer_tree_says_what_this_tree_lacks() {
+        let mut me = character(&[10, 11, 40, 99, 0x10003]);
+        me.specs[0].tree_version = Some("3_30".into());
+        let mut s = tree_stage(&layout(), &guide(), 1, Some(&me), TreeMode::Character);
+        assert_eq!(s.character_version.as_deref(), Some("3_30"));
+        // 40 is the class start and 0x10003 a cluster jewel node, both fine.
+        assert_eq!(s.missing, 1);
+        let newer = TreeLayout::from_lua(&TREE.replace("[50]=", "[99]= { [\"skill\"]= 99, [\"name\"]= \"Bastion\", [\"isNotable\"]= true, [\"group\"]= 2, [\"orbit\"]= 0, [\"orbitIndex\"]= 0, [\"out\"]= {}, [\"in\"]= {} },\n        [50]=")).unwrap();
+        s.name_missing(&newer);
+        assert_eq!(s.missing_names, vec!["Bastion"]);
+
+        let same = character(&[10, 11]);
+        let s = tree_stage(&layout(), &guide(), 1, Some(&same), TreeMode::Character);
+        assert_eq!(s.character_version, None);
+        assert_eq!(s.missing, 0);
     }
 
     #[test]

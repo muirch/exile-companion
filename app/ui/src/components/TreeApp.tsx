@@ -91,6 +91,20 @@ export function summary(s: TreeStage): React.ReactNode {
   );
 }
 
+const dotted = (v: string): string => v.replace('_', '.');
+
+/** Says when the stage's tree is older than Path of Building's, and what of it this tree lacks. */
+export function versionNote(s: TreeStage): string | null {
+  if (!s.version || (!s.latest && s.missing === 0)) return null;
+  const tree = `the ${dotted(s.version)} tree`;
+  const whose = s.mode === 'character' && s.characterVersion ? 'of your nodes' : 'nodes of this stage';
+  const names = s.missingNames.length ? `: ${s.missingNames.join(', ')}` : '';
+  const lacks = s.missing > 0 ? `${s.missing} ${whose} aren't in ${tree}${names}.` : null;
+  if (!s.latest) return lacks;
+  const older = `This stage is for ${tree}, Path of Building has ${dotted(s.latest)}.`;
+  return lacks ? `${older} ${lacks}` : `${older} A few nodes may have moved.`;
+}
+
 function Ascendancy({ stage }: { stage: TreeStage }): React.JSX.Element | null {
   if (stage.ascendancy.length === 0) return null;
   return (
@@ -865,6 +879,11 @@ export function TreeApp(): React.JSX.Element {
             {summary(stage)}
             <Ascendancy stage={stage} />
           </p>
+          {versionNote(stage) && (
+            <p className="-mt-1 shrink-0 px-3 pb-2 font-body text-[12px] leading-snug text-plain">
+              {versionNote(stage)}
+            </p>
+          )}
           {layout?.version === version ? (
             // A new stage or mode opens on its own part of the tree.
             <TreeCanvas

@@ -4,7 +4,7 @@ import { afterAll, beforeAll, beforeEach, describe, expect, it, vi } from 'vites
 
 import * as commands from '../ipc/commands';
 import type { TreeLayout, TreeMode, TreePrefs, TreeStage } from '../ipc/types';
-import { TreeApp, markName } from './TreeApp';
+import { TreeApp, markName, versionNote } from './TreeApp';
 
 vi.mock('../ipc/commands', () => ({
   getTreeStage: vi.fn((stage: number | null) => Promise.resolve(stageFor(stage ?? 1))),
@@ -77,6 +77,10 @@ function stageFor(stage: number): TreeStage {
     notables: 1,
     focus: { minX: 0, minY: -162, maxX: 1000, maxY: 82 },
     ascendancies: stage === 0 ? [] : ['Guardian', 'Farrul'],
+    latest: null,
+    characterVersion: null,
+    missing: 0,
+    missingNames: [],
   };
   if (shown === 'tree') {
     return {
@@ -392,5 +396,18 @@ describe('TreeApp', () => {
     expect(markName('character', 'added')).toBe('To take');
     expect(markName('new', 'added')).toBe('New at this stage');
     expect(markName('new', 'extra')).toBe('Refunded at this stage');
+  });
+
+  it('says when the stage is for an older tree and what it lacks of the character', async () => {
+    const old = { ...stageFor(1), latest: '3_30' };
+    expect(versionNote(stageFor(1))).toBeNull();
+    expect(versionNote(old)).toBe('This stage is for the 3.29 tree, Path of Building has 3.30. A few nodes may have moved.');
+    const vs = { ...old, mode: 'character' as const, characterVersion: '3_30', missing: 3, missingNames: ['Divine Guidance'] };
+    expect(versionNote(vs)).toBe(
+      "This stage is for the 3.29 tree, Path of Building has 3.30. 3 of your nodes aren't in the 3.29 tree: Divine Guidance.",
+    );
+    vi.mocked(commands.getTreeStage).mockResolvedValueOnce(old);
+    render(<TreeApp />);
+    expect(await screen.findByText(/Path of Building has 3.30/)).toBeInTheDocument();
   });
 });

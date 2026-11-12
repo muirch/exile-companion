@@ -166,13 +166,20 @@ pub fn stage(app: &AppHandle, stage: Option<usize>) -> Result<Option<TreeStage>,
         })
         .flatten();
     let mode = settings::load(app).unwrap_or_default().tree_mode;
-    Ok(Some(tree::tree_stage(
-        &layout,
-        &guide,
-        stage,
-        character.as_ref(),
-        mode,
-    )))
+    let mut out = tree::tree_stage(&layout, &guide, stage, character.as_ref(), mode);
+    out.latest = tree::latest_version(&pob_src(app)?)
+        .ok()
+        .filter(|v| Some(v) != out.version.as_ref());
+    if out.missing > 0 {
+        if let Some(theirs) = out
+            .character_version
+            .clone()
+            .and_then(|v| self::layout(app, Some(&v)).ok())
+        {
+            out.name_missing(&theirs);
+        }
+    }
+    Ok(Some(out))
 }
 
 #[cfg(test)]
