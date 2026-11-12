@@ -26,6 +26,9 @@ pub struct GemStep {
     pub gem_id: String,
     pub name: String,
     pub quest_id: String,
+    /// Which of the quest's reward offers gives it: "a1q2b" from Nessa before Brutus or "a1q2"
+    /// from Tarkleigh after. Vendors stock a quest's gems from the offer they come with.
+    pub offer_id: String,
     pub act: u32,
     pub action: GemAction,
     pub npc: String,
@@ -172,8 +175,16 @@ impl GemStep {
 }
 
 impl GemPlan {
-    pub fn for_quest<'a>(&'a self, quest_id: &'a str) -> impl Iterator<Item = &'a GemStep> + 'a {
-        self.steps.iter().filter(move |s| s.quest_id == quest_id)
+    /// The gems a hand-in of `quest_id` gives. `offers` are the offers that hand-in names, empty
+    /// for a quest handed in once.
+    pub fn for_hand_in<'a>(
+        &'a self,
+        quest_id: &'a str,
+        offers: &'a [String],
+    ) -> impl Iterator<Item = &'a GemStep> + 'a {
+        self.steps.iter().filter(move |s| {
+            s.quest_id == quest_id && (offers.is_empty() || offers.contains(&s.offer_id))
+        })
     }
 }
 
@@ -485,18 +496,18 @@ pub fn annotate(view: &mut RouteView, plan: &GemPlan, hints: GemHints) {
         out.extend(plan.mules.iter().map(mule_step));
     }
     for step in view.here.drain(..) {
-        let quests: Vec<String> = step
+        let quests: Vec<(String, Vec<String>)> = step
             .parts
             .iter()
             .filter_map(|p| match p {
-                Part::Quest { id, .. } => Some(id.clone()),
+                Part::Quest { id, offers, .. } => Some((id.clone(), offers.clone())),
                 _ => None,
             })
             .collect();
         out.push(step);
-        for quest in &quests {
+        for (quest, offers) in &quests {
             out.extend(
-                plan.for_quest(quest)
+                plan.for_hand_in(quest, offers)
                     .filter(|g| hints.shows(g.action))
                     .map(gem_step),
             );
@@ -610,6 +621,7 @@ fn step(w: &Wanted, s: &GemSource, action: GemAction) -> GemStep {
         gem_id: w.id.clone(),
         name: w.name.clone(),
         quest_id: s.quest_id.clone(),
+        offer_id: s.offer_id.clone(),
         act: s.act,
         action,
         npc: s.npc.clone(),
@@ -1006,6 +1018,7 @@ mod tests {
                 Part::Quest {
                     id: MULE_QUEST.into(),
                     name: "Enemy at the Gate".into(),
+                    offers: Vec::new(),
                 },
             ],
             sub_steps: Vec::new(),
@@ -1039,6 +1052,7 @@ mod tests {
             parts: vec![Part::Quest {
                 id: MULE_QUEST.into(),
                 name: "Enemy at the Gate".into(),
+                offers: Vec::new(),
             }],
             sub_steps: Vec::new(),
             edge: None,
@@ -1094,6 +1108,7 @@ mod tests {
                 Part::Quest {
                     id: "a1q1".into(),
                     name: "First".into(),
+                    offers: Vec::new(),
                 },
             ],
             sub_steps: Vec::new(),
@@ -1371,6 +1386,43 @@ mod tests {
             include_bytes!("../../data/data/routes/exile-leveling/quests.json"),
         )
         .unwrap()
+    }
+
+    #[test]
+    fn brutus_gems_wait_for_the_hand_in_after_brutus() {
+        // The Caged Brute is handed in twice: to Nessa on entering the prison (a1q2b), and to
+        // Tarkleigh after Brutus (a1q2). Nessa sells these only after the second.
+        let gems = real_table();
+        let p = plan(
+            &build(vec![group(vec![
+                gem("Metadata/Items/Gems/SkillGemLeapSlam", false),
+                gem("Metadata/Items/Gems/SkillGemPrecision", false),
+                gem("Metadata/Items/Gems/SkillGemIntimidatingCry", false),
+            ])]),
+            "Templar",
+            &gems,
+        );
+        let hand_in = |offer: &str| Step {
+            parts: vec![Part::Quest {
+                id: "a1q2".into(),
+                name: "The Caged Brute".into(),
+                offers: vec![offer.into()],
+            }],
+            sub_steps: Vec::new(),
+            edge: None,
+        };
+        let mut view = view_with(vec![hand_in("a1q2b"), hand_in("a1q2")]);
+        annotate(&mut view, &p, GemHints::RewardsAndVendors);
+        let lines: Vec<String> = view.here.iter().map(text_of).collect();
+        assert_eq!(lines[0], "The Caged Brute");
+        assert_eq!(
+            lines[1], "The Caged Brute",
+            "nothing between the two: {lines:?}"
+        );
+        let after: String = lines[2..].join(" | ");
+        for id in ["LeapSlam", "Precision", "IntimidatingCry"] {
+            assert!(after.contains(id), "{id} missing after Brutus: {after}");
+        }
     }
 
     #[test]

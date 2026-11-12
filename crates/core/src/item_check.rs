@@ -307,6 +307,7 @@ mod tests {
                 gem_id: "G/Onslaught".into(),
                 name: "Onslaught".into(),
                 quest_id: "a1q2".into(),
+                offer_id: "a1q2".into(),
                 act: 1,
                 action: GemAction::Buy,
                 npc: "Nessa".into(),

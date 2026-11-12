@@ -51,6 +51,11 @@ pub enum Part {
     Quest {
         id: String,
         name: String,
+        /// The reward offers this hand-in gives, when the quest is handed in more than once
+        /// ("a1q2b" to Nessa before Brutus, "a1q2" to Tarkleigh after). Empty means all of them.
+        #[serde(skip)]
+        #[cfg_attr(feature = "ts", ts(skip))]
+        offers: Vec<String>,
     },
     QuestText {
         text: String,
@@ -350,7 +355,7 @@ impl Parser<'_> {
                 Part::PortalSet
             }
             ["portal", "use"] => self.use_portal()?,
-            ["quest", id, ..] => {
+            ["quest", id, offers @ ..] => {
                 let name = match self.quests.by_id(id) {
                     Some(q) => q.name.clone(),
                     None => {
@@ -361,6 +366,7 @@ impl Parser<'_> {
                 Part::Quest {
                     id: id.to_string(),
                     name,
+                    offers: offers.iter().map(|o| o.to_string()).collect(),
                 }
             }
             ["quest_text", text] => Part::QuestText {
@@ -775,7 +781,8 @@ Take {portal|use}
                 },
                 Part::Quest {
                     id: "a1q1".into(),
-                    name: "Enemy at the Gate".into()
+                    name: "Enemy at the Gate".into(),
+                    offers: Vec::new()
                 },
             ]
         );
