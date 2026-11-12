@@ -157,9 +157,14 @@ const ITEM_MARK = 'var(--color-crafted)';
 
 /** The ink mark on a tattooed node's shoulder: a small turned square. */
 function TattooMark({ x, y, r, px }: { x: number; y: number; r: number; px: (v: number) => number }): React.JSX.Element {
-  const s = Math.max(r * 0.45, px(3));
-  const cx = x + r * 0.71;
-  const cy = y - r * 0.71;
+  // Half a side. Zoomed out a small passive is smaller than the mark, so the mark sits outside its
+  // edge and leaves the node itself in view.
+  const s = Math.max(r * 0.42, px(2));
+  // A turned square reaches `s` towards the node along the diagonal, so this keeps its inner edge
+  // at the node's rim.
+  const d = (r + s * 0.9) * Math.SQRT1_2;
+  const cx = x + d;
+  const cy = y - d;
   return (
     <rect
       data-tattoo
