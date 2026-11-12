@@ -87,6 +87,7 @@ function state(
     deaths,
     session_started: true,
     area_id: zoneId,
+    log_unrecognised: false,
   };
 }
 

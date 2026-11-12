@@ -55,6 +55,9 @@ pub struct CampaignState {
     /// Raw id from the `Generating level` line, kept even for areas the pack doesn't know (the
     /// labyrinth). The route tracker keys off this.
     pub area_id: Option<String>,
+    /// Areas keep loading but the "You have entered" line stopped coming, as after a patch that
+    /// reworded it. The zone then follows the `Generating level` line alone.
+    pub log_unrecognised: bool,
     /// When the current zone was entered. Internal (drives future "time in zone"). Not serialized.
     #[serde(skip)]
     #[cfg_attr(feature = "ts", ts(skip))]
@@ -71,6 +74,7 @@ pub struct StateDelta {
     pub character_changed: bool,
     pub location_changed: bool,
     pub session_changed: bool,
+    pub log_changed: bool,
 }
 
 impl StateDelta {
@@ -83,6 +87,7 @@ impl StateDelta {
             || self.character_changed
             || self.location_changed
             || self.session_changed
+            || self.log_changed
     }
 }
 
@@ -93,7 +98,13 @@ pub struct CampaignMachine {
     zones: Arc<ZoneTable>,
     /// worldAreaId from the most recent `AreaGenerated`, consumed by the next `ZoneEntered`.
     last_generated_id: Option<String>,
+    /// Instance connections and generated areas since the last `ZoneEntered`.
+    loads_without_entry: (u32, u32),
 }
+
+/// Area loads in a row without a "You have entered" line before the log counts as unrecognised.
+/// One can go missing in normal play (a crash while loading), three don't.
+const UNRECOGNISED_AFTER: u32 = 3;
 
 impl CampaignMachine {
     pub fn new(zones: Arc<ZoneTable>) -> Self {
@@ -101,6 +112,7 @@ impl CampaignMachine {
             state: CampaignState::default(),
             zones,
             last_generated_id: None,
+            loads_without_entry: (0, 0),
         }
     }
 
@@ -118,19 +130,67 @@ impl CampaignMachine {
     pub fn apply(&mut self, event: LogEvent, at: Option<PrimitiveDateTime>) -> StateDelta {
         match event {
             LogEvent::SessionStart => self.apply_session_start(),
-            LogEvent::ZoneEntered { zone } => self.apply_zone_entered(&zone, at),
+            LogEvent::ZoneEntered { zone } => {
+                self.loads_without_entry = (0, 0);
+                let recognised = self.set_unrecognised(false);
+                let delta = self.apply_zone_entered(&zone, at);
+                StateDelta {
+                    log_changed: recognised,
+                    ..delta
+                }
+            }
             LogEvent::LevelUp {
                 character,
                 class,
                 level,
             } => self.apply_level_up(character, class, level),
             LogEvent::Death { name, cause } => self.apply_death(&name, cause),
-            LogEvent::InstanceConnect { .. } => StateDelta::default(),
+            LogEvent::InstanceConnect { .. } => {
+                self.loads_without_entry.0 += 1;
+                self.check_loads()
+            }
             LogEvent::AreaGenerated { world_area_id, .. } => {
+                self.loads_without_entry.1 += 1;
+                let log_changed = self.check_loads().log_changed;
                 self.last_generated_id = Some(world_area_id);
-                StateDelta::default()
+                let delta = if self.state.log_unrecognised {
+                    self.enter_generated(at)
+                } else {
+                    StateDelta::default()
+                };
+                StateDelta {
+                    log_changed,
+                    ..delta
+                }
             }
         }
+    }
+
+    fn check_loads(&mut self) -> StateDelta {
+        let (connects, generated) = self.loads_without_entry;
+        StateDelta {
+            log_changed: connects.max(generated) >= UNRECOGNISED_AFTER
+                && self.set_unrecognised(true),
+            ..Default::default()
+        }
+    }
+
+    /// Whether the flag changed.
+    fn set_unrecognised(&mut self, on: bool) -> bool {
+        let changed = self.state.log_unrecognised != on;
+        self.state.log_unrecognised = on;
+        changed
+    }
+
+    /// Enters the area the last `AreaGenerated` named, for a log without zone lines. An area the
+    /// pack doesn't know (a hideout, the labyrinth) still moves the tracker by its id.
+    fn enter_generated(&mut self, at: Option<PrimitiveDateTime>) -> StateDelta {
+        let id = self.last_generated_id.clone().unwrap_or_default();
+        let name = self
+            .zones
+            .by_id(&id)
+            .map_or_else(|| id.clone(), |z| z.name.clone());
+        self.apply_zone_entered(&name, at)
     }
 
     fn apply_session_start(&mut self) -> StateDelta {
@@ -509,5 +569,68 @@ mod tests {
         assert!(m.apply(LogEvent::SessionStart, None).session_changed);
         assert!(m.snapshot().session_started);
         assert!(!m.apply(LogEvent::SessionStart, None).session_changed);
+    }
+
+    fn load(m: &mut CampaignMachine, id: &str) -> StateDelta {
+        m.apply(
+            LogEvent::InstanceConnect {
+                server: "1.2.3.4:6112".into(),
+            },
+            None,
+        );
+        m.apply(
+            LogEvent::AreaGenerated {
+                level: 1,
+                world_area_id: id.into(),
+                seed: 1,
+            },
+            None,
+        )
+    }
+
+    #[test]
+    fn follows_generated_areas_when_zone_lines_stop() {
+        let mut m = machine();
+        load(&mut m, "1_1_1");
+        enter(&mut m, "The Twilight Strand");
+        assert!(!load(&mut m, "1_1_town").is_meaningful());
+        assert!(!load(&mut m, "1_1_2").is_meaningful());
+        assert!(!m.snapshot().log_unrecognised);
+
+        let d = load(&mut m, "1_1_town");
+        assert!(d.zone_changed);
+        assert!(m.snapshot().log_unrecognised);
+        assert_eq!(m.snapshot().area_id.as_deref(), Some("1_1_town"));
+        assert_eq!(m.snapshot().location_kind, LocationKind::Town);
+
+        let d = load(&mut m, "2_6_2");
+        assert!(d.zone_changed && !d.log_changed);
+        assert_eq!(m.snapshot().act, Some(6));
+    }
+
+    #[test]
+    fn a_zone_line_makes_the_log_recognised_again() {
+        let mut m = machine();
+        let connect = LogEvent::InstanceConnect {
+            server: "1.2.3.4:6112".into(),
+        };
+        assert!(!m.apply(connect.clone(), None).log_changed);
+        assert!(!m.apply(connect.clone(), None).log_changed);
+        assert!(m.apply(connect, None).log_changed);
+        assert!(m.snapshot().log_unrecognised);
+        let d = enter(&mut m, "Lioneye's Watch");
+        assert!(d.log_changed);
+        assert!(!m.snapshot().log_unrecognised);
+    }
+
+    #[test]
+    fn one_load_without_a_zone_line_is_normal() {
+        let mut m = machine();
+        for _ in 0..5 {
+            load(&mut m, "1_1_2");
+            load(&mut m, "1_1_2");
+            enter(&mut m, "Riverside");
+        }
+        assert!(!m.snapshot().log_unrecognised);
     }
 }

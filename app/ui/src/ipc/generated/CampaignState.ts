@@ -10,4 +10,9 @@ export type CampaignState = { character: string | null, class: string | null, le
  * Raw id from the `Generating level` line, kept even for areas the pack doesn't know (the
  * labyrinth). The route tracker keys off this.
  */
-area_id: string | null, };
+area_id: string | null, 
+/**
+ * Areas keep loading but the "You have entered" line stopped coming, as after a patch that
+ * reworded it. The zone then follows the `Generating level` line alone.
+ */
+log_unrecognised: boolean, };
