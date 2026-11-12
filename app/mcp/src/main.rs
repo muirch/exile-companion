@@ -64,6 +64,8 @@ Measuring changes nothing. apply_changes keeps changes in the player's build, an
 use it only when the player says to keep a change, after you measured it, with the reason in a few words. \
 build_history lists what was kept and undo_change takes the last change back. \
 The player's build should be their own character, so its gear, tree and defences are real: import_character reads it from pathofexile.com, and the guide stays the followed guide. \
+When the player asks to update or refresh their build or character, they mean their own character, not the guide: run import_character without a name, it takes the last imported one. \
+Tell them what changed from its refreshed field: level, passive points and new items. \
 A new player who wants to level with a guide has no build of their own yet. With their OK, use_as_my_build makes the guide their build in Exile Companion, \
 so the overlay shows its gems along the campaign route. Follow the guide too. undo_change takes that back as well. \
 load_build switches the tools to another build until back_to_my_build. That build doesn't keep changes, and it stays in use across conversations \
@@ -405,10 +407,7 @@ impl Companion {
     ) -> Result<CallToolResult, McpError> {
         let session = self.session.clone();
         let r = tokio::task::spawn_blocking(move || {
-            session
-                .lock()
-                .unwrap()
-                .import_character(p.account.as_deref(), p.character.as_deref())
+            session::lock(&session).import_character(p.account.as_deref(), p.character.as_deref())
         })
         .await
         .unwrap_or_else(|e| Err(e.to_string()));
