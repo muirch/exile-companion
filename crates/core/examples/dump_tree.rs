@@ -7,7 +7,7 @@
 use std::collections::HashSet;
 use std::path::Path;
 
-use exile_core::tree::{tree_file, tree_stage, TreeLayout, TreeMode};
+use exile_core::tree::{tree_file, tree_stage, ClusterData, TreeLayout, TreeMode};
 use exile_pob::{PobBuild, TreeSpec};
 
 const STAGES: usize = 5;
@@ -23,7 +23,10 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
     let mut layout = TreeLayout::from_lua(&std::fs::read_to_string(tree_file(
         Path::new(pob),
         version.as_deref(),
-    )?)?)?;
+    )?)?)?
+    .with_cluster_data(ClusterData::from_lua(&std::fs::read_to_string(
+        Path::new(pob).join("Data/ClusterJewels.lua"),
+    )?)?);
 
     // The second stage plus the first three neighbours the third stage doesn't take.
     let mut mine: Vec<u32> = guide
@@ -75,6 +78,27 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
             stages.push(tree_stage(&layout, &guide, stage, Some(&character), mode));
         }
     }
+    // The first stage with cluster jewels, in Tree mode only. Only the part around its clusters is
+    // kept, the rest of an endgame tree would make the mock as big as PoB's.
+    let clusters = (STAGES..guide.specs.len())
+        .map(|i| tree_stage(&layout, &guide, i, None, TreeMode::Tree))
+        .find(|s| !s.cluster_nodes.is_empty());
+    let cluster_box = clusters.as_ref().and_then(|s| {
+        s.cluster_nodes
+            .iter()
+            .map(|n| exile_core::tree::Bounds {
+                min_x: n.x,
+                min_y: n.y,
+                max_x: n.x,
+                max_y: n.y,
+            })
+            .reduce(|a, b| exile_core::tree::Bounds {
+                min_x: a.min_x.min(b.min_x),
+                min_y: a.min_y.min(b.min_y),
+                max_x: a.max_x.max(b.max_x),
+                max_y: a.max_y.max(b.max_y),
+            })
+    });
     let focus = stages
         .iter()
         .filter_map(|s| s.focus)
@@ -86,14 +110,15 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
         })
         .ok_or("the guide's first stages mark nothing")?;
     let drawn: HashSet<&String> = stages.iter().flat_map(|s| &s.ascendancies).collect();
+    let within = |b: &exile_core::tree::Bounds, x: f64, y: f64| {
+        x > b.min_x - MARGIN && x < b.max_x + MARGIN && y > b.min_y - MARGIN && y < b.max_y + MARGIN
+    };
     let inside = |id: u32| {
         layout.node(id).is_some_and(|n| {
             n.ascendancy.as_ref().is_some_and(|a| drawn.contains(a))
                 || (n.ascendancy.is_none()
-                    && n.x > focus.min_x - MARGIN
-                    && n.x < focus.max_x + MARGIN
-                    && n.y > focus.min_y - MARGIN
-                    && n.y < focus.max_y + MARGIN)
+                    && (within(&focus, n.x, n.y)
+                        || cluster_box.as_ref().is_some_and(|b| within(b, n.x, n.y))))
         })
     };
     let keep: HashSet<u32> = layout
@@ -110,6 +135,7 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
         }
     }
     layout.nodes.retain(|n| keep.contains(&n.id));
+    stages.extend(clusters);
     let out = serde_json::json!({ "layout": layout, "stages": stages });
     println!("{}", serde_json::to_string(&out)?);
     Ok(())
