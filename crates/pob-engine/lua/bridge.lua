@@ -114,15 +114,17 @@ function bridge.load_build(params)
 		launch.promptMsg = nil
 		error("Path of Building couldn't open the build. " .. msg, 0)
 	end
+	-- A build for another game version stops at the conversion popup without a targetVersion. Any
+	-- other popup is a notice a newer PoB shows over a build that did open.
 	local popup = main.popups[1]
-	if popup or not build.targetVersion then
+	main.popups = {}
+	if not build.targetVersion then
 		local lines = {}
 		for _, c in pairs(popup and popup.controls or {}) do
 			if type(c.label) == "string" and c.label ~= "" then
 				lines[#lines + 1] = strip(c.label)
 			end
 		end
-		main.popups = {}
 		error("Path of Building couldn't open the build. " .. table.concat(lines, " "), 0)
 	end
 	return bridge.summary()

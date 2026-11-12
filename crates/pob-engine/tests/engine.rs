@@ -543,6 +543,11 @@ fn reports_pob_errors_and_keeps_serving() {
         )
         .unwrap_err();
     assert!(err.to_string().contains("couldn't open the build"), "{err}");
+    let legacy = FIXTURE.replacen("targetVersion=\"3_0\"", "targetVersion=\"2_6\"", 1);
+    let err = e
+        .call("load_build", json!({ "xml": legacy }), SLOW)
+        .unwrap_err();
+    assert!(err.to_string().contains("convert"), "{err}");
     e.call("load_build", json!({ "xml": FIXTURE }), SLOW)
         .unwrap();
 }
