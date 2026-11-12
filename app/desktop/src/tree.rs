@@ -107,7 +107,8 @@ fn pob_src(app: &AppHandle) -> Result<PathBuf, String> {
 
 /// PoB's tree for `version`, read once per run.
 pub fn layout(app: &AppHandle, version: Option<&str>) -> Result<Arc<TreeLayout>, String> {
-    let file = tree::tree_file(&pob_src(app)?, version).map_err(|e| e.to_string())?;
+    let src_dir = pob_src(app)?;
+    let file = tree::tree_file(&src_dir, version).map_err(|e| e.to_string())?;
     let mut cache = LAYOUTS.lock().unwrap_or_else(|p| p.into_inner());
     let cache = cache.get_or_insert_with(HashMap::new);
     if let Some(l) = cache.get(&file) {
@@ -115,7 +116,7 @@ pub fn layout(app: &AppHandle, version: Option<&str>) -> Result<Arc<TreeLayout>,
     }
     let src = std::fs::read_to_string(&file).map_err(|e| format!("{}: {e}", file.display()))?;
     // A new league can change the tree data's shape before Exile Companion is updated for it.
-    let l = Arc::new(TreeLayout::from_lua(&src).map_err(|e| {
+    let l = TreeLayout::from_lua(&src).map_err(|e| {
         log::error!("passive tree {}: {e}", file.display());
         let version = file
             .parent()
@@ -126,7 +127,21 @@ pub fn layout(app: &AppHandle, version: Option<&str>) -> Result<Arc<TreeLayout>,
             "This version of Exile Companion can't read Path of Building's {version} passive tree. \
              The rest of the app works, and an update of Exile Companion will fix it."
         )
-    })?);
+    })?;
+    // Without it the tree still draws, only without the passives cluster jewels add.
+    let clusters = src_dir.join("Data").join("ClusterJewels.lua");
+    let l = Arc::new(
+        match std::fs::read_to_string(&clusters)
+            .map_err(|e| e.to_string())
+            .and_then(|s| tree::ClusterData::from_lua(&s).map_err(|e| e.to_string()))
+        {
+            Ok(data) => l.with_cluster_data(data),
+            Err(e) => {
+                log::warn!("cluster jewels {}: {e}", clusters.display());
+                l
+            }
+        },
+    );
     log::info!("passive tree {} read", file.display());
     cache.insert(file, l.clone());
     Ok(l)
