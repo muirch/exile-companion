@@ -411,6 +411,12 @@ describe('TreeApp', () => {
     });
     render(<TreeApp />);
     await screen.findByTestId('tree');
+    const svg = screen.getByTestId('tree');
+    expect(svg.querySelector('[data-node="10"] [data-tattoo]')).not.toBeNull();
+    expect(svg.querySelector('[data-node="11"] [data-anointed]')).not.toBeNull();
+    expect(svg.querySelector('[data-node="20"] [data-tattoo], [data-node="20"] [data-anointed]')).toBeNull();
+    expect(screen.getByText('Tattoo')).toBeInTheDocument();
+    expect(screen.getByText('Anointed')).toBeInTheDocument();
     const area = screen.getByTestId('jewel-area-13');
     expect(area).toHaveAttribute('r', '960');
     expect(area).toHaveAttribute('stroke-dasharray');

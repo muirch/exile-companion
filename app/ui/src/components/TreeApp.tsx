@@ -150,8 +150,50 @@ function Swatch({ mark }: { mark: Mark }): React.JSX.Element {
   );
 }
 
+const unscaled = (v: number): number => v;
+
+// Lavender, the game's colour for what's laid onto an item, marks what items lay onto the tree.
+const ITEM_MARK = 'var(--color-crafted)';
+
+/** The ink mark on a tattooed node's shoulder: a small turned square. */
+function TattooMark({ x, y, r, px }: { x: number; y: number; r: number; px: (v: number) => number }): React.JSX.Element {
+  const s = Math.max(r * 0.45, px(3));
+  const cx = x + r * 0.71;
+  const cy = y - r * 0.71;
+  return (
+    <rect
+      data-tattoo
+      x={cx - s}
+      y={cy - s}
+      width={s * 2}
+      height={s * 2}
+      transform={`rotate(45 ${cx} ${cy})`}
+      fill={ITEM_MARK}
+      stroke="#0a0a0a"
+      strokeWidth={px(1)}
+    />
+  );
+}
+
+/** A dashed halo: taken by the amulet's anoint, no path to it, like Impossible Escape's dashed area. */
+function AnointMark({ x, y, r, px }: { x: number; y: number; r: number; px: (v: number) => number }): React.JSX.Element {
+  return (
+    <circle
+      data-anointed
+      cx={x}
+      cy={y}
+      r={r + px(5)}
+      fill="none"
+      stroke={ITEM_MARK}
+      strokeWidth={px(1.2)}
+      strokeDasharray={`${px(3)} ${px(2.5)}`}
+    />
+  );
+}
+
 function Legend({ stage }: { stage: TreeStage }): React.JSX.Element {
   const marks: Mark[] = stage.mode === 'tree' ? [] : stage.extra > 0 ? ['taken', 'added', 'extra'] : ['taken', 'added'];
+
   return (
     <div className="flex shrink-0 flex-wrap items-center gap-x-3.5 px-3 pt-1.5 pb-2 font-body text-[11px] text-label">
       {marks.map((m) => (
@@ -160,6 +202,24 @@ function Legend({ stage }: { stage: TreeStage }): React.JSX.Element {
           {markName(stage.mode, m)}
         </span>
       ))}
+      {stage.nodes.some((m) => m.tattoo) && (
+        <span>
+          <svg width="14" height="14" viewBox="0 0 14 14" aria-hidden="true" className="mr-1 inline-block align-[-2px]">
+            <circle cx="6" cy="8" r="4" fill={COLOR.taken} />
+            <TattooMark x={6} y={8} r={4} px={unscaled} />
+          </svg>
+          Tattoo
+        </span>
+      )}
+      {stage.nodes.some((m) => m.anointed) && (
+        <span>
+          <svg width="16" height="16" viewBox="0 0 16 16" aria-hidden="true" className="mr-1 inline-block align-[-3px]">
+            <circle cx="8" cy="8" r="3.5" fill={COLOR.taken} />
+            <AnointMark x={8} y={8} r={1.8} px={unscaled} />
+          </svg>
+          Anointed
+        </span>
+      )}
       <span className="ml-auto">Drag to move, wheel to zoom</span>
     </div>
   );
@@ -177,7 +237,7 @@ function mockHover(layout: TreeLayout, stage: TreeStage): Hover | null {
     const node = layout.nodes.find((n) => n.id === item);
     return node ? { node } : null;
   }
-  const want =(n: TreeNode | undefined): boolean =>
+  const want = (n: TreeNode | undefined): boolean =>
     kind === 'mastery' ? n?.kind === 'mastery' : n?.kind === 'notable' && (kind === 'ascendancy') === Boolean(n.ascendancy);
   const marked = stage.nodes.find((m) => (kind === 'mastery' || m.mark === (stage.mode === 'tree' ? 'taken' : 'added')) && want(layout.nodes.find((n) => n.id === m.id)));
   const node = layout.nodes.find((n) => n.id === marked?.id);
@@ -217,15 +277,16 @@ function insetBoxes(names: string[], folded: string[], h: number): { left: numbe
 /** A node the stage marks, filled when taken, ringed when added, slashed when extra. */
 function MarkedNode({
   n,
-  mark,
+  m,
   px,
   grow = 1,
 }: {
   n: TreeNode;
-  mark: Mark;
+  m: NodeMark;
   px: (v: number) => number;
   grow?: number;
 }): React.JSX.Element {
+  const { mark } = m;
   const r = RADIUS[n.kind] * grow;
   const fill = mark === 'taken' ? COLOR.taken : '#0a0a0a';
   const stroke = mark === 'taken' ? 'var(--color-value)' : COLOR[mark];
@@ -241,6 +302,8 @@ function MarkedNode({
       {mark === 'extra' && (
         <path d={`M${n.x - cross} ${n.y - cross}L${n.x + cross} ${n.y + cross}`} stroke={COLOR.extra} strokeWidth={px(1.5)} />
       )}
+      {m.anointed && <AnointMark x={n.x} y={n.y} r={r} px={px} />}
+      {m.tattoo && <TattooMark x={n.x} y={n.y} r={r} px={px} />}
     </g>
   );
 }
@@ -396,7 +459,7 @@ function AscendancyMap({
         <Edges paths={paths} px={px} />
         {nodes.map((n) => {
           const m = marks.get(n.id);
-          if (m) return <MarkedNode key={n.id} n={n} mark={m.mark} px={px} grow={INSET_GROW} />;
+          if (m) return <MarkedNode key={n.id} n={n} m={m} px={px} grow={INSET_GROW} />;
           return (
             <circle key={n.id} cx={n.x} cy={n.y} r={RADIUS[n.kind] * INSET_GROW} fill={OFF_NODE} stroke={OFF_RING} strokeWidth={px(1)} />
           );
@@ -802,7 +865,7 @@ function TreeCanvas({
             ))}
             {stage.nodes.map((m) => {
               const n = byId.get(m.id);
-              return n && !n.ascendancy ? <MarkedNode key={m.id} n={n} mark={m.mark} px={px} /> : null;
+              return n && !n.ascendancy ? <MarkedNode key={m.id} n={n} m={m} px={px} /> : null;
             })}
             {hover && !hover.node.ascendancy && (
               <circle cx={hover.node.x} cy={hover.node.y} r={RADIUS[hover.node.kind] + px(5)} fill="none" stroke="var(--color-value)" strokeWidth={px(1)} />
