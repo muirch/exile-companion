@@ -33,6 +33,9 @@ pub struct ItemText {
     pub radius: Option<String>,
     pub corrupted: bool,
     pub mods: Vec<ModLine>,
+    /// A cluster jewel's small passive, as PoB names it: "affliction_minion_damage".
+    pub cluster_skill: Option<String>,
+    pub cluster_node_count: Option<u32>,
 }
 
 impl ItemText {
@@ -64,6 +67,8 @@ impl ItemText {
                 "LevelReq" => item.level_req = value.parse().ok(),
                 "Radius" => item.radius = Some(value.to_string()),
                 "Selected Variant" => variant = value.parse().ok(),
+                "Cluster Jewel Skill" => item.cluster_skill = Some(value.to_string()),
+                "Cluster Jewel Node Count" => item.cluster_node_count = value.parse().ok(),
                 _ => {}
             }
         }

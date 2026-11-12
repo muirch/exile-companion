@@ -1,6 +1,7 @@
 //! The passive tree drawn from PoB's own tree data, and what a guide's stage marks on it: the
 //! stage's tree, what it adds to the previous stage, or how it differs from the character's tree.
 
+mod cluster;
 mod items;
 mod lua;
 
@@ -14,6 +15,7 @@ use serde_json::Value;
 
 use crate::resolve::stage_for_level;
 
+pub use cluster::{ClusterData, ClusterGraph};
 pub use items::{jewel_radius, JewelMark, Tattoo};
 pub use lua::LuaError;
 
@@ -140,6 +142,11 @@ pub struct TreeLayout {
     /// Every node id the tree data has, also the ones not drawn (class starts, cluster parts).
     #[serde(skip)]
     known: HashSet<u32>,
+    #[serde(skip)]
+    clusters: cluster::ClusterTree,
+    /// PoB's cluster jewel data, for the passives a build's cluster jewels add.
+    #[serde(skip)]
+    cluster_data: Option<ClusterData>,
 }
 
 #[derive(Deserialize)]
@@ -245,10 +252,50 @@ impl TreeLayout {
         let mut nodes = Vec::new();
         let mut placed = Vec::new();
         let mut links = Vec::new();
+        let mut clusters = cluster::ClusterTree {
+            groups: raw
+                .groups
+                .iter()
+                .filter(|(_, g)| g.is_proxy)
+                .filter_map(|(id, g)| Some((id.parse().ok()?, (g.x, g.y))))
+                .collect(),
+            skills_per_orbit: skills_per_orbit.clone(),
+            orbit_radii: orbit_radii.clone(),
+            ..Default::default()
+        };
         for (key, n) in &raw.nodes {
             let Ok(id) = key.parse::<u32>() else {
                 continue;
             };
+            let name = n.name.clone().unwrap_or_default();
+            if let Some(e) = &n.expansion_jewel {
+                cluster::ClusterTree::socket(id, &name, n.group, e, &mut clusters);
+            }
+            if let (true, Some(g)) = (n.is_proxy, n.group) {
+                clusters.proxies.insert(id, g);
+            }
+            if n.group.is_none() && (n.is_notable || n.is_keystone) {
+                clusters.notables.insert(
+                    name.clone(),
+                    TreeNode {
+                        id,
+                        x: 0.,
+                        y: 0.,
+                        kind: if n.is_keystone {
+                            NodeKind::Keystone
+                        } else {
+                            NodeKind::Notable
+                        },
+                        name,
+                        stats: n.stats.clone(),
+                        ascendancy: None,
+                        mastery: Vec::new(),
+                        reminder: n.reminder_text.clone(),
+                        flavour: n.flavour_text.clone(),
+                    },
+                );
+                continue;
+            }
             let in_cluster = n
                 .expansion_jewel
                 .as_ref()
@@ -353,11 +400,26 @@ impl TreeLayout {
             ascendancy_names,
             index,
             known,
+            clusters,
+            cluster_data: None,
         })
+    }
+
+    pub fn with_cluster_data(mut self, data: ClusterData) -> Self {
+        self.cluster_data = Some(data);
+        self
     }
 
     pub fn node(&self, id: u32) -> Option<&TreeNode> {
         self.index.get(&id).map(|&i| &self.nodes[i])
+    }
+
+    /// The passives the cluster jewels in `spec` add. Empty without PoB's cluster data.
+    pub fn cluster_graph(&self, build: &PobBuild, spec: &exile_pob::TreeSpec) -> ClusterGraph {
+        match &self.cluster_data {
+            Some(data) => cluster::build(&self.clusters, data, build, spec),
+            None => ClusterGraph::default(),
+        }
     }
 }
 
@@ -459,6 +521,10 @@ pub struct TreeStage {
     pub missing_ids: Vec<u32>,
     /// The stage's jewels in their sockets.
     pub jewels: Vec<JewelMark>,
+    /// Passives the stage's or the compared tree's cluster jewels add. Drawn with the layout's
+    /// nodes, and [`EdgeMark::edge`] counts these edges after the layout's.
+    pub cluster_nodes: Vec<TreeNode>,
+    pub cluster_edges: Vec<TreeEdge>,
 }
 
 pub fn stage_titles(build: &PobBuild) -> Vec<String> {
@@ -565,6 +631,11 @@ pub fn tree_stage(
         (false, false) => None,
     };
     let since = |id: u32| guide.specs.iter().position(|s| s.nodes.contains(&id));
+    let before_build = match mode {
+        TreeMode::Character => character,
+        _ => Some(guide),
+    };
+    let clusters = cluster_graphs(layout, (guide, spec), (before_build, before_spec));
 
     let mut marks: HashMap<u32, Mark> = HashMap::new();
     let mut nodes = Vec::new();
@@ -573,7 +644,7 @@ pub fn tree_stage(
     let mut focus: Option<Bounds> = None;
     let mut ascendancy = Vec::new();
     let mut ascendancies: Vec<String> = Vec::new();
-    for n in &layout.nodes {
+    for n in layout.nodes.iter().chain(&clusters.nodes) {
         let Some(mark) = mark_of(n.id) else { continue };
         marks.insert(n.id, mark);
         nodes.push(NodeMark {
@@ -629,6 +700,7 @@ pub fn tree_stage(
     let edges = layout
         .edges
         .iter()
+        .chain(&clusters.edges)
         .enumerate()
         .filter_map(|(i, e)| {
             let mark = edge_mark(*marks.get(&e.a)?, *marks.get(&e.b)?)?;
@@ -668,8 +740,40 @@ pub fn tree_stage(
         missing: missing_ids.len(),
         missing_names: Vec::new(),
         missing_ids,
-        jewels: items::jewels(layout, guide, spec),
+        jewels: items::jewels(layout, &clusters.nodes, guide, spec),
+        cluster_nodes: clusters.nodes,
+        cluster_edges: clusters.edges,
     }
+}
+
+/// The cluster passives of the stage and of the tree it's compared with, each node once.
+fn cluster_graphs(
+    layout: &TreeLayout,
+    (guide, spec): (&PobBuild, Option<&exile_pob::TreeSpec>),
+    (other, other_spec): (Option<&PobBuild>, Option<&exile_pob::TreeSpec>),
+) -> ClusterGraph {
+    let mut out = spec
+        .map(|s| layout.cluster_graph(guide, s))
+        .unwrap_or_default();
+    let (Some(other), Some(other_spec)) = (other, other_spec) else {
+        return out;
+    };
+    if spec.is_some_and(|s| std::ptr::eq(s, other_spec)) {
+        return out;
+    }
+    let theirs = layout.cluster_graph(other, other_spec);
+    let ends = |e: &TreeEdge| (e.a.min(e.b), e.a.max(e.b));
+    let nodes: HashSet<u32> = out.nodes.iter().map(|n| n.id).collect();
+    let edges: HashSet<(u32, u32)> = out.edges.iter().map(ends).collect();
+    out.nodes
+        .extend(theirs.nodes.into_iter().filter(|n| !nodes.contains(&n.id)));
+    out.edges.extend(
+        theirs
+            .edges
+            .into_iter()
+            .filter(|e| !edges.contains(&ends(e))),
+    );
+    out
 }
 
 /// PoB numbers the nodes it builds for cluster jewels from here up.

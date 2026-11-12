@@ -4,7 +4,7 @@
 use exile_pob::{ItemSet, ItemText, PobBuild, TreeSpec};
 use serde::Serialize;
 
-use super::{NodeKind, TreeLayout};
+use super::{NodeKind, TreeLayout, TreeNode};
 use crate::gear::ItemView;
 
 #[derive(Debug, Clone, PartialEq, Eq, Serialize)]
@@ -82,12 +82,20 @@ pub fn tattoo(spec: Option<&TreeSpec>, node: u32) -> Option<Tattoo> {
         })
 }
 
-pub fn jewels(layout: &TreeLayout, build: &PobBuild, spec: Option<&TreeSpec>) -> Vec<JewelMark> {
+/// The jewels in `spec`'s sockets, also the sockets its cluster jewels add (`cluster`).
+pub fn jewels(
+    layout: &TreeLayout,
+    cluster: &[TreeNode],
+    build: &PobBuild,
+    spec: Option<&TreeSpec>,
+) -> Vec<JewelMark> {
     let Some(spec) = spec else { return Vec::new() };
     let version = spec.tree_version.as_deref();
     spec.sockets
         .iter()
-        .filter(|(socket, _)| layout.node(*socket).is_some())
+        .filter(|(socket, _)| {
+            layout.node(*socket).is_some() || cluster.iter().any(|n| n.id == *socket)
+        })
         .filter_map(|(socket, id)| {
             let text = ItemText::parse(&build.item(*id)?.text)?;
             let escape = text.mods.iter().find_map(|m| {
