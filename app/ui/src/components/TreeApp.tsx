@@ -293,7 +293,10 @@ function MarkedNode({
 }): React.JSX.Element {
   const { mark } = m;
   const r = RADIUS[n.kind] * grow;
-  const fill = mark === 'taken' ? COLOR.taken : '#0a0a0a';
+  // Zoomed out a small passive is a dot, and a mark beside it reads as the node itself, off centre.
+  // There the tattoo inks the node instead.
+  const inked = m.tattoo != null && r < px(4);
+  const fill = inked ? ITEM_MARK : mark === 'taken' ? COLOR.taken : '#0a0a0a';
   const stroke = mark === 'taken' ? 'var(--color-value)' : COLOR[mark];
   const sw = px(mark === 'taken' ? 1 : 2);
   const cross = r + px(2.5);
@@ -308,7 +311,7 @@ function MarkedNode({
         <path d={`M${n.x - cross} ${n.y - cross}L${n.x + cross} ${n.y + cross}`} stroke={COLOR.extra} strokeWidth={px(1.5)} />
       )}
       {m.anointed && <AnointMark x={n.x} y={n.y} r={r} px={px} />}
-      {m.tattoo && <TattooMark x={n.x} y={n.y} r={r} px={px} />}
+      {m.tattoo && !inked && <TattooMark x={n.x} y={n.y} r={r} px={px} />}
     </g>
   );
 }
