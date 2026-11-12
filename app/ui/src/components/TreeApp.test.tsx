@@ -91,6 +91,8 @@ function stageFor(stage: number): TreeStage {
     missing: 0,
     missingNames: [],
     jewels: [],
+    clusterNodes: [],
+    clusterEdges: [],
   };
   if (shown === 'tree') {
     return {
@@ -427,6 +429,23 @@ describe('TreeApp', () => {
     expect(tattoo).toHaveTextContent('Tattoo of the Kitava Shaman');
     expect(tattoo).toHaveTextContent('Tattoo on Strength');
     expect(tattoo).toHaveTextContent('Attacks have 5% chance to cause Bleeding');
+  });
+
+  it("draws a cluster jewel's passives with the tree and marks the taken ones", async () => {
+    const base = stageFor(1);
+    const cluster = { id: 65572, x: 400, y: -300, kind: 'notable' as const, name: 'Fuel the Fight', stats: ['20% increased Attack Speed'] };
+    vi.mocked(commands.getTreeStage).mockResolvedValue({
+      ...base,
+      nodes: [...base.nodes, nm(65572, 'taken', 1)],
+      edges: [...base.edges, { edge: LAYOUT.edges.length, mark: 'taken' }],
+      clusterNodes: [cluster],
+      clusterEdges: [{ a: 65572, b: 11, arc: null, clockwise: false }],
+    });
+    render(<TreeApp />);
+    await screen.findByTestId('tree');
+    expect(screen.getByTestId('tree').querySelector('[data-node="65572"]')).toHaveAttribute('data-mark', 'taken');
+    hoverNode(65572);
+    expect(await screen.findByRole('tooltip')).toHaveTextContent('Fuel the Fight');
   });
 
   it('loads another stage from the select and closes on Esc', async () => {

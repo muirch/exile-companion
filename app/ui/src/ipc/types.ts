@@ -165,6 +165,9 @@ export interface TreeStage {
   /** Their notables and keystones, named from the character's tree. */
   missingNames: string[];
   jewels: JewelMark[];
+  /** Passives cluster jewels add, drawn with the layout's. `edges[].edge` counts these after the layout's. */
+  clusterNodes: TreeNode[];
+  clusterEdges: TreeEdge[];
 }
 
 /** Mirrors `settings::TreePrefs`. */
