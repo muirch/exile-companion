@@ -21,6 +21,7 @@ const EMPTY_CAMPAIGN: CampaignState = {
   deaths: 0,
   session_started: false,
   area_id: null,
+  log_unrecognised: false,
 };
 
 interface AppStore {

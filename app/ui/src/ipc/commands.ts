@@ -51,6 +51,7 @@ const EMPTY_STATE: CampaignState = {
   deaths: 0,
   session_started: false,
   area_id: null,
+  log_unrecognised: false,
 };
 
 export const pickLogFile = (): Promise<string | null> =>

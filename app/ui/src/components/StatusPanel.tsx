@@ -45,6 +45,17 @@ function NoLogHint(): React.JSX.Element | null {
   );
 }
 
+function LogChangedNote(): React.JSX.Element | null {
+  const unrecognised = useAppStore((s) => s.campaign.log_unrecognised);
+  if (!unrecognised) return null;
+  return (
+    <p className="font-body text-[13px] leading-snug text-value">
+      The game's log changed with the patch, so the route may skip steps. An update of Exile
+      Companion will fix it.
+    </p>
+  );
+}
+
 export function RouteNav(): React.JSX.Element {
   const keys = useAppStore((s) => s.hotkeys);
   return (
@@ -114,6 +125,7 @@ export function CompactPanel(): React.JSX.Element {
       <ActDone />
       <OffRouteNote />
       <NoLogHint />
+      <LogChangedNote />
       {route && !actions ? <PassThrough /> : <HereSteps hints={hints} />}
       {actions && <ThenStep />}
     </div>
@@ -134,6 +146,7 @@ export function StatusPanel(): React.JSX.Element {
         <ActDone />
         <OffRouteNote />
         <NoLogHint />
+        <LogChangedNote />
         {route && !actions ? <PassThrough /> : <HereSteps />}
         {actions && (
           <>
