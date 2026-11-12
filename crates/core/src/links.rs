@@ -300,6 +300,7 @@ mod tests {
                 gem_id: "Metadata/Items/Gems/SkillGemSunder".into(),
                 name: "Sunder".into(),
                 quest_id: "a1q4".into(),
+                offer_id: "a1q4".into(),
                 act: 1,
                 action: GemAction::Buy,
                 npc: "Nessa".into(),

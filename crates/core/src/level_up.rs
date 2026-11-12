@@ -65,6 +65,7 @@ mod tests {
             gem_id: name.into(),
             name: name.into(),
             quest_id: "q".into(),
+            offer_id: "q".into(),
             act: 1,
             action: GemAction::Buy,
             npc: "Nessa".into(),

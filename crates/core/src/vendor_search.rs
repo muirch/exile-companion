@@ -14,12 +14,12 @@ const MAX_LEN: usize = 250;
 /// handed in here (and the mules' on the first step), else every buy of the plan in the current
 /// act (the player came back to town after the route moved on).
 pub fn vendor_gems(view: &RouteView, plan: &GemPlan, gems: &GemTable) -> Vec<String> {
-    let quests: Vec<&str> = view
+    let hand_ins: Vec<(&str, &[String])> = view
         .here
         .iter()
         .flat_map(|s| &s.parts)
         .filter_map(|p| match p {
-            Part::Quest { id, .. } => Some(id.as_str()),
+            Part::Quest { id, offers, .. } => Some((id.as_str(), offers.as_slice())),
             _ => None,
         })
         .collect();
@@ -37,9 +37,11 @@ pub fn vendor_gems(view: &RouteView, plan: &GemPlan, gems: &GemTable) -> Vec<Str
             push_unique(&mut names, game_name(&gem.name));
         }
     }
-    for step in &plan.steps {
-        if step.action == GemAction::Buy && quests.contains(&step.quest_id.as_str()) {
-            push_unique(&mut names, step_name(step));
+    for (quest, offers) in hand_ins {
+        for step in plan.for_hand_in(quest, offers) {
+            if step.action == GemAction::Buy {
+                push_unique(&mut names, step_name(step));
+            }
         }
     }
     if names.is_empty() {
@@ -193,6 +195,7 @@ mod tests {
         Part::Quest {
             id: id.into(),
             name: id.into(),
+            offers: Vec::new(),
         }
     }
 
@@ -202,6 +205,7 @@ mod tests {
             gem_id: id.into(),
             name: name.into(),
             quest_id: quest.into(),
+            offer_id: quest.into(),
             act,
             action,
             npc: "Nessa".into(),
