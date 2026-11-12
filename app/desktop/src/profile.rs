@@ -72,19 +72,20 @@ pub async fn list_characters(app: &AppHandle, account: String) -> Result<Charact
 }
 
 /// Imports the character as the player's build. With no name, the last imported one again.
+/// Returns what the tool said, with what the import changed under "refreshed".
 pub async fn import_character(
     app: &AppHandle,
     account: Option<String>,
     character: Option<String>,
-) -> Result<(), String> {
-    tool(
+) -> Result<Value, String> {
+    let out = tool(
         app,
         "import_character",
         json!({ "account": account, "character": character }),
     )
     .await?;
     refresh(app);
-    Ok(())
+    Ok(out)
 }
 
 #[derive(Debug, Clone, serde::Serialize)]
