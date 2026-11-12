@@ -27,6 +27,7 @@ pub mod events;
 pub mod exp;
 pub mod followed_guide;
 pub mod game_window;
+pub mod gear;
 pub mod gemplan;
 pub mod gems;
 pub mod guidance;
