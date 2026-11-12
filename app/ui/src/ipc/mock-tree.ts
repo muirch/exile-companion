@@ -31,7 +31,17 @@ export function treeStageMock(stage: number | null): TreeStage {
     missingNames: compared ? ['Divine Guidance'] : [],
   };
   const nodes = found.nodes.map((n) => ({ ...n, anointed: n.anointed ?? false, tattoo: n.tattoo ?? null }));
-  const out = { ...found, ...versions, nodes, jewels: found.jewels ?? [], canCompare: !noCharacter };
+  const out = { ...found, ...versions, nodes, jewels: found.jewels ?? [],
+    clusterNodes: found.clusterNodes ?? [],
+    clusterEdges: found.clusterEdges ?? [],
+    canCompare: !noCharacter };
+  // ?clusters opens on the stage's cluster jewels instead of its whole tree.
+  const clusters = out.clusterNodes.filter((n) => n.y < -7000);
+  if (params.has('clusters') && clusters.length > 0) {
+    const xs = clusters.map((n) => n.x);
+    const ys = clusters.map((n) => n.y);
+    out.focus = { minX: Math.min(...xs), minY: Math.min(...ys), maxX: Math.max(...xs), maxY: Math.max(...ys) };
+  }
   return params.has('items') ? withItems(out) : out;
 }
 

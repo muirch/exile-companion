@@ -94,6 +94,21 @@ export function summary(s: TreeStage): React.ReactNode {
 
 const dotted = (v: string): string => v.replace('_', '.');
 
+const clustered = new WeakMap<TreeStage, { from: TreeLayout; out: TreeLayout }>();
+
+/**
+ * The layout with the stage's cluster jewel passives. The same object for the same stage and
+ * layout, so the canvas doesn't redraw on every render.
+ */
+export function withClusters(layout: TreeLayout, stage: TreeStage): TreeLayout {
+  if (stage.clusterNodes.length === 0) return layout;
+  const hit = clustered.get(stage);
+  if (hit?.from === layout) return hit.out;
+  const out = { ...layout, nodes: [...layout.nodes, ...stage.clusterNodes], edges: [...layout.edges, ...stage.clusterEdges] };
+  clustered.set(stage, { from: layout, out });
+  return out;
+}
+
 /** Says when the stage's tree is older than Path of Building's, and what of it this tree lacks. */
 export function versionNote(s: TreeStage): string | null {
   if (!s.version || (!s.latest && s.missing === 0)) return null;
@@ -943,7 +958,7 @@ export function TreeApp(): React.JSX.Element {
             // A new stage or mode opens on its own part of the tree.
             <TreeCanvas
               key={`${stage.stage}:${stage.mode}`}
-              layout={layout.layout}
+              layout={withClusters(layout.layout, stage)}
               stage={stage}
               prefs={prefs}
               onPrefs={changePrefs}
