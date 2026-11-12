@@ -390,9 +390,15 @@ impl Session {
             &exile_core::character::CharacterLink::new(&account, &name, &realm),
         )
         .map_err(|e| format!("Couldn't remember the character: {e}"))?;
+        let refreshed = exile_core::character::refreshed(&before, xml.as_bytes());
         self.disk_xml = Some(xml);
         self.has_build = true;
-        Ok(json!({ "change": change.id, "character": name, "build": out["summary"] }))
+        Ok(json!({
+            "change": change.id,
+            "character": name,
+            "build": out["summary"],
+            "refreshed": refreshed,
+        }))
     }
 
     /// Drops a build from load_build and goes back to the player's own.
