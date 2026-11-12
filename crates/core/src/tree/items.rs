@@ -50,15 +50,6 @@ pub fn jewel_radius(label: &str, version: Option<&str>) -> Option<f64> {
     })
 }
 
-/// The gear set a build wears now: the active one, else the first.
-pub fn active_set(build: &PobBuild) -> Option<&ItemSet> {
-    build
-        .item_sets
-        .iter()
-        .find(|s| s.id.is_some() && s.id == build.active_item_set)
-        .or_else(|| build.item_sets.first())
-}
-
 /// The notables the amulet in `set` anoints.
 pub fn anointed(layout: &TreeLayout, build: &PobBuild, set: Option<&ItemSet>) -> Vec<u32> {
     let Some(amulet) = set

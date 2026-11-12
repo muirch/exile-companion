@@ -62,6 +62,8 @@ pub struct Links {
     /// The one shown, an index into `sets`.
     pub set: usize,
     pub groups: Vec<LinkGroup>,
+    /// The items the stage wears, in slot order.
+    pub gear: Vec<crate::gear::GearSlot>,
 }
 
 fn set_titles(build: &PobBuild) -> Vec<String> {
@@ -158,7 +160,13 @@ pub fn links(build: &PobBuild, set: usize, gems: &GemTable, plan: Option<&GemPla
         })
         .filter(|g: &LinkGroup| !g.gems.is_empty() || g.label.is_some())
         .collect();
-    Links { sets, set, groups }
+    let gear = crate::gear::gear_for_set(build, set);
+    Links {
+        sets,
+        set,
+        groups,
+        gear,
+    }
 }
 
 #[cfg(test)]
