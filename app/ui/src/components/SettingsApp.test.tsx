@@ -200,6 +200,18 @@ describe('SettingsApp', () => {
     expect(commands.updateSettings).toHaveBeenCalledWith({ gemHints: 'rewards' });
   });
 
+  it('turns off picking the stage by level', async () => {
+    vi.mocked(commands.getSettings).mockResolvedValue({
+      stageByLevel: true,
+    } as Awaited<ReturnType<typeof commands.getSettings>>);
+    render(<SettingsApp />);
+    const toggle = screen.getByRole('switch', { name: 'Stage by level' });
+    expect(toggle).toHaveAttribute('aria-checked', 'true');
+    await userEvent.click(toggle);
+    expect(toggle).toHaveAttribute('aria-checked', 'false');
+    expect(commands.updateSettings).toHaveBeenCalledWith({ stageByLevel: false });
+  });
+
   it('saves the bandit choice the act 2 route follows', async () => {
     render(<SettingsApp />);
     expect(screen.getByRole('button', { name: 'Kill all' })).toHaveAttribute('aria-pressed', 'true');

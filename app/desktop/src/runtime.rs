@@ -273,8 +273,8 @@ pub fn current_character(app: &AppHandle) -> Option<exile_core::character::Chara
     exile_core::character::read_link(&dir).ok().flatten()
 }
 
-/// Stages belong to the plan's skill sets, overrides to its gems. They go when the build the
-/// plan comes from changes into one with other presets.
+/// Stages belong to the plan's skill sets, overrides to its gems, and the windows' picked stages
+/// to both. They go when the build the plan comes from changes into one with other presets.
 pub(crate) fn keep_or_drop_stages(app: &AppHandle, before: Option<&exile_pob::PobBuild>) {
     let after = plan_source(app);
     let same = match (before, after.as_ref()) {
@@ -284,9 +284,15 @@ pub(crate) fn keep_or_drop_stages(app: &AppHandle, before: Option<&exile_pob::Po
     };
     if !same {
         if let Ok(mut s) = settings::load(app) {
-            if !s.preset_stages.is_empty() || !s.gem_overrides.is_empty() {
+            if !s.preset_stages.is_empty()
+                || !s.gem_overrides.is_empty()
+                || s.tree_stage.is_some()
+                || s.gems_set.is_some()
+            {
                 s.preset_stages.clear();
                 s.gem_overrides.clear();
+                s.tree_stage = None;
+                s.gems_set = None;
                 let _ = settings::save(app, &s);
             }
         }

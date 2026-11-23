@@ -159,13 +159,28 @@ pub fn guarded<T>(f: impl FnOnce() -> Result<T, String>) -> Result<T, String> {
     })
 }
 
-/// Stage `stage` of the guide, or the one the character's level is at, in the saved mode.
+/// Stage `stage` of the guide, or the one the window opens on, in the saved mode.
 pub fn stage(app: &AppHandle, stage: Option<usize>) -> Result<Option<TreeStage>, String> {
     let Some(guide) = crate::runtime::plan_source(app) else {
         return Ok(None);
     };
     let state = app.state::<AppState>();
-    let stage = stage.unwrap_or_else(|| tree::stage_for(&guide, state.current_state().level));
+    let mut saved = settings::load(app).unwrap_or_default();
+    let stage = match stage {
+        Some(picked) => {
+            if saved.tree_stage != Some(picked) {
+                saved.tree_stage = Some(picked);
+                let _ = settings::save(app, &saved);
+            }
+            picked
+        }
+        None => exile_core::resolve::opening_stage(
+            saved.stage_by_level,
+            saved.tree_stage,
+            guide.specs.len(),
+            tree::stage_for(&guide, state.current_state().level),
+        ),
+    };
     let version = guide.specs.get(stage).and_then(|s| s.tree_version.clone());
     let layout = layout(app, version.as_deref())?;
     // Without a followed guide the tree is the character's own, nothing to compare it with.
@@ -180,7 +195,7 @@ pub fn stage(app: &AppHandle, stage: Option<usize>) -> Result<Option<TreeStage>,
             builds.build().cloned()
         })
         .flatten();
-    let mode = settings::load(app).unwrap_or_default().tree_mode;
+    let mode = saved.tree_mode;
     let mut out = tree::tree_stage(&layout, &guide, stage, character.as_ref(), mode);
     out.latest = tree::latest_version(&pob_src(app)?)
         .ok()

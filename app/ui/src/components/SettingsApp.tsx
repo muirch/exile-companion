@@ -306,6 +306,33 @@ function GemHintsRow(): React.JSX.Element {
   );
 }
 
+function StageByLevelRow(): React.JSX.Element {
+  const [on, setOn] = useState(true);
+  useEffect(() => {
+    void getSettings().then((s) => {
+      if (s) setOn(s.stageByLevel);
+    });
+  }, []);
+  return (
+    <>
+      <Row label="Stage by level">
+        <Toggle
+          on={on}
+          label="Stage by level"
+          onChange={(v) => {
+            setOn(v);
+            void updateSettings({ stageByLevel: v });
+          }}
+        />
+      </Row>
+      <Note>
+        The gems and passive tree windows open on the stage for your level. Turn it off to keep the
+        stage you picked, for example on maps.
+      </Note>
+    </>
+  );
+}
+
 const ACTS = [1, 2, 3, 4, 5, 6, 7, 8, 9, 10];
 
 function stageValue(stage: PresetStage | undefined): string {
@@ -774,6 +801,7 @@ function BuildSection(): React.JSX.Element {
       )}
       <PobRows />
       <GemHintsRow />
+      <StageByLevelRow />
       {build && build.not_in_campaign.length > 0 && (
         <Row label="Not in campaign">
           <span className="min-w-0 flex-1 font-body text-[13px] text-value">

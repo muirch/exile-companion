@@ -226,6 +226,8 @@ export interface Settings {
   /** Seconds without a route change before the overlay fades out; 0 keeps it shown. */
   fadeAfter: number;
   presetStages: PresetStage[];
+  /** The tree and gems windows open on the stage for the level, else on the one picked last. */
+  stageByLevel: boolean;
   pobPath: string | null;
   pobSync: boolean;
   pobBuild: string | null;

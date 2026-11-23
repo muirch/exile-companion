@@ -93,6 +93,19 @@ pub fn stage_for_level<'a>(titles: impl IntoIterator<Item = &'a str>, level: u32
     best.map(|(i, _)| i)
 }
 
+/// The stage a window opens on: the one for the character's level, or with `by_level` off the one
+/// the player picked last, while the build still has it.
+pub fn opening_stage(
+    by_level: bool,
+    picked: Option<usize>,
+    count: usize,
+    for_level: usize,
+) -> usize {
+    picked
+        .filter(|&i| !by_level && i < count)
+        .unwrap_or(for_level)
+}
+
 fn find_after_keyword(text: &str, keywords: &[&str]) -> Option<u32> {
     for kw in keywords {
         let mut from = 0;
@@ -278,6 +291,19 @@ mod stage_tests {
 
 #[cfg(test)]
 mod tests {
+    #[test]
+    fn a_picked_stage_stays_only_with_stage_by_level_off() {
+        use super::opening_stage;
+        assert_eq!(opening_stage(true, Some(9), 12, 3), 3);
+        assert_eq!(opening_stage(false, Some(9), 12, 3), 9);
+        assert_eq!(opening_stage(false, None, 12, 3), 3);
+        assert_eq!(
+            opening_stage(false, Some(12), 12, 3),
+            3,
+            "the build lost that stage"
+        );
+    }
+
     use super::*;
     use exile_pob::{Gem, SkillGroup, SkillSet};
 
