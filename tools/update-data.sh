@@ -20,7 +20,7 @@ PATCH=${PATCH:-$(curl -fsSL https://raw.githubusercontent.com/poe-tool-dev/lates
 ROUTE_COMMIT=${ROUTE_COMMIT:-$(gh api repos/HeartofPhos/exile-leveling/commits/main --jq .sha)}
 POB_TAG=${POB_TAG:-$(gh api repos/PathOfBuildingCommunity/PathOfBuilding/releases/latest --jq .tag_name)}
 
-echo "$PATCH" | grep -Eq '^[0-9]+(\.[0-9]+){3}$' || { echo "update-data: not a game patch: $PATCH" >&2; exit 1; }
+echo "$PATCH" | grep -Eq '^[0-9]+(\.[0-9]+){3,4}$' || { echo "update-data: not a game patch: $PATCH" >&2; exit 1; }
 echo "$ROUTE_COMMIT" | grep -Eq '^[0-9a-f]{40}$' || { echo "update-data: not a commit: $ROUTE_COMMIT" >&2; exit 1; }
 echo "$POB_TAG" | grep -Eq '^v[0-9]+(\.[0-9]+)+$' || { echo "update-data: not a PoB release: $POB_TAG" >&2; exit 1; }
 # PoB keeps one passive tree folder per league, 3_30 for 3.30.x.
