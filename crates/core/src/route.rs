@@ -563,6 +563,22 @@ pub struct RouteView {
 }
 
 impl Route {
+    /// The edge of the first step that hands in `offer` of `quest`.
+    pub fn hand_in_edge(&self, quest: &str, offer: &str) -> Option<usize> {
+        let mut edge = 0;
+        for step in self.sections.iter().flat_map(|s| &s.steps) {
+            edge = step.edge.unwrap_or(edge);
+            let hands_in = step.parts.iter().any(|p| {
+                matches!(p, Part::Quest { id, offers, .. }
+                    if id == quest && (offers.is_empty() || offers.iter().any(|o| o == offer)))
+            });
+            if hands_in {
+                return Some(edge);
+            }
+        }
+        None
+    }
+
     /// Where a player at `edge` of this route stands in `to`, another variant of the same route.
     /// Variants share the edges before and after the part that differs. A player inside that part
     /// goes to its start in `to`.

@@ -90,10 +90,17 @@ pub(crate) fn current_gem_plan(app: &AppHandle) -> Option<exile_core::gemplan::G
     ))
 }
 
+/// The gem plan without the gems whose quest the player hasn't reached on the route yet.
+pub(crate) fn reached_gem_plan(app: &AppHandle) -> Option<exile_core::gemplan::GemPlan> {
+    let app_state = app.state::<AppState>();
+    let edge = lock(&app_state.tracker).active();
+    Some(current_gem_plan(app)?.handed_in_by(&app_state.route(), edge))
+}
+
 /// Search strings for the gems to buy here. Uses the plan's buys even when the player hides
 /// vendor steps in the route.
 pub fn vendor_search_strings(app: &AppHandle) -> Vec<String> {
-    let (Some(view), Some(plan)) = (bare_route_view(app), current_gem_plan(app)) else {
+    let (Some(view), Some(plan)) = (bare_route_view(app), reached_gem_plan(app)) else {
         return Vec::new();
     };
     let gems = app.state::<AppState>().gems.clone();
