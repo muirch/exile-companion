@@ -340,6 +340,7 @@ export const getSettings = (): Promise<Settings> =>
         compact: useAppStore.getState().ui.compact,
         fadeAfter: useAppStore.getState().ui.fadeAfter,
         presetStages: [],
+        stageByLevel: true,
         pobPath: null,
         pobSync: false,
         pobBuild: null,

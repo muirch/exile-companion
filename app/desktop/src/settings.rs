@@ -55,6 +55,11 @@ pub struct Settings {
     /// The size the player gave the tree window, at 1080p.
     pub tree_size: Option<(f64, f64)>,
     pub tree_prefs: TreePrefs,
+    /// The tree and gems windows open on the stage for the character's level. Off, they open on
+    /// the stage the player picked last.
+    pub stage_by_level: bool,
+    pub tree_stage: Option<usize>,
+    pub gems_set: Option<usize>,
 }
 
 /// How the player left the tree window's side parts.
@@ -99,6 +104,9 @@ impl Default for Settings {
             tree_anchor: None,
             tree_size: None,
             tree_prefs: TreePrefs::default(),
+            stage_by_level: true,
+            tree_stage: None,
+            gems_set: None,
         }
     }
 }

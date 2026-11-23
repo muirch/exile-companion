@@ -88,12 +88,26 @@ pub fn notes(app: &AppHandle) -> Option<String> {
     crate::runtime::plan_source(app)?.notes
 }
 
-/// The links of skill set `set`, or of the one the character's level is at.
+/// The links of skill set `set`, or of the one the window opens on.
 pub fn links(app: &AppHandle, set: Option<usize>) -> Option<exile_core::links::Links> {
     let build = crate::runtime::plan_source(app)?;
     let state = app.state::<AppState>();
-    let set = set
-        .unwrap_or_else(|| exile_core::links::set_for_level(&build, state.current_state().level));
+    let mut saved = crate::settings::load(app).unwrap_or_default();
+    let set = match set {
+        Some(picked) => {
+            if saved.gems_set != Some(picked) {
+                saved.gems_set = Some(picked);
+                let _ = crate::settings::save(app, &saved);
+            }
+            picked
+        }
+        None => exile_core::resolve::opening_stage(
+            saved.stage_by_level,
+            saved.gems_set,
+            build.skill_sets.len(),
+            exile_core::links::set_for_level(&build, state.current_state().level),
+        ),
+    };
     let plan = crate::runtime::current_gem_plan(app);
     Some(exile_core::links::links(
         &build,
