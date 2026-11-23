@@ -137,7 +137,8 @@ pub fn kitava(app: &AppHandle, penalty: i32) {
 
 /// Called when the log says the character went from level `from` to `to`.
 pub fn level_up(app: &AppHandle, from: u32, to: u32) {
-    let plan = crate::runtime::current_gem_plan(app);
+    // A gem whose quest is still ahead shows up on the route at its hand-in instead.
+    let plan = crate::runtime::reached_gem_plan(app);
     // Only a character from pathofexile.com can be refreshed, a guide made the build can't.
     let imported = crate::runtime::current_character(app)
         .and_then(|_| crate::runtime::current_character_summary(app))

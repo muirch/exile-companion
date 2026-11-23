@@ -13,7 +13,7 @@ use exile_pob::PobBuild;
 
 use crate::gems::{quest_number, GemSource, GemSourceKind, GemTable};
 use crate::resolve::{act_expected_level, title_target_level};
-use crate::route::{Part, RouteView, Step};
+use crate::route::{Part, Route, RouteView, Step};
 
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
 pub enum GemAction {
@@ -185,6 +185,19 @@ impl GemPlan {
         self.steps.iter().filter(move |s| {
             s.quest_id == quest_id && (offers.is_empty() || offers.contains(&s.offer_id))
         })
+    }
+}
+
+impl GemPlan {
+    /// The plan without the gems whose quest `route` hands in after `edge`: the vendor doesn't
+    /// sell them yet. Gems from quests the route doesn't hand in stay.
+    pub fn handed_in_by(mut self, route: &Route, edge: usize) -> Self {
+        self.steps.retain(|s| {
+            route
+                .hand_in_edge(&s.quest_id, &s.offer_id)
+                .is_none_or(|e| e <= edge)
+        });
+        self
     }
 }
 
@@ -1423,6 +1436,54 @@ mod tests {
         for id in ["LeapSlam", "Precision", "IntimidatingCry"] {
             assert!(after.contains(id), "{id} missing after Brutus: {after}");
         }
+    }
+
+    #[test]
+    fn brutus_gems_are_left_out_until_the_route_hands_him_in() {
+        use crate::data::DataPack;
+        use crate::route::{parse_route, route_defines, Bandit};
+
+        let pack = DataPack::from_bytes(
+            exile_data::AREAS_JSON,
+            exile_data::AREAS_SCHEMA_VERSION,
+            exile_data::QUESTS_JSON,
+            exile_data::QUESTS_SCHEMA_VERSION,
+            exile_data::TRIALS_JSON,
+            exile_data::TRIALS_SCHEMA_VERSION,
+        )
+        .unwrap();
+        let (route, _) = parse_route(
+            &exile_data::ROUTE_ACTS.join("\n"),
+            &pack.zones,
+            &pack.quests,
+            &route_defines(true, Bandit::KillAll),
+        );
+        let gems = real_table();
+        let p = plan(
+            &build(vec![group(vec![
+                gem("Metadata/Items/Gems/SkillGemLeapSlam", false),
+                gem("Metadata/Items/Gems/SkillGemPrecision", false),
+            ])]),
+            "Templar",
+            &gems,
+        );
+        let names = |edge: usize| -> Vec<String> {
+            let mut n: Vec<String> = p
+                .clone()
+                .handed_in_by(&route, edge)
+                .steps
+                .into_iter()
+                .map(|s| s.name)
+                .collect();
+            n.sort();
+            n
+        };
+        let upper_prison = route.edges.iter().position(|e| e == "1_1_7_2").unwrap();
+        let after_brutus = route.hand_in_edge("a1q2", "a1q2").unwrap();
+        assert!(after_brutus > upper_prison);
+        assert!(names(upper_prison).is_empty(), "{:?}", names(upper_prison));
+        assert_eq!(names(after_brutus).len(), 2);
+        assert_eq!(names(route.edges.len() - 1).len(), 2);
     }
 
     #[test]
