@@ -32,6 +32,19 @@ local function pct(new, base)
 	return (new - base) / base * 100
 end
 
+-- PoB 2.68 builds objects with new("Item"):Item(raw) and refuses arguments to new(). Older
+-- versions take them as new("Item", raw).
+local function construct(className, ...)
+	if not common.classes[className] then
+		LoadModule("Classes/" .. className)
+	end
+	if common.classes[className]._unconstructedMeta then
+		local object = new(className)
+		return object[className](object, ...)
+	end
+	return new(className, ...)
+end
+
 local function output()
 	return build.calcsTab.mainOutput
 end
@@ -524,7 +537,7 @@ end
 -- An item as the game copies it with Ctrl+C, compared against every slot it fits, the way
 -- PoB's item tooltip does it. Best slot first.
 function bridge.compare_item(params)
-	local item = new("Item", params.text)
+	local item = construct("Item", params.text)
 	if not item.base then
 		error("Path of Building couldn't read that item", 0)
 	end
@@ -631,7 +644,7 @@ function bridge.what_if(params)
 				override[key][node] = true
 			end
 		elseif change.item then
-			local item = new("Item", change.item)
+			local item = construct("Item", change.item)
 			if not item.base then
 				error("Path of Building couldn't read the item for " .. tostring(change.slot), 0)
 			end
@@ -758,7 +771,7 @@ function bridge.apply_changes(params)
 			if not slot then
 				error("no item slot " .. change.slot, 0)
 			end
-			local item = new("Item", change.item)
+			local item = construct("Item", change.item)
 			if not item.base then
 				error("Path of Building couldn't read the item for " .. change.slot, 0)
 			end
@@ -931,7 +944,7 @@ end
 -- Loads a guide or any other build to compare the player's build with. Several can be loaded,
 -- each gets an index.
 function bridge.load_reference(params)
-	local ref = new("CompareEntry", params.xml, params.label or "Guide")
+	local ref = construct("CompareEntry", params.xml, params.label or "Guide")
 	if not (ref and ref.calcsTab and ref.calcsTab.mainOutput) then
 		error("Path of Building couldn't open the reference build", 0)
 	end
@@ -1053,7 +1066,7 @@ function bridge.compare_reference(params)
 		local pSlot = build.itemsTab.slots[slotName]
 		local pItem = pSlot and build.itemsTab.items[pSlot.selItemId]
 		if rItem and rItem.raw and not (pItem and pItem.name == rItem.name) then
-			local copy = new("Item", rItem.raw)
+			local copy = construct("Item", rItem.raw)
 			copy:NormaliseQuality()
 			copy:BuildModList()
 			local r = value({ repSlotName = slotName, repItem = copy })
