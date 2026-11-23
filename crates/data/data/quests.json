@@ -1,7 +1,7 @@
 {
   "schema_version": 1,
-  "patch": "3.29.3.6",
-  "generated_at": "2026-11-11T14:48:52.729Z",
+  "patch": "3.30.0.4.3",
+  "generated_at": "2026-11-23T09:11:11.746Z",
   "source": "PoE game files (GGG patch CDN) via pathofexile-dat",
   "quests": [
     {
@@ -3418,6 +3418,14 @@
           "reward_level": 1,
           "classes": [
             "Shadow"
+          ]
+        },
+        {
+          "gem_id": "Metadata/Items/Gems/SkillGemArcaneLink",
+          "gem_name": "Arcane Link",
+          "reward_level": 1,
+          "classes": [
+            "Scion"
           ]
         },
         {

@@ -7,8 +7,8 @@ set -eu
 # Git Bash on Windows rewrites arguments that start with / into Windows paths, sparse patterns too.
 export MSYS_NO_PATHCONV=1
 
-TAG=${POB_TAG:-v2.67.2}
-TREE=${POB_TREE:-3_29}
+TAG=${POB_TAG:-v2.68.1}
+TREE=${POB_TREE:-3_30}
 # The builds in the tests are saved with this tree, and PoB opens a build with its own tree.
 FIXTURE_TREE=3_29
 DIR=${1:-.pob}
