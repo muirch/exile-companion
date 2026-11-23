@@ -8,7 +8,7 @@ import { dirname, resolve } from 'node:path';
 import { fileURLToPath } from 'node:url';
 
 const REPO = 'HeartofPhos/exile-leveling';
-const COMMIT = 'f3a323b1da5533280cd7bc90be601f6bbe33f17f';
+const COMMIT = 'd6951db0ca9463e42074e1e05e9ffde3d42d1604';
 const ACTS = 10;
 
 const here = dirname(fileURLToPath(import.meta.url));
