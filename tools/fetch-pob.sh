@@ -1,14 +1,16 @@
 #!/bin/sh
 # Fetches the parts of Path of Building the engine needs, for its tests: tools/fetch-pob.sh [dir]
 # then EXILE_POB_DIR=<dir> cargo test -p exile-pob-engine. About 220 MB, no images and only the
-# current passive tree (PoB also loads every tree's Assets.lua and the non-version folders), plus
-# PoB's sample character for the import test.
+# current passive tree and the tests' one (PoB also loads every tree's Assets.lua and the
+# non-version folders), plus PoB's sample character for the import test.
 set -eu
 # Git Bash on Windows rewrites arguments that start with / into Windows paths, sparse patterns too.
 export MSYS_NO_PATHCONV=1
 
 TAG=${POB_TAG:-v2.67.2}
 TREE=${POB_TREE:-3_29}
+# The builds in the tests are saved with this tree, and PoB opens a build with its own tree.
+FIXTURE_TREE=3_29
 DIR=${1:-.pob}
 
 if [ ! -d "$DIR/.git" ]; then
@@ -18,7 +20,8 @@ fi
 cd "$DIR"
 git sparse-checkout set --no-cone '/manifest.xml' '/runtime/lua/' '/src/' \
   '/spec/System/SampleCharacter.json' \
-  '!/src/TreeData/[0-9]*/' "/src/TreeData/$TREE/" '/src/TreeData/*/Assets.lua' \
+  '!/src/TreeData/[0-9]*/' "/src/TreeData/$TREE/" "/src/TreeData/$FIXTURE_TREE/" \
+  '/src/TreeData/*/Assets.lua' \
   '!*.png' '!*.jpg' '!*.jpeg' '!*.webp'
 git checkout --quiet
 test -f src/Launch.lua || { echo "fetch-pob: no src/Launch.lua after checkout" >&2; exit 1; }
